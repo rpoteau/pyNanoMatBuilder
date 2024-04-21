@@ -1,0 +1,162 @@
+<style>
+h1, h2, h3, h4, h5, h6 {
+  font-family: Verdana, "DejaVu Sans", "Bitstream Vera Sans", Geneva, sans-serif;
+  font-weight: bold;
+}
+body, intro, introE, rq, rqE, ex, exE, app, appE, sol  {
+  font-family: Verdana, "DejaVu Sans", "Bitstream Vera Sans", Geneva, sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+}
+h1 {
+  border: 0 solid #333;
+  padding: 30px ;
+  color: white;
+  background: #b11d01;
+  text-align: center;
+}
+h2 {
+  border: 3px solid #333;
+  padding: 18px ;
+  color: #b11d01;
+  background: #ffffff;
+  text-align: center;
+}
+h3 {
+  border: 0 solid #333;
+  padding: 12px ;
+  color: #000000;
+  background: #c1c1c1;
+  text-align: left;
+}
+h4 {
+  border: 0 solid #333;
+  padding: 2px ;
+  color: #000000;
+  background: #d9fffc;
+  text-align: left;
+}
+h5 {
+  border: 1px solid #333;
+  padding: 2px ;
+  color: #000000;
+  background: #ffffff;
+  text-align: left;
+}
+.intro {    
+    background-color: #f1f1f1;
+    border-color: #969696;
+    border-left: 5px solid #969696;
+    padding: 0.5em;
+}
+.introE {    
+    background-color: #f1f1f1;
+    border-color: #969696;
+    border-left: 5px solid #969696;
+    padding: 0.5em;
+    color : #117996;
+}
+.rq {    
+    background-color: #fcf2f2;
+    border-color: #dFb5b4;
+    border-left: 5px solid #dfb5b4;
+    padding: 0.5em;
+}
+.rqE {    
+    background-color: #fcf2f2;
+    border-color: #dFb5b4;
+    border-left: 5px solid #dfb5b4;
+    padding: 0.5em;
+    color : #117996;
+}
+.exold {    
+    background-color: #b2dbea80;
+    border-color: #0055ff;
+    border-left: 10px solid #0055ff;
+    padding: 0.5em;
+}
+.ex {    
+    background-color: #b2dbea80;
+    padding: 0.5em;
+    padding-top: 0em;
+    position:relative;
+}
+.ex::before {
+    background-color: #b2dbea;
+    content:"Exercice";
+    margin-left:-0.5em;
+    margin-right:-0.5em;
+    padding-left:0.5em;
+    padding-right:0.5em;
+    font-weight: 600;
+    display: block;
+}
+.exE {    
+    background-color: #b2dbea80;
+    padding: 0.5em;
+    padding-top: 0em;
+    position:relative;
+    color : #117996;
+}
+.exE::before {
+    background-color: #b2dbea;
+    content:"Exercise";
+    margin-left:-0.5em;
+    margin-right:-0.5em;
+    padding-left:0.5em;
+    padding-right:0.5em;
+    font-weight: 600;
+    display: block;
+    color : #117996;
+}
+.app {    
+    background-color: #b2dbea80;
+    padding: 0.5em;
+    padding-top: 0em;
+    position:relative;
+}
+.app::before {
+    background-color: #b2dbea;
+    content:"Application";
+    margin-left:-0.5em;
+    margin-right:-0.5em;
+    padding-left:0.5em;
+    padding-right:0.5em;
+    font-weight: 600;
+    display: block;
+}
+.appE {    
+    background-color: #b2dbea80;
+    padding: 0.5em;
+    padding-top: 0em;
+    color : #117996;
+    position:relative;
+}
+.appE::before {
+    background-color: #b2dbea;
+    content:"Application";
+    margin-left:-0.5em;
+    margin-right:-0.5em;
+    padding-left:0.5em;
+    padding-right:0.5em;
+    font-weight: 600;
+    color : #117996;
+    display: block;
+}
+.sol {    
+    background-color: #bbeab880;
+    padding: 0.5em;
+    padding-top: 0em;
+    position:relative;
+}
+.sol::before {
+    background-color: #bbeab8;
+    content:"Answer";
+    margin-left:-0.5em;
+    margin-right:-0.5em;
+    padding-left:0.5em;
+    padding-right:0.5em;
+    font-weight: 600;
+    display: block;
+}
+</style>
