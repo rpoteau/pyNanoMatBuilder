@@ -1,5 +1,6 @@
-.ipynb_checkpoints/
-.ipynb_checkpoints/*
+# all hidden files... except .gitignore itself
+/**/.*  # ignore all dotted files
+/**/.*/ # ignore all dotted folders
+!/.gitignore  # except `gitignore` :)
 __pycache__/
 __pycache__/*
-*.swp
