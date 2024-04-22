@@ -1,1 +1,1 @@
-<img width="700px" src="./styles/svg/pyNanoMatBuilder_banner.svg"/>
+<img width="700px" src="./styles/svg/pyNanoMatBuilder_banner.png"/>

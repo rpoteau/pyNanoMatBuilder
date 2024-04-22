@@ -53,6 +53,9 @@ def MakeFaceCoord(Rnn,f,coord,nAtomsOnFaces,coordFaceAt):
     if (len(f) == 5):  #pentagonal facet
         edge1 = [f[1],f[0]]
         edge2 = [f[1],f[2]]
+    if (len(f) == 6):  #hexagonal facet
+        edge1 = [f[0],f[1]]
+        edge2 = [f[5],f[4]]
     nAtomsOnEdges = int((RAB(coord,f[1],f[0])+1e-6)/Rnn) - 1
     nIntervalsE = nAtomsOnEdges + 1
     for n in range(nAtomsOnEdges):
