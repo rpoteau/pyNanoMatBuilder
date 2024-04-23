@@ -1,6 +1,9 @@
 import sys
 import numpy as np
 import pyNanoMatBuilder.utils as pnmbu
+import ase
+from ase.build import bulk, make_supercell, cut
+from ase.visualize import view
 
 ###########################################################################################################
 class fccCubo:
@@ -12,7 +15,11 @@ class fccCubo:
     interShellF = 1/radiusCSF
     radiusISF = 3/4
   
-    def __init__(self, Rnn, nShell):
+    def __init__(self,
+                 element: str='Au',
+                 Rnn: float=2.7,
+                 nShell: int=1):
+        self.element = element
         self.Rnn = Rnn
         self.nShell = nShell
         self.nAtoms = 0
@@ -166,14 +173,19 @@ class fccCubo:
             self.nAtoms += nAtomsOnFaces4
             c.extend(coordFace4At)
             indexFace4Atoms.extend(range(nAtoms0,self.nAtoms))
+
+        print(self.nAtoms)
+        print(self.nAtomsPerShell)
+        aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
             
         # print(indexVertexAtoms)
         # print(indexEdgeAtoms)
         # print(indexFaceAtoms)
-        return c,[indexVertexAtoms,indexEdgeAtoms,indexFace3Atoms,indexFace4Atoms]
+        return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFace3Atoms,indexFace4Atoms]
     
     def prop(self):
         print(self)
+        print("element = ",self.element)
         print("number of vertices = ",self.nVertices)
         print("number of edges = ",self.nEdges)
         print("number of faces = ",self.nFaces)

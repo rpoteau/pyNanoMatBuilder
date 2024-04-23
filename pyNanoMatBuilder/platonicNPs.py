@@ -1,6 +1,10 @@
 import sys
 import numpy as np
 import pyNanoMatBuilder.utils as pnmbu
+import ase
+from ase.build import bulk, make_supercell, cut
+from ase.visualize import view
+from ase.cluster.cubic import FaceCenteredCubic
 
 ###########################################################################################################
 class regfccOh:
@@ -14,7 +18,11 @@ class regfccOh:
     dihedralAngle = np.rad2deg(np.arccos(-1/3))
     interShellF = 1/radiusCSF
   
-    def __init__(self, Rnn, nOrder):
+    def __init__(self,
+                 element: str='Au',
+                 Rnn: float = 2.7,
+                 nOrder: int = 1):
+        self.element = element
         self.Rnn = Rnn
         self.nOrder = nOrder
         self.nAtoms = 0
@@ -169,11 +177,16 @@ class regfccOh:
         self.nAtoms += nAtomsInCore
         c.extend(coordCoreAt)
         indexCoreAtoms.extend(range(nAtoms0,self.nAtoms))
+
+        print(self.nAtoms)
+        print(self.nAtomsPerLayer)
+        aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
       
-        return c,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms,indexCoreAtoms]
+        return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms,indexCoreAtoms]
             
     def prop(self):
         print(self)
+        print("element = ",self.element)
         print("number of vertices = ",self.nVertices)
         print("number of edges = ",self.nEdges)
         print("number of faces = ",self.nFaces)
@@ -205,7 +218,11 @@ class regIco:
 #    interShellF = np.sqrt(2*(1-1/np.sqrt(5)))
     radiusISF = np.sqrt(3) * (3 + np.sqrt(5))/12
   
-    def __init__(self, Rnn, nShell):
+    def __init__(self,
+                 element: str='Au',
+                 Rnn: float=2.7,
+                 nShell: int=1):
+        self.element=element
         self.Rnn = Rnn
         self.nShell = nShell
         self.nAtoms = 0
@@ -344,14 +361,19 @@ class regIco:
             self.nAtoms += nAtomsOnFaces
             c.extend(coordFaceAt)
             indexFaceAtoms.extend(range(nAtoms0,self.nAtoms))
+
+        print(self.nAtoms)
+        print(self.nAtomsPerShell)
+        aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
             
         # print(indexVertexAtoms)
         # print(indexEdgeAtoms)
         # print(indexFaceAtoms)
-        return c,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms]
+        return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms]
     
     def prop(self):
         print(self)
+        print("element = ",self.element)
         print("number of vertices = ",self.nVertices)
         print("number of edges = ",self.nEdges)
         print("number of faces = ",self.nFaces)
@@ -384,7 +406,11 @@ class regfccTd:
     fefAngle = np.rad2deg(np.arccos(1/3)) #Face-edge-face angle
     vcvAngle = np.rad2deg(np.arccos(-1/3)) #Vertex-Center-Vertex angle
   
-    def __init__(self, Rnn, nLayer):
+    def __init__(self,
+                 element: str='Au',
+                 Rnn: float=2.7,
+                 nLayer: int=1):
+        self.element = element
         self.Rnn = Rnn
         self.nLayer = int(nLayer-1)
         self.nAtoms = 0
@@ -514,11 +540,16 @@ class regfccTd:
         self.nAtoms += nAtomsInCore
         c.extend(coordCoreAt)
         indexCoreAtoms.extend(range(nAtoms0,self.nAtoms))
+
+        print(self.nAtoms)
+        print(self.nAtomsPerLayer)
+        aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
         
-        return c,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms,indexCoreAtoms]
+        return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms,indexCoreAtoms]
     
     def prop(self):
         print(self)
+        print("element = ",self.element)
         print("number of vertices = ",self.nVertices)
         print("number of edges = ",self.nEdges)
         print("number of faces = ",self.nFaces)
@@ -549,7 +580,11 @@ class regDD:
     interShellF = 1/radiusCSF
     radiusISF = np.sqrt((5/2) + (11/10)*np.sqrt(5))/2
   
-    def __init__(self, Rnn, nShell):
+    def __init__(self,
+                 element: str='Au',
+                 Rnn: float=2.7,
+                 nShell: int=1):
+        self.element = element
         self.Rnn = Rnn
         self.nShell = nShell
         self.nAtoms = 0
@@ -712,11 +747,16 @@ class regDD:
             self.nAtoms += nAtomsOnFaces
             c.extend(coordFaceAt)
             indexFaceAtoms.extend(range(nAtoms0,self.nAtoms))
+
+        print(self.nAtoms)
+        print(self.nAtomsPerShell)
+        aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
                 
-        return c,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms]
+        return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms]
     
     def prop(self):
         print(self)
+        print("element = ",self.element)
         print("number of vertices = ",self.nVertices)
         print("number of edges = ",self.nEdges)
         print("number of faces = ",self.nFaces)
@@ -733,3 +773,135 @@ class regDD:
         print("number of atoms per shell = ",self.nAtomsPerShellAnalytic())
         print("total number of atoms = ",self.nAtomsAnalytic())
         print("Dual polyhedron: icosahedron")
+
+###########################################################################################################
+class cube:
+    nFaces = 6
+    nEdges = 12
+    nVertices = 8
+    edgeLengthFfcc = np.sqrt(2)
+    edgeLengthFbcc = 2/np.sqrt(3)
+    radiusCSF = np.sqrt(3)/2
+    radiusISF = 1/2
+  
+    def __init__(self,
+                 crystalStructure='fcc',
+                 element='Au',
+                 Rnn: float=2.7,
+                 nOrder: int=1):
+        self.crystalStructure = crystalStructure
+        self.element = element
+        self.Rnn = Rnn
+        self.nOrder = nOrder
+        self.nAtoms = 0
+        self.nAtomsPerShell = [0]
+          
+    def __str__(self):
+        return(f"{self.nOrder}x{self.nOrder}x{self.nOrder} fcc cube with Rnn = {self.Rnn}")
+    
+    def nAtomsfccF(self,i):
+        """ returns the number of atoms of an fcc cube of size i x i x i"""
+        return 4*i**3 + 6*i*2 + 3*i + 1
+
+    def nAtomsbccF(self,i):
+        """ returns the number of atoms of a bcc cube of size i x i x i"""
+        return 2*i**3 + 3*i*2 + 3*i
+    
+    def nAtomsPerShellAnalytic(self):
+        n = []
+        Sum = 0
+        for i in range(self.nOrder+1):
+            Sum = sum(n)
+            ni = self.nAtomsF(i)
+            n.append(ni-Sum)
+        return n
+    
+    def nAtomsPerShellCumulativeAnalytic(self):
+        n = []
+        Sum = 0
+        for i in range(self.nOrder+1):
+            Sum = sum(n)
+            ni = self.nAtomsF(i)
+            n.append(ni)
+        return n
+    
+    def nAtomsfccAnalytic(self):
+        n = self.nAtomsfccF(self.nOrder)
+        return n
+        
+    def nAtomsbccAnalytic(self):
+        n = self.nAtomsbccF(self.nOrder)
+        return n
+        
+    def edgeLength(self):
+        if self.crystalStructure == 'fcc':
+            return self.Rnn*self.edgeLengthFfcc*self.nOrder
+        elif self.crystalStructure == 'bcc':
+            return self.Rnn*self.edgeLengthFbcc*self.nOrder
+        
+    def latticeConstant(self):
+        if self.crystalStructure == 'fcc':
+            return self.Rnn*self.edgeLengthFfcc
+        elif self.crystalStructure == 'bcc':
+            return self.Rnn*self.edgeLengthFbcc
+        
+    def radiusCircumscribedSphere(self):
+        return self.radiusCSF*self.edgeLength()
+
+    def radiusInscribedSphere(self):
+        return self.radiusISF*self.edgeLength()
+
+    def area(self):
+        el = self.edgeLength()
+        return 6 * el**2
+    
+    def volume(self):
+        el = self.edgeLength()
+        return el**3
+
+    # def coords(self):
+    #     print(f"Making a {self.nOrder}x{self.nOrder}x{self.nOrder} fcc cube")
+    #     surfaces = [(2, 0, 0), (0, 2, 0), (0, 0, 2)]
+    #     layers = [self.nOrder, self.nOrder, self.nOrder]
+    #     fcc = FaceCenteredCubic(self.element, surfaces, layers, latticeconstant=self.latticeConstant())
+    #     natoms = len(fcc.positions)
+    #     self.nAtoms=natoms
+    #     return fcc
+
+    def coordsSC(self):
+        if self.crystalStructure == 'fcc':
+            cube = bulk(self.element, 'fcc', a=self.latticeConstant(), cubic=True)
+        elif self.crystalStructure == 'bcc':
+            cube = bulk(self.element, 'bcc', a=self.latticeConstant(), cubic=True)
+        view(cube)
+        print(f"Now making a {self.nOrder}x{self.nOrder}x{self.nOrder} fcc supercell...")
+        M = [[self.nOrder, 0, 0], [0, self.nOrder, 0], [0, 0, self.nOrder]]
+        sc=make_supercell(cube, M)
+        # now add last layers
+        print(f"... and adding the upper layers")
+        sc = cut(sc,extend=1.05)
+        natoms = len(sc.positions)
+        self.nAtoms=natoms
+        return sc
+        
+    def prop(self):
+        print(self)
+        print("element = ",self.element)
+        print("number of vertices = ",self.nVertices)
+        print("number of edges = ",self.nEdges)
+        print("number of faces = ",self.nFaces)
+        print(f"nearest neighbour distance = {self.Rnn:.2f} Å")
+        print(f"lattice constant = {self.latticeConstant():.2f} Å")
+        print(f"edge length = {self.edgeLength()*0.1:.2f} nm")
+        print(f"radius after volume = {pnmbu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
+        print(f"radius of the circumscribed sphere = {self.radiusCircumscribedSphere()*0.1:.2f} nm")
+        print(f"radius of the inscribed sphere = {self.radiusInscribedSphere()*0.1:.2f} nm")
+        print(f"area = {self.area()*1e-2:.1f} nm2")
+        print(f"volume = {self.volume()*1e-3:.1f} nm3")
+        # print("number of atoms per shell = ",self.nAtomsPerShellAnalytic())
+        # print("cumulative number of atoms per shell = ",self.nAtomsPerShellCumulativeAnalytic())
+        if self.crystalStructure == 'fcc':
+            print("total number of atoms = ",self.nAtomsfccAnalytic())
+        elif self.crystalStructure == 'bcc':
+            print("total number of atoms = ",self.nAtomsbccAnalytic())
+        print("Dual polyhedron: octahedron")

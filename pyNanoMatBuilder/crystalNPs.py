@@ -1,0 +1,121 @@
+import sys
+import numpy as np
+import pyNanoMatBuilder.utils as pnmbu
+from ase.build import bulk
+from ase import io
+from ase.visualize import view
+from ase.build.supercells import make_supercell
+from ase.geometry import cellpar_to_cell
+
+import visualID as vID
+
+class Crystal:
+    
+    def __init__(self,
+                 crystal: str='Au',
+                 shape: str='sphere',
+                 size: float=[2],
+                 dbFolder: str='cif_database'):
+        self.dbFolder = dbFolder #database folder that contains cif files
+        self.crystal = crystal # see list with the pnmbu.ciflist() command
+        self.shape = shape # 'sphere', 'ellipsoid', 'cube'
+        self.size = size
+        self.nAtoms = 0
+          
+    def __str__(self):
+        return(f"Crystal = {self.crystal} {self.shape}")
+
+    def bulk(self,
+             fformat: str='cif',
+             crystal: str=None,
+             pNMBlib: bool=True):
+        '''
+        input:
+            - fformat = file format, either 'cif' or 'poscar'
+            - crystal = name of the crystal
+            - pNMBlib, Boolean = pypyNanoMatBuilder library of cf files (default: True). If False, pNMB will look for user-defined files
+              in the default user folder
+        returns:
+            - cif or poscar file
+            - name of the cif or POSCAR file
+        '''
+        import os
+
+        path2cif = os.path.join(pnmbu.pNMB_location(),self.dbFolder)
+        match self.crystal.upper():
+            case "RU":
+                cifname = "9008513_Ru.cif"
+            case _:
+                sys.exit(f"The database does not contain bulk parameters for the {self.crystal} crystal.\nPlease provide parameters")
+        cif = io.read(os.path.join(path2cif,cifname))
+        return cif, cifname
+
+    def print_unitcell(self,cif):
+        unitcell = cif.cell.cellpar()
+        print(f"a: {unitcell[0]:.3f} Å, b: {unitcell[1]:.3f} Å, c: {unitcell[2]:.3f} Å. (c/a = {unitcell[2]/unitcell[0]:.3f})")
+        print(f"α: {unitcell[3]:.3f} °, β: {unitcell[4]:.3f} °, γ: {unitcell[5]:.3f} °")
+        print()
+        print(f"Bravais lattice: {cif.cell.get_bravais_lattice()}")
+        print(f"Volume: {cif.cell.volume:.3f} Å3")
+        print(f"Chemical formula: {cif.get_chemical_formula()}")
+
+    def makeSuperCell(self,cif):
+        view(cif)
+        if (self.shape == 'sphere'):
+            # first calculate the size of the supercell
+            sphereRadius = self.size[0]
+            Ma = int(np.round(1.1 * sphereRadius*2*10/cif.cell.lengths()[0]))
+            Mb = int(np.round(1.1 * sphereRadius*2*10/cif.cell.lengths()[1]))
+            Mc = int(np.round(1.1 * sphereRadius*2*10/cif.cell.lengths()[2]))
+        print(f"Making a {Ma}x{Mb}x{Mc} supercell")
+        M = [[Ma, 0, 0], [0, Mb, 0], [0, 0, Mc]]
+        sc=make_supercell(cif, M)
+        # print(cif.cell.cellpar())
+        # print(cellpar_to_cell(cif.cell.cellpar()))
+        # print(sc.cell.cellpar())
+        # print(cellpar_to_cell(sc.cell.cellpar()))
+        V = cellpar_to_cell(sc.cell.cellpar())
+        print(f"Center of Mass: {sc.get_center_of_mass()} Å")
+        print("Now translating the supercell")
+        sc.translate(-V[0]/2)
+        sc.translate(-V[1]/2)
+        sc.translate(-V[2]/2)
+        print(f"Center of Mass after translation of the supercell: {sc.get_center_of_mass()} Å")
+        view(sc)
+        return sc
+        
+    def makeSphere(self,cif):
+        com = cif.get_center_of_mass()
+        delAtom = []
+        for atom in cif.positions:
+            delAtom.extend(pnmbu.Rbetween2Points(com,atom)/10 > self.size)
+        del cif[delAtom]
+        view(cif)
+        return cif
+                
+    def makeNP(self):
+        import os
+        print(self)
+        # print(f"Crystal = {self.crystal}")
+
+        cif, cifname = self.bulk()
+        
+        vID.centertxt("Unit cell properties",bgc='#007a7a',size='14',weight='bold')
+        print(f"cif parameters for {self.crystal} found in {cifname}")
+        self.print_unitcell(cif)
+
+        vID.centertxt("Builder",bgc='#007a7a',size='14',weight='bold')
+        if (self.size is None):
+            self.length = [2,2,2]
+            print(f"length parameter set up as = {self.size} nm")
+        if (self.shape == "sphere"):
+            print((f"Sphere radius = {self.size[0]} nm"))
+            sc = self.makeSuperCell(cif)
+            NP = self.makeSphere(sc)
+        if (self.shape == "ellipsoid"):
+            print((f"Ellipsoid radii = {self.size} nm"))
+        if (self.shape == "cube"):
+            print((f"Cube side length = {self.size[0]} nm"))
+        if (self.shape == "rectangular cuboid"):
+            print((f"Rectangular cuboid side lengths = {self.size} nm"))
+        return NP

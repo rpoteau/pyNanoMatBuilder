@@ -2,6 +2,11 @@ import sys
 import numpy as np
 import pyNanoMatBuilder.utils as pnmbu
 
+import ase
+from ase.build import bulk
+from ase import io
+from ase.visualize import view
+
 ###########################################################################################################
 class bccrdd:
     nFaces = 12
@@ -16,7 +21,11 @@ class bccrdd:
     interShellF3 = 1/radiusCSF3rdOrderV
     interShellF4 = 1/radiusCSF4thOrderV
   
-    def __init__(self, Rnn, nShell):
+    def __init__(self,
+                 element: str='Au',
+                 Rnn: float=2.7,
+                 nShell: int=1):
+        self.element = element
         self.Rnn = Rnn
         self.nShell = nShell
         self.nAtoms = 0
@@ -165,11 +174,16 @@ class bccrdd:
             self.nAtoms += nAtomsOnFaces
             c.extend(coordFaceAt)
             indexFaceAtoms.extend(range(nAtoms0,self.nAtoms))
+
+        print(self.nAtoms)
+        print(self.nAtomsPerShell)
+        aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
             
-        return c,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms]
+        return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms]
     
     def prop(self):
         print(self)
+        print("element = ",self.element)
         print("number of vertices = ",self.nVertices)
         print("number of edges = ",self.nEdges)
         print("number of faces = ",self.nFaces)
@@ -190,10 +204,6 @@ class bccrdd:
         print("cumulative number of atoms per shell = ",self.nAtomsPerShellCumulativeAnalytic())
         print("total number of atoms = ",self.nAtomsAnalytic())
         print("Dual polyhedron: ")
-###########################################################################################################
-import sys
-import numpy as np
-import pyNanoMatBuilder.utils as pnmbu
 
 ###########################################################################################################
 class fccdrdd:
@@ -208,7 +218,11 @@ class fccdrdd:
     interShellF = 1/radiusCSF
     interShellFTB = 1/radiusCSFTB
   
-    def __init__(self, Rnn, nShell):
+    def __init__(self,
+                 element: str='Au',
+                 Rnn: float=2.7,
+                 nShell: int=1):
+        self.element = element
         self.Rnn = Rnn
         self.nShell = nShell
         self.nAtoms = 0
@@ -368,11 +382,16 @@ class fccdrdd:
             self.nAtoms += nAtomsOnFaces
             c.extend(coordFaceAt)
             indexFaceAtoms.extend(range(nAtoms0,self.nAtoms))
+
+        print(self.nAtoms)
+        print(self.nAtomsPerShell)
+        aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
             
-        return c,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms]
+        return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms]
     
     def prop(self):
         print(self)
+        print("element = ",self.element)
         print("number of vertices = ",self.nVertices)
         print("number of edges = ",self.nEdges)
         print("number of faces = ",self.nFaces)

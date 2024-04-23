@@ -1,3 +1,15 @@
+######################################## Folder pathways
+def ciflist(dbFolder='cif_database'):
+    import os
+    path2cif = os.path.join(pNMB_location(),dbFolder)
+    print(os.listdir(path2cif))
+        
+def pNMB_location():
+    import pyNanoMatBuilder, pathlib, os
+    path = pathlib.Path(pyNanoMatBuilder.__file__)
+    return pathlib.Path(*path.parts[0:-2])
+
+######################################## Builder
 def RAB(coord,a,b):
     import numpy as np
     """calculate the interatomic distance between two atoms a and b"""
@@ -82,6 +94,7 @@ def centerOfGravity(c,select):
     cog = [xg/nselect, yg/nselect, zg/nselect]
     return cog
 
+######################################## Momenta of inertia
 def moi(model):
     import numpy as np
     model.moi = model.get_moments_of_inertia() # in amu*angstrom**2
@@ -93,6 +106,7 @@ def moi(model):
     model.dim = 2*np.sqrt(5*model.moiM)
     print(f"Size of the ellipsoid = {model.dim[0]*0.1:.2f} {model.dim[1]*0.1:.2f} {model.dim[2]*0.1:.2f} nm")
 
+######################################## Geometry optimization
 def optimize(model, pathway="./coords/model", fthreshold=0.05):
     from varname import nameof, argname
     import numpy as np
