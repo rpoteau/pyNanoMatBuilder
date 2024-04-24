@@ -1,3 +1,6 @@
+import visualID as vID
+from visualID import  fg, hl, bg
+
 ######################################## Folder pathways
 def ciflist(dbFolder='cif_database'):
     import os
@@ -107,17 +110,20 @@ def moi(model):
     print(f"Size of the ellipsoid = {model.dim[0]*0.1:.2f} {model.dim[1]*0.1:.2f} {model.dim[2]*0.1:.2f} nm")
 
 ######################################## Geometry optimization
-def optimize(model, pathway="./coords/model", fthreshold=0.05):
+def optimizeEMT(model, pathway="./coords/model", fthreshold=0.05):
     from varname import nameof, argname
     import numpy as np
     from ase.io import write
     from ase import Atoms
     from ase.visualize import view
     from ase.calculators.emt import EMT
+    vID.centerTitle(f"ase EMT calculator & Quasi Newton algorithm for geometry optimization")
     model.calc=EMT()
     model.get_potential_energy()
     from ase.optimize import QuasiNewton
     dyn = QuasiNewton(model, trajectory=pathway+'.opt')
     dyn.run(fmax=fthreshold)
     write(pathway+"_opt.xyz", model)
+    print(f"{fg.BLUE}Optimization steps saved in {pathway+'_.opt'} (binary file){fg.OFF}")
+    print(f"{fg.RED}Optimized geometry saved in {pathway+'_opt.xyz'}{fg.OFF}")
     view(model)
