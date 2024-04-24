@@ -45,6 +45,8 @@ class Crystal:
         match self.crystal.upper():
             case "RU":
                 cifname = "9008513_Ru.cif"
+            case "AU":
+                cifname = "9008463_Au.cif"
             case _:
                 sys.exit(f"The database does not contain bulk parameters for the {self.crystal} crystal.\nPlease provide parameters")
         cif = io.read(os.path.join(path2cif,cifname))
@@ -61,12 +63,18 @@ class Crystal:
 
     def makeSuperCell(self,cif):
         view(cif)
+        extendSizeByFactor = 1.1
         if (self.shape == 'sphere'):
             # first calculate the size of the supercell
             sphereRadius = self.size[0]
-            Ma = int(np.round(1.1 * sphereRadius*2*10/cif.cell.lengths()[0]))
-            Mb = int(np.round(1.1 * sphereRadius*2*10/cif.cell.lengths()[1]))
-            Mc = int(np.round(1.1 * sphereRadius*2*10/cif.cell.lengths()[2]))
+            Ma = int(np.round(extendSizeByFactor * sphereRadius*2*10/cif.cell.lengths()[0]))
+            Mb = int(np.round(extendSizeByFactor * sphereRadius*2*10/cif.cell.lengths()[1]))
+            Mc = int(np.round(extendSizeByFactor * sphereRadius*2*10/cif.cell.lengths()[2]))
+        elif (self.shape == 'ellipsoid'):
+            # first calculate the size of the supercell
+            Ma = int(np.round(extendSizeByFactor * self.size[0]*2*10/cif.cell.lengths()[0]))
+            Mb = int(np.round(extendSizeByFactor * self.size[1]*2*10/cif.cell.lengths()[1]))
+            Mc = int(np.round(extendSizeByFactor * self.size[2]*2*10/cif.cell.lengths()[2]))
         print(f"Making a {Ma}x{Mb}x{Mc} supercell")
         M = [[Ma, 0, 0], [0, Mb, 0], [0, 0, Mc]]
         sc=make_supercell(cif, M)
@@ -93,6 +101,18 @@ class Crystal:
         view(cif)
         return cif
                 
+    def makeEllipsoid(self,cif):
+        com = cif.get_center_of_mass()
+        size = np.array(self.size)*10 #nm to angstrom
+        def outside(coord,com,size):
+            return (coord[0]-com[0])**2/(size[0])**2+(coord[1]-com[1])**2/(size[1])**2+(coord[2]-com[2])**2/(size[2])**2
+        delAtom = []
+        for atom in cif.positions:
+            delAtom.extend([outside(atom,com,size) > 1])
+        del cif[delAtom]
+        view(cif)
+        return cif
+                
     def makeNP(self):
         import os
         print(self)
@@ -112,10 +132,14 @@ class Crystal:
             print((f"Sphere radius = {self.size[0]} nm"))
             sc = self.makeSuperCell(cif)
             NP = self.makeSphere(sc)
-        if (self.shape == "ellipsoid"):
+        elif (self.shape == "ellipsoid"):
             print((f"Ellipsoid radii = {self.size} nm"))
-        if (self.shape == "cube"):
+            sc = self.makeSuperCell(cif)
+            NP = self.makeEllipsoid(sc)
+        elif (self.shape == "cube"):
             print((f"Cube side length = {self.size[0]} nm"))
-        if (self.shape == "rectangular cuboid"):
+        elif (self.shape == "rectangular cuboid"):
             print((f"Rectangular cuboid side lengths = {self.size} nm"))
+        else:
+            sys.exit("Shape {self.shape} is unknown")
         return NP
