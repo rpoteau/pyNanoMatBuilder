@@ -1,6 +1,26 @@
 import visualID as vID
 from visualID import  fg, hl, bg
 
+from ase.atoms import Atoms
+
+######################################## coupling with pymatgen in order to find the symmetry
+def MolSym(aseobject: Atoms,
+           getEquivalentAtoms: bool=False):
+    import pymatgen.core as pmg
+    from pymatgen.io.ase import AseAtomsAdaptor as aaa
+    from pymatgen.symmetry.analyzer import PointGroupAnalyzer
+    
+    vID.centertxt("Symmetry analysis",bgc='#007a7a',size='14',weight='bold')
+    pmgmol = pmg.Molecule(aseobject.get_chemical_symbols(),aseobject.get_positions())
+    pga = PointGroupAnalyzer(pmgmol, tolerance=0.6, eigen_tolerance=0.02, matrix_tolerance=0.2)
+    pg = pga.get_pointgroup()
+    print(f"Point Group: {pg}")
+    print(f"Rotational Symmetry Number = {pga.get_rotational_symmetry_number()}")
+    if getEquivalentAtoms:
+        return pg, pga.get_equivalent_atoms()
+    else:
+        return pg, []
+
 ######################################## Folder pathways
 def ciflist(dbFolder='cif_database'):
     import os
@@ -98,8 +118,9 @@ def centerOfGravity(c,select):
     return cog
 
 ######################################## Momenta of inertia
-def moi(model):
+def moi(model: Atoms):
     import numpy as np
+    vID.centertxt("Moments of inertia",bgc='#007a7a',size='14',weight='bold')
     model.moi = model.get_moments_of_inertia() # in amu*angstrom**2
     print(f"Moments of inertia = {model.moi[0]:.2f} {model.moi[1]:.2f} {model.moi[2]:.2f} amu.Å2")
     model.masses = model.get_masses()
@@ -110,7 +131,7 @@ def moi(model):
     print(f"Size of the ellipsoid = {model.dim[0]*0.1:.2f} {model.dim[1]*0.1:.2f} {model.dim[2]*0.1:.2f} nm")
 
 ######################################## Geometry optimization
-def optimizeEMT(model, pathway="./coords/model", fthreshold=0.05):
+def optimizeEMT(model: Atoms, pathway="./coords/model", fthreshold=0.05):
     from varname import nameof, argname
     import numpy as np
     from ase.io import write
@@ -127,3 +148,4 @@ def optimizeEMT(model, pathway="./coords/model", fthreshold=0.05):
     print(f"{fg.BLUE}Optimization steps saved in {pathway+'_.opt'} (binary file){fg.OFF}")
     print(f"{fg.RED}Optimized geometry saved in {pathway+'_opt.xyz'}{fg.OFF}")
     view(model)
+    return model

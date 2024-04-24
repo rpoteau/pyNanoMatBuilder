@@ -1,4 +1,5 @@
 import sys
+import math
 import numpy as np
 import pyNanoMatBuilder.utils as pnmbu
 from ase.build import bulk
@@ -75,6 +76,10 @@ class Crystal:
             Ma = int(np.round(extendSizeByFactor * self.size[0]*2*10/cif.cell.lengths()[0]))
             Mb = int(np.round(extendSizeByFactor * self.size[1]*2*10/cif.cell.lengths()[1]))
             Mc = int(np.round(extendSizeByFactor * self.size[2]*2*10/cif.cell.lengths()[2]))
+        #finds the nearest even numbers
+        Ma = math.ceil(Ma / 2.) * 2
+        Mb = math.ceil(Mb / 2.) * 2
+        Mc = math.ceil(Mc / 2.) * 2
         print(f"Making a {Ma}x{Mb}x{Mc} supercell")
         M = [[Ma, 0, 0], [0, Mb, 0], [0, 0, Mc]]
         sc=make_supercell(cif, M)
