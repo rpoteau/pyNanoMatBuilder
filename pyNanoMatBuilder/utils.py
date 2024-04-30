@@ -1,5 +1,6 @@
 import visualID as vID
 from visualID import  fg, hl, bg
+import numpy as np
 
 from ase.atoms import Atoms
 
@@ -11,6 +12,8 @@ def MolSym(aseobject: Atoms,
     from pymatgen.symmetry.analyzer import PointGroupAnalyzer
     
     vID.centertxt("Symmetry analysis",bgc='#007a7a',size='14',weight='bold')
+    print(f"Currently using the PointGroupAnalyzer class of pymatgen\n The analyzis can take a while for large compounds")
+    print()
     pmgmol = pmg.Molecule(aseobject.get_chemical_symbols(),aseobject.get_positions())
     pga = PointGroupAnalyzer(pmgmol, tolerance=0.6, eigen_tolerance=0.02, matrix_tolerance=0.2)
     pg = pga.get_pointgroup()
@@ -104,8 +107,11 @@ def MakeFaceCoord(Rnn,f,coord,nAtomsOnFaces,coordFaceAt):
             nAtomsOnFaces += 1
     return nAtomsOnFaces,coordFaceAt
 
-def centerOfGravity(c,select):
+def centerOfGravity(c: np.ndarray,
+                    select=None):
     import numpy as np
+    if select is None:
+        select = np.array((range(len(c))))
     nselect = len(select)
     xg = 0
     yg = 0
@@ -115,7 +121,7 @@ def centerOfGravity(c,select):
         yg += c[at][1]
         zg += c[at][2]
     cog = [xg/nselect, yg/nselect, zg/nselect]
-    return cog
+    return np.array(cog)
 
 ######################################## Momenta of inertia
 def moi(model: Atoms):
@@ -149,3 +155,11 @@ def optimizeEMT(model: Atoms, pathway="./coords/model", fthreshold=0.05):
     print(f"{fg.RED}Optimized geometry saved in {pathway+'_opt.xyz'}{fg.OFF}")
     view(model)
     return model
+
+######################################## Planes
+def point2PlaneDistance(point: np.float64,
+                              plane: np.float64):
+    import numpy as np
+    from numpy.linalg import norm
+    distance = abs(np.dot(point,plane[0:3]) + plane[3]) / norm(plane[0:3])
+    return distance

@@ -100,7 +100,7 @@ Title Oh
 #
 #
 #Polyhedron CF2 Etch 
-Polyhedron RDD
+Polyhedron NRHCP
 Center_At 0.0 0.0 0.0
 #Generate_Random_Structures N 1000 Displacement 0.1 Folder Pt155-DODECA-2Shells
 #Etch RotNP   0.0   0.0   0.0 ShiftXY_To 0.0 0.0 ShiftZ_By  -24.0 Scale  1.0
@@ -125,9 +125,9 @@ Parameter2 2
 na_nb_nc 3 3 3 
 n_m 17 5 nprime 13  9  5  1
 #SHIFT_SHELL 0.0357 0.0 0.1
-Diameter_NP 11.0
-Diameter2_NP 11.0
-Height_NP  11.0
+Diameter_NP 20.0
+Diameter2_NP 20.0
+Height_NP  50.0
 #!Reduce2 147
 Core_Surface_Threshold 1.5
 Doublon_Threshold 0.3

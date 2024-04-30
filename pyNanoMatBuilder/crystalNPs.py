@@ -71,7 +71,7 @@ class Crystal:
             Ma = int(np.round(extendSizeByFactor * sphereRadius*2*10/cif.cell.lengths()[0]))
             Mb = int(np.round(extendSizeByFactor * sphereRadius*2*10/cif.cell.lengths()[1]))
             Mc = int(np.round(extendSizeByFactor * sphereRadius*2*10/cif.cell.lengths()[2]))
-        elif (self.shape == 'ellipsoid'):
+        elif (self.shape == 'ellipsoid' or self.shape == 'supercell'):
             # first calculate the size of the supercell
             Ma = int(np.round(extendSizeByFactor * self.size[0]*2*10/cif.cell.lengths()[0]))
             Mb = int(np.round(extendSizeByFactor * self.size[1]*2*10/cif.cell.lengths()[1]))
@@ -145,6 +145,11 @@ class Crystal:
             print((f"Cube side length = {self.size[0]} nm"))
         elif (self.shape == "rectangular cuboid"):
             print((f"Rectangular cuboid side lengths = {self.size} nm"))
+        elif (self.shape == "supercell"):
+            print((f"Supercell side length = {self.size} nm"))
+            NP = self.makeSuperCell(cif)
         else:
             sys.exit("Shape {self.shape} is unknown")
+        self.nAtoms=len(NP.get_positions())
+        print(f"Total number of atoms = {self.nAtoms}")
         return NP

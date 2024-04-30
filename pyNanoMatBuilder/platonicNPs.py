@@ -416,6 +416,8 @@ class regfccTd:
         self.nAtoms = 0
         self.nAtomsPerLayer = []
         self.interLayerDistance = self.Rnn / self.heightOfPyramid
+        self.nAtomsPerEdge = 0
+        self.cog = np.array([0., 0., 0.])
           
     def __str__(self):
         return(f"Regular tetrahedron with {self.nLayer+1} layer(s) and Rnn = {self.Rnn}")
@@ -514,7 +516,9 @@ class regfccTd:
         self.nAtoms += nAtomsOnEdges * len(E)
         c.extend(coordEdgeAt)
         indexEdgeAtoms.extend(range(nAtoms0,self.nAtoms))
+        self.nAtomsPerEdge = nAtomsOnEdges  + 2 #2 vertices
         # print(indexEdgeAtoms)
+        print("self.nAtomsPerEdge = ",self.nAtomsPerEdge)
         
         # now, facet atoms
         coordFaceAt = []
@@ -544,6 +548,8 @@ class regfccTd:
         print(self.nAtoms)
         print(self.nAtomsPerLayer)
         aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
+
+        self.cog = pnmbu.centerOfGravity(c)
         
         return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms,indexCoreAtoms]
     
@@ -555,6 +561,7 @@ class regfccTd:
         print("number of faces = ",self.nFaces)
         print(f"nearest neighbour distance = {self.Rnn:.2f} Å")
         print(f"edge length = {self.edgeLength()*0.1:.2f} nm")
+        print(f"number of atoms per edge = {self.nAtomsPerEdge}")
         print(f"height of pyramid = {self.heightOfPyramid*0.1:.2f} nm")
         print(f"radius after volume = {pnmbu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
         print(f"radius of the circumscribed sphere = {self.radiusCircumscribedSphere()*0.1:.2f} nm")
@@ -568,6 +575,8 @@ class regfccTd:
         print("number of atoms per layer = ",self.nAtomsPerLayerAnalytic())
         print("total number of atoms = ",self.nAtomsAnalytic())
         print("Dual polyhedron: terahedron")
+        print("Indexes of vertex atom = [0,1,2,3] by construction")
+        print(f"coordinates of the center of gravity = {self.cog}")
 
 ###########################################################################################################
 class regDD:
