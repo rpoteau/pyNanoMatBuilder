@@ -100,7 +100,7 @@ Title Oh
 #
 #
 #Polyhedron CF2 Etch 
-Polyhedron NRHCP
+Polyhedron RD
 Center_At 0.0 0.0 0.0
 #Generate_Random_Structures N 1000 Displacement 0.1 Folder Pt155-DODECA-2Shells
 #Etch RotNP   0.0   0.0   0.0 ShiftXY_To 0.0 0.0 ShiftZ_By  -24.0 Scale  1.0
@@ -119,7 +119,7 @@ Center_At 0.0 0.0 0.0
 Atomic_Symbol Pt
 Interatomic_Distance 2.7
 #Size_NP 18
-Size_NP 2
+Size_NP 4
 Parameter1 1
 Parameter2 2
 na_nb_nc 3 3 3 

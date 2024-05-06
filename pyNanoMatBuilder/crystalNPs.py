@@ -1,7 +1,7 @@
 import sys
 import math
 import numpy as np
-import pyNanoMatBuilder.utils as pnmbu
+import pyNanoMatBuilder.utils as pNMBu
 from ase.build import bulk
 from ase import io
 from ase.visualize import view
@@ -16,11 +16,13 @@ class Crystal:
                  crystal: str='Au',
                  shape: str='sphere',
                  size: float=[2],
+                 direction: float=[1,1,1],
                  dbFolder: str='cif_database'):
         self.dbFolder = dbFolder #database folder that contains cif files
-        self.crystal = crystal # see list with the pnmbu.ciflist() command
+        self.crystal = crystal # see list with the pNMBu.ciflist() command
         self.shape = shape # 'sphere', 'ellipsoid', 'cube'
         self.size = size
+        self.direction = direction
         self.nAtoms = 0
           
     def __str__(self):
@@ -42,12 +44,14 @@ class Crystal:
         '''
         import os
 
-        path2cif = os.path.join(pnmbu.pNMB_location(),self.dbFolder)
+        path2cif = os.path.join(pNMBu.pNMB_location(),self.dbFolder)
         match self.crystal.upper():
             case "RU":
-                cifname = "9008513_Ru.cif"
+                cifname = "9008513_Ru_hcp.cif"
+            case "PT":
+                cifname = "9012957_Pt_fcc.cif"
             case "AU":
-                cifname = "9008463_Au.cif"
+                cifname = "9008463_Au_fcc.cif"
             case _:
                 sys.exit(f"The database does not contain bulk parameters for the {self.crystal} crystal.\nPlease provide parameters")
         cif = io.read(os.path.join(path2cif,cifname))
@@ -101,7 +105,7 @@ class Crystal:
         com = cif.get_center_of_mass()
         delAtom = []
         for atom in cif.positions:
-            delAtom.extend(pnmbu.Rbetween2Points(com,atom)/10 > self.size)
+            delAtom.extend(pNMBu.Rbetween2Points(com,atom)/10 > self.size)
         del cif[delAtom]
         view(cif)
         return cif
@@ -148,6 +152,8 @@ class Crystal:
         elif (self.shape == "supercell"):
             print((f"Supercell side length = {self.size} nm"))
             NP = self.makeSuperCell(cif)
+        elif (self.shape == "cylinder"):
+            print((f"Cylinder in the {self.direction} direction. Length x width = {self.size[1]} x {self.size[0]} nm"))
         else:
             sys.exit("Shape {self.shape} is unknown")
         self.nAtoms=len(NP.get_positions())

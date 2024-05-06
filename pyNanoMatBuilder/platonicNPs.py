@@ -1,6 +1,6 @@
 import sys
 import numpy as np
-import pyNanoMatBuilder.utils as pnmbu
+import pyNanoMatBuilder.utils as pNMBu
 import ase
 from ase.build import bulk, make_supercell, cut
 from ase.visualize import view
@@ -95,12 +95,12 @@ class regfccOh:
             sys.exit(f"regfccOh.MakeVertices(i) is called with i = {i} > nOrder = {self.nOrder}")
         else:
             scale = self.interLayerDistance * i
-            CoordVertices = [ pnmbu.vertex(-1, 0, 0, scale),\
-                              pnmbu.vertex( 1, 0, 0, scale),\
-                              pnmbu.vertex( 0,-1, 0, scale),\
-                              pnmbu.vertex( 0, 1, 0, scale),\
-                              pnmbu.vertex( 0, 0,-1, scale),\
-                              pnmbu.vertex( 0, 0, 1, scale)]
+            CoordVertices = [ pNMBu.vertex(-1, 0, 0, scale),\
+                              pNMBu.vertex( 1, 0, 0, scale),\
+                              pNMBu.vertex( 0,-1, 0, scale),\
+                              pNMBu.vertex( 0, 1, 0, scale),\
+                              pNMBu.vertex( 0, 0,-1, scale),\
+                              pNMBu.vertex( 0, 0, 1, scale)]
             edges = [( 2, 0), ( 2, 1), ( 3, 0), ( 3, 1), ( 4, 0), ( 4, 1), ( 4, 2), ( 4, 3), ( 5, 0), ( 5, 1), ( 5, 2), ( 5, 3)]
             faces = [( 2, 0, 4), ( 2, 0, 5), ( 2, 1, 4), ( 2, 1, 5), ( 3, 0, 4), ( 3, 0, 5), ( 3, 1, 4), ( 3, 1, 5)]
             CoordVertices = np.array(CoordVertices)
@@ -125,7 +125,7 @@ class regfccOh:
 
         # intermediate atoms on edges e
         nAtoms0 = self.nAtoms
-        Rvv = pnmbu.RAB(cVertices,E[0,0],E[0,1]) #distance between two vertex atoms
+        Rvv = pNMBu.RAB(cVertices,E[0,0],E[0,1]) #distance between two vertex atoms
         nAtomsOnEdges = int((Rvv+1e-6) / self.Rnn)-1
         nIntervals = nAtomsOnEdges + 1
         #print("nAtomsOnEdges = ",nAtomsOnEdges)
@@ -134,7 +134,7 @@ class regfccOh:
             for e in E:
                 a = e[0]
                 b = e[1]
-                coordEdgeAt.append(cVertices[a]+pnmbu.vector(cVertices,a,b)*(n+1) / nIntervals)
+                coordEdgeAt.append(cVertices[a]+pNMBu.vector(cVertices,a,b)*(n+1) / nIntervals)
         self.nAtoms += nAtomsOnEdges * len(E)
         c.extend(coordEdgeAt)
         indexEdgeAtoms.extend(range(nAtoms0,self.nAtoms))
@@ -145,7 +145,7 @@ class regfccOh:
         nAtomsOnFaces = 0
         nAtoms0 = self.nAtoms
         for f in F:
-            nAtomsOnFaces,coordFaceAt = pnmbu.MakeFaceCoord(self.Rnn,f,c,nAtomsOnFaces,coordFaceAt)
+            nAtomsOnFaces,coordFaceAt = pNMBu.MakeFaceCoord(self.Rnn,f,c,nAtomsOnFaces,coordFaceAt)
         self.nAtoms += nAtomsOnFaces
         c.extend(coordFaceAt)
         indexFaceAtoms.extend(range(nAtoms0,self.nAtoms))
@@ -160,7 +160,7 @@ class regfccOh:
         #                                          |  |
         #                                          d--c
         f = np.array([0,3,1,2])
-        nAtomsInCore,coordCoreAt = pnmbu.MakeFaceCoord(self.Rnn,f,c,nAtomsInCore,coordCoreAt)
+        nAtomsInCore,coordCoreAt = pNMBu.MakeFaceCoord(self.Rnn,f,c,nAtomsInCore,coordCoreAt)
         # don't ask... it is the algorithm to find the indexes of the square
         # corners of each layer along z
         def layerup(ilayer,f):
@@ -170,10 +170,10 @@ class regfccOh:
         for i in range(1,nAtomsOnEdges+1): 
             f = layerup(i,np.array([0,3,1,2]))
             # print(i,"  fup",f)
-            nAtomsInCore,coordCoreAt = pnmbu.MakeFaceCoord(self.Rnn,f,c,nAtomsInCore,coordCoreAt)
+            nAtomsInCore,coordCoreAt = pNMBu.MakeFaceCoord(self.Rnn,f,c,nAtomsInCore,coordCoreAt)
             f = layerdown(i,np.array([0,3,1,2]))
             # print(i,"fdown",f)
-            nAtomsInCore,coordCoreAt = pnmbu.MakeFaceCoord(self.Rnn,f,c,nAtomsInCore,coordCoreAt)
+            nAtomsInCore,coordCoreAt = pNMBu.MakeFaceCoord(self.Rnn,f,c,nAtomsInCore,coordCoreAt)
         self.nAtoms += nAtomsInCore
         c.extend(coordCoreAt)
         indexCoreAtoms.extend(range(nAtoms0,self.nAtoms))
@@ -195,7 +195,7 @@ class regfccOh:
         print(f"interlayer distance = {self.interLayerDistance:.2f} Å")
         
         print(f"edge length = {self.edgeLength()*0.1:.2f} nm")
-        print(f"radius after volume = {pnmbu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
+        print(f"radius after volume = {pNMBu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
         print(f"radius of the circumscribed sphere = {self.radiusCircumscribedSphere()*0.1:.2f} nm")
         print(f"radius of the inscribed sphere = {self.radiusInscribedSphere()*0.1:.2f} nm")
         print(f"area = {self.area()*1e-2:.1f} nm2")
@@ -293,18 +293,18 @@ class regIco:
         else:
             phi = self.phi
             scale = self.interShellDistance * i
-            CoordVertices = [ pnmbu.vertex(-1, phi, 0, scale),\
-                              pnmbu.vertex( 1, phi, 0, scale),\
-                              pnmbu.vertex(-1, -phi, 0, scale),\
-                              pnmbu.vertex( 1, -phi, 0, scale),\
-                              pnmbu.vertex(0, -1, phi, scale),\
-                              pnmbu.vertex(0, 1, phi, scale),\
-                              pnmbu.vertex(0, -1, -phi, scale),\
-                              pnmbu.vertex(0, 1, -phi, scale),\
-                              pnmbu.vertex( phi, 0, -1, scale),\
-                              pnmbu.vertex( phi, 0, 1, scale),\
-                              pnmbu.vertex(-phi, 0, -1, scale),\
-                              pnmbu.vertex(-phi, 0, 1, scale) ]
+            CoordVertices = [ pNMBu.vertex(-1, phi, 0, scale),\
+                              pNMBu.vertex( 1, phi, 0, scale),\
+                              pNMBu.vertex(-1, -phi, 0, scale),\
+                              pNMBu.vertex( 1, -phi, 0, scale),\
+                              pNMBu.vertex(0, -1, phi, scale),\
+                              pNMBu.vertex(0, 1, phi, scale),\
+                              pNMBu.vertex(0, -1, -phi, scale),\
+                              pNMBu.vertex(0, 1, -phi, scale),\
+                              pNMBu.vertex( phi, 0, -1, scale),\
+                              pNMBu.vertex( phi, 0, 1, scale),\
+                              pNMBu.vertex(-phi, 0, -1, scale),\
+                              pNMBu.vertex(-phi, 0, 1, scale) ]
             edges = [( 1, 0), ( 3, 2), ( 4, 2), ( 4, 3), ( 5, 0), ( 5, 1), ( 5, 4), ( 6, 2), ( 6, 3), ( 7, 0),\
                   ( 7, 1), ( 7, 6), ( 8, 1), ( 8, 3), ( 8, 6), ( 8, 7), ( 9, 1), ( 9, 3), ( 9, 4), ( 9, 5),\
                   ( 9, 8), (10, 0), (10, 2), (10, 6), (10, 7), (11, 0), (11, 2), (11, 4), (11, 5), (11,10),]
@@ -336,7 +336,7 @@ class regIco:
 
             # intermediate atoms on edges e
             nAtoms0 = self.nAtoms
-            Rvv = pnmbu.RAB(cshell,E[0,0],E[0,1]) #distance between two vertex atoms
+            Rvv = pNMBu.RAB(cshell,E[0,0],E[0,1]) #distance between two vertex atoms
             nAtomsOnEdges = int((Rvv+1e-6) / self.Rnn)-1
             nIntervals = nAtomsOnEdges + 1
             # print("nAtomsOnEdges = ",nAtomsOnEdges)
@@ -345,7 +345,7 @@ class regIco:
                 for e in E:
                     a = e[0]
                     b = e[1]
-                    coordEdgeAt.append(cshell[a]+pnmbu.vector(cshell,a,b)*(n+1) / nIntervals)
+                    coordEdgeAt.append(cshell[a]+pNMBu.vector(cshell,a,b)*(n+1) / nIntervals)
             self.nAtomsPerShell[i] += nAtomsOnEdges * len(E) # number of edges x nAtomsOnEdges
             self.nAtoms += nAtomsOnEdges * len(E)
             c.extend(coordEdgeAt)
@@ -356,7 +356,7 @@ class regIco:
             nAtomsOnFaces = 0
             nAtoms0 = self.nAtoms
             for f in F:
-                nAtomsOnFaces,coordFaceAt = pnmbu.MakeFaceCoord(self.Rnn,f,cshell,nAtomsOnFaces,coordFaceAt)
+                nAtomsOnFaces,coordFaceAt = pNMBu.MakeFaceCoord(self.Rnn,f,cshell,nAtomsOnFaces,coordFaceAt)
             self.nAtomsPerShell[i] += nAtomsOnFaces
             self.nAtoms += nAtomsOnFaces
             c.extend(coordFaceAt)
@@ -382,7 +382,7 @@ class regIco:
         print(f"nearest neighbour distance = {self.Rnn:.2f} Å")
         print(f"intershell distance = {self.interShellDistance:.2f} Å")
         print(f"edge length = {self.edgeLength()*0.1:.2f} nm")
-        print(f"radius after volume = {pnmbu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
+        print(f"radius after volume = {pNMBu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
         print(f"radius of the circumscribed sphere = {self.radiusCircumscribedSphere()*0.1:.2f} nm")
         print(f"radius of the inscribed sphere = {self.radiusInscribedSphere()*0.1:.2f} nm")
         print(f"area = {self.area()*1e-2:.1f} nm2")
@@ -416,7 +416,7 @@ class regfccTd:
         self.nAtoms = 0
         self.nAtomsPerLayer = []
         self.interLayerDistance = self.Rnn / self.heightOfPyramid
-        self.nAtomsPerEdge = 0
+        self.nAtomsPerEdge = self.nLayer+1
         self.cog = np.array([0., 0., 0.])
           
     def __str__(self):
@@ -472,13 +472,13 @@ class regfccTd:
             - faces = indexes of the 4 faces 
         """
         if (nL > self.nLayer):
-            sys.exit(f"regTd.MakeVertices(nL) is called with i = {nL} > nLayer = {self.nLayer}")
+            sys.exit(f"regTd.MakeVertices(nL) is called with nL = {nL} > nLayer = {self.nLayer}")
         else:
             scale = self.interLayerDistance * nL
-            CoordVertices = [pnmbu.vertex(1, 1, 1, scale),\
-                             pnmbu.vertex(1, -1, -1, scale),\
-                             pnmbu.vertex(-1, 1, -1, scale),\
-                             pnmbu.vertex(-1, -1, 1, scale)]
+            CoordVertices = [pNMBu.vertex(1, 1, 1, scale),\
+                             pNMBu.vertex(1, -1, -1, scale),\
+                             pNMBu.vertex(-1, 1, -1, scale),\
+                             pNMBu.vertex(-1, -1, 1, scale)]
             edges = [(0,1), (0,2), (0,3), (1,2), (1,3), (2,3)]
             faces = [(0,2,1),(0,1,3),(0,3,2),(1,2,3)]
             edges = np.array(edges)
@@ -503,7 +503,7 @@ class regfccTd:
 
         # intermediate atoms on edges e
         nAtoms0 = self.nAtoms
-        Rvv = pnmbu.RAB(cVertices,E[0,0],E[0,1]) #distance between two vertex atoms
+        Rvv = pNMBu.RAB(cVertices,E[0,0],E[0,1]) #distance between two vertex atoms
         nAtomsOnEdges = int((Rvv+1e-6) / self.Rnn)-1
         nIntervals = nAtomsOnEdges + 1
         #print("nAtomsOnEdges = ",nAtomsOnEdges)
@@ -512,7 +512,7 @@ class regfccTd:
             for e in E:
                 a = e[0]
                 b = e[1]
-                coordEdgeAt.append(cVertices[a]+pnmbu.vector(cVertices,a,b)*(n+1) / nIntervals)
+                coordEdgeAt.append(cVertices[a]+pNMBu.vector(cVertices,a,b)*(n+1) / nIntervals)
         self.nAtoms += nAtomsOnEdges * len(E)
         c.extend(coordEdgeAt)
         indexEdgeAtoms.extend(range(nAtoms0,self.nAtoms))
@@ -525,7 +525,7 @@ class regfccTd:
         nAtomsOnFaces = 0
         nAtoms0 = self.nAtoms
         for f in F:
-            nAtomsOnFaces,coordFaceAt = pnmbu.MakeFaceCoord(self.Rnn,f,c,nAtomsOnFaces,coordFaceAt)
+            nAtomsOnFaces,coordFaceAt = pNMBu.MakeFaceCoord(self.Rnn,f,c,nAtomsOnFaces,coordFaceAt)
         self.nAtoms += nAtomsOnFaces
         c.extend(coordFaceAt)
         indexFaceAtoms.extend(range(nAtoms0,self.nAtoms))
@@ -540,7 +540,7 @@ class regfccTd:
             FirstAtom = 4 + (ilayer-2)*6
             f = np.array([FirstAtom, FirstAtom+1, FirstAtom+2])
             # print("layer ",ilayer,f)
-            nAtomsInCore,coordCoreAt = pnmbu.MakeFaceCoord(self.Rnn,f,c,nAtomsInCore,coordCoreAt)
+            nAtomsInCore,coordCoreAt = pNMBu.MakeFaceCoord(self.Rnn,f,c,nAtomsInCore,coordCoreAt)
         self.nAtoms += nAtomsInCore
         c.extend(coordCoreAt)
         indexCoreAtoms.extend(range(nAtoms0,self.nAtoms))
@@ -549,7 +549,7 @@ class regfccTd:
         print(self.nAtomsPerLayer)
         aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
 
-        self.cog = pnmbu.centerOfGravity(c)
+        self.cog = pNMBu.centerOfGravity(c)
         
         return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms,indexCoreAtoms]
     
@@ -563,7 +563,7 @@ class regfccTd:
         print(f"edge length = {self.edgeLength()*0.1:.2f} nm")
         print(f"number of atoms per edge = {self.nAtomsPerEdge}")
         print(f"height of pyramid = {self.heightOfPyramid*0.1:.2f} nm")
-        print(f"radius after volume = {pnmbu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
+        print(f"radius after volume = {pNMBu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
         print(f"radius of the circumscribed sphere = {self.radiusCircumscribedSphere()*0.1:.2f} nm")
         print(f"radius of the inscribed sphere = {self.radiusInscribedSphere()*0.1:.2f} nm")
         print(f"radius of the midsphere that is tangent to edges = {self.radiusMidSphere()*0.1:.2f} nm")
@@ -574,7 +574,7 @@ class regfccTd:
         print(f"vertex-center-vertex (tetrahedral bond) angle = {self.vcvAngle:.1f}°")
         print("number of atoms per layer = ",self.nAtomsPerLayerAnalytic())
         print("total number of atoms = ",self.nAtomsAnalytic())
-        print("Dual polyhedron: terahedron")
+        print("Dual polyhedron: tetrahedron")
         print("Indexes of vertex atom = [0,1,2,3] by construction")
         print(f"coordinates of the center of gravity = {self.cog}")
 
@@ -655,26 +655,26 @@ class regDD:
         else:
             phi = self.phi
             scale = self.interShellDistance * i
-            CoordVertices = [pnmbu.vertex(1, 1, 1, scale),\
-                             pnmbu.vertex(-1, 1, 1, scale),\
-                             pnmbu.vertex(1, -1, 1, scale),\
-                             pnmbu.vertex(1, 1, -1, scale),\
-                             pnmbu.vertex(-1, -1, 1, scale),\
-                             pnmbu.vertex(-1, 1, -1, scale),\
-                             pnmbu.vertex(1, -1, -1, scale),\
-                             pnmbu.vertex(-1, -1, -1, scale),\
-                             pnmbu.vertex(0, phi, 1/phi, scale),\
-                             pnmbu.vertex(0, -phi, 1/phi, scale),\
-                             pnmbu.vertex(0, phi, -1/phi, scale),\
-                             pnmbu.vertex(0, -phi, -1/phi, scale),\
-                             pnmbu.vertex(1/phi, 0, phi, scale),\
-                             pnmbu.vertex(-1/phi, 0, phi, scale),\
-                             pnmbu.vertex(1/phi, 0, -phi, scale),\
-                             pnmbu.vertex(-1/phi, 0, -phi, scale),\
-                             pnmbu.vertex(phi, 1/phi, 0, scale),\
-                             pnmbu.vertex(phi, -1/phi, 0, scale),\
-                             pnmbu.vertex(-phi, 1/phi, 0, scale),\
-                             pnmbu.vertex(-phi, -1/phi, 0, scale)]
+            CoordVertices = [pNMBu.vertex(1, 1, 1, scale),\
+                             pNMBu.vertex(-1, 1, 1, scale),\
+                             pNMBu.vertex(1, -1, 1, scale),\
+                             pNMBu.vertex(1, 1, -1, scale),\
+                             pNMBu.vertex(-1, -1, 1, scale),\
+                             pNMBu.vertex(-1, 1, -1, scale),\
+                             pNMBu.vertex(1, -1, -1, scale),\
+                             pNMBu.vertex(-1, -1, -1, scale),\
+                             pNMBu.vertex(0, phi, 1/phi, scale),\
+                             pNMBu.vertex(0, -phi, 1/phi, scale),\
+                             pNMBu.vertex(0, phi, -1/phi, scale),\
+                             pNMBu.vertex(0, -phi, -1/phi, scale),\
+                             pNMBu.vertex(1/phi, 0, phi, scale),\
+                             pNMBu.vertex(-1/phi, 0, phi, scale),\
+                             pNMBu.vertex(1/phi, 0, -phi, scale),\
+                             pNMBu.vertex(-1/phi, 0, -phi, scale),\
+                             pNMBu.vertex(phi, 1/phi, 0, scale),\
+                             pNMBu.vertex(phi, -1/phi, 0, scale),\
+                             pNMBu.vertex(-phi, 1/phi, 0, scale),\
+                             pNMBu.vertex(-phi, -1/phi, 0, scale)]
             edges = [(8,0), (8,1), (9,2), (9,4), (10,3), (10,5), (10,8), (11,6), (11,7),\
                      (11,9), (12,0), (12,2), (13,1), (13,4), (13,12), (14,3), (14,6), (15,5),\
                      (15,7), (15,14), (16,0), (16,3), (17,2), (17,6), (17,16), (18,1), (18,5),\
@@ -706,7 +706,7 @@ class regDD:
 
             # intermediate atoms on edges e
             nAtoms0 = self.nAtoms
-            Rvv = pnmbu.RAB(cshell,E[0,0],E[0,1]) #distance between two vertex atoms
+            Rvv = pNMBu.RAB(cshell,E[0,0],E[0,1]) #distance between two vertex atoms
             nAtomsOnEdges = int((Rvv+1e-6) / self.Rnn)-1
             nIntervals = nAtomsOnEdges + 1
             #print("nAtomsOnEdges = ",nAtomsOnEdges)
@@ -715,7 +715,7 @@ class regDD:
                 for e in E:
                     a = e[0]
                     b = e[1]
-                    coordEdgeAt.append(cshell[a]+pnmbu.vector(cshell,a,b)*(n+1) / nIntervals)
+                    coordEdgeAt.append(cshell[a]+pNMBu.vector(cshell,a,b)*(n+1) / nIntervals)
             self.nAtomsPerShell[i] += nAtomsOnEdges * len(E) # number of edges x nAtomsOnEdges
             self.nAtoms += nAtomsOnEdges * len(E)
             c.extend(coordEdgeAt)
@@ -728,7 +728,7 @@ class regDD:
             coordFaceAt = []
             for f in F:
                 nAtomsOnFaces += 1
-                coordCenterFace = pnmbu.centerOfGravity(cshell,f)
+                coordCenterFace = pNMBu.centerOfGravity(cshell,f)
                 #print("coordCenterFace",coordCenterFace)
                 self.nAtomsPerShell[i] += 1
                 coordFaceAt.append(coordCenterFace)
@@ -744,15 +744,15 @@ class regDD:
                     apexPlus1 = f[indexApexPlus1]
                     for n in range(nAtomsOnInternalRadius):
                         nAtomsOnFaces += 1
-                        coordAtomOnApex = coordCenterFace+pnmbu.vectorBetween2Points(coordCenterFace,cshell[apex])*(n+1) / nIntervals
-                        coordAtomOnApexPlus1 = coordCenterFace+pnmbu.vectorBetween2Points(coordCenterFace,cshell[apexPlus1])*(n+1) / nIntervals
+                        coordAtomOnApex = coordCenterFace+pNMBu.vectorBetween2Points(coordCenterFace,cshell[apex])*(n+1) / nIntervals
+                        coordAtomOnApexPlus1 = coordCenterFace+pNMBu.vectorBetween2Points(coordCenterFace,cshell[apexPlus1])*(n+1) / nIntervals
                         coordFaceAt.append(coordAtomOnApex)
-                        RbetweenRadialAtoms = pnmbu.Rbetween2Points(coordAtomOnApex,coordAtomOnApexPlus1)
+                        RbetweenRadialAtoms = pNMBu.Rbetween2Points(coordAtomOnApex,coordAtomOnApexPlus1)
                         nAtomsBetweenRadialAtoms = int((RbetweenRadialAtoms+1e-6) / self.Rnn)-1
                         nIntervalsRadial = nAtomsBetweenRadialAtoms + 1
                         for k in range(nAtomsBetweenRadialAtoms):
                             nAtomsOnFaces += 1
-                            coordFaceAt.append(coordAtomOnApex+pnmbu.vectorBetween2Points(coordAtomOnApex,coordAtomOnApexPlus1)*(k+1) / nIntervalsRadial)
+                            coordFaceAt.append(coordAtomOnApex+pNMBu.vectorBetween2Points(coordAtomOnApex,coordAtomOnApexPlus1)*(k+1) / nIntervalsRadial)
             self.nAtoms += nAtomsOnFaces
             c.extend(coordFaceAt)
             indexFaceAtoms.extend(range(nAtoms0,self.nAtoms))
@@ -774,7 +774,7 @@ class regDD:
         print(f"nearest neighbour distance = {self.Rnn:.2f} Å")
         print(f"intershell distance = {self.interShellDistance:.2f} Å")
         print(f"edge length = {self.edgeLength()*0.1:.2f} nm")
-        print(f"radius after volume = {pnmbu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
+        print(f"radius after volume = {pNMBu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
         print(f"radius of the circumscribed sphere = {self.radiusCircumscribedSphere()*0.1:.2f} nm")
         print(f"radius of the inscribed sphere = {self.radiusInscribedSphere()*0.1:.2f} nm")
         print(f"area = {self.area()*1e-2:.1f} nm2")
@@ -902,7 +902,7 @@ class cube:
         print(f"nearest neighbour distance = {self.Rnn:.2f} Å")
         print(f"lattice constant = {self.latticeConstant():.2f} Å")
         print(f"edge length = {self.edgeLength()*0.1:.2f} nm")
-        print(f"radius after volume = {pnmbu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
+        print(f"radius after volume = {pNMBu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
         print(f"radius of the circumscribed sphere = {self.radiusCircumscribedSphere()*0.1:.2f} nm")
         print(f"radius of the inscribed sphere = {self.radiusInscribedSphere()*0.1:.2f} nm")
         print(f"area = {self.area()*1e-2:.1f} nm2")

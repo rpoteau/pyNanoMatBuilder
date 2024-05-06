@@ -1,0 +1,77 @@
+Function Facettes345PtLight
+Var atoms = {Platinum}; \
+Var n = atoms.length ;\
+Var minDistance = 3.5 ;\
+ ;\
+for (Var i = 1; i <= n; i++) { ;\
+  Var a = atoms[i] ;\
+  for (Var j = i + 1; j <= n; j++) { ;\
+    Var b = atoms[j] ;\
+     if (b.distance(a) < minDistance) { ;\
+       for (Var k = j + 1; k <= n; k++) { ;\
+         Var c = atoms[k] ;\
+         if (c.distance(a) < minDistance && c.distance(b) < minDistance) { ;\
+            draw ID @{"t" + i + j + k} @a @b @c ;\
+            color $@{"t" + i + j + k} [x828282] translucent 77 ;\
+	 } ;\
+       } ;\
+     } ;\
+  } ;\
+} ;\
+ ;\
+for (Var i = 1; i <= n; i++) { ;\
+  Var a = atoms[i] ;\
+  for (Var j = i + 1; j <= n; j++) { ;\
+    Var b = atoms[j] ;\
+    if (b.distance(a) < minDistance) { ;\
+      for (Var k = 1; k <= n; k++) { ;\
+        Var c = atoms[k] ;\
+        if (c.distance(b) < minDistance && c.distance(a) > mindistance) { ;\
+          jk = k;\
+          if (j < k) {;\
+             jk = j;\
+          };\
+          for (Var l = jk; l <= n; l++) { ;\
+            Var d = atoms[l] ;\
+            if (d.distance(a) < minDistance && d.distance(c) < minDistance && b.distance(d) > minDistance && a.distance(c) > minDistance) { ;\
+            draw ID @{"c" + i + j + k + l} @a @b @c @d ;\
+            color $@{"c" + i + j + k + l}  translucent 77 [x828282];\
+	     } ;\
+           } ;\
+         } ;\
+       } ;\
+     } ;\
+  } ;\
+} ;\
+ ;\
+for (Var i = 1; i <= n; i++) { ;\
+  Var a = atoms[i] ;\
+  for (Var j = i + 1; j <= n; j++) { ;\
+    Var b = atoms[j] ;\
+    if (b.distance(a) < minDistance) { ;\
+      for (Var k = 1; k <= n; k++) { ;\
+        Var c = atoms[k] ;\
+        if (c.distance(b) < minDistance && c.distance(a) > mindistance) { ;\
+          jk = k;\
+          if (j < k) {;\
+             jk = j;\
+          };\
+          for (Var l = jk; l <= n; l++) { ;\
+            Var d = atoms[l] ;\
+            if (d.distance(a) > minDistance && d.distance(b) > minDistance && d.distance(c) < minDistance && a.distance(c) > minDistance && b.distance(a) < minDistance && c.distance(b) < minDistance) { ;\
+          	for (Var m = 1; m <= n; m++) { ;\
+            	    Var e = atoms[m] ;\
+                    if (e.distance(d) < minDistance && e.distance(a) < minDistance && e.distance(b) > minDistance && e.distance(c) > minDistance) { ;\
+            		draw ID @{"p" + i + j + k + l + m} @a @b @c @d @e ;\
+            		color $@{"p" + i + j + k + l + m}  translucent 77 [x828282];\
+	            } ;\
+	     	} ;\
+	     } ;\
+           } ;\
+         } ;\
+       } ;\
+     } ;\
+  } ;\
+} ;\
+ ;\
+end function

@@ -1,9 +1,14 @@
+import visualID as vID
+from visualID import  fg, hl, bg
+
 import sys
 import numpy as np
-import pyNanoMatBuilder.utils as pnmbu
+import pyNanoMatBuilder.utils as pNMBu
 import ase
 from ase.build import bulk, make_supercell, cut
 from ase.visualize import view
+
+from pyNanoMatBuilder import platonicNPs as pNP
 
 ###########################################################################################################
 class fccCubo:
@@ -89,18 +94,18 @@ class fccCubo:
             sys.exit(f"icoreg.MakeVertices(i) is called with i = {i} > nShell = {self.nShell}")
         else:            
             scale = self.interShellDistance * i
-            CoordVertices = [ pnmbu.vertex(-1, 1, 0, scale),\
-                              pnmbu.vertex( 1, 1, 0, scale),\
-                              pnmbu.vertex(-1,-1, 0, scale),\
-                              pnmbu.vertex( 1,-1, 0, scale),\
-                              pnmbu.vertex( 0,-1, 1, scale),\
-                              pnmbu.vertex( 0, 1, 1, scale),\
-                              pnmbu.vertex( 0,-1,-1, scale),\
-                              pnmbu.vertex( 0, 1,-1, scale),\
-                              pnmbu.vertex( 1, 0,-1, scale),\
-                              pnmbu.vertex( 1, 0, 1, scale),\
-                              pnmbu.vertex(-1, 0,-1, scale),\
-                              pnmbu.vertex(-1, 0, 1, scale) ]
+            CoordVertices = [ pNMBu.vertex(-1, 1, 0, scale),\
+                              pNMBu.vertex( 1, 1, 0, scale),\
+                              pNMBu.vertex(-1,-1, 0, scale),\
+                              pNMBu.vertex( 1,-1, 0, scale),\
+                              pNMBu.vertex( 0,-1, 1, scale),\
+                              pNMBu.vertex( 0, 1, 1, scale),\
+                              pNMBu.vertex( 0,-1,-1, scale),\
+                              pNMBu.vertex( 0, 1,-1, scale),\
+                              pNMBu.vertex( 1, 0,-1, scale),\
+                              pNMBu.vertex( 1, 0, 1, scale),\
+                              pNMBu.vertex(-1, 0,-1, scale),\
+                              pNMBu.vertex(-1, 0, 1, scale) ]
             CoordVertices = np.array(CoordVertices)
             edges = [( 4, 2), ( 4, 3), ( 5, 0), ( 5, 1), ( 6, 2), ( 6, 3), ( 7, 0), ( 7, 1),\
                      ( 8, 1), ( 8, 3), ( 8, 6), ( 8, 7), ( 9, 1), ( 9, 3), ( 9, 4), ( 9, 5),\
@@ -137,7 +142,7 @@ class fccCubo:
             # intermediate atoms on edges e
             nAtoms0 = self.nAtoms
             # print("nAtoms0 = ",nAtoms0)
-            Rvv = pnmbu.RAB(cshell,E[0,0],E[0,1]) #distance between two vertex atoms
+            Rvv = pNMBu.RAB(cshell,E[0,0],E[0,1]) #distance between two vertex atoms
             nAtomsOnEdges = int((Rvv+1e-6) / self.Rnn)-1
             nIntervals = nAtomsOnEdges + 1
             # print("nAtomsOnEdges = ",nAtomsOnEdges,"  len(E) = ",len(E))
@@ -146,7 +151,7 @@ class fccCubo:
                 for e in E:
                     a = e[0]
                     b = e[1]
-                    coordEdgeAt.append(cshell[a]+pnmbu.vector(cshell,a,b)*(n+1) / nIntervals)
+                    coordEdgeAt.append(cshell[a]+pNMBu.vector(cshell,a,b)*(n+1) / nIntervals)
             self.nAtomsPerShell[i] += nAtomsOnEdges * len(E) # number of edges x nAtomsOnEdges
             self.nAtoms += nAtomsOnEdges * len(E)
             c.extend(coordEdgeAt)
@@ -157,7 +162,7 @@ class fccCubo:
             nAtomsOnFaces3 = 0
             nAtoms0 = self.nAtoms
             for f in F3:
-                nAtomsOnFaces3,coordFace3At = pnmbu.MakeFaceCoord(self.Rnn,f,cshell,nAtomsOnFaces3,coordFace3At)
+                nAtomsOnFaces3,coordFace3At = pNMBu.MakeFaceCoord(self.Rnn,f,cshell,nAtomsOnFaces3,coordFace3At)
             self.nAtomsPerShell[i] += nAtomsOnFaces3
             self.nAtoms += nAtomsOnFaces3
             c.extend(coordFace3At)
@@ -168,7 +173,7 @@ class fccCubo:
             nAtomsOnFaces4 = 0
             nAtoms0 = self.nAtoms
             for f in F4:
-                nAtomsOnFaces4,coordFace4At = pnmbu.MakeFaceCoord(self.Rnn,f,cshell,nAtomsOnFaces4,coordFace4At)
+                nAtomsOnFaces4,coordFace4At = pNMBu.MakeFaceCoord(self.Rnn,f,cshell,nAtomsOnFaces4,coordFace4At)
             self.nAtomsPerShell[i] += nAtomsOnFaces4
             self.nAtoms += nAtomsOnFaces4
             c.extend(coordFace4At)
@@ -193,7 +198,7 @@ class fccCubo:
         print(f"nearest neighbour distance = {self.Rnn:.2f} Å")
         print(f"intershell distance = {self.interShellDistance:.2f} Å")
         print(f"edge length = {self.edgeLength()*0.1:.2f} nm")
-        print(f"radius after volume = {pnmbu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
+        print(f"radius after volume = {pNMBu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
         print(f"radius of the circumscribed sphere = {self.radiusCircumscribedSphere()*0.1:.2f} nm")
         print(f"radius of the inscribed sphere = {self.radiusInscribedSphere()*0.1:.2f} nm")
         print(f"area = {self.area()*1e-2:.1f} nm2")
@@ -203,3 +208,116 @@ class fccCubo:
         print("total number of atoms = ",self.nAtomsAnalytic())
         print("Dual polyhedron: rhombic dodecahedron")
 
+###########################################################################################################
+class fccTrTd:
+    nFaces3 = 4
+    nFaces6 = 4
+    nEdges = 18
+    nVertices = 12
+    edgeLengthF = 1 # length of an edge
+    radiusCSF = edgeLengthF * (1/4)* np.sqrt(22) #Centroid to vertex distance = Radius of circumsphere
+    radiusMSF = edgeLengthF * (3/4) * np.sqrt(2) #Radius of midsphere that is tangent to edges
+  
+    def __init__(self,
+                 element: str='Au',
+                 Rnn: float=2.7,
+                 nLayer: int=1):
+        self.Td = pNP.regfccTd(element,Rnn,nLayer)
+        self.element = element
+        self.Rnn = Rnn
+        self.nAtoms = 0
+        self.interLayerDistance = self.Td.interLayerDistance
+        self.cog = np.array([0., 0., 0.])
+        self.nLayer = int(nLayer-1)
+          
+    def __str__(self):
+        return(f"Truncated tetrahedron based on a {self.nLayer+1} layer(s) Td and Rnn = {self.Rnn}")
+   
+    def nAtomsF(self,i):
+        return round((i+1)*(23*i**2 + 19*i + 6)/6)
+
+    def nAtomsAnalytic(self):
+        n = self.nAtomsF(self.nLayer)
+        return n
+
+    def edgeLength(self):
+        # a truncated Td is constructed by truncating all 4 vertices of a regular tetrahedron
+        # at one third of the original edge length, hence the remaining edge length is Td.edgeLength/3
+        return self.Td.edgeLength()/3
+
+    def radiusCircumscribedSphere(self):
+        return self.radiusCSF*self.edgeLength()
+
+    def radiusMidSphere(self):
+        return self.radiusMSF*self.edgeLength()
+
+    def area(self):
+        el = self.edgeLength()
+        return el**2*7*np.sqrt(3)
+    
+    def volume(self):
+        el = self.edgeLength()
+        return el**3*(23/12)*np.sqrt(2)
+
+    def magicEdgeNumberOfTd2MakeATrTd(self, index: int):
+        '''
+        returns the number of edge atoms of the tetrahedron that will lead to perfect
+        trucated tetrahedra with all edges of equal atomic length
+        '''
+        import numpy as np
+        N = []
+        for i in range(1,index+1):
+            N.append(3*i-2)
+        return np.array(N)
+    
+    def NumberOfTdEdgeAtomsValid4ATrTd(self):
+        import numpy as np
+        N = self.nLayer+1
+        nTrTd = N - 2*(N-1)/3
+        return nTrTd.is_integer(), nTrTd
+
+    def coords(self):
+        Td = pNP.regfccTd(self.element,self.Rnn,self.nLayer+1)
+        vID.centertxt("Generation of the coordinates of the tetrahedron",bgc='#007a7a',size='14',weight='bold')
+        aseTd,atTd = Td.coords()
+        view(aseTd)
+        del atTd
+        vID.centertxt("Removing atoms ",bgc='#007a7a',size='14',weight='bold')
+        print('First searching for the coordinates of the edges (atoms 1-4) and of the cog')
+        coordVertices = aseTd.get_positions()[0:4]
+        print("Now calculating the coordinates of the planes orthogonal the the cog-vertex directions")
+        planesAtVertices = pNMBu.planeAtVertices(coordVertices, Td.cog)
+        n = 3 #trTd = truncation all 4 vertices of a regular tetrahedron at one third of the original edge length
+        cutFromVertexAt = (12*n-16)/(12*n)
+        AtomsAbovePlanes = pNMBu.truncateAboveEachPlane(planesAtVertices,1/n,cutFromVertexAt,\
+                                                        aseTd.get_positions(),Td.nAtomsPerEdge,False)
+        
+        aseTrTd = aseTd.copy() 
+        del aseTrTd[AtomsAbovePlanes]
+        return aseTrTd,aseTd
+
+    def prop(self):
+        print(self)
+        print("element = ",self.element)
+        print("number of vertices = ",self.nVertices)
+        print("number of edges = ",self.nEdges)
+        print("number of triangular faces = ",self.nFaces3)
+        print("number of hexagonal faces = ",self.nFaces6)
+        print(f"nearest neighbour distance = {self.Rnn:.2f} Å")
+        isTrTd,self.nAtomsPerEdge = self.NumberOfTdEdgeAtomsValid4ATrTd()
+        if (isTrTd):
+            self.nAtomsPerEdge = int(self.nAtomsPerEdge)
+            print(f"edge length = {self.edgeLength()*0.1:.2f} nm")
+            print(f"number of atoms per edge = {self.nAtomsPerEdge}")
+            print(f"area = {self.area()*1e-2:.1f} nm2")
+            print(f"volume = {self.volume()*1e-3:.1f} nm3")
+            print("total number of atoms = ",self.nAtomsAnalytic())
+            print("dual polyhedron: triakis tetrahedron")
+            print(f"coordinates of the center of gravity = {self.cog}")
+        else:
+            listOfPossiblenLayers = self.magicEdgeNumberOfTd2MakeATrTd(100)
+            nearest_nL = min(listOfPossiblenLayers, key = lambda x: abs(x-(self.nLayer+1)))
+            sys.exit(f"This number of layers cannot yield a perfect truncated tetrahedron.\n"\
+                     f"The closest possible nLayer value is {nearest_nL}.\n"\
+                     f"Try again."\
+                     f"Any doubt about the valid nLayers values? Call the archimedeanNP.magicEdgeNumberOfTd2MakeATrTd(N) to see all possible values")

@@ -1,6 +1,6 @@
 import sys
 import numpy as np
-import pyNanoMatBuilder.utils as pnmbu
+import pyNanoMatBuilder.utils as pNMBu
 
 import ase
 from ase.build import bulk
@@ -103,20 +103,20 @@ class bccrdd:
         else:
             scale3 = self.interShellDistance3 * i
             scale4 = self.interShellDistance4 * i
-            CoordVertices = [ pnmbu.vertex( 1, 1, 1, scale3),\
-                              pnmbu.vertex( 1,-1, 1, scale3),\
-                              pnmbu.vertex(-1, 1, 1, scale3),\
-                              pnmbu.vertex(-1,-1, 1, scale3),\
-                              pnmbu.vertex( 1, 1,-1, scale3),\
-                              pnmbu.vertex( 1,-1,-1, scale3),\
-                              pnmbu.vertex(-1, 1,-1, scale3),\
-                              pnmbu.vertex(-1,-1,-1, scale3),\
-                              pnmbu.vertex( 2, 0, 0, scale4),\
-                              pnmbu.vertex(-2, 0, 0, scale4),\
-                              pnmbu.vertex( 0, 2, 0, scale4),\
-                              pnmbu.vertex( 0,-2, 0, scale4),\
-                              pnmbu.vertex( 0, 0, 2, scale4),\
-                              pnmbu.vertex( 0, 0,-2, scale4)]
+            CoordVertices = [ pNMBu.vertex( 1, 1, 1, scale3),\
+                              pNMBu.vertex( 1,-1, 1, scale3),\
+                              pNMBu.vertex(-1, 1, 1, scale3),\
+                              pNMBu.vertex(-1,-1, 1, scale3),\
+                              pNMBu.vertex( 1, 1,-1, scale3),\
+                              pNMBu.vertex( 1,-1,-1, scale3),\
+                              pNMBu.vertex(-1, 1,-1, scale3),\
+                              pNMBu.vertex(-1,-1,-1, scale3),\
+                              pNMBu.vertex( 2, 0, 0, scale4),\
+                              pNMBu.vertex(-2, 0, 0, scale4),\
+                              pNMBu.vertex( 0, 2, 0, scale4),\
+                              pNMBu.vertex( 0,-2, 0, scale4),\
+                              pNMBu.vertex( 0, 0, 2, scale4),\
+                              pNMBu.vertex( 0, 0,-2, scale4)]
             edges = [( 1, 0), ( 2, 0), ( 3, 1), ( 3, 2), ( 4, 0), ( 5, 1), ( 5, 4), ( 6, 2), ( 6, 4), ( 7, 3), ( 7, 5), ( 7, 6),\
                      ( 8, 0), ( 8, 1), ( 8, 4), ( 8, 5), ( 9, 2), ( 9, 3), ( 9, 6), ( 9, 7), ( 10, 0), ( 10, 2), ( 10, 4), ( 10, 6),\
                      ( 11, 1), ( 11, 3), ( 11, 5), ( 11, 7), ( 12, 0), ( 12, 1), ( 12, 2), ( 12, 3), ( 13, 4), ( 13, 5), ( 13, 6), ( 13, 7)]
@@ -149,7 +149,7 @@ class bccrdd:
 
             # intermediate atoms on edges e
             nAtoms0 = self.nAtoms
-            Rvv = pnmbu.RAB(cshell,E[0,0],E[0,1]) #distance between two vertex atoms
+            Rvv = pNMBu.RAB(cshell,E[0,0],E[0,1]) #distance between two vertex atoms
             nAtomsOnEdges = int((Rvv+1e-6) / self.Rnn)-1
             nIntervals = nAtomsOnEdges + 1
             # print("nAtomsOnEdges = ",nAtomsOnEdges)
@@ -158,7 +158,7 @@ class bccrdd:
                 for e in E:
                     a = e[0]
                     b = e[1]
-                    coordEdgeAt.append(cshell[a]+pnmbu.vector(cshell,a,b)*(n+1) / nIntervals)
+                    coordEdgeAt.append(cshell[a]+pNMBu.vector(cshell,a,b)*(n+1) / nIntervals)
             self.nAtomsPerShell[i] += nAtomsOnEdges * len(E) # number of edges x nAtomsOnEdges
             self.nAtoms += nAtomsOnEdges * len(E)
             c.extend(coordEdgeAt)
@@ -169,7 +169,7 @@ class bccrdd:
             nAtomsOnFaces = 0
             nAtoms0 = self.nAtoms
             for f in F:
-                nAtomsOnFaces,coordFaceAt = pnmbu.MakeFaceCoord(self.Rnn,f,cshell,nAtomsOnFaces,coordFaceAt)
+                nAtomsOnFaces,coordFaceAt = pNMBu.MakeFaceCoord(self.Rnn,f,cshell,nAtomsOnFaces,coordFaceAt)
             self.nAtomsPerShell[i] += nAtomsOnFaces
             self.nAtoms += nAtomsOnFaces
             c.extend(coordFaceAt)
@@ -193,7 +193,7 @@ class bccrdd:
         print(f"intershell distance for 3rd order vertices = {self.interShellDistance3:.2f} Å")
         print(f"intershell distance for 4th order vertices = {self.interShellDistance4:.2f} Å")
         print(f"edge length = {self.edgeLength()*0.1:.2f} nm")
-        print(f"radius after volume = {pnmbu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
+        print(f"radius after volume = {pNMBu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
         print(f"radius of the circumscribed sphere passing through the six 4th order vertices = {self.radiusCircumscribedSphere4()*0.1:.2f} nm")
         print(f"radius of the circumscribed sphere passing through the eight 3rd order vertices = {self.radiusCircumscribedSphere3()*0.1:.2f} nm")
         print(f"radius of the midsphere = {self.radiusMidSphere()*0.1:.2f} nm")
@@ -300,20 +300,20 @@ class fccdrdd:
         else:
             scale = self.interShellDistance * i
             scaleTB = self.interShellDistanceTB * i
-            CoordVertices = [ pnmbu.vertex( 0, 0, 2, scaleTB),\
-                              pnmbu.vertex( 0, 0,-2, scaleTB),\
-                              pnmbu.vertex( 1, 1, 0, scale),\
-                              pnmbu.vertex( 1,-1, 0, scale),\
-                              pnmbu.vertex(-1, 1, 0, scale),\
-                              pnmbu.vertex(-1,-1, 0, scale),\
-                              pnmbu.vertex( 1, 0, 1, scale),\
-                              pnmbu.vertex( 1, 0,-1, scale),\
-                              pnmbu.vertex(-1, 0, 1, scale),\
-                              pnmbu.vertex(-1, 0,-1, scale),\
-                              pnmbu.vertex( 0, 1, 1, scale),\
-                              pnmbu.vertex( 0, 1,-1, scale),\
-                              pnmbu.vertex( 0,-1, 1, scale),\
-                              pnmbu.vertex( 0,-1,-1, scale)]
+            CoordVertices = [ pNMBu.vertex( 0, 0, 2, scaleTB),\
+                              pNMBu.vertex( 0, 0,-2, scaleTB),\
+                              pNMBu.vertex( 1, 1, 0, scale),\
+                              pNMBu.vertex( 1,-1, 0, scale),\
+                              pNMBu.vertex(-1, 1, 0, scale),\
+                              pNMBu.vertex(-1,-1, 0, scale),\
+                              pNMBu.vertex( 1, 0, 1, scale),\
+                              pNMBu.vertex( 1, 0,-1, scale),\
+                              pNMBu.vertex(-1, 0, 1, scale),\
+                              pNMBu.vertex(-1, 0,-1, scale),\
+                              pNMBu.vertex( 0, 1, 1, scale),\
+                              pNMBu.vertex( 0, 1,-1, scale),\
+                              pNMBu.vertex( 0,-1, 1, scale),\
+                              pNMBu.vertex( 0,-1,-1, scale)]
             edges = [( 6, 0), ( 6, 2), ( 6, 3), ( 7, 1), ( 7, 2), ( 7, 3), ( 8, 0), ( 8, 4), ( 8, 5), ( 9, 1), ( 9, 4), ( 9, 5),\
                      ( 10, 0), ( 10, 2), ( 10, 4), ( 10, 6), ( 10, 8),
                      ( 11, 1), ( 11, 2), ( 11, 4), ( 11, 7), ( 11, 9), ( 12, 0), ( 12, 3), ( 12, 5), ( 12, 6), ( 12, 8),\
@@ -346,7 +346,7 @@ class fccdrdd:
 
             # intermediate atoms on edges e
             nAtoms0 = self.nAtoms
-            Rvv = pnmbu.RAB(cshell,E[0,0],E[0,1]) #distance between two vertex atoms
+            Rvv = pNMBu.RAB(cshell,E[0,0],E[0,1]) #distance between two vertex atoms
             nAtomsOnEdges = int((Rvv+1e-6) / self.Rnn)-1
             nIntervals = nAtomsOnEdges + 1
             # print("nAtomsOnEdges = ",nAtomsOnEdges)
@@ -355,7 +355,7 @@ class fccdrdd:
                 for e in E:
                     a = e[0]
                     b = e[1]
-                    coordEdgeAt.append(cshell[a]+pnmbu.vector(cshell,a,b)*(n+1) / nIntervals)
+                    coordEdgeAt.append(cshell[a]+pNMBu.vector(cshell,a,b)*(n+1) / nIntervals)
             self.nAtomsPerShell[i] += nAtomsOnEdges * len(E) # number of edges x nAtomsOnEdges
             self.nAtoms += nAtomsOnEdges * len(E)
             c.extend(coordEdgeAt)
@@ -366,7 +366,7 @@ class fccdrdd:
             nAtomsOnFaces = 0
             nAtoms0 = self.nAtoms
             for f in F3:
-                nAtomsOnFaces,coordFaceAt = pnmbu.MakeFaceCoord(self.Rnn,f,cshell,nAtomsOnFaces,coordFaceAt)
+                nAtomsOnFaces,coordFaceAt = pNMBu.MakeFaceCoord(self.Rnn,f,cshell,nAtomsOnFaces,coordFaceAt)
             self.nAtomsPerShell[i] += nAtomsOnFaces
             self.nAtoms += nAtomsOnFaces
             c.extend(coordFaceAt)
@@ -377,7 +377,7 @@ class fccdrdd:
             nAtomsOnFaces = 0
             nAtoms0 = self.nAtoms
             for f in F4:
-                nAtomsOnFaces,coordFaceAt = pnmbu.MakeFaceCoord(self.Rnn,f,cshell,nAtomsOnFaces,coordFaceAt)
+                nAtomsOnFaces,coordFaceAt = pNMBu.MakeFaceCoord(self.Rnn,f,cshell,nAtomsOnFaces,coordFaceAt)
             self.nAtomsPerShell[i] += nAtomsOnFaces
             self.nAtoms += nAtomsOnFaces
             c.extend(coordFaceAt)
@@ -401,7 +401,7 @@ class fccdrdd:
         print(f"intershell distance = {self.interShellDistance:.2f} Å")
         print(f"intershell distance for top and bottom vertices = {self.interShellDistanceTB:.2f} Å")
         print(f"edge length = {self.edgeLength()*0.1:.2f} nm")
-        print(f"radius after volume = {pnmbu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
+        print(f"radius after volume = {pNMBu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
         # print(f"radius of the circumscribed sphere passing through the six 4th order vertices = {self.radiusCircumscribedSphere4()*0.1:.2f} nm")
         # print(f"radius of the circumscribed sphere passing through the eight 3rd order vertices = {self.radiusCircumscribedSphere3()*0.1:.2f} nm")
         # print(f"radius of the midsphere = {self.radiusMidSphere()*0.1:.2f} nm")
