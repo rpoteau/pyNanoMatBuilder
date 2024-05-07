@@ -6,4 +6,4 @@ The following solutions can be used:
 - D+ (python library - windows only) - takes pdb format as input - can handle large structures and is GPU friendly. No anomalous investigations. FILE: pentarod_Marianne_Dplus.ipynb
 - sasview (python library) - takes pdb as input - does not account for anomalous effects.
 - 'diffpy': it is a python function, named Iofq, that uses diffpy-cmi library to load the structure, and get statistics from it (such as pairs). This function is open and is a good candidate to adapt to pyNanoMatBuilder. Scaterring factors can be computed as desired, e.g. using xraylarch library FILE: Iofq_diffpy
-- Python function derived from A. Boule notebook: FILE: Iofq_nodiffpy_py311 also a good candidate
+- Python function derived from A. Boule notebook (see https://github.com/aboulle/HPPython/blob/master/Debye.ipynb) : FILE: Iofq_nodiffpy_py311 also a good candidate
