@@ -121,6 +121,7 @@ class fccCubo:
         return CoordVertices, edges, faces3, faces4
 
     def coords(self):
+        chrono = pNMBu.timer(); chrono.chrono_start()
         # central atom = "1st shell"
         c = [[0., 0., 0.]]
         self.nAtoms = 1
@@ -186,6 +187,7 @@ class fccCubo:
         # print(indexVertexAtoms)
         # print(indexEdgeAtoms)
         # print(indexFaceAtoms)
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFace3Atoms,indexFace4Atoms]
     
     def prop(self):
@@ -217,6 +219,7 @@ class fccTrTd:
     edgeLengthF = 1 # length of an edge
     radiusCSF = edgeLengthF * (1/4)* np.sqrt(22) #Centroid to vertex distance = Radius of circumsphere
     radiusMSF = edgeLengthF * (3/4) * np.sqrt(2) #Radius of midsphere that is tangent to edges
+    cutFromVertexAt = 1/3
   
     def __init__(self,
                  element: str='Au',
@@ -226,9 +229,20 @@ class fccTrTd:
         self.element = element
         self.Rnn = Rnn
         self.nAtoms = 0
-        self.interLayerDistance = self.Td.interLayerDistance
+        self.interLayerDistance = self.Td.interLayerDistance()
         self.cog = np.array([0., 0., 0.])
         self.nLayer = int(nLayer-1)
+        isTrTd,self.nAtomsPerEdge = self.NumberOfTdEdgeAtomsValid4ATrTd()
+        if not isTrTd:
+            listOfPossiblenLayers = self.magicEdgeNumberOfTd2MakeATrTd(int(1.2*nLayer))
+            nearest_nL = min(listOfPossiblenLayers, key = lambda x: abs(x-(self.nLayer+1)))
+            sys.exit(f"This number of layers cannot yield a perfect truncated tetrahedron.\n"\
+                     f"The closest possible nLayer value is {nearest_nL}.\n"\
+                     f"Try again."\
+                     f"Any doubt about the valid nLayers values? Call the archimedeanNP.magicEdgeNumberOfTd2MakeATrTd(N) "\
+                     f"to see all possible values between 1 and N")
+        else:
+            self.nAtomsPerEdge = int(self.nAtomsPerEdge)
           
     def __str__(self):
         return(f"Truncated tetrahedron based on a {self.nLayer+1} layer(s) Td and Rnn = {self.Rnn}")
@@ -237,7 +251,7 @@ class fccTrTd:
         return round((i+1)*(23*i**2 + 19*i + 6)/6)
 
     def nAtomsAnalytic(self):
-        n = self.nAtomsF(self.nLayer)
+        n = self.nAtomsF(self.nAtomsPerEdge-1)
         return n
 
     def edgeLength(self):
@@ -273,27 +287,51 @@ class fccTrTd:
     def NumberOfTdEdgeAtomsValid4ATrTd(self):
         import numpy as np
         N = self.nLayer+1
-        nTrTd = N - 2*(N-1)/3
+        nTrTd = N - 2*(N-1)*self.cutFromVertexAt
         return nTrTd.is_integer(), nTrTd
 
+    # def calculateTruncationPlanes(self, planes, nAtomsPerEdge, debug=False):
+    #     cutFromVertexAt = (12*n-16)/(12*n)
+    #     print(f"factor = {cutFromVertexAt:.3f} ▶ {round(nAtomsPerEdge/n)} layer(s) will be removed, starting from each vertex")
+
+    #     trPlanes = []
+    #     for p in planes:
+    #         pNormalized = p.copy()
+    #         p[3] = p[3]*cutFromVertexAt
+    #         trPlanes.append(p)
+    #         hkld = pNMBu.convertuvwh2hkld(p,False)
+    #         if (debug):
+    #             print("original plane = ",pNormalized,"... norm = ",pNMBu.normV(pNormalized[0:3]))
+    #             print("cut plane = ",p,"... norm = ",pNMBu.normV(p[0:3]))
+    #             hkldRef = pNMBu.convertuvwh2hkld(pNormalized,False)
+    #             print("hkld[3]*factor = ",p[3])
+    #             print("signed distance between original hkld and origin = ",pNMBu.Pt2planeSignedDistance(hkldRef,[0,0,0]))
+    #             print("signed distance between cut plane and origin = ",pNMBu.Pt2planeSignedDistance(hkld,[0,0,0]))
+    #             print("pcut/pRef = ",pNMBu.Pt2planeSignedDistance(hkld,[0,0,0])/pNMBu.Pt2planeSignedDistance(hkldRef,[0,0,0]))
+    #         print(f"Will remove atoms just above plane {hkld[0]:.2f} {hkld[1]:.2f} {hkld[2]:.2f} d:{hkld[3]:.3f}")
+    #     return np.array(trPlanes)
+
     def coords(self):
+        chrono = pNMBu.timer(); chrono.chrono_start()
         Td = pNP.regfccTd(self.element,self.Rnn,self.nLayer+1)
         vID.centertxt("Generation of the coordinates of the tetrahedron",bgc='#007a7a',size='14',weight='bold')
         aseTd,atTd = Td.coords()
         view(aseTd)
         del atTd
         vID.centertxt("Removing atoms ",bgc='#007a7a',size='14',weight='bold')
-        print('First searching for the coordinates of the edges (atoms 1-4) and of the cog')
+        print('First searching for the coordinates of the vertices (atoms 1-4) and of the cog')
         coordVertices = aseTd.get_positions()[0:4]
         print("Now calculating the coordinates of the planes orthogonal the the cog-vertex directions")
         planesAtVertices = pNMBu.planeAtVertices(coordVertices, Td.cog)
-        n = 3 #trTd = truncation all 4 vertices of a regular tetrahedron at one third of the original edge length
-        cutFromVertexAt = (12*n-16)/(12*n)
-        AtomsAbovePlanes = pNMBu.truncateAboveEachPlane(planesAtVertices,1/n,cutFromVertexAt,\
-                                                        aseTd.get_positions(),Td.nAtomsPerEdge,False)
+        #trTd = truncation all 4 vertices of a regular tetrahedron at one third of the original edge length
+        trPlanes = pNMBu.calculateTruncationPlanesFromVertices(planesAtVertices,self.cutFromVertexAt,Td.nAtomsPerEdge-1)
+        AtomsAbovePlanes = pNMBu.truncateAboveEachPlane(trPlanes,aseTd.get_positions())
         
         aseTrTd = aseTd.copy() 
         del aseTrTd[AtomsAbovePlanes]
+        nAtoms = aseTrTd.get_global_number_of_atoms()
+        print(f"Total number of atoms = {nAtoms}")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         return aseTrTd,aseTd
 
     def prop(self):
@@ -303,21 +341,142 @@ class fccTrTd:
         print("number of edges = ",self.nEdges)
         print("number of triangular faces = ",self.nFaces3)
         print("number of hexagonal faces = ",self.nFaces6)
+        print(f"truncation all 4 vertices of a regular tetrahedron at {self.cutFromVertexAt:.3f}a_Td from the vertices of the Td")
         print(f"nearest neighbour distance = {self.Rnn:.2f} Å")
-        isTrTd,self.nAtomsPerEdge = self.NumberOfTdEdgeAtomsValid4ATrTd()
-        if (isTrTd):
-            self.nAtomsPerEdge = int(self.nAtomsPerEdge)
-            print(f"edge length = {self.edgeLength()*0.1:.2f} nm")
-            print(f"number of atoms per edge = {self.nAtomsPerEdge}")
-            print(f"area = {self.area()*1e-2:.1f} nm2")
-            print(f"volume = {self.volume()*1e-3:.1f} nm3")
-            print("total number of atoms = ",self.nAtomsAnalytic())
-            print("dual polyhedron: triakis tetrahedron")
-            print(f"coordinates of the center of gravity = {self.cog}")
-        else:
-            listOfPossiblenLayers = self.magicEdgeNumberOfTd2MakeATrTd(100)
-            nearest_nL = min(listOfPossiblenLayers, key = lambda x: abs(x-(self.nLayer+1)))
-            sys.exit(f"This number of layers cannot yield a perfect truncated tetrahedron.\n"\
-                     f"The closest possible nLayer value is {nearest_nL}.\n"\
+        print(f"inter layer distance = {self.interLayerDistance:.2f} Å")
+        print(f"edge length = {self.edgeLength()*0.1:.2f} nm")
+        print(f"number of atoms per edge = {self.nAtomsPerEdge}")
+        print(f"area = {self.area()*1e-2:.1f} nm2")
+        print(f"volume = {self.volume()*1e-3:.1f} nm3")
+        print("total number of atoms = ",self.nAtomsAnalytic())
+        print("dual polyhedron: triakis tetrahedron")
+        print(f"coordinates of the center of gravity = {self.cog}")
+
+###########################################################################################################
+class fccTrOh:
+    nFaces4 = 6
+    nFaces6 = 8
+    nEdges = 36
+    nVertices = 24
+    edgeLengthF = 1 # length of an edge
+    radiusCSF = edgeLengthF * (1/2)* np.sqrt(10) # Centroid to vertex distance = Radius of circumsphere
+    radiusMSF = edgeLengthF * (3/2)              # Radius of midsphere that is tangent to edges
+    radiusISF = edgeLengthF * (9/20) * np.sqrt(10) # inradius
+    cutFromVertexAt = 1/3
+  
+    def __init__(self,
+                 element: str='Au',
+                 Rnn: float=2.7,
+                 nOrder: int=1):
+        self.Oh = pNP.regfccOh(element,Rnn,nOrder)
+        self.element = element
+        self.Rnn = Rnn
+        self.nAtoms = 0
+        self.interLayerDistance = self.Oh.interLayerDistance
+        self.cog = np.array([0., 0., 0.])
+        self.nOrder = nOrder
+        isTrOh,self.nAtomsPerEdge = self.NumberOfOhEdgeAtomsValid4ATrOh()
+        if not isTrOh:
+            listOfPossiblenLayers = self.magicEdgeNumberOfOh2MakeATrOh(int(1.2*nOrder))
+            nearest_nL = min(listOfPossiblenLayers, key = lambda x: abs(x-(self.nOrder)))
+            sys.exit(f"This order cannot yield a perfect truncated octahedron.\n"\
+                     f"The closest possible nOrder value is {nearest_nL}.\n"\
                      f"Try again."\
-                     f"Any doubt about the valid nLayers values? Call the archimedeanNP.magicEdgeNumberOfTd2MakeATrTd(N) to see all possible values")
+                     f"Any doubt about the valid nOrder values? Call the archimedeanNP.magicEdgeNumberOfOh2MakeATrOh(N) "\
+                     f"to see all possible values between 1 and N")
+        else:
+            self.nAtomsPerEdge = int(self.nAtomsPerEdge)
+          
+    def __str__(self):
+        return(f"Truncated octahedron based on a {self.nOrder} order Oh (i.e. {self.nOrder+1} atoms lie on an edge) and Rnn = {self.Rnn}")
+   
+    def nAtomsF(self,i):
+        return round(16*i**3 + 15*i**2 + 6*i + 1)
+
+    def nAtomsAnalytic(self):
+        n = self.nAtomsF(self.nAtomsPerEdge-1)
+        return n
+
+    def edgeLength(self):
+        # a truncated Oh is constructed by truncating all 6 vertices of a regular octahedron
+        # at one third of the original edge length, hence the remaining edge length is Oh.edgeLength/3
+        return self.Oh.edgeLength()/3
+
+    def radiusCircumscribedSphere(self):
+        return self.radiusCSF*self.edgeLength()
+
+    def radiusMidSphere(self):
+        return self.radiusMSF*self.edgeLength()
+
+    def radiusInscribedSphere(self):
+        return self.radiusISF*self.edgeLength()
+
+    def area(self):
+        el = self.edgeLength()
+        return el**2*(6 + 12*np.sqrt(3))
+    
+    def volume(self):
+        el = self.edgeLength()
+        return self.Oh.volume() - 6*(el**3*np.sqrt(2)/6)
+
+    def magicEdgeNumberOfOh2MakeATrOh(self, index: int):
+        '''
+        returns the number of edge atoms of the octahedron that will lead to perfect
+        trucated tetrahedra with all edges of equal atomic length
+        '''
+        import numpy as np
+        N = []
+        for i in range(3,index+1):
+            N.append(3*i)
+        return np.array(N)
+    
+    def NumberOfOhEdgeAtomsValid4ATrOh(self):
+        import numpy as np
+        N = self.nOrder+1
+        nTrOh = N - 2*(N-1)/3
+        return nTrOh.is_integer(), nTrOh
+
+    def coords(self):
+        chrono = pNMBu.timer(); chrono.chrono_start()
+        Oh = pNP.regfccOh(self.element,self.Rnn,self.nOrder)
+        vID.centertxt("Generation of the coordinates of the octahedron",bgc='#007a7a',size='14',weight='bold')
+        aseOh,atOh = Oh.coords()
+        view(aseOh)
+        del atOh
+        vID.centertxt("Removing atoms ",bgc='#007a7a',size='14',weight='bold')
+        print('First searching for the coordinates of the vertices (atoms 1-6) and of the cog')
+        coordVertices = aseOh.get_positions()[0:6]
+        print("Now calculating the coordinates of the planes orthogonal the the cog-vertex directions")
+        planesAtVertices = pNMBu.planeAtVertices(coordVertices, Oh.cog)
+        #trOh = truncation all 6 vertices of a regular octahedron at one third of the original edge length
+        trPlanes = pNMBu.calculateTruncationPlanesFromVertices(planesAtVertices,self.cutFromVertexAt,Oh.nAtomsPerEdge)
+        AtomsAbovePlanes = pNMBu.truncateAboveEachPlane(trPlanes,aseOh.get_positions())
+        
+        aseTrOh = aseOh.copy()
+        del aseTrOh[AtomsAbovePlanes]
+        nAtoms = aseTrOh.get_global_number_of_atoms()
+        print(f"Total number of atoms = {nAtoms}")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+        return aseTrOh,aseOh
+
+    def prop(self):
+        print(self)
+        print("element = ",self.element)
+        print("number of vertices = ",self.nVertices)
+        print("number of edges = ",self.nEdges)
+        print("number of square faces = ",self.nFaces4)
+        print("number of hexagonal faces = ",self.nFaces6)
+        print(f"truncation all 6 vertices of a regular octahedron at {self.cutFromVertexAt:.3f}a_Oh from the vertices of the Oh")
+        print(f"nearest neighbour distance = {self.Rnn:.2f} Å")
+        print(f"inter layer distance = {self.interLayerDistance:.2f} Å")
+        print(f"edge length = {self.edgeLength()*0.1:.2f} nm")
+        print(f"radius of the circumscribed sphere = {self.radiusCircumscribedSphere()*0.1:.2f} nm")
+        print(f"radius of the medium sphere = {self.radiusMidSphere()*0.1:.2f} nm")
+        print(f"radius of the inscribed sphere = {self.radiusInscribedSphere()*0.1:.2f} nm")
+        print(f"number of atoms per edge = {self.nAtomsPerEdge}")
+        print(f"area = {self.area()*1e-2:.1f} nm2")
+        print(f"volume = {self.volume()*1e-3:.1f} nm3")
+        print("total number of atoms = ",self.nAtomsAnalytic())
+        print("dual polyhedron: triakis hexahedron")
+        print(f"coordinates of the center of gravity = {self.cog}")
+

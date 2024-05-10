@@ -130,6 +130,7 @@ class bccrdd:
         return CoordVertices, edges, faces
 
     def coords(self):
+        chrono = pNMBu.timer(); chrono.chrono_start()
         # central atom = "1st shell"
         c = [[0., 0., 0.]]
         self.nAtoms = 1
@@ -178,7 +179,8 @@ class bccrdd:
         print(self.nAtoms)
         print(self.nAtomsPerShell)
         aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
-            
+
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms]
     
     def prop(self):
@@ -327,6 +329,7 @@ class fccdrdd:
         return CoordVertices, edges, faces3, faces4
 
     def coords(self):
+        chrono = pNMBu.timer(); chrono.chrono_start()
         # central atom = "1st shell"
         c = [[0., 0., 0.]]
         self.nAtoms = 1
@@ -387,6 +390,7 @@ class fccdrdd:
         print(self.nAtomsPerShell)
         aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
             
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms]
     
     def prop(self):

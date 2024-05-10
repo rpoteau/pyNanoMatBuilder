@@ -27,10 +27,12 @@ class regfccOh:
         self.nOrder = nOrder
         self.nAtoms = 0
         self.nAtomsPerLayer = []
+        self.nAtomsPerEdge = self.nOrder+1
         self.interLayerDistance = self.Rnn/self.interShellF
+        self.cog = np.array([0., 0., 0.])
           
     def __str__(self):
-        return(f"Regular octahedron of order {self.nOrder} (i.e. {self.nOrder+1} atoms on an edge) and Rnn = {self.Rnn}")
+        return(f"Regular octahedron of order {self.nOrder} (i.e. {self.nOrder+1} atoms lie on an edge) and Rnn = {self.Rnn}")
     
     def nAtomsF(self,i):
         """ returns the number of atoms of an octahedron of size i"""
@@ -109,6 +111,7 @@ class regfccOh:
         return CoordVertices, edges, faces
 
     def coords(self):
+        chrono = pNMBu.timer(); chrono.chrono_start()
         c = []
         # print(self.nAtomsPerLayer)
         indexVertexAtoms = []
@@ -181,7 +184,10 @@ class regfccOh:
         print(self.nAtoms)
         print(self.nAtomsPerLayer)
         aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
+
+        self.cog = pNMBu.centerOfGravity(c)
       
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms,indexCoreAtoms]
             
     def prop(self):
@@ -193,8 +199,8 @@ class regfccOh:
         print(f"intershell factor = {self.interShellF:.2f}")
         print(f"nearest neighbour distance = {self.Rnn:.2f} Å")
         print(f"interlayer distance = {self.interLayerDistance:.2f} Å")
-        
         print(f"edge length = {self.edgeLength()*0.1:.2f} nm")
+        print(f"number of atoms per edge = {self.nAtomsPerEdge}")
         print(f"radius after volume = {pNMBu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
         print(f"radius of the circumscribed sphere = {self.radiusCircumscribedSphere()*0.1:.2f} nm")
         print(f"radius of the inscribed sphere = {self.radiusInscribedSphere()*0.1:.2f} nm")
@@ -205,6 +211,8 @@ class regfccOh:
         print("intermediate magic numbers = ",self.nAtomsPerShellCumulativeAnalytic())
         print("total number of atoms = ",self.nAtomsAnalytic())
         print("Dual polyhedron: cube")
+        print("Indexes of vertex atoms = [0,1,2,3,4,5] by construction")
+        print(f"coordinates of the center of gravity = {self.cog}")
 
 ###########################################################################################################
 class regIco:
@@ -317,6 +325,7 @@ class regIco:
         return CoordVertices, edges, faces
 
     def coords(self):
+        chrono = pNMBu.timer(); chrono.chrono_start()
         # central atom = "1st shell"
         c = [[0., 0., 0.]]
         self.nAtoms = 1
@@ -369,6 +378,7 @@ class regIco:
         # print(indexVertexAtoms)
         # print(indexEdgeAtoms)
         # print(indexFaceAtoms)
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms]
     
     def prop(self):
@@ -397,8 +407,8 @@ class regfccTd:
     nFaces = 4
     nEdges = 6
     nVertices = 4
-    edgeLengthF = 2 # length of an edge
-    heightOfPyramid = edgeLengthF * np.sqrt(2/3)
+    edgeLengthF = 1 # length of an edge
+    heightOfPyramidF = edgeLengthF * np.sqrt(2/3)
     radiusCSF = edgeLengthF * np.sqrt(3/8) #Centroid to vertex distance = Radius of circumsphere
     radiusISF = edgeLengthF/np.sqrt(24) #Radius of insphere that is tangent to faces
     radiusMSF = edgeLengthF/np.sqrt(8) #Radius of midsphere that is tangent to edges
@@ -412,15 +422,14 @@ class regfccTd:
                  nLayer: int=1):
         self.element = element
         self.Rnn = Rnn
-        self.nLayer = int(nLayer-1)
+        self.nLayer = nLayer
         self.nAtoms = 0
         self.nAtomsPerLayer = []
-        self.interLayerDistance = self.Rnn / self.heightOfPyramid
-        self.nAtomsPerEdge = self.nLayer+1
+        self.nAtomsPerEdge = self.nLayer
         self.cog = np.array([0., 0., 0.])
           
     def __str__(self):
-        return(f"Regular tetrahedron with {self.nLayer+1} layer(s) and Rnn = {self.Rnn}")
+        return(f"Regular tetrahedron with {self.nLayer} layer(s) and Rnn = {self.Rnn}")
     
     def nAtomsF(self,i):
         # print("nAtoms - part1",i**3/6)
@@ -431,7 +440,7 @@ class regfccTd:
     def nAtomsPerLayerAnalytic(self):
         n = []
         Sum = 0
-        for i in range(self.nLayer+1):
+        for i in range(self.nLayer):
             Sum = sum(n)
             ni = int(self.nAtomsF(i))
             n.append(ni-Sum)
@@ -439,12 +448,18 @@ class regfccTd:
         return n
     
     def nAtomsAnalytic(self):
-        n = self.nAtomsF(self.nLayer)
+        n = self.nAtomsF(self.nLayer-1)
         return n
     
     def edgeLength(self):
-        return self.Rnn*self.nLayer
+        return self.Rnn*(self.nLayer-1)
 
+    def heightOfPyramid(self):
+        return self.heightOfPyramidF*self.edgeLength()
+    
+    def interLayerDistance(self):
+        return self.heightOfPyramid()/(self.nLayer-1)
+    
     def radiusCircumscribedSphere(self):
         return self.radiusCSF*self.edgeLength()
 
@@ -474,11 +489,12 @@ class regfccTd:
         if (nL > self.nLayer):
             sys.exit(f"regTd.MakeVertices(nL) is called with nL = {nL} > nLayer = {self.nLayer}")
         else:
-            scale = self.interLayerDistance * nL
-            CoordVertices = [pNMBu.vertex(1, 1, 1, scale),\
-                             pNMBu.vertex(1, -1, -1, scale),\
-                             pNMBu.vertex(-1, 1, -1, scale),\
-                             pNMBu.vertex(-1, -1, 1, scale)]
+            scale = self.radiusCircumscribedSphere()
+            c = 1/(2*np.sqrt(2)) # edge length 1
+            CoordVertices = [pNMBu.vertex(c, c, c, scale),\
+                             pNMBu.vertex(c, -c, -c, scale),\
+                             pNMBu.vertex(-c, c, -c, scale),\
+                             pNMBu.vertex(-c, -c, c, scale)]
             edges = [(0,1), (0,2), (0,3), (1,2), (1,3), (2,3)]
             faces = [(0,2,1),(0,1,3),(0,3,2),(1,2,3)]
             edges = np.array(edges)
@@ -487,6 +503,7 @@ class regfccTd:
         return CoordVertices, edges, faces
 
     def coords(self):
+        chrono = pNMBu.timer(); chrono.chrono_start()
         c = []
         # print(self.nAtomsPerLayer)
         indexVertexAtoms = []
@@ -497,7 +514,7 @@ class regfccTd:
         # vertices
         nAtoms0 = 0
         self.nAtoms += self.nVertices
-        cVertices, E, F = self.MakeVertices(self.nLayer)
+        cVertices, E, F = self.MakeVertices(self.nLayer-1)
         c.extend(cVertices.tolist())
         indexVertexAtoms.extend(range(nAtoms0,self.nAtoms))
 
@@ -518,7 +535,6 @@ class regfccTd:
         indexEdgeAtoms.extend(range(nAtoms0,self.nAtoms))
         self.nAtomsPerEdge = nAtomsOnEdges  + 2 #2 vertices
         # print(indexEdgeAtoms)
-        print("self.nAtomsPerEdge = ",self.nAtomsPerEdge)
         
         # now, facet atoms
         coordFaceAt = []
@@ -551,6 +567,7 @@ class regfccTd:
 
         self.cog = pNMBu.centerOfGravity(c)
         
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms,indexCoreAtoms]
     
     def prop(self):
@@ -562,7 +579,8 @@ class regfccTd:
         print(f"nearest neighbour distance = {self.Rnn:.2f} Å")
         print(f"edge length = {self.edgeLength()*0.1:.2f} nm")
         print(f"number of atoms per edge = {self.nAtomsPerEdge}")
-        print(f"height of pyramid = {self.heightOfPyramid*0.1:.2f} nm")
+        print(f"inter-layer distance = {self.interLayerDistance():.2f} Å")
+        print(f"height of pyramid = {self.heightOfPyramid()*0.1:.2f} nm")
         print(f"radius after volume = {pNMBu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
         print(f"radius of the circumscribed sphere = {self.radiusCircumscribedSphere()*0.1:.2f} nm")
         print(f"radius of the inscribed sphere = {self.radiusInscribedSphere()*0.1:.2f} nm")
@@ -575,7 +593,7 @@ class regfccTd:
         print("number of atoms per layer = ",self.nAtomsPerLayerAnalytic())
         print("total number of atoms = ",self.nAtomsAnalytic())
         print("Dual polyhedron: tetrahedron")
-        print("Indexes of vertex atom = [0,1,2,3] by construction")
+        print("Indexes of vertex atoms = [0,1,2,3] by construction")
         print(f"coordinates of the center of gravity = {self.cog}")
 
 ###########################################################################################################
@@ -687,6 +705,7 @@ class regDD:
         return CoordVertices, edges, faces
 
     def coords(self):
+        chrono = pNMBu.timer(); chrono.chrono_start()
         # central atom = "1st shell"
         c = [[0., 0., 0.]]
         self.nAtoms = 1
@@ -761,6 +780,7 @@ class regDD:
         print(self.nAtomsPerShell)
         aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
                 
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms]
     
     def prop(self):
@@ -878,6 +898,7 @@ class cube:
     #     return fcc
 
     def coordsSC(self):
+        chrono = pNMBu.timer(); chrono.chrono_start()
         if self.crystalStructure == 'fcc':
             cube = bulk(self.element, 'fcc', a=self.latticeConstant(), cubic=True)
         elif self.crystalStructure == 'bcc':
@@ -891,6 +912,7 @@ class cube:
         sc = cut(sc,extend=1.05)
         natoms = len(sc.positions)
         self.nAtoms=natoms
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         return sc
         
     def prop(self):

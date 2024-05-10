@@ -7,6 +7,55 @@ from ase.io import write
 import os
 
 ##############################################################################################
+######################################## time
+from datetime import datetime
+import datetime, time
+class timer:
+
+    def __init__(self):
+        _start_time   = None
+        _end_time     = None
+        _chrono_start = None
+        _chrono_stop  = None
+
+    # Return human delay like 01:14:28 543ms
+    # delay can be timedelta or seconds
+    def hdelay_ms(self,delay):
+        if type(delay) is not datetime.timedelta:
+            delay=datetime.timedelta(seconds=delay)
+        sec = delay.total_seconds()
+        hh = sec // 3600
+        mm = (sec // 60) - (hh * 60)
+        ss = sec - hh*3600 - mm*60
+        ms = (sec - int(sec))*1000
+        return f'{hh:02.0f}:{mm:02.0f}:{ss:02.0f} {ms:03.0f}ms'
+    
+    def chrono_start(self):
+        global _chrono_start, _chrono_stop
+        _chrono_start=time.time()
+    
+    # return delay in seconds or in humain format
+    def chrono_stop(self, hdelay=False):
+        global _chrono_start, _chrono_stop
+        _chrono_stop = time.time()
+        sec = _chrono_stop - _chrono_start
+        if hdelay : return self.hdelay_ms(sec)
+        return sec
+
+    def hdelay_ms(self,delay):
+        if type(delay) is not datetime.timedelta:
+            delay=datetime.timedelta(seconds=delay)
+        sec = delay.total_seconds()
+        hh = sec // 3600
+        mm = (sec // 60) - (hh * 60)
+        ss = sec - hh*3600 - mm*60
+        ms = (sec - int(sec))*1000
+        return f'{hh:02.0f}:{mm:02.0f}:{ss:02.0f} {ms:03.0f}ms'
+    
+    def chrono_show(self):
+        print(f'{fg.BLUE}Duration : {self.hdelay_ms(time.time() - _chrono_start)}{fg.OFF}')
+
+##############################################################################################
 ######################################## coupling with pymatgen in order to find the symmetry
 def MolSym(aseobject: Atoms,
            getEquivalentAtoms: bool=False):
@@ -14,14 +63,16 @@ def MolSym(aseobject: Atoms,
     from pymatgen.io.ase import AseAtomsAdaptor as aaa
     from pymatgen.symmetry.analyzer import PointGroupAnalyzer
     
+    chrono = timer(); chrono.chrono_start()
     vID.centertxt("Symmetry analysis",bgc='#007a7a',size='14',weight='bold')
-    print(f"Currently using the PointGroupAnalyzer class of pymatgen\n The analyzis can take a while for large compounds")
+    print(f"Currently using the PointGroupAnalyzer class of pymatgen\nThe analyzis can take a while for large compounds")
     print()
     pmgmol = pmg.Molecule(aseobject.get_chemical_symbols(),aseobject.get_positions())
     pga = PointGroupAnalyzer(pmgmol, tolerance=0.6, eigen_tolerance=0.02, matrix_tolerance=0.2)
     pg = pga.get_pointgroup()
     print(f"Point Group: {pg}")
     print(f"Rotational Symmetry Number = {pga.get_rotational_symmetry_number()}")
+    chrono.chrono_stop(hdelay=False); chrono.chrono_show()
     if getEquivalentAtoms:
         return pg, pga.get_equivalent_atoms()
     else:
@@ -188,6 +239,7 @@ def optimizeEMT(model: Atoms, pathway="./coords/model", fthreshold=0.05):
     from ase import Atoms
     from ase.visualize import view
     from ase.calculators.emt import EMT
+    chrono = timer(); chrono.chrono_start()
     vID.centerTitle(f"ase EMT calculator & Quasi Newton algorithm for geometry optimization")
     model.calc=EMT()
     model.get_potential_energy()
@@ -197,6 +249,7 @@ def optimizeEMT(model: Atoms, pathway="./coords/model", fthreshold=0.05):
     write(pathway+"_opt.xyz", model)
     print(f"{fg.BLUE}Optimization steps saved in {pathway+'_.opt'} (binary file){fg.OFF}")
     print(f"{fg.RED}Optimized geometry saved in {pathway+'_opt.xyz'}{fg.OFF}")
+    chrono.chrono_stop(hdelay=False); chrono.chrono_show()
     view(model)
     return model
 
@@ -319,8 +372,8 @@ def planeFittingLSF(coords: np.float64,
     h = -u*cog[0] - v*cog[1] - w*cog[2]
     if printEq:
         print(f"bare solution: {u:.5f} x + {v:.5f} y + {w:.5f} z + {h:.5f} = 0")
-        print("     or")
-        print(f"bare solution: {-u/w:.5f} x + {-v/w:.5f} y + {-h/w:.5f} = z")
+        # print("     or")
+        # print(f"bare solution: {-u/w:.5f} x + {-v/w:.5f} y + {-h/w:.5f} = z")
     tmp = coords.copy
     ones = np.ones(nat)
     tmp = np.column_stack((coords,ones))
@@ -359,8 +412,8 @@ def convertuvwh2hkld(plane: np.float64,
     
     if prthkld:
         print(f"hkl solution: {hkld[0]:.5f} x + {hkld[1]:.5f} y + {hkld[2]:.5f} z + {hkld[3]:.5f} = 0")
-        print("     or")
-        print(f"hkl solution: {-hkld[0]/hkld[2]:.5f} x + {-hkld[1]/hkld[2]:.5f} y + {-hkld[3]/hkld[2]:.5f} = z")
+        # print("     or")
+        # print(f"hkl solution: {-hkld[0]/hkld[2]:.5f} x + {-hkld[1]/hkld[2]:.5f} y + {-hkld[3]/hkld[2]:.5f} = z")
     return hkld
 
 def hklPlaneFitting(coords: np.float64,
@@ -402,8 +455,8 @@ def Pt2planeSignedDistance(plane,point):
         - point = [x0 y0 z0] coordinates of the X0 point (numpy array)
     returns the signed modulus ±||PX0||
     '''
-    sm = (plane[3] + np.dot(plane[0:3],point))/np.sqrt(plane[0]**2+plane[1]**2+plane[2]**2)
-    return sm
+    sd = (plane[3] + np.dot(plane[0:3],point))/np.sqrt(plane[0]**2+plane[1]**2+plane[2]**2)
+    return sd
 
 def planeAtVertices(coordVertices: np.ndarray,
                     cog: np.ndarray):
@@ -439,12 +492,12 @@ def planeAtPoint(plane: np.ndarray,
     planeAtP[3] = -d
     return planeAtP
 
-def normPlane(p):
+def normalizePlane(p):
     import numpy as np
     '''
-    normalizes the [a,b,c] coordinates of a plane
+    normalizes the [a,b,c,d] coordinates of a plane
     - input: plane [a,b,c,d]
-    returns [a/norm,b/norm,c/norm]
+    returns [a/norm,b/norm,c/norm,d/norm] where norm=dsqrt(a**2+b**2+c**2)
     '''
     return p/normV(p[0:3])
 
@@ -508,72 +561,59 @@ def delAtomsWithCN(coords: np.ndarray,
 
 ##############################################################################################
 ######################################## cut above planes
-def truncateAboveEachPlane(planes: np.ndarray,
-                      fractionOfEdgeDeleted,
-                      specificFactor,
-                      coords,
-                      numberOfAtomsPerEdge,
-                      debug = False):
-    def plot3D():
-        from matplotlib import pyplot as plt
-        #%matplotlib widget 
-        xs = coords[:,0]
-        ys = coords[:,1]
-        zs = coords[:,2]
-                    
-        # plot raw data
-        plt.figure(figsize=(10,10))
-        ax = plt.subplot(111, projection='3d')
-        ax.scatter(xs, ys, zs, color='grey')
-        # plot plane
-        xlim = ax.get_xlim()
-        ylim = ax.get_ylim()
-        X,Y = np.meshgrid(np.arange(xlim[0], xlim[1]),
-                          np.arange(ylim[0], ylim[1]))
-        ZLSFR = np.zeros(X.shape)
-        ZLSF = np.zeros(X.shape)
-        for row in range(X.shape[0]):
-            for col in range(X.shape[1]):
-                ZLSFR[row,col] = (-hkldRef[0]/hkldRef[2]) * X[row,col] - (hkldRef[1]/hkldRef[2]) * Y[row,col] - hkldRef[3]/hkldRef[2]
-                ZLSF[row,col] = (-hkld[0]/hkld[2]) * X[row,col] - (hkld[1]/hkld[2]) * Y[row,col] - hkld[3]/hkld[2]
-        ax.plot_wireframe(X,Y,ZLSFR, color='blue', label='ref plane')
-        ax.plot_wireframe(X,Y,ZLSF, color='red', label='cut plane')
-        
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
-        ax.set_zlabel('z')
-        plt.legend()
-        plt.show()
+def calculateTruncationPlanesFromVertices(planes, cutFromVertexAt, nAtomsPerEdge, debug=False):
+    n = int(round(1/cutFromVertexAt))
+    print(f"factor = {cutFromVertexAt:.3f} ▶ {round(nAtomsPerEdge/n)} layer(s) will be removed, starting from each vertex")
 
-    AtomsAbovePlanes = []
-    print(f"factor = {specificFactor:.3f} ▶ {round((numberOfAtomsPerEdge-1)*fractionOfEdgeDeleted)} layer(s) will be removed, starting from each vertex")
+    trPlanes = []
+    for p in planes:
+        pNormalized =normalizePlane(p.copy())
+        pNormalized[3] =  pNormalized[3] - pNormalized[3]*cutFromVertexAt
+        trPlanes.append(pNormalized)
+        if (debug):
+            print("normalized original plane = ",normalizePlane(p))
+            print("cut plane = ",pNormalized,"... norm = ",normV(pNormalized[0:3]))
+            print("signed distance between original plane and origin = ",Pt2planeSignedDistance(p,[0,0,0]))
+            print("signed distance between cut plane and origin = ",Pt2planeSignedDistance(pNormalized,[0,0,0]))
+            print("pcut/pRef = ",Pt2planeSignedDistance(pNormalized,[0,0,0])\
+                                /Pt2planeSignedDistance(p,[0,0,0]))
+        print(f"Will remove atoms just above plane "\
+              f"{pNormalized[0]:.2f} {pNormalized[1]:.2f} {pNormalized[2]:.2f} d:{pNormalized[3]:.3f}")
+    return np.array(trPlanes)    
+
+def truncateAboveEachPlane(planes: np.ndarray,
+                           coords,
+                           debug=False,
+                           delAbove: bool = True):
+    '''
+    - input: 
+        - planes = numpy array with all [u v w d] plane definitions
+        - coords = (N,3) numpy array will all coordinates
+        - delAbove = if True (default) delete atoms that lie above the planes + eps = 1e-4. Delete atoms below the
+                     planes otherwise (use with precaution, could return no atoms as a function of their definition)
+        - hkldRef, hkld: for debugging purpose
+    - returns the coordinates of the atoms that are below ALL input planes
+    '''
+
+    keptAtoms = []
+
     eps =1e-3
     for p in planes:
-        pNormalized = p.copy()
-        p[3] = p[3]*specificFactor
-        hkld = convertuvwh2hkld(p,False)
-        if (debug):
-            print("original plane = ",pNormalized,"... norm = ",normV(pNormalized[0:3]))
-            print("cut plane = ",p,"... norm = ",normV(p[0:3]))
-            hkldRef = convertuvwh2hkld(pNormalized,False)
-            print("hkld[3]*factor = ",p[3])
-            print("signed distance between original hkld and origin = ",Pt2planeSignedDistance(hkldRef,[0,0,0]))
-            print("signed distance between cut plane and origin = ",Pt2planeSignedDistance(hkld,[0,0,0]))
-            print("pcut/pRef = ",Pt2planeSignedDistance(hkld,[0,0,0])/Pt2planeSignedDistance(hkldRef,[0,0,0]))
-        print(f"Removing atoms just above plane {hkld[0]:.2f} {hkld[1]:.2f} {hkld[2]:.2f} d:{hkld[3]:.3f}")
         for i,c in enumerate(coords):
-            signedDistance = Pt2planeSignedDistance(hkld,c)
-            if signedDistance > eps:
-                AtomsAbovePlanes.append(i)
-        # print(AtomsAbovePlanes)
+            signedDistance = Pt2planeSignedDistance(p,c)
+            if delAbove and signedDistance > eps:
+                keptAtoms.append(i)
+            elif not delAbove and signedDistance < eps:
+                keptAtoms.append(i)
+        # print(keptAtoms)
         if debug:
-            for a in AtomsAbovePlanes:
+            for a in keptAtoms:
                 print(f"@{a+1}",end=',')
             print("",end='\n')
-    AtomsAbovePlanes = np.array(AtomsAbovePlanes)
-    AtomsAbovePlanes = np.unique(AtomsAbovePlanes)
-    if debug: plot3D()
-    return AtomsAbovePlanes
+    keptAtoms = np.array(keptAtoms)
+    keptAtoms = np.unique(keptAtoms)
+    # if (debug): plot3D()
+    return keptAtoms
 
 ##############################################################################################
 ######################################## symmetry
@@ -595,3 +635,58 @@ def reflection(plane,points):
             ptmp = p+2*vp2plane
             pr.append(ptmp)
     return np.array(pr)
+
+##############################################################################################
+######################################## rotation
+def Rx(a):
+  return np.matrix([[ 1, 0           , 0   ],
+                    [ 0, m.cos(a),-m.sin(a)],
+                    [ 0, m.sin(a), m.cos(a)]])
+  
+def Ry(a):
+  return np.matrix([[ m.cos(a), 0, m.sin(a)],
+                   [ 0           , 1, 0           ],
+                   [-m.sin(a), 0, m.cos(a)]])
+  
+def Rz(a):
+  return np.matrix([[ m.cos(a), -m.sin(a), 0 ],
+                   [ m.sin(a), m.cos(a) , 0 ],
+                   [ 0           , 0            , 1 ]])
+
+def EulerRotationMatrix(gamma,beta,alpha,order="zyx"):
+    """
+    - input:
+        - gamma: Rot/x (°)
+        - beta: Rot/y (°)
+        - alpha: Rot/z (°)
+        - if (order="zyx"): returns Rz(alpha) * Ry(beta) * Rx(gamma)
+    returns a 3x3 Euler matrix as a numpy array
+    """
+    import math as m
+    #REuler is a 3x3 matrix
+    R = 1.
+    gammarad = gamma*m.pi/180
+    betarad = beta*m.pi/180
+    alpharad = alpha*m.pi/180
+    for i in range(3):
+        if order[i] == "x":
+            R = R*Rx(gammarad)
+        if order[i] == "y":
+            R = R*Ry(betarad)
+        if order[i] == "z":
+            R = R*Rz(alpharad)
+    return R
+
+def EulerRotationMol(coord, gamma, beta, alpha, order="zyx"):
+    return np.array(EulerRotationMatrix(gamma,beta,alpha,order)@coord.transpose()).transpose()
+
+def RotationMatrixFromAxisAngle(u,angle):
+    import math as m
+    a = angle*m.pi/180
+    ux = u[0]
+    uy = u[1]
+    uz = u[2]
+    return np.matrix([[cos(a)+ux**2*(1-m.cos(a))     , ux*uy*(1-m.cos(a))-uz*m.sin(a), ux*uz*(1-m.cos(a))+uy*m.sin(a)],
+                      [uy*ux*(1-m.cos(a))+uz*m.sin(a), cos(a)+uy**2*(1-m.cos(a))     , uy*uz*(1-m.cos(a))-ux*m.sin(a)],
+                      [uz*ux*(1-m.cos(a))-uy*m.sin(a), uz*uy*(1-m.cos(a))+ux*m.sin(a), cos(a)+uz**2*(1-m.cos(a))     ]])
+

@@ -126,6 +126,7 @@ class Crystal:
         import os
         print(self)
         # print(f"Crystal = {self.crystal}")
+        chrono = pNMBu.timer(); chrono.chrono_start()
 
         cif, cifname = self.bulk()
         
@@ -158,4 +159,5 @@ class Crystal:
             sys.exit("Shape {self.shape} is unknown")
         self.nAtoms=len(NP.get_positions())
         print(f"Total number of atoms = {self.nAtoms}")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         return NP

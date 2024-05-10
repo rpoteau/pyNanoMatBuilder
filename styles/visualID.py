@@ -31,6 +31,7 @@ def centertxt(content=None,font='sans', size=12,weight="normal",bgc="#000000",fg
     '''
     from IPython.display import display, HTML
     display(HTML(f"<div style='text-align:center; font-family: {font}; font-weight: {weight}; font-size:{size}px;background-color: {bgc};color: {fgc}'>{content}</div>"))
+
 import os,sys,platform
 from datetime import datetime
 import datetime, time
@@ -123,7 +124,7 @@ def chrono_start():
     global _chrono_start, _chrono_stop
     _chrono_start=time.time()
 
-# return delay in seconds or in humain format
+# return delay in seconds or in human format
 def chrono_stop(hdelay=False):
     global _chrono_start, _chrono_stop
     _chrono_stop = time.time()
