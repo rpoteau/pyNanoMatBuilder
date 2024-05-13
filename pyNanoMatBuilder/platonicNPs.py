@@ -822,6 +822,7 @@ class cube:
         self.element = element
         self.Rnn = Rnn
         self.nOrder = nOrder
+        self.nAtomsPerEdge = nOrder+1
         self.nAtoms = 0
         self.nAtomsPerShell = [0]
           
@@ -897,7 +898,7 @@ class cube:
     #     self.nAtoms=natoms
     #     return fcc
 
-    def coordsSC(self):
+    def coords(self):
         chrono = pNMBu.timer(); chrono.chrono_start()
         if self.crystalStructure == 'fcc':
             cube = bulk(self.element, 'fcc', a=self.latticeConstant(), cubic=True)
@@ -912,6 +913,7 @@ class cube:
         sc = cut(sc,extend=1.05)
         natoms = len(sc.positions)
         self.nAtoms=natoms
+        self.cog = pNMBu.centerOfGravity(sc.get_positions())
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         return sc
         
@@ -936,3 +938,4 @@ class cube:
         elif self.crystalStructure == 'bcc':
             print("total number of atoms = ",self.nAtomsbccAnalytic())
         print("Dual polyhedron: octahedron")
+        print(f"coordinates of the center of gravity = {self.cog}")

@@ -152,11 +152,11 @@ def centerOfGravity(c: np.ndarray,
 def center2cog(c: np.ndarray):
     import numpy as np
     cog = centerOfGravity(c)
-    ccog = []
+    c2cog = []
     for at in c:
         at = at - cog
-        ccog.append(at)
-    return np.array(ccog)
+        c2cog.append(at)
+    return np.array(c2cog)
 
 def normV(V):
     '''
@@ -592,28 +592,64 @@ def truncateAboveEachPlane(planes: np.ndarray,
         - delAbove = if True (default) delete atoms that lie above the planes + eps = 1e-4. Delete atoms below the
                      planes otherwise (use with precaution, could return no atoms as a function of their definition)
         - hkldRef, hkld: for debugging purpose
-    - returns the coordinates of the atoms that are below ALL input planes
+    - returns the indexes of the atoms that are above each input planes
     '''
 
-    keptAtoms = []
+    delAtoms = []
 
     eps =1e-3
     for p in planes:
         for i,c in enumerate(coords):
             signedDistance = Pt2planeSignedDistance(p,c)
             if delAbove and signedDistance > eps:
-                keptAtoms.append(i)
+                delAtoms.append(i)
             elif not delAbove and signedDistance < eps:
-                keptAtoms.append(i)
+                delAtoms.append(i)
         # print(keptAtoms)
         if debug:
-            for a in keptAtoms:
+            for a in delAtoms:
                 print(f"@{a+1}",end=',')
             print("",end='\n')
-    keptAtoms = np.array(keptAtoms)
-    keptAtoms = np.unique(keptAtoms)
+    delAtoms = np.array(delAtoms)
+    delAtoms = np.unique(delAtoms)
     # if (debug): plot3D()
-    return keptAtoms
+    return delAtoms
+
+def truncateAbovePlanes(planes: np.ndarray,
+                        coords,
+                        allP=False,
+                        debug=False,
+                        delAbove: bool = True):
+    '''
+    - input: 
+        - planes = numpy array with all [u v w d] plane definitions
+        - coords = (N,3) numpy array will all coordinates
+        - allP = deleted atoms must lie above ALL planes (default: False)
+        - delAbove = if True (default) delete atoms that lie above the planes + eps = 1e-4. Delete atoms below the
+                     planes otherwise (use with precaution, could return no atoms as a function of their definition)
+    - returns the coordinates of the atoms that are above each input planes
+    '''
+
+    delAtoms = numpy.zeros(len(coords), dtype=bool)
+    eps =1e-3
+    for p in planes:
+        for i,c in enumerate(coords):
+            signedDistance = Pt2planeSignedDistance(p,c)
+            if delAbove and signedDistance > eps:
+                if not allP:
+                    delAtoms[i] = True
+            elif not delAbove and signedDistance < eps:
+                if not allP:
+                    delAtoms[i] = True
+        # print(keptAtoms)
+        if debug:
+            for a in delAtoms:
+                print(f"@{a+1}",end=',')
+            print("",end='\n')
+    delAtoms = np.array(delAtoms)
+    delAtoms = np.unique(delAtoms)
+    # if (debug): plot3D()
+    return delAtoms
 
 ##############################################################################################
 ######################################## symmetry
@@ -639,17 +675,23 @@ def reflection(plane,points):
 ##############################################################################################
 ######################################## rotation
 def Rx(a):
-  return np.matrix([[ 1, 0           , 0   ],
+    ''' returns the x rotation matrix'''
+    import math as m
+    return np.matrix([[ 1, 0           , 0   ],
                     [ 0, m.cos(a),-m.sin(a)],
                     [ 0, m.sin(a), m.cos(a)]])
   
 def Ry(a):
-  return np.matrix([[ m.cos(a), 0, m.sin(a)],
+    ''' returns the y rotation matrix'''
+    import math as m
+    return np.matrix([[ m.cos(a), 0, m.sin(a)],
                    [ 0           , 1, 0           ],
                    [-m.sin(a), 0, m.cos(a)]])
   
 def Rz(a):
-  return np.matrix([[ m.cos(a), -m.sin(a), 0 ],
+    ''' returns the z rotation matrix'''
+    import math as m
+    return np.matrix([[ m.cos(a), -m.sin(a), 0 ],
                    [ m.sin(a), m.cos(a) , 0 ],
                    [ 0           , 0            , 1 ]])
 
@@ -676,6 +718,17 @@ def EulerRotationMatrix(gamma,beta,alpha,order="zyx"):
         if order[i] == "z":
             R = R*Rz(alpharad)
     return R
+
+def RotationMol(coord, angle, axis="z"):
+    import math as m
+    angler = angle*m.pi/180
+    if axis == 'x':
+        R =  np.array(Rx(angler)@coord.transpose())
+    elif axis == 'y':
+        R =  np.array(Ry(angler)@coord.transpose())
+    elif axis == 'z':
+        R =  np.array(Rz(angler)@coord.transpose())
+    return R[0]
 
 def EulerRotationMol(coord, gamma, beta, alpha, order="zyx"):
     return np.array(EulerRotationMatrix(gamma,beta,alpha,order)@coord.transpose()).transpose()

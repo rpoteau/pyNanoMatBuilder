@@ -1,8 +1,17 @@
 **Development of a pre-release version -> date-based versioning**
 
+## 20240512
+### added
+- strategy for pentagonal bipyramids, Ino decahedra and Marks decahedra evaluated in [`SandBox-doNotDelete-dev.ipynb`](./SandBox-doNotDelete-dev.ipynb)
+- truncated cube sub-section in the Archimidean solids section of `pyNanoMatBuilder.ipynb` and in `archimedeanNPs.py`. <span style='color:red'>Development in progress (magic numbers inconsitent with those of Kaatz2019)</span>
+
+### changed
+- trigonal bipyramid class (`fcctbp`) and pentagonal bipyramid code in `pyNanoMatBuilder.ipynb` moved to newly created `johnsonNPs.py`
+
 ## 20240510
 ### added
-- new fcc truncated octahedron, aka `fccTrOh` class in `archimedeanNPs` module & added in the introductory figurel-
+- new fcc truncated octahedron, aka `fccTrOh` class in `archimedeanNPs` module & added in the introductory figure
+- pentagonal bipyramid <span style='color:red'>under development</span> in the main notebook
 
 ## 20240509
 ### changed

@@ -480,3 +480,139 @@ class fccTrOh:
         print("dual polyhedron: triakis hexahedron")
         print(f"coordinates of the center of gravity = {self.cog}")
 
+###########################################################################################################
+class fccTrCube:
+    nFaces3 = 8
+    nFaces8 = 6
+    nEdges = 36
+    nVertices = 24
+    edgeLengthF = 1 # length of an edge
+    radiusCSF = edgeLengthF * (1/2) * np.sqrt(7+4*np.sqrt(2)) # Centroid to vertex distance = Radius of circumsphere
+    radiusMSF = edgeLengthF * (1/2) * (2+np.sqrt(2))             # Radius of midsphere that is tangent to edges
+    radiusISF = edgeLengthF * (1/17) * (5+2*np.sqrt(2)) * np.sqrt(7+4*np.sqrt(2))# inradius
+    cutFromVertexAt = 0.15
+  
+    def __init__(self,
+                 element: str='Au',
+                 Rnn: float=2.7,
+                 nOrder: int=1):
+        self.cube = pNP.cube('fcc',element,Rnn,nOrder)
+        self.element = element
+        self.Rnn = Rnn
+        self.nAtoms = 0
+        self.cog = np.array([0., 0., 0.])
+        self.nOrder = nOrder
+        # isTrCube,self.nAtomsPerEdge = self.NumberOfCubeEdgeAtomsValid4ATrCube()
+        # if not isTrCube:
+        #     listOfPossiblenLayers = self.magicEdgeNumberOfCube2MakeATrCube(int(1.2*nOrder))
+        #     nearest_nL = min(listOfPossiblenLayers, key = lambda x: abs(x-(self.nOrder)))
+        #     sys.exit(f"This order cannot yield a perfect truncated octahedron.\n"\
+        #              f"The closest possible nOrder value is {nearest_nL}.\n"\
+        #              f"Try again."\
+        #              f"Any doubt about the valid nOrder values? Call the archimedeanNP.magicEdgeNumberOfCube2MakeATrCube(N) "\
+        #              f"to see all possible values between 1 and N")
+        # else:
+        #     self.nAtomsPerEdge = int(self.nAtomsPerEdge)
+          
+    def __str__(self):
+        return(f"Truncated cube based on a {self.nOrder}x{self.nOrder}x{self.nOrder} cube (i.e. {self.nOrder+1} atoms lie on an edge) and Rnn = {self.Rnn}")
+   
+    def nAtomsF(self,i):
+        return round(4*i**3 + 6*i**2 + 3*i - 7)
+
+    def nAtomsAnalytic(self):
+        n = self.nAtomsF(self.nAtomsPerEdge-1)
+        return n
+
+    def edgeLength(self):
+        # a truncated Oh is constructed by truncating all 6 vertices of a regular octahedron
+        # at one third of the original edge length, hence the remaining edge length is Oh.edgeLength/3
+        return self.cube.edgeLength()/3
+
+    def radiusCircumscribedSphere(self):
+        return self.radiusCSF*self.edgeLength()
+
+    def radiusMidSphere(self):
+        return self.radiusMSF*self.edgeLength()
+
+    def radiusInscribedSphere(self):
+        return self.radiusISF*self.edgeLength()
+
+    def area(self):
+        el = self.edgeLength()
+        return el**2 * 2 * (6 + 6*np.sqrt(2) + np.sqrt(3))
+    
+    def volume(self):
+        el = self.edgeLength()
+        return el**3 * (1/3) * (21 + 14*np.sqrt(2))
+
+    def magicEdgeNumberOfCube2MakeATrCube(self, index: int):
+        '''
+        returns the number of edge atoms of the octahedron that will lead to perfect
+        trucated tetrahedra with all edges of equal atomic length
+        '''
+        import numpy as np
+        N = []
+        for i in range(3,index+1):
+            N.append(3*i)
+        return np.array(N)
+    
+    def NumberOfCubeEdgeAtomsValid4ATrCube(self):
+        import numpy as np
+        N = self.nOrder+1
+        nTrCube = N - 2*(N-1)/3
+        return nTrCube.is_integer(), nTrCube
+
+    def coords(self):
+        def findVertices(c):
+            eps = 1.e-4
+            max = np.max(c)
+            indexV = (np.where((np.abs(np.abs(c[:,0]) - max) < eps) &\
+                     (np.abs(np.abs(c[:,1]) - max) < eps) & \
+                     (np.abs(np.abs(c[:,2]) - max) < eps)))
+            coordV = c[indexV]
+            return indexV, coordV
+        chrono = pNMBu.timer(); chrono.chrono_start()
+        vID.centertxt("Generation of the coordinates of the cube",bgc='#007a7a',size='14',weight='bold')
+        aseCube = self.cube.coords()
+        vID.centertxt("Cube moved to origin",bgc='#007a7a',size='14',weight='bold')
+        c2cog = pNMBu.center2cog(aseCube.get_positions())
+        aseCube.set_positions(c2cog)
+        view(aseCube)
+        vID.centertxt("Removing atoms ",bgc='#007a7a',size='14',weight='bold')
+        print('First searching for the coordinates of the vertices and of the cog')
+        indexV, coordVertices = findVertices(aseCube.get_positions())
+        print("Vertices = atoms ",indexV)
+        print("Now calculating the coordinates of the planes orthogonal the the cog-vertex directions")
+        planesAtVertices = pNMBu.planeAtVertices(coordVertices, self.cog)
+        #trCube = truncation all 6 vertices of a regular octahedron at one third of the original edge length
+        trPlanes = pNMBu.calculateTruncationPlanesFromVertices(planesAtVertices,self.cutFromVertexAt,self.cube.nAtomsPerEdge)
+        AtomsAbovePlanes = pNMBu.truncateAboveEachPlane(trPlanes,aseCube.get_positions())
+        
+        aseTrCube = aseCube.copy()
+        del aseTrCube[AtomsAbovePlanes]
+        nAtoms = aseTrCube.get_global_number_of_atoms()
+        print(f"Total number of atoms = {nAtoms}")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+        return aseTrCube,aseCube
+
+    def prop(self):
+        print(self)
+        print("element = ",self.element)
+        print("number of vertices = ",self.nVertices)
+        print("number of edges = ",self.nEdges)
+        print("number of trigonal faces = ",self.nFaces3)
+        print("number of octogonal faces = ",self.nFaces8)
+        print(f"truncation all 6 vertices of a regular octahedron at {self.cutFromVertexAt:.3f}a_cube from the vertices of the cube")
+        print(f"nearest neighbour distance = {self.Rnn:.2f} Å")
+        print(f"edge length = {self.edgeLength()*0.1:.2f} nm")
+        print(f"radius of the circumscribed sphere = {self.radiusCircumscribedSphere()*0.1:.2f} nm")
+        print(f"radius of the medium sphere = {self.radiusMidSphere()*0.1:.2f} nm")
+        print(f"radius of the inscribed sphere = {self.radiusInscribedSphere()*0.1:.2f} nm")
+        # print(f"number of atoms per edge = {self.nAtomsPerEdge}")
+        print(f"area = {self.area()*1e-2:.1f} nm2")
+        print(f"volume = {self.volume()*1e-3:.1f} nm3")
+        # print("total number of atoms = ",self.nAtomsAnalytic())
+        print("dual polyhedron: Triakis octahedron")
+        print(f"coordinates of the center of gravity = {self.cog}")
+
