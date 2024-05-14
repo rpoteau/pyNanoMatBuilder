@@ -6,5 +6,5 @@ The following solutions can be used:
 - D+ (python library - windows only https://dplus-python-api.readthedocs.io/en/latest/) - takes pdb format as input - can handle large and hierarchical structures and is GPU friendly. No anomalous investigations. FILE: pentarod_Marianne_Dplus.ipynb
 - sasview (python library) - takes pdb as input - does not account for anomalous effects. (https://www.sasview.org/docs/user/qtgui/Calculators/sas_calculator_help.html#) FILE:Iofq_nodiffpy_py311
 - 'diffpy': it is a python function, named Iofq, that uses diffpy-cmi library to load the structure, and get statistics from it (such as pairs). This function is open and is a good candidate to adapt to pyNanoMatBuilder. Scaterring factors can be computed as desired, e.g. using xraylarch library FILE: Iofq_diffpy
-- Python function derived from A. Boule notebook (see https://github.com/aboulle/HPPython/blob/master/Debye.ipynb) : FILE: Iofq_nodiffpy_py311 also a good candidate
+- Python function derived from diffpy function described above, but modified to take xyz files as input : complex scattering factors, talking into account anomalous effects, are computed using xraylarch library.  FILE: Iofq_fcomplex_ok, is a very good candidate for optimisation
 
