@@ -1,5 +1,10 @@
 **Development of a pre-release version -> date-based versioning**
-
+## 20240514
+### added
+- function to compute I(q) from a xyz file. Needs to be optimized (cython?) and implemented in the library
+### deleted
+- doublons
+- obsolete functions
 ## 20240512
 ### added
 - strategy for pentagonal bipyramids, Ino decahedra and Marks decahedra evaluated in [`SandBox-doNotDelete-dev.ipynb`](./SandBox-doNotDelete-dev.ipynb)
