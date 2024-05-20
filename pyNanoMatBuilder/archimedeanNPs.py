@@ -325,7 +325,8 @@ class fccTrTd:
         planesAtVertices = pNMBu.planeAtVertices(coordVertices, Td.cog)
         #trTd = truncation all 4 vertices of a regular tetrahedron at one third of the original edge length
         trPlanes = pNMBu.calculateTruncationPlanesFromVertices(planesAtVertices,self.cutFromVertexAt,Td.nAtomsPerEdge-1)
-        AtomsAbovePlanes = pNMBu.truncateAboveEachPlane(trPlanes,aseTd.get_positions())
+        #AtomsAbovePlanes = pNMBu.truncateAboveEachPlane(trPlanes,aseTd.get_positions())
+        AtomsAbovePlanes = pNMBu.truncateAbovePlanes(trPlanes,aseTd.get_positions())
         
         aseTrTd = aseTd.copy() 
         del aseTrTd[AtomsAbovePlanes]
@@ -426,7 +427,7 @@ class fccTrOh:
         '''
         import numpy as np
         N = []
-        for i in range(3,index+1):
+        for i in range(1,index+1):
             N.append(3*i)
         return np.array(N)
     

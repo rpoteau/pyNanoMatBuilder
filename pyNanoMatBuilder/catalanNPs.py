@@ -8,7 +8,7 @@ from ase import io
 from ase.visualize import view
 
 ###########################################################################################################
-class bccrdd:
+class bccrDD:
     nFaces = 12
     nEdges = 24
     nVertices = 14
@@ -208,7 +208,7 @@ class bccrdd:
         print("Dual polyhedron: ")
 
 ###########################################################################################################
-class fccdrdd:
+class fccdrDD:
     nFaces = 12
     nEdges = 32
     nVertices = 14
@@ -233,11 +233,11 @@ class fccdrdd:
         self.interShellDistanceTB = self.Rnn / self.interShellFTB
           
     def __str__(self):
-        return(f"Dihedral rhombic dodecahedron (drdd) with {self.nShell} shell(s) and Rnn = {self.Rnn}")
+        return(f"Dihedral rhombic dodecahedron (drDD) with {self.nShell} shell(s) and Rnn = {self.Rnn}")
     
     def nAtomsF(self,i):
         """ returns the number of atoms of an bcc rhombic dodecahedron of size i"""
-        return 4*i**3 + 6*i**2 + 4*i + 1
+        return 8*i**3 + 6*i**2 + 2*i + 3
     
     def nAtomsPerShellAnalytic(self):
         n = []

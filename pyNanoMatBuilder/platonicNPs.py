@@ -432,9 +432,6 @@ class regfccTd:
         return(f"Regular tetrahedron with {self.nLayer} layer(s) and Rnn = {self.Rnn}")
     
     def nAtomsF(self,i):
-        # print("nAtoms - part1",i**3/6)
-        # print("nAtoms - part2",i**2)
-        # print("nAtoms - part3",11*i/6)
         return round(i**3/6 + i**2 + 11*i/6 + 1)
     
     def nAtomsPerLayerAnalytic(self):

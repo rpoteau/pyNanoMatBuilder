@@ -128,6 +128,11 @@ def vertex(x, y, z, scale):
     length = np.sqrt(x**2 + y**2 + z**2)
     return [(i * scale) / length for i in (x,y,z)]
 
+def vertexScaled(x, y, z, scale):
+    import numpy as np
+    """ Return vertex coordinates multiplied by the scale factor """
+    return [i * scale for i in (x,y,z)]
+
     
 def RadiusSphereAfterV(V):
     import numpy as np
@@ -158,12 +163,20 @@ def center2cog(c: np.ndarray):
         c2cog.append(at)
     return np.array(c2cog)
 
-def normV(V):
+def normOfV(V):
     '''
     returns the norm of a vector V, [V0,V1,V2]
     '''
     import numpy as np
     return np.sqrt(V[0]**2+V[1]**2+V[2]**2)
+
+def normV(V):
+    '''
+    normalizes V and returns the result as an array
+    '''
+    import numpy as np
+    N = normOfV(V)
+    return np.array([V[0]/N,V[1]/N,V[2]/N])
 
 def centerToVertices(coordVertices: np.ndarray,
                      cog: np.ndarray):
@@ -197,10 +210,10 @@ def MakeFaceCoord(Rnn,f,coord,nAtomsOnFaces,coordFaceAt):
     if (len(f) == 4):  #square facet 0-1-2-3-4-0
         edge1 = [f[3],f[0]]
         edge2 = [f[2],f[1]]
-    if (len(f) == 5):  #pentagonal facet
+    if (len(f) == 5):  #pentagonal facet #not working
         edge1 = [f[1],f[0]]
         edge2 = [f[1],f[2]]
-    if (len(f) == 6):  #hexagonal facet
+    if (len(f) == 6):  #hexagonal facet #not working
         edge1 = [f[0],f[1]]
         edge2 = [f[5],f[4]]
     nAtomsOnEdges = int((RAB(coord,f[1],f[0])+1e-6)/Rnn) - 1
@@ -255,13 +268,6 @@ def optimizeEMT(model: Atoms, pathway="./coords/model", fthreshold=0.05):
 
 ##############################################################################################
 ######################################## Planes
-def point2PlaneDistance(point: np.float64,
-                              plane: np.float64):
-    import numpy as np
-    from numpy.linalg import norm
-    distance = abs(np.dot(point,plane[0:3]) + plane[3]) / norm(plane[0:3])
-    return distance
-
 def interPlanarSpacing(plane: np.ndarray,
                        unitcell: np.ndarray,
                        CrystalSystem: str='CUB'):
@@ -499,7 +505,129 @@ def normalizePlane(p):
     - input: plane [a,b,c,d]
     returns [a/norm,b/norm,c/norm,d/norm] where norm=dsqrt(a**2+b**2+c**2)
     '''
-    return p/normV(p[0:3])
+    return p/normOfV(p[0:3])
+
+def point2PlaneDistance(point: np.float64,
+                              plane: np.float64):
+    import numpy as np
+    from numpy.linalg import norm
+    distance = abs(np.dot(point,plane[0:3]) + plane[3]) / norm(plane[0:3])
+    return distance
+
+##############################################################################################
+######################################## cut above planes
+def calculateTruncationPlanesFromVertices(planes, cutFromVertexAt, nAtomsPerEdge, debug=False):
+    n = int(round(1/cutFromVertexAt))
+    print(f"factor = {cutFromVertexAt:.3f} ▶ {round(nAtomsPerEdge/n)} layer(s) will be removed, starting from each vertex")
+
+    trPlanes = []
+    for p in planes:
+        pNormalized =normalizePlane(p.copy())
+        pNormalized[3] =  pNormalized[3] - pNormalized[3]*cutFromVertexAt
+        trPlanes.append(pNormalized)
+        if (debug):
+            print("normalized original plane = ",normalizePlane(p))
+            print("cut plane = ",pNormalized,"... norm = ",normOfV(pNormalized[0:3]))
+            print("signed distance between original plane and origin = ",Pt2planeSignedDistance(p,[0,0,0]))
+            print("signed distance between cut plane and origin = ",Pt2planeSignedDistance(pNormalized,[0,0,0]))
+            print("pcut/pRef = ",Pt2planeSignedDistance(pNormalized,[0,0,0])\
+                                /Pt2planeSignedDistance(p,[0,0,0]))
+        print(f"Will remove atoms just above plane "\
+              f"{pNormalized[0]:.2f} {pNormalized[1]:.2f} {pNormalized[2]:.2f} d:{pNormalized[3]:.3f}")
+    return np.array(trPlanes)    
+
+def truncateAboveEachPlane(planes: np.ndarray,
+                           coords,
+                           debug=False,
+                           delAbove: bool = True):
+    '''
+    - input: 
+        - planes = numpy array with all [u v w d] plane definitions
+        - coords = (N,3) numpy array will all coordinates
+        - delAbove = if True (default) delete atoms that lie above the planes + eps = 1e-4. Delete atoms below the
+                     planes otherwise (use with precaution, could return no atoms as a function of their definition)
+    - returns the indexes of the atoms that are above each input planes
+    '''
+
+    delAtoms = []
+
+    eps =1e-3
+    for p in planes:
+        for i,c in enumerate(coords):
+            signedDistance = Pt2planeSignedDistance(p,c)
+            if delAbove and signedDistance > eps:
+                delAtoms.append(i)
+            elif not delAbove and signedDistance < eps:
+                delAtoms.append(i)
+        # print(keptAtoms)
+        if debug:
+            for a in delAtoms:
+                print(f"@{a+1}",end=',')
+            print("",end='\n')
+    delAtoms = np.array(delAtoms)
+    delAtoms = np.unique(delAtoms)
+    # if (debug): plot3D()
+    return delAtoms
+
+def truncateAbovePlanes(planes: np.ndarray,
+                        coords: np.ndarray,
+                        allP: bool=False,
+                        delAbove: bool = True,
+                        debug: bool=False,
+                        eps: float=1e-3):
+    '''
+    - input: 
+        - planes = numpy array with all [u v w d] plane definitions
+        - coords = (N,3) numpy array will all coordinates
+        - allP = deleted atoms must lie above ALL planes (default: False)
+        - delAbove = if True (default) delete atoms that lie above the planes + eps = 1e-3 (default). Delete atoms below the
+                     planes otherwise (use with precaution, could return no atoms as a function of their definition)
+        - debug: if True (default is False) print atoms that match the allP/delAbove planes conditions
+        - eps: atom-to-plane signed distance threshold (default 1e-3)
+    - returns an N-dimension boolean array that tells which atoms above each input planes (allP = False) 
+      or above all input planes at the same time (allP=True) (opposite if delAbove is False)
+    '''
+
+    import numpy as np
+    if allP:
+        delAtoms = np.ones(len(coords), dtype=bool)
+    else:
+        delAtoms = np.zeros(len(coords), dtype=bool)
+    eps =1e-3
+    for p in planes:
+        for i,c in enumerate(coords):
+            signedDistance = Pt2planeSignedDistance(p,c)
+            if delAbove and allP:
+                delAtoms[i] = delAtoms[i] and signedDistance > eps
+            elif delAbove and not allP:
+                delAtoms[i] = delAtoms[i] or signedDistance > eps
+            elif not delAbove and allP:
+                delAtoms[i] = delAtoms[i] and signedDistance < eps
+            elif not delAbove and not allP:
+                delAtoms[i] = delAtoms[i] or signedDistance < eps
+        if debug:
+            for i,a in enumerate(delAtoms):
+                if a: print(f"@{i}",end=',')
+            print("",end='\n')
+    delAtoms = np.array(delAtoms)
+    return delAtoms
+
+def deleteElementsOfAList(t,
+                          list2Delete: bool):
+    '''
+    returns a new list
+    input:
+        - t: list or table
+        - list2Delete = list of booleans. list2Delete[i] = True ==> t[i] is deleted 
+    '''
+    import numpy as np
+    if len(t) != len(list2Delete): sys.exit("the input list and the array of booleans must have the same dimension. Check your code")
+    if type(t) == list: 
+        tloc = np.array(t.copy())
+    else:
+        tloc = t.copy()
+    tloc = np.delete(tloc,list2Delete,axis=0)
+    return list(tloc)
 
 ##############################################################################################
 ######################################## coupling with Jmol
@@ -560,105 +688,14 @@ def delAtomsWithCN(coords: np.ndarray,
     return tabDelAtoms
 
 ##############################################################################################
-######################################## cut above planes
-def calculateTruncationPlanesFromVertices(planes, cutFromVertexAt, nAtomsPerEdge, debug=False):
-    n = int(round(1/cutFromVertexAt))
-    print(f"factor = {cutFromVertexAt:.3f} ▶ {round(nAtomsPerEdge/n)} layer(s) will be removed, starting from each vertex")
-
-    trPlanes = []
-    for p in planes:
-        pNormalized =normalizePlane(p.copy())
-        pNormalized[3] =  pNormalized[3] - pNormalized[3]*cutFromVertexAt
-        trPlanes.append(pNormalized)
-        if (debug):
-            print("normalized original plane = ",normalizePlane(p))
-            print("cut plane = ",pNormalized,"... norm = ",normV(pNormalized[0:3]))
-            print("signed distance between original plane and origin = ",Pt2planeSignedDistance(p,[0,0,0]))
-            print("signed distance between cut plane and origin = ",Pt2planeSignedDistance(pNormalized,[0,0,0]))
-            print("pcut/pRef = ",Pt2planeSignedDistance(pNormalized,[0,0,0])\
-                                /Pt2planeSignedDistance(p,[0,0,0]))
-        print(f"Will remove atoms just above plane "\
-              f"{pNormalized[0]:.2f} {pNormalized[1]:.2f} {pNormalized[2]:.2f} d:{pNormalized[3]:.3f}")
-    return np.array(trPlanes)    
-
-def truncateAboveEachPlane(planes: np.ndarray,
-                           coords,
-                           debug=False,
-                           delAbove: bool = True):
-    '''
-    - input: 
-        - planes = numpy array with all [u v w d] plane definitions
-        - coords = (N,3) numpy array will all coordinates
-        - delAbove = if True (default) delete atoms that lie above the planes + eps = 1e-4. Delete atoms below the
-                     planes otherwise (use with precaution, could return no atoms as a function of their definition)
-        - hkldRef, hkld: for debugging purpose
-    - returns the indexes of the atoms that are above each input planes
-    '''
-
-    delAtoms = []
-
-    eps =1e-3
-    for p in planes:
-        for i,c in enumerate(coords):
-            signedDistance = Pt2planeSignedDistance(p,c)
-            if delAbove and signedDistance > eps:
-                delAtoms.append(i)
-            elif not delAbove and signedDistance < eps:
-                delAtoms.append(i)
-        # print(keptAtoms)
-        if debug:
-            for a in delAtoms:
-                print(f"@{a+1}",end=',')
-            print("",end='\n')
-    delAtoms = np.array(delAtoms)
-    delAtoms = np.unique(delAtoms)
-    # if (debug): plot3D()
-    return delAtoms
-
-def truncateAbovePlanes(planes: np.ndarray,
-                        coords,
-                        allP=False,
-                        debug=False,
-                        delAbove: bool = True):
-    '''
-    - input: 
-        - planes = numpy array with all [u v w d] plane definitions
-        - coords = (N,3) numpy array will all coordinates
-        - allP = deleted atoms must lie above ALL planes (default: False)
-        - delAbove = if True (default) delete atoms that lie above the planes + eps = 1e-4. Delete atoms below the
-                     planes otherwise (use with precaution, could return no atoms as a function of their definition)
-    - returns the coordinates of the atoms that are above each input planes
-    '''
-
-    delAtoms = numpy.zeros(len(coords), dtype=bool)
-    eps =1e-3
-    for p in planes:
-        for i,c in enumerate(coords):
-            signedDistance = Pt2planeSignedDistance(p,c)
-            if delAbove and signedDistance > eps:
-                if not allP:
-                    delAtoms[i] = True
-            elif not delAbove and signedDistance < eps:
-                if not allP:
-                    delAtoms[i] = True
-        # print(keptAtoms)
-        if debug:
-            for a in delAtoms:
-                print(f"@{a+1}",end=',')
-            print("",end='\n')
-    delAtoms = np.array(delAtoms)
-    delAtoms = np.unique(delAtoms)
-    # if (debug): plot3D()
-    return delAtoms
-
-##############################################################################################
 ######################################## symmetry
-def reflection(plane,points):
+def reflection(plane,points,doItForAtomsThatLieInTheReflectionPlane=False):
     '''
     applies a mirror-image symmetry operation of an array of points w.r.t. a plane of symmetry
     - input:
         - plane = [u,v,w,d] parameters that define a plane
         - point = (N, 3) array of points
+        - doItForAtomsThatLieInTheReflectionPlane = slef-explanatory
     - returns an (N, 3) array of mirror-image points
     '''
     import numpy as np
@@ -666,8 +703,11 @@ def reflection(plane,points):
     eps = 1.e-4
     for p in points:
         vp2plane, dp2plane = shortestPoint2PlaneVectorDistance(plane,p)
-        if dp2plane >= eps: # otherwise the point belongs to the reflection plane
+        if dp2plane >= eps and not doItForAtomsThatLieInTheReflectionPlane: # otherwise the point belongs to the reflection plane
             # print(dp2plane, vp2plane, p)
+            ptmp = p+2*vp2plane
+            pr.append(ptmp)
+        else:
             ptmp = p+2*vp2plane
             pr.append(ptmp)
     return np.array(pr)
@@ -675,21 +715,21 @@ def reflection(plane,points):
 ##############################################################################################
 ######################################## rotation
 def Rx(a):
-    ''' returns the x rotation matrix'''
+    ''' returns the R/x rotation matrix'''
     import math as m
     return np.matrix([[ 1, 0           , 0   ],
                     [ 0, m.cos(a),-m.sin(a)],
                     [ 0, m.sin(a), m.cos(a)]])
   
 def Ry(a):
-    ''' returns the y rotation matrix'''
+    ''' returns the R/y rotation matrix'''
     import math as m
     return np.matrix([[ m.cos(a), 0, m.sin(a)],
                    [ 0           , 1, 0           ],
                    [-m.sin(a), 0, m.cos(a)]])
   
 def Rz(a):
-    ''' returns the z rotation matrix'''
+    ''' returns the R/z rotation matrix'''
     import math as m
     return np.matrix([[ m.cos(a), -m.sin(a), 0 ],
                    [ m.sin(a), m.cos(a) , 0 ],
@@ -743,3 +783,45 @@ def RotationMatrixFromAxisAngle(u,angle):
                       [uy*ux*(1-m.cos(a))+uz*m.sin(a), cos(a)+uy**2*(1-m.cos(a))     , uy*uz*(1-m.cos(a))-ux*m.sin(a)],
                       [uz*ux*(1-m.cos(a))-uy*m.sin(a), uz*uy*(1-m.cos(a))+ux*m.sin(a), cos(a)+uz**2*(1-m.cos(a))     ]])
 
+##############################################################################################
+######################################## magic numbers
+def magicNumbers(cluster,i):
+    match cluster:
+        case 'regfccOh':
+            mn = np.round((2/3)*i**3 + 2*i**2 + (7/3)*i + 1)
+            return mn
+        case 'regIco':
+            mn = (10*i**3 + 11*i)//3 + 5*i**2 + 1
+            return mn
+        case 'regfccTd':
+            mn = np.round(i**3/6 + i**2 + 11*i/6 + 1)
+            return mn
+        case 'regDD':
+            mn = 10*i**3 + 15*i**2 + 7*i + 1
+            return mn
+        case 'fccCube':
+            mn = 4*i**3 + 6*i*2 + 3*i + 1
+            return mn
+        case 'bccCube':
+            mn = 2*i**3 + 3*i*2 + 3*i
+            return mn
+        case 'fccCubo':
+            mn = np.round((10*i**3 + 11*i)/3 + 5*i**2 + 1)
+            return mn
+        case 'fccTrOh':
+            mn = np.round(16*i**3 + 15*i**2 + 6*i + 1)
+            return mn
+        case 'fccTrCube':
+            mn = np.round(4*i**3 + 6*i**2 + 3*i - 7)
+            return mn
+        case 'bccrDD':
+            mn = 4*i**3 + 6*i**2 + 4*i + 1
+            return mn
+        case 'fccdrDD':
+            mn = 8*i**3 + 6*i**2 + 2*i + 3
+            return mn
+        case 'pbpy':
+            mn = 5*i**3/6 + 5*i**2/2 + 8*i/3 + 1
+            return mn
+        case _:
+            sys.exit(f"The {cluster} cluster is unknown")
