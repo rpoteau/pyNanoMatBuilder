@@ -1,5 +1,4 @@
 **Development of a pre-release version -> date-based versioning**
-
 ## 20240520
 ### added
 - pentagonal bipyramids, Ino and Marks decahedra added on the introductory figure - with the help of the corresponding code of the main notebook
@@ -23,6 +22,13 @@
 ### added
 - `utils.truncateAbovePlanes`: intends to be a generalization of `utils.truncateAboveEachPlane` (see also the *Decahedron, Ino & Marks decahedra* section in [`SandBox-doNotDelete-dev.ipynb`](./SandBox-doNotDelete-dev.ipynb)). Returns an array of booleans that tells which atoms fulfill the input conditions (above/below each/all input plane(s))
 - `deleteElementsOfAList`: delete all items of a list (or array) specified by a list (or array) of booleans (returns a list)
+
+## 20240514 (NRR)
+### added
+- function to compute I(q) from a xyz file. Needs to be optimized (cython?) and implemented in the library
+### deleted
+- doublons
+- obsolete functions
 
 ## 20240512
 ### added
