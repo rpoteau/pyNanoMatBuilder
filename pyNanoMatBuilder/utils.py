@@ -268,74 +268,6 @@ def optimizeEMT(model: Atoms, pathway="./coords/model", fthreshold=0.05):
 
 ##############################################################################################
 ######################################## Planes
-def interPlanarSpacing(plane: np.ndarray,
-                       unitcell: np.ndarray,
-                       CrystalSystem: str='CUB'):
-    '''
-    - input:
-        - plane = numpy array that the contains the [h k l d] parameters of the plane of equation
-                hx + ky +lz + d = 0
-        - unitcell = numpy array with [a b c alpha beta gamma]
-        - CrystalSystem = name of the crystal system, string among:
-          ['CUB', 'HEX', 'TRH', 'TET', 'ORC', 'MCL', 'TRI'] = cubic, hexagonal, trigonal-rhombohedral, tetragonal, orthorombic, monoclinic, tricilinic
-    returns the interplanar spacing (float value)
-    '''
-    import sys
-    h = plane[0]
-    k = plane[1]
-    l = plane[2]
-    a = unitcell[0]
-    match CrystalSystem.upper():
-        case 'CUB':
-            d2 = a**2 / (h**2+k**2+l**2)
-        case 'HEX':
-            c = unitcell[2]
-            d2inv = (4/3)*(h**2 + k**2 + h*k)/a**2 + l**2/c**2
-            d2 = 1/d2inv
-        case 'TRH':
-            alpha = (np.pi/180) * unitcell[3]
-            d2inv = ((h**2 + k**2 + l**2)*np.sin(alpha)**2 + 2*(h*k + k*l + h*l)*(np.cos(alpha)**2-np.cos(alpha)))/(a**2*(1-3*np.cos(alpha)**2+2*np.cos(alpha)**3))
-            d2 = 1/d2inv
-        case 'TET':
-            c = unitcell[2]
-            d2inv = (h**2+k**2)/a**2 + l**2/c**2
-            d2 = 1/d2inv    
-        case 'ORC':
-            b = unitcell[1]
-            c = unitcell[2]
-            d2inv = h**2/a**2 + k**2/b**2 + l**2/c**2
-            d2 = 1/d2inv    
-        case 'MCL':
-            b = unitcell[1]
-            c = unitcell[2]
-            # beta = np.pi - (np.pi/180) * unitcell[4]
-            # d2inv = h**2/(a**2*np.sin(beta)) + k**2/b**2 + l**2/(c**2*np.sin(beta)) + 2*h*l*np.cos(beta)/(a*c*np.sin(beta)**2)
-            beta = (np.pi/180) * unitcell[4]
-            d2inv = ((h/a)**2 + (k*np.sin(beta)/b)**2 + (l/c)**2 - 2*h*l*np.cos(beta)/(a*c))/np.sin(beta)**2
-            d2 = 1/d2inv    
-        case 'TRI':
-            b = unitcell[1]
-            c = unitcell[2]
-            alpha = (np.pi/180) * unitcell[3]
-            beta = (np.pi/180) * unitcell[4]
-            gamma = (np.pi/180) * unitcell[5]
-            V = (a*b*c) * np.sqrt(1 - np.cos(alpha)**2 - np.cos(beta)**2 - np.cos(gamma)**2 + 2*np.cos(alpha)*np.cos(beta)*np.cos(gamma))
-            astar = b*c*np.sin(alpha)/V
-            bstar = a*c*np.sin(beta)/V
-            cstar = a*b*np.sin(gamma)/V
-            cosalphastar = (np.cos(gamma)*np.cos(beta) - np.cos(alpha))/(np.sin(gamma)*np.sin(beta))
-            cosbetastar  = (np.cos(alpha)*np.cos(gamma) - np.cos(beta))/(np.sin(alpha)*np.sin(gamma))
-            cosgammastar = (np.cos(beta)*np.cos(alpha) - np.cos(gamma))/(np.sin(beta)*np.sin(alpha))
-            d2inv = (h*astar)**2 + (k*bstar)**2 + (l*cstar)**2 + 2*k*l*bstar*cstar*cosalphastar\
-                                                               + 2*l*h*cstar*astar*cosbetastar\
-                                                               + 2*h*k*astar*bstar*cosgammastar
-            d2 = 1/d2inv    
-        case _:
-            sys.exit(f"{CrystalSystem} crystal system is unknown. Check your data.\n"\
-                      "Or do not try to calculate interplanar distances on this system with interPlanarSpacing()")
-    d = np.sqrt(d2)
-    return d
-
 def planeFittingLSF(coords: np.float64,
                     printErrors: bool=False,
                     printEq: bool=True):
@@ -825,3 +757,97 @@ def magicNumbers(cluster,i):
             return mn
         case _:
             sys.exit(f"The {cluster} cluster is unknown")
+
+##############################################################################################
+######################################## Bravais
+def interPlanarSpacing(plane: np.ndarray,
+                       unitcell: np.ndarray,
+                       CrystalSystem: str='CUB'):
+    '''
+    - input:
+        - plane = numpy array that the contains the [h k l d] parameters of the plane of equation
+                hx + ky +lz + d = 0
+        - unitcell = numpy array with [a b c alpha beta gamma]
+        - CrystalSystem = name of the crystal system, string among:
+          ['CUB', 'HEX', 'TRH', 'TET', 'ORC', 'MCL', 'TRI'] = cubic, hexagonal, trigonal-rhombohedral, tetragonal, orthorombic, monoclinic, tricilinic
+    returns the interplanar spacing (float value)
+    '''
+    import sys
+    h = plane[0]
+    k = plane[1]
+    l = plane[2]
+    a = unitcell[0]
+    match CrystalSystem.upper():
+        case 'CUB':
+            d2 = a**2 / (h**2+k**2+l**2)
+        case 'HEX':
+            c = unitcell[2]
+            d2inv = (4/3)*(h**2 + k**2 + h*k)/a**2 + l**2/c**2
+            d2 = 1/d2inv
+        case 'TRH':
+            alpha = (np.pi/180) * unitcell[3]
+            d2inv = ((h**2 + k**2 + l**2)*np.sin(alpha)**2 + 2*(h*k + k*l + h*l)*(np.cos(alpha)**2-np.cos(alpha)))/(a**2*(1-3*np.cos(alpha)**2+2*np.cos(alpha)**3))
+            d2 = 1/d2inv
+        case 'TET':
+            c = unitcell[2]
+            d2inv = (h**2+k**2)/a**2 + l**2/c**2
+            d2 = 1/d2inv    
+        case 'ORC':
+            b = unitcell[1]
+            c = unitcell[2]
+            d2inv = h**2/a**2 + k**2/b**2 + l**2/c**2
+            d2 = 1/d2inv    
+        case 'MCL':
+            b = unitcell[1]
+            c = unitcell[2]
+            # beta = np.pi - (np.pi/180) * unitcell[4]
+            # d2inv = h**2/(a**2*np.sin(beta)) + k**2/b**2 + l**2/(c**2*np.sin(beta)) + 2*h*l*np.cos(beta)/(a*c*np.sin(beta)**2)
+            beta = (np.pi/180) * unitcell[4]
+            d2inv = ((h/a)**2 + (k*np.sin(beta)/b)**2 + (l/c)**2 - 2*h*l*np.cos(beta)/(a*c))/np.sin(beta)**2
+            d2 = 1/d2inv    
+        case 'TRI':
+            b = unitcell[1]
+            c = unitcell[2]
+            alpha = (np.pi/180) * unitcell[3]
+            beta = (np.pi/180) * unitcell[4]
+            gamma = (np.pi/180) * unitcell[5]
+            V = (a*b*c) * np.sqrt(1 - np.cos(alpha)**2 - np.cos(beta)**2 - np.cos(gamma)**2 + 2*np.cos(alpha)*np.cos(beta)*np.cos(gamma))
+            astar = b*c*np.sin(alpha)/V
+            bstar = a*c*np.sin(beta)/V
+            cstar = a*b*np.sin(gamma)/V
+            cosalphastar = (np.cos(gamma)*np.cos(beta) - np.cos(alpha))/(np.sin(gamma)*np.sin(beta))
+            cosbetastar  = (np.cos(alpha)*np.cos(gamma) - np.cos(beta))/(np.sin(alpha)*np.sin(gamma))
+            cosgammastar = (np.cos(beta)*np.cos(alpha) - np.cos(gamma))/(np.sin(beta)*np.sin(alpha))
+            d2inv = (h*astar)**2 + (k*bstar)**2 + (l*cstar)**2 + 2*k*l*bstar*cstar*cosalphastar\
+                                                               + 2*l*h*cstar*astar*cosbetastar\
+                                                               + 2*h*k*astar*bstar*cosgammastar
+            d2 = 1/d2inv    
+        case _:
+            sys.exit(f"{CrystalSystem} crystal system is unknown. Check your data.\n"\
+                      "Or do not try to calculate interplanar distances on this system with interPlanarSpacing()")
+    d = np.sqrt(d2)
+    return d
+
+def lattice_cart(system,vectors,Bravais2cart=True,printV=False):
+    '''
+    - input:
+        - system = ase Atoms object with periodic boundary conditions
+        - vectors = vectors to project from the Bravais lattice to cartesian axis (if Bravais2cart is True)
+                         or to project from the cartesian coordinate system to the Bravais axis  (if Bravais2cart is False)
+    '''
+    import numpy as np
+    unitcell, Vuc = system.return_unitcell()
+    if Bravais2cart:
+        Vproj = (Vuc@vectors.transpose()).transpose()
+        B = 'B'
+        E = 'C'
+    else:
+        Vproj = (np.linalg.inv(Vuc)@vectors.transpose()).transpose()
+        B = 'C'
+        E = 'B'
+    if printV:
+        for i,V in enumerate(vectors):
+            Bstr = [f"{v: .2f}" for v in V]
+            Estr = [f"{vp: .2f}" for vp in Vproj[i]]
+            print(f"{Bstr}{B} > {Estr}{E}")
+    return Vproj 

@@ -1,4 +1,12 @@
 **Development of a pre-release version -> date-based versioning**
+
+## 20240521
+### added
+- `lattice_cart()` function in `utils.py`: project vectors from/to the Bravais axis system to/from the cartesian coordinate system. The unitcell definition is given under the form of an ase `Atoms` object with periodic boundary conditions (see basic example in the *sandbox notebook*)
+
+### changed
+- `Crystal` class of `CrystalNP.py` module: cif and cifname variables are now variables of the instance created by this class (i.e. `self.cif` and `self.cifname`). Was necessary to directly address some `Crystal` functions, without using the `makeNP(self)` "macro"
+
 ## 20240520
 ### added
 - pentagonal bipyramids, Ino and Marks decahedra added on the introductory figure - with the help of the corresponding code of the main notebook
@@ -11,7 +19,7 @@
 
 ### fixed
 - `magicEdgeNumberOfOh2MakeATrOh` in `fccTrOh` class of `archimedeanNPs` module now starts at 3 (previously 9. Oups)
-- magic numbers of the `fccdrDD` class were wrong (formula was the bccrDD one)
+- magic numbers of the `fccdrDD` class were wrong (formula was that of `bccrDD`)
 
 ## 20240516-19
 ### added
