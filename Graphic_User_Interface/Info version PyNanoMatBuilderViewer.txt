@@ -1,0 +1,36 @@
+Info version PyNanoMatBuilderViewer
+
+v7:
+Open multi files with combobox
+
+v8
+- Add pdb to structure files (not only xyz)
+- Try of I(q) calculations. xraylarch installation failed
+
+v12
+- Change relative path to absolut path to allow to select structures outside folder of execution
+- Write index.html in structures'folder and remove it when close
+
+v14
+- Fixed string format issue for filenames \ not supported
+- Add debye calculation with plot
+- Add Tread Debye
+
+v16
+- split code with class debye
+- add title , log, legend to graph
+
+v22
+- Add progressbar
+- Add splash image
+
+
+---------------------
+to do:
+- Save I(q)
+- Show / hide progressbar
+- display estimated time
+- chose options (qmin=0.001, qmax=20, qstep=0.001, device='cpu', biso=0) for debye calculation
+- def debye_calculation(file_path): is 2 times: inside and outside class thread ->check
+- add button cancel for I(q) calculation
+- chose dataset strucure
