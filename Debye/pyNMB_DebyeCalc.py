@@ -52,13 +52,3 @@ writexyz(RuNP,xyzfile)
 from debyecalculator import DebyeCalculator
 calc = DebyeCalculator(qmin=0.01,qmax=20,qstep=0.01,device='cpu',biso=0)
 Q, I = calc.iq(structure_source=xyzfile)
-
-xyz2=filepath+'Sphere_10.0.xyz'
-Q2, I2 = calc.iq(structure_source=xyz2)
-
-from matplotlib import pyplot as plt
-plt.figure()
-plt.loglog(Q,I,label='pyNanoMatBuilder')
-plt.loglog(Q2,I2,label='WAXS_toolbox')
-plt.legend()
-plt.show()
