@@ -7,7 +7,9 @@ The following solutions can be used:
 - sasview (python library) - takes pdb as input - does not account for anomalous effects. (https://www.sasview.org/docs/user/qtgui/Calculators/sas_calculator_help.html#) FILE:Iofq_nodiffpy_py311
 - 'diffpy': it is a python function, named Iofq, that uses diffpy-cmi library to load the structure, and get statistics from it (such as pairs). This function is open and is a good candidate to adapt to pyNanoMatBuilder. Scaterring factors can be computed as desired, e.g. using xraylarch library FILE: Iofq_diffpy
 - Python function derived from diffpy function described above, but modified to take xyz files as input : complex scattering factors, talking into account anomalous effects, are computed using xraylarch library.  FILE: Iofq_fcomplex_ok, is a very good candidate for optimisation. However there is some work to be done (introduce fNT is structure factor)
-- DebyeCalculator python package: provides same resuslts as Debyer. Is optimized for GPU calculations. No anomalous calculations
+- DebyeCalculator python package: provides same resuslts as Debyer. Is optimized for GPU calculations. No anomalous calculations. See file pyNMB_Debyecalc for (straightforard) implementation with pyNMB
+
+
 
   For clarity, here is the full expression of X-ray form factor in its complex form, which appears in Debye equation:
 
