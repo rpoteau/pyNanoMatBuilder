@@ -822,6 +822,7 @@ class cube:
         self.nAtomsPerEdge = nOrder+1
         self.nAtoms = 0
         self.nAtomsPerShell = [0]
+        self.cog = np.array([0., 0., 0.])
           
     def __str__(self):
         return(f"{self.nOrder}x{self.nOrder}x{self.nOrder} fcc cube with Rnn = {self.Rnn}")
@@ -935,4 +936,3 @@ class cube:
         elif self.crystalStructure == 'bcc':
             print("total number of atoms = ",self.nAtomsbccAnalytic())
         print("Dual polyhedron: octahedron")
-        print(f"coordinates of the center of gravity = {self.cog}")

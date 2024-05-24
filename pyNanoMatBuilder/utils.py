@@ -267,7 +267,7 @@ def optimizeEMT(model: Atoms, pathway="./coords/model", fthreshold=0.05):
     return model
 
 ##############################################################################################
-######################################## Planes
+######################################## Planes & Directions
 def planeFittingLSF(coords: np.float64,
                     printErrors: bool=False,
                     printEq: bool=True):
@@ -446,6 +446,68 @@ def point2PlaneDistance(point: np.float64,
     distance = abs(np.dot(point,plane[0:3]) + plane[3]) / norm(plane[0:3])
     return distance
 
+def AngleBetweenVV(lineDV,planeNV):
+    '''
+    returns the angle, in degrees, between two vectors
+    '''
+    import numpy as np
+    ldv = np.array(lineDV)
+    pnv = np.array(planeNV)
+    numerator = np.dot(ldv,pnv)
+    denominator = pNMBu.normOfV(lineDV)*pNMBu.normOfV(planeNV)
+    if denominator == 0:
+        alpha = np.NaN
+    else:
+        alpha = 180*np.arccos(np.clip(numerator/denominator,-1,1))/np.pi
+    return alpha
+
+def isPlaneParrallel2Line(v1,v2,tol=1e-5):
+    '''
+    returns a boolean
+    a line direction vector and a plane are parallel if the |angle| between the line and the normal vector of the plane is 90°
+    '''
+    return np.abs(np.abs(AngleBetweenVV(v1,v2)) - 90) < tol
+
+def isPlaneOrthogonal2Line(v1,v2,tol=1e-5):
+    '''
+    returns a boolean
+    a line direction vector and a plane are orthogonal if the |angle| between the line and the normal vector of the plane is 0° or 180°
+    '''
+    return np.abs(AngleBetweenVV(v1,v2)) < tol or np.abs(np.abs(AngleBetweenVV(v1,v2)) - 180) < tol
+
+def areDirectionsOrthogonal(v1,v2,tol=1e-6):
+    '''
+    returns a boolean
+    lines are orthogonal if the |angle| between their direction vector is 90°
+    '''
+    return np.abs(np.abs(AngleBetweenVV(v1,v2)) - 90) < tol
+
+def areDirectionsParallel(v1,v2,tol=1e-6):
+    '''
+    returns a boolean
+    lines are orthogonal if the |angle| between their direction vector is 0° or 180°
+    '''
+    return np.abs(AngleBetweenVV(v1,v2)) < tol or np.abs(np.abs(AngleBetweenVV(v1,v2)) - 180) < tol
+
+def returnPlaneParallel2Line(V, shift=[1,0,0], debug = False):
+    '''
+    returns the [a b c] parameters for a plane parallel to the input direction
+    (d must be found separately)
+
+    algorithm:
+        - choose any arbitrary vector not parallel to V[i,j,k] such as V[i+1,j,k]
+        - calculate the vector perpendicular to both of these, i.e. the cross product
+        - this is the normal to the plane, i.e. you directly obtain the equation of the plane ax+by+cz+d = 0, d being indeterminate
+        (to find d, it would be necessary to provide an (x0,y0,z0) point that does not belong to the line, hence d = -ax0-by0-cz0)
+    '''
+    arbV = np.array(V.copy())
+    arbV = arbV + np.array(shift)
+    plane = np.cross(V,arbV)
+    if areDirectionsParallel(V,arbV): sys.exit(f"Error in returnPlaneParallel2Line(): plane {V} is parallel to {arbV}. "\
+                                               f"Are you sure of your data?\n(this function wants to return an equation for a plane parallel to the direction V = {V}.\n"\
+                                               f" Play with the shift variable - current problematic value = {shift})")
+    if debug: print(areDirectionsParallel(V,arbV), V, arbV, "cross product = ",plane)
+    return plane
 ##############################################################################################
 ######################################## cut above planes
 def calculateTruncationPlanesFromVertices(planes, cutFromVertexAt, nAtomsPerEdge, debug=False):
@@ -832,17 +894,20 @@ def lattice_cart(system,vectors,Bravais2cart=True,printV=False):
     '''
     - input:
         - system = ase Atoms object with periodic boundary conditions
-        - vectors = vectors to project from the Bravais lattice to cartesian axis (if Bravais2cart is True)
-                         or to project from the cartesian coordinate system to the Bravais axis  (if Bravais2cart is False)
+        - vectors = vectors to project from the Bravais basis to the cartesian coordinate system (if Bravais2cart is True)
+                         or to project from the cartesian coordinate system to the Bravais basis  (if Bravais2cart is False)
+        - printV = boolean (default: False), prints the resulting vectors if True
+    - returns an array of projected vectors
     '''
     import numpy as np
     unitcell, Vuc = system.return_unitcell()
     if Bravais2cart:
-        Vproj = (Vuc@vectors.transpose()).transpose()
+        Vproj = (vectors@Vuc)
         B = 'B'
         E = 'C'
     else:
-        Vproj = (np.linalg.inv(Vuc)@vectors.transpose()).transpose()
+        VucInv = np.linalg.inv(Vuc)
+        Vproj = (vectors@VucInv)
         B = 'C'
         E = 'B'
     if printV:

@@ -1,8 +1,23 @@
 **Development of a pre-release version -> date-based versioning**
 
+## 20240524
+### added
+- new functions in `utils.py`, that will be useful as basic tools for the automatic generation of wires: `returnPlaneParallel2Line()`, `AngleBetweenVV()`, `isPlaneParrallel2Line()`, `isPlaneOrthogonal2Line()`, `areDirectionsOrthogonal()`, `areDirectionsParallel()`
+
+## 20240523
+### added
+- basic tests on the orthogonality between vectors and planes ([*sandbox notebook*](./SandBox-doNotDelete-dev.ipynb), section *Planes parallel to a line*)
+
+## 20240522
+### changed
+- *Change of basis* section in the [*sandbox notebook*](./SandBox-doNotDelete-dev.ipynb): `lattice_cart()` validated in the hcp case
+
+### fixed
+- `lattice_cart()` function in `utils.py`: now does the right projection (`vectors@Vuc` instead of `Vuc@vectors`, ahah)
+
 ## 20240521
 ### added
-- `lattice_cart()` function in `utils.py`: project vectors from/to the Bravais axis system to/from the cartesian coordinate system. The unitcell definition is given under the form of an ase `Atoms` object with periodic boundary conditions (see basic example in the *sandbox notebook*)
+- `lattice_cart()` function in `utils.py`: project vectors from/to the Bravais axis system to/from the cartesian coordinate system. The unitcell definition is given under the form of an ase `Atoms` object with periodic boundary conditions (see basic example in the [*sandbox notebook*](./SandBox-doNotDelete-dev.ipynb), *Change of basis* section)
 
 ### changed
 - `Crystal` class of `CrystalNP.py` module: cif and cifname variables are now variables of the instance created by this class (i.e. `self.cif` and `self.cifname`). Was necessary to directly address some `Crystal` functions, without using the `makeNP(self)` "macro"
