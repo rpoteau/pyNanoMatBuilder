@@ -667,7 +667,7 @@ def deleteElementsOfAList(t,
     return list(tloc)
 
 ##############################################################################################
-######################################## coupling with Jmol
+######################################## coupling with Jmol & DebyeCalculator
 def saveCoords_DrawJmol(asemol,prefix,scriptJ=""):
     path2Jmol = '/usr/local/src/jmol-14.32.50'
     fxyz = "./figs/"+prefix+".xyz"
@@ -686,6 +686,28 @@ def DrawJmol(mol,prefix,scriptJ=""):
     jmolcmd="java -Xmx512m -jar " + path2Jmol + "/JmolData.jar " + fxyz + " -ij '" + jmolscript + prefix + ".png'" + " >/dev/null "
     print(jmolcmd)
     os.system(jmolcmd)
+
+def writexyz(filename,atoms):
+    '''
+    simple xyz writing, with atomic symbols/x/y/z and no other information sometimes misunderstood by some utilities, such as DebyeCalculator
+    '''
+    element_array=atoms.get_chemical_symbols()
+    # extract composition in dict form
+    composition={}
+    for element in element_array:
+        if element in composition:
+            composition[element]+=1
+        else:
+            composition[element]=1
+       
+    coord=atoms.get_positions()
+    natoms=len(element_array)  
+    line2write='%d \n'%natoms
+    line2write+='%s\n'%str(composition)
+    for i in range(natoms):
+        line2write+='%s'%str(element_array[i])+'\t %.8f'%float(coord[i,0])+'\t %.8f'%float(coord[i,1])+'\t %.8f'%float(coord[i,2])+'\n'
+    with open(filename,'w') as file:
+        file.write(line2write)
 
 ##############################################################################################
 ######################################## coordination numbers
