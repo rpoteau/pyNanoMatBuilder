@@ -8,6 +8,7 @@ from ase.visualize import view
 from ase.build.supercells import make_supercell
 from ase.geometry import cellpar_to_cell
 
+from visualID import  fg, hl, bg
 import visualID as vID
 
 class Crystal:
@@ -15,20 +16,45 @@ class Crystal:
     def __init__(self,
                  crystal: str='Au',
                  shape: str='sphere',
-                 size: float=[2],
-                 direction: float=[1,1,1],
+                 size: float=[2,2,2], #nm
+                 direction: float=[0,0,1],
+                 refPlane: float=[1,0,0],
+                 nRot: int=6,
+                 pbc: bool=False,
                  dbFolder: str='cif_database'):
         self.dbFolder = dbFolder #database folder that contains cif files
         self.crystal = crystal # see list with the pNMBu.ciflist() command
         self.shape = shape # 'sphere', 'ellipsoid', 'cube'
         self.size = size
         self.direction = direction
+        self.refPlane = refPlane
+        self.nRot = nRot
+        self.pbc = pbc
         self.nAtoms = 0
         self.cif = None
         self.cifname = None
           
     def __str__(self):
         return(f"Crystal = {self.crystal} {self.shape}")
+
+    def print_unitcell(self):
+        unitcell = self.cif.cell.cellpar()
+        bl = self.cif.cell.get_bravais_lattice()
+        print(f"Bravais lattice: {bl}")
+        print(f"Chemical formula: {self.cif.get_chemical_formula()}")
+        print(f"Crystal family = {bl.crystal_family} (lattice system = {bl.lattice_system})")
+        print(f"Name = {bl.longname} (Pearson symbol = {bl.pearson_symbol})")
+        print(f"Variant names = {bl.variant_names}")
+        print()
+        print(f"a: {unitcell[0]:.3f} Å, b: {unitcell[1]:.3f} Å, c: {unitcell[2]:.3f} Å. (c/a = {unitcell[2]/unitcell[0]:.3f})")
+        print(f"α: {unitcell[3]:.3f} °, β: {unitcell[4]:.3f} °, γ: {unitcell[5]:.3f} °")
+        print()
+        print(f"Volume: {self.cif.cell.volume:.3f} Å3")
+
+    def return_unitcell(self):
+        unitcell = self.cif.cell.cellpar()
+        V = cellpar_to_cell(unitcell)
+        return unitcell, V
 
     def bulk(self,
              fformat: str='cif',
@@ -55,23 +81,10 @@ class Crystal:
             case "AU":
                 self.cifname = "9008463_Au_fcc.cif"
             case _:
-                sys.exit(f"The database does not contain bulk parameters for the {self.crystal} crystal.\nPlease provide parameters")
+                sys.exit(f"The database does not contain bulk parameters for the {self.crystal} crystal.\nPlease provide a cif file")
         self.cif = io.read(os.path.join(path2cif,self.cifname))
+        self.print_unitcell()
         return 
-
-    def print_unitcell(self):
-        unitcell = self.cif.cell.cellpar()
-        print(f"a: {unitcell[0]:.3f} Å, b: {unitcell[1]:.3f} Å, c: {unitcell[2]:.3f} Å. (c/a = {unitcell[2]/unitcell[0]:.3f})")
-        print(f"α: {unitcell[3]:.3f} °, β: {unitcell[4]:.3f} °, γ: {unitcell[5]:.3f} °")
-        print()
-        print(f"Bravais lattice: {self.cif.cell.get_bravais_lattice()}")
-        print(f"Volume: {self.cif.cell.volume:.3f} Å3")
-        print(f"Chemical formula: {self.cif.get_chemical_formula()}")
-
-    def return_unitcell(self):
-        unitcell = self.cif.cell.cellpar()
-        V = cellpar_to_cell(unitcell)
-        return unitcell, V
 
     def makeSuperCell(self):
         view(self.cif)
@@ -87,6 +100,14 @@ class Crystal:
             Ma = int(np.round(extendSizeByFactor * self.size[0]*2*10/self.cif.cell.lengths()[0]))
             Mb = int(np.round(extendSizeByFactor * self.size[1]*2*10/self.cif.cell.lengths()[1]))
             Mc = int(np.round(extendSizeByFactor * self.size[2]*2*10/self.cif.cell.lengths()[2]))
+        elif (self.shape == 'wire'):
+            if np.argmax(self.size) == 1:
+                maxDim = self.size[1]
+            else:
+                maxDim = self.size[0]*1.5 # add space
+            Ma = int(np.round(extendSizeByFactor * maxDim*10/self.cif.cell.lengths()[0]))
+            Mb = int(np.round(extendSizeByFactor * maxDim*10/self.cif.cell.lengths()[1]))
+            Mc = int(np.round(extendSizeByFactor * maxDim*10/self.cif.cell.lengths()[2]))
         #finds the nearest even numbers
         Ma = math.ceil(Ma / 2.) * 2
         Mb = math.ceil(Mb / 2.) * 2
@@ -110,9 +131,11 @@ class Crystal:
         
     def makeSphere(self,sc):
         com = sc.get_center_of_mass()
+        print(self.size,self.size[0])
+        sphereRadius = self.size[0]
         delAtom = []
-        for atom in sc.positions:
-            delAtom.extend(pNMBu.Rbetween2Points(com,atom)/10 > self.size)
+        for atomCoord in sc.positions:
+            delAtom.extend(pNMBu.Rbetween2Points(com,atomCoord)/10 > [sphereRadius])
         del sc[delAtom]
         view(sc)
         return sc
@@ -128,19 +151,40 @@ class Crystal:
         del sc[delAtom]
         view(sc)
         return sc
+
+    def makeWire(self,sc):
+        if self.refPlane is None: self.refPlane = pNMBu.returnPlaneParallel2Line(self.direction,[1,0,0],debug=True)
+        trPlanes = pNMBu.planeRotation(self,self.refPlane,self.direction,self.nRot)
+        for i,p in enumerate(trPlanes):
+            trPlanes[i] = pNMBu.normV(p)
+        radius = 10*self.size[0]/2
+        tradius = np.full((self.nRot,1),-radius)
+        trPlanes = np.append(trPlanes,tradius,axis=1)
+        if not self.pbc:
+            halfLength = 10*self.size[1]/2
+            ptop = np.append(pNMBu.normV(self.direction),-halfLength)
+            pbottom = np.append(-pNMBu.normV(self.direction),-halfLength)
+            trPlanes = np.append(trPlanes,ptop)
+            trPlanes = np.append(trPlanes,pbottom)
+            trPlanes = np.reshape(trPlanes,(self.nRot+2,4))
+        AtomsAbovePlanes = pNMBu.truncateAbovePlanes(trPlanes,sc.positions)
+        del sc[AtomsAbovePlanes]
+        nAtoms = sc.get_global_number_of_atoms()
+        vID.centertxt("Nanowire moved to the center of the unitcell",bgc='#007a7a',size='14',weight='bold')
+        sc.center()
+        view(sc)
+        return sc
                 
     def makeNP(self):
         import os
         print(self)
         # print(f"Crystal = {self.crystal}")
         chrono = pNMBu.timer(); chrono.chrono_start()
-        print(self.bulk())
 
         self.bulk()
         
         vID.centertxt("Unit cell properties",bgc='#007a7a',size='14',weight='bold')
         print(f"cif parameters for {self.crystal} found in {self.cifname}")
-        self.print_unitcell()
 
         vID.centertxt("Builder",bgc='#007a7a',size='14',weight='bold')
         if (self.size is None):
@@ -160,9 +204,19 @@ class Crystal:
             print((f"Rectangular cuboid side lengths = {self.size} nm"))
         elif (self.shape == "supercell"):
             print((f"Supercell side length = {self.size} nm"))
+            if len(self.size) != 3: sys.exit("Please enter lengths along a,b and c axis, i.e. size=[l_a,l_b,l_c]")
             NP = self.makeSuperCell()
-        elif (self.shape == "cylinder"):
-            print((f"Cylinder in the {self.direction} direction. Length x width = {self.size[1]} x {self.size[0]} nm"))
+        elif (self.shape == "wire"):
+            print((f"Wire in the {self.direction} direction. Length x width = {self.size[1]} x {self.size[0]} nm"))
+            print((f"Reference plane = {self.refPlane}, {self.nRot}-th order rotation around {self.direction}"))
+            if not pNMBu.isPlaneParrallel2Line(self.refPlane, self.direction):
+                print(f"{fg.RED}Warning! The reference truncation plane is not parallel to {self.direction}. Are you sure?{fg.OFF}")
+                suggestedPlane = pNMBu.returnPlaneParallel2Line(self.direction)
+                print(f"Among other possibilities, you can try {suggestedPlane}")
+            else:
+                print(f"{fg.GREEN}The reference truncation plane is parallel to {self.direction}{fg.OFF}")
+            sc = self.makeSuperCell()
+            NP = self.makeWire(sc)
         else:
             sys.exit("Shape {self.shape} is unknown")
         self.nAtoms=len(NP.get_positions())

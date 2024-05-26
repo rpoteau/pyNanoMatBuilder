@@ -466,7 +466,7 @@ def isPlaneParrallel2Line(v1,v2,tol=1e-5):
     returns a boolean
     a line direction vector and a plane are parallel if the |angle| between the line and the normal vector of the plane is 90°
     '''
-    return np.abs(np.abs(AngleBetweenVV(v1,v2)) - 90) < tol or np.abs(np.abs(AngleBetweenVV(v1,v2)) - 270) < tol 
+    return np.abs(np.abs(AngleBetweenVV(v1,v2)) - 90) < tol
 
 def isPlaneOrthogonal2Line(v1,v2,tol=1e-5):
     '''
@@ -480,7 +480,7 @@ def areDirectionsOrthogonal(v1,v2,tol=1e-6):
     returns a boolean
     lines are orthogonal if the |angle| between their direction vector is 90°
     '''
-    return np.abs(np.abs(AngleBetweenVV(v1,v2)) - 90) < tol or np.abs(np.abs(AngleBetweenVV(v1,v2)) - 270) < tol
+    return np.abs(np.abs(AngleBetweenVV(v1,v2)) - 90) < tol
 
 def areDirectionsParallel(v1,v2,tol=1e-6):
     '''
@@ -508,43 +508,6 @@ def returnPlaneParallel2Line(V, shift=[1,0,0], debug = False):
                                                f" Play with the shift variable - current problematic value = {shift})")
     if debug: print(areDirectionsParallel(V,arbV), V, arbV, "cross product = ",plane)
     return plane
-
-def planeRotation(Crystal, refPlane, rotAxis, nRot=6, debug=False):
-    '''
-    returns an array with planes obtained by rotating the reference plane around the input axis
-    - input: 
-        - Crystal = Crystal object
-        - refPlane = plane to rotate
-        - nRot = rotation angle is 360°/nRot
-        - rotAxis = rotation axis
-        - debug = normalized planes are printed
-    '''
-    pRef = np.array([refPlane])
-    aRot = np.array([rotAxis])
-    vID.centertxt(f"Projection of the {pRef[0]} reference truncation plane around the {rotAxis} axis, after projection in the cartesian coordinate system",bgc='#007a7a',size='14',weight='bold')
-    pRefCart = lattice_cart(Crystal,pRef,True,True)
-    rotAxisCart = lattice_cart(Crystal,aRot,True,True)
-    vID.centertxt(f"{nRot}th order rotation around {rotAxisCart} of the {pRefCart[0]} truncation plane",bgc='#007a7a',size='14',weight='bold')
-    planesCart = []
-    for i in range(0,nRot):
-        angle = i*360/nRot
-        # print("rot around z    = ",RotationMol(pRefCart[0],angle,'z'))
-        x = rotationMolAroundAxis(pRefCart[0],angle,rotAxisCart[0])
-        # print("rot around axis = ",x)
-        planesCart.append(x)
-    if (debug): print(np.array(planesCart))
-    vID.centertxt(f"Just for your knowledge: indexes of the {nRot} cartesian planes after projection to the {Crystal.cif.cell.get_bravais_lattice()} unitcell",bgc='#007a7a',size='14',weight='bold')
-    planesHCP = lattice_cart(Crystal,np.array(planesCart),False,True)
-    if (debug):
-        vID.centertxt(f"Normalized HCP planes",bgc='#007a7a',size='14',weight='bold')
-        for i,p in enumerate(planesHCP):
-            print(i,normV(p))
-        print()
-        vID.centertxt(f"Normalized cartesian planes",bgc='#007a7a',size='14',weight='bold')
-        for i,p in enumerate(planesCart):
-            print(i,normV(p))
-    return np.array(planesCart)
-
 ##############################################################################################
 ######################################## cut above planes
 def calculateTruncationPlanesFromVertices(planes, cutFromVertexAt, nAtomsPerEdge, debug=False):
@@ -640,7 +603,7 @@ def truncateAbovePlanes(planes: np.ndarray,
             elif not delAbove and not allP:
                 delAtoms[i] = delAtoms[i] or signedDistance < eps
         nOfDeletedAtoms = np.count_nonzero(delAtoms) - nOfDeletedAtoms
-        print(f"- plane", [f"{x: .2f}" for x in p],f"> {nOfDeletedAtoms} atoms deleted")
+        print(f"    - plane", [f"{x: .2f}" for x in p],f"> {nOfDeletedAtoms} atoms deleted")
         if debug:
             for i,a in enumerate(delAtoms):
                 if a: print(f"@{i}",end=',')
@@ -807,8 +770,8 @@ def RotationMol(coords, angle, axis="z"):
         R =  np.array(Rz(angler)@coords.transpose())
     return R[0]
 
-def EulerRotationMol(coords, gamma, beta, alpha, order="zyx"):
-    return np.array(EulerRotationMatrix(gamma,beta,alpha,order)@coords.transpose()).transpose()
+def EulerRotationMol(coord, gamma, beta, alpha, order="zyx"):
+    return np.array(EulerRotationMatrix(gamma,beta,alpha,order)@coord.transpose()).transpose()
 
 def RotationMatrixFromAxisAngle(u,angle):
     import math as m
@@ -816,7 +779,7 @@ def RotationMatrixFromAxisAngle(u,angle):
     ux = u[0]
     uy = u[1]
     uz = u[2]
-    return np.array([[m.cos(a)+ux**2*(1-m.cos(a))   , ux*uy*(1-m.cos(a))-uz*m.sin(a), ux*uz*(1-m.cos(a))+uy*m.sin(a)],
+    return np.matrix([[m.cos(a)+ux**2*(1-m.cos(a))   , ux*uy*(1-m.cos(a))-uz*m.sin(a), ux*uz*(1-m.cos(a))+uy*m.sin(a)],
                       [uy*ux*(1-m.cos(a))+uz*m.sin(a), m.cos(a)+uy**2*(1-m.cos(a))   , uy*uz*(1-m.cos(a))-ux*m.sin(a)],
                       [uz*ux*(1-m.cos(a))-uy*m.sin(a), uz*uy*(1-m.cos(a))+ux*m.sin(a), m.cos(a)+uz**2*(1-m.cos(a))   ]])
 
@@ -830,7 +793,7 @@ def rotationMolAroundAxis(coords, angle, axis):
     - returns a numpy array
     '''
     normalizedAxis = normV(axis)
-    return np.array(RotationMatrixFromAxisAngle(normalizedAxis,angle)@coords.transpose()).transpose()
+    return np.array(RotationMatrixFromAxisAngle(normalizedAxis,angle)@coord.transpose()).transpose()
 
 ##############################################################################################
 ######################################## magic numbers
@@ -945,17 +908,17 @@ def interPlanarSpacing(plane: np.ndarray,
     d = np.sqrt(d2)
     return d
 
-def lattice_cart(Crystal,vectors,Bravais2cart=True,printV=False):
+def lattice_cart(system,vectors,Bravais2cart=True,printV=False):
     '''
     - input:
-        - Crystal = Crystal object
+        - system = ase Atoms object with periodic boundary conditions
         - vectors = vectors to project from the Bravais basis to the cartesian coordinate system (if Bravais2cart is True)
                          or to project from the cartesian coordinate system to the Bravais basis  (if Bravais2cart is False)
         - printV = boolean (default: False), prints the resulting vectors if True
     - returns an array of projected vectors
     '''
     import numpy as np
-    unitcell, Vuc = Crystal.return_unitcell()
+    unitcell, Vuc = system.return_unitcell()
     if Bravais2cart:
         Vproj = (vectors@Vuc)
         B = 'B'
