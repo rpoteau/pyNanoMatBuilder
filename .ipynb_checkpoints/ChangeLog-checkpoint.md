@@ -3,8 +3,13 @@
 ## 20250601
 ### added
 - cif coordinates for TiO2 rutile, TiO2 anatase, NaCl
-- in the `Crystal` class, it is now possible to load a cif file that does not belong to the database, using the new `userDefCif` keyword. The `loadExternalCif()` function is called if `userDefCif` is not `None`, *i.e.* it contains the path to the cif file
+- in the `Crystal` class, it is now possible to load a cif file that does not belong to the database, using the new `userDefCif` keyword. The `loadExternalCif()` function is called if `userDefCif` is not `None`, *i.e.* it contains the path to a cif file
 - `alignV1WithV2_returnR()` and `rotateMoltoAlignItWithAxis()` functions in `utils.py`. See example of application in the sandbox notebook, section *Calculate rotation matrix to align two vectors in 3D space*. Could for example be useful to align wires along the *c* direction
+
+### changed
+- changes previously done to the `Crystal` class in the **20250529** version applied to the classes of:
+    - `crystalNPs.py`
+- `silent` variable renamed as `noOutput`
 
 ## 20250531
 ### changed

@@ -32,7 +32,7 @@ class bccrDD:
                  aseView=True,
                  thresholdCoreSurface = 1.,
                  skipSymmetryAnalyzis = False,
-                 silent = False,
+                 noOutput = False,
                  calcPropOnly = False,
                 ):
         self.element = element
@@ -44,11 +44,11 @@ class bccrDD:
         self.interShellDistance4 = self.Rnn / self.interShellF4
         self.cog = np.array([0., 0., 0.])
         self.imageFile = pNMBu.imageNameWithPathway("bccrdd-C.png")
-        if not silent: vID.centerTitle(f"{nShell} shells bcc rhombic dodecahedron ")
+        if not noOutput: vID.centerTitle(f"{nShell} shells bcc rhombic dodecahedron ")
 
-        if not silent: self.prop()
+        if not noOutput: self.prop()
         if not calcPropOnly:
-            self.coords(silent)
+            self.coords(noOutput)
             if aseView: view(self.NP)
             if postAnalyzis:
                 self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
@@ -150,8 +150,8 @@ class bccrDD:
             faces = np.array(faces)
         return CoordVertices, edges, faces
 
-    def coords(self,silent):
-        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
+    def coords(self,noOutput):
+        if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         # central atom = "1st shell"
         c = [[0., 0., 0.]]
@@ -263,7 +263,7 @@ class fccdrDD:
                  aseView=True,
                  thresholdCoreSurface = 1.,
                  skipSymmetryAnalyzis = False,
-                 silent = False,
+                 noOutput = False,
                  calcPropOnly = False,
                 ):
         self.element = element
@@ -275,11 +275,11 @@ class fccdrDD:
         self.interShellDistanceTB = self.Rnn / self.interShellFTB
         self.cog = np.array([0., 0., 0.])
         self.imageFile = pNMBu.imageNameWithPathway("fccrdd-C.png")
-        if not silent: vID.centerTitle(f"{nShell} shells fcc rhombic dodecahedron")
+        if not noOutput: vID.centerTitle(f"{nShell} shells fcc rhombic dodecahedron")
 
-        if not silent: self.prop()
+        if not noOutput: self.prop()
         if not calcPropOnly:
-            self.coords(silent)
+            self.coords(noOutput)
             if aseView: view(self.NP)
             if postAnalyzis:
                 self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
@@ -381,8 +381,8 @@ class fccdrDD:
             faces4 = np.array(faces4)
         return CoordVertices, edges, faces3, faces4
 
-    def coords(self,silent):
-        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
+    def coords(self,noOutput):
+        if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         # central atom = "1st shell"
         c = [[0., 0., 0.]]

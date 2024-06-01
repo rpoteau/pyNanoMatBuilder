@@ -30,7 +30,7 @@ class regfccOh:
                  aseView=True,
                  thresholdCoreSurface = 1.,
                  skipSymmetryAnalyzis = False,
-                 silent = False,
+                 noOutput = False,
                  calcPropOnly = False,
                 ):
         self.element = element
@@ -42,11 +42,11 @@ class regfccOh:
         self.interLayerDistance = self.Rnn/self.interShellF
         self.cog = np.array([0., 0., 0.])
         self.imageFile = pNMBu.imageNameWithPathway("fccOh-C.png")
-        if not silent: vID.centerTitle(f"{nOrder}th order regular fcc Octahedron")
+        if not noOutput: vID.centerTitle(f"{nOrder}th order regular fcc Octahedron")
 
-        if not silent: self.prop()
+        if not noOutput: self.prop()
         if not calcPropOnly:
-            self.coords(silent)
+            self.coords(noOutput)
             if aseView: view(self.NP)
             if postAnalyzis:
                 self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
@@ -131,8 +131,8 @@ class regfccOh:
             faces = np.array(faces)
         return CoordVertices, edges, faces
 
-    def coords(self,silent):
-        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
+    def coords(self,noOutput):
+        if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         c = []
         # print(self.nAtomsPerLayer)
@@ -266,7 +266,7 @@ class regIco:
                  aseView=True,
                  thresholdCoreSurface = 1.,
                  skipSymmetryAnalyzis = False,
-                 silent = False,
+                 noOutput = False,
                  calcPropOnly = False,
                 ):
         self.element=element
@@ -276,11 +276,11 @@ class regIco:
         self.nAtomsPerShell = [0]
         self.interShellDistance = self.Rnn / self.interShellF
         self.imageFile = pNMBu.imageNameWithPathway("ico-C.png")
-        if not silent: vID.centerTitle(f"{nShell} shells icosahedron")
+        if not noOutput: vID.centerTitle(f"{nShell} shells icosahedron")
           
-        if not silent: self.prop()
+        if not noOutput: self.prop()
         if not calcPropOnly:
-            self.coords(silent)
+            self.coords(noOutput)
             if aseView: view(self.NP)
             if postAnalyzis:
                 self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
@@ -373,8 +373,8 @@ class regIco:
             faces = np.array(faces)
         return CoordVertices, edges, faces
 
-    def coords(self,silent):
-        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
+    def coords(self,noOutput):
+        if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         # central atom = "1st shell"
         c = [[0., 0., 0.]]
@@ -484,7 +484,7 @@ class regfccTd:
                  aseView=True,
                  thresholdCoreSurface = 1.,
                  skipSymmetryAnalyzis = False,
-                 silent = False,
+                 noOutput = False,
                  calcPropOnly = False,
                 ):
         self.element = element
@@ -496,12 +496,12 @@ class regfccTd:
         self.cog = np.array([0., 0., 0.])
         self.imageFile = pNMBu.imageNameWithPathway("fccTd-C.png")
         self.NP = None
-        if not silent: vID.centerTitle(f"fcc tetrahedron: {nLayer} atoms/edge = number of layers")
+        if not noOutput: vID.centerTitle(f"fcc tetrahedron: {nLayer} atoms/edge = number of layers")
           
-        if not silent: self.prop()
+        if not noOutput: self.prop()
 
         if not calcPropOnly:
-           self.coords(silent)
+           self.coords(noOutput)
            if aseView: view(self.NP)
            if postAnalyzis:
                self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
@@ -578,8 +578,8 @@ class regfccTd:
             faces = np.array(faces)
         return CoordVertices, edges, faces
 
-    def coords(self,silent):
-        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
+    def coords(self,noOutput):
+        if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         c = []
         # print(self.nAtomsPerLayer)
@@ -702,7 +702,7 @@ class regDD:
                  aseView=True,
                  thresholdCoreSurface = 1.,
                  skipSymmetryAnalyzis = False,
-                 silent = False,
+                 noOutput = False,
                  calcPropOnly = False,
                 ):
         self.element = element
@@ -714,9 +714,9 @@ class regDD:
         self.imageFile = pNMBu.imageNameWithPathway("rDD-C.png")
         vID.centerTitle(f"{nShell} shells regular dodecahedron")
           
-        if not silent: self.prop()
+        if not noOutput: self.prop()
         if not calcPropOnly:
-            self.coords(silent)
+            self.coords(noOutput)
             if aseView: view(self.NP)
             if postAnalyzis:
                 self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
@@ -808,7 +808,7 @@ class regDD:
             faces = np.array(faces)
         return CoordVertices, edges, faces
 
-    def coords(self,silent):
+    def coords(self,noOutput):
         vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         # central atom = "1st shell"
@@ -937,7 +937,7 @@ class cube:
                  aseView=True,
                  thresholdCoreSurface = 1.,
                  skipSymmetryAnalyzis = False,
-                 silent = False,
+                 noOutput = False,
                  calcPropOnly = False,
                 ):
         self.crystalStructure = crystalStructure
@@ -949,11 +949,11 @@ class cube:
         self.nAtomsPerShell = [0]
         self.cog = np.array([0., 0., 0.])
         self.imageFile = pNMBu.imageNameWithPathway("cube-C.png")
-        if not silent: vID.centerTitle(f"{nOrder}x{nOrder}x{nOrder} {self.crystalStructure} cube")
+        if not noOutput: vID.centerTitle(f"{nOrder}x{nOrder}x{nOrder} {self.crystalStructure} cube")
           
-        if not silent: self.prop()
+        if not noOutput: self.prop()
         if not calcPropOnly:
-            self.coords(silent)
+            self.coords(noOutput)
             if aseView: view(self.NP)
             if postAnalyzis:
                 self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
@@ -1031,8 +1031,8 @@ class cube:
     #     self.nAtoms=natoms
     #     return fcc
 
-    def coords(self,silent):
-        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
+    def coords(self,noOutput):
+        if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         if self.crystalStructure == 'fcc':
             cube = bulk(self.element, 'fcc', a=self.latticeConstant(), cubic=True)

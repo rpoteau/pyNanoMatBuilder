@@ -29,6 +29,8 @@ class Crystal:
                  aseView=True,
                  thresholdCoreSurface = 1.,
                  skipSymmetryAnalyzis = False,
+                 noOutput = False,
+                 calcPropOnly = False,
                 ):
         self.dbFolder = dbFolder #database folder that contains cif files
         self.crystal = crystal # see list with the pNMBu.ciflist() command
@@ -55,18 +57,19 @@ class Crystal:
                 self.imageFile = pNMBu.imageNameWithPathway("underConstruction.png")
             case _:
                 sys.exit("Shape {self.shape} is unknown")
-        vID.centerTitle(f"{self.crystal} {self.shape}")
+        if not noOutput: vID.centerTitle(f"{self.crystal} {self.shape}")
 
-        self.bulk()
+        self.bulk(noOutput)
         if aseView: view(self.cif)
-        self.prop()
-        self.makeNP()
-        if aseView: 
-            view(self.sc)
-            view(self.NP)
-        if postAnalyzis:
-            self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
-            if aseView: view(self.NPcs)
+        if not noOutput: self.prop()
+        if not calcPropOnly:
+            self.makeNP(noOutput)
+            if aseView: 
+                view(self.sc)
+                view(self.NP)
+            if postAnalyzis:
+                self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
+                if aseView: view(self.NPcs)
           
     def __str__(self):
         return(f"Crystal = {self.crystal} {self.shape}")
@@ -125,8 +128,7 @@ class Crystal:
         V = cellpar_to_cell(unitcell)
         return unitcell, V
 
-    def bulk(self):
-        print("self.userDefCif = ",self.userDefCif)
+    def bulk(self, noOutput):
 
         if self.userDefCif is None:
             path2cif = os.path.join(pNMBu.pNMB_location(),self.dbFolder)
@@ -150,12 +152,12 @@ class Crystal:
             self.cif = io.read(self.userDefCif)
             path2extCif = pathlib.Path(self.userDefCif)
             self.cifname = pathlib.Path(*path2extCif.parts[-1:])
-        print(f"cif parameters for {self.crystal} found in {self.cifname}")
+        if not noOutput: print(f"cif parameters for {self.crystal} found in {self.cifname}")
         return 
 
-    def makeSuperCell(self):
+    def makeSuperCell(self,noOutput):
         chrono = pNMBu.timer(); chrono.chrono_start()
-        vID.centertxt(f"Making a multiple cell",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        if not noOutput: vID.centertxt(f"Making a multiple cell",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         extendSizeByFactor = 1.1
         if (self.shape == 'sphere'):
             # first calculate the size of the supercell
@@ -180,7 +182,7 @@ class Crystal:
         Ma = math.ceil(Ma / 2.) * 2
         Mb = math.ceil(Mb / 2.) * 2
         Mc = math.ceil(Mc / 2.) * 2
-        print(f"Making a {Ma}x{Mb}x{Mc} supercell")
+        if not noOutput: print(f"Making a {Ma}x{Mb}x{Mc} supercell")
         M = [[Ma, 0, 0], [0, Mb, 0], [0, 0, Mc]]
         sc=make_supercell(self.cif,M)
         # print(cif.cell.cellpar())
@@ -188,18 +190,18 @@ class Crystal:
         # print(sc.cell.cellpar())
         # print(cellpar_to_cell(sc.cell.cellpar()))
         V = cellpar_to_cell(sc.cell.cellpar())
-        print(f"Center of Mass: {sc.get_center_of_mass()} Å")
-        print("Now translating the supercell")
+        if not noOutput: print(f"Center of Mass: {sc.get_center_of_mass()} Å")
+        if not noOutput: print("Now translating the supercell")
         sc.translate(-V[0]/2)
         sc.translate(-V[1]/2)
         sc.translate(-V[2]/2)
-        print(f"Center of Mass after translation of the supercell: {sc.get_center_of_mass()} Å")
+        if not noOutput: print(f"Center of Mass after translation of the supercell: {sc.get_center_of_mass()} Å")
         self.sc = sc.copy()
         nAtoms=len(self.sc.get_positions())
-        print(f"Total number of atoms = {nAtoms}")
+        if not noOutput: print(f"Total number of atoms = {nAtoms}")
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         
-    def makeSphere(self):
+    def makeSphere(self,noOutput):
         vID.centertxt(f"Removing atoms to make a sphere",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         com = self.sc.get_center_of_mass()
@@ -211,8 +213,8 @@ class Crystal:
         del self.NP[delAtom]
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
                 
-    def makeEllipsoid(self):
-        vID.centertxt(f"Removing atoms to make an ellipsoid",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+    def makeEllipsoid(self,noOutput):
+        if not noOutput: vID.centertxt(f"Removing atoms to make an ellipsoid",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         com = self.sc.get_center_of_mass()
         size = np.array(self.size)*10 #nm to angstrom
@@ -225,8 +227,8 @@ class Crystal:
         del self.NP[delAtom]
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
 
-    def makeWire(self):
-        vID.centertxt(f"Removing atoms to make a wire",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+    def makeWire(self,noOutput):
+        if not noOutput: vID.centertxt(f"Removing atoms to make a wire",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         if self.refPlane is None: self.refPlane = pNMBu.returnPlaneParallel2Line(self.direction,[1,0,0],debug=True)
         trPlanes = pNMBu.planeRotation(self,self.refPlane,self.direction,self.nRot)
@@ -250,41 +252,41 @@ class Crystal:
         self.NP.center()
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
                 
-    def makeNP(self):
+    def makeNP(self,noOutput):
         import os
-        vID.centertxt("Builder",bgc='#007a7a',size='14',weight='bold')
+        if not noOutput: vID.centertxt("Builder",bgc='#007a7a',size='14',weight='bold')
         if (self.size is None):
             self.length = [2,2,2]
-            print(f"length parameter set up as = {self.size} nm")
+            if not noOutput: print(f"length parameter set up as = {self.size} nm")
         if (self.shape == "sphere"):
-            print((f"Sphere radius = {self.size[0]} nm"))
-            self.makeSuperCell()
-            self.makeSphere()
+            if not noOutput: print((f"Sphere radius = {self.size[0]} nm"))
+            self.makeSuperCell(noOutput)
+            self.makeSphere(noOutput)
         elif (self.shape == "ellipsoid"):
-            print((f"Ellipsoid radii = {self.size} nm"))
-            self.makeSuperCell()
-            self.makeEllipsoid()
+            if not noOutput: print((f"Ellipsoid radii = {self.size} nm"))
+            self.makeSuperCell(noOutput)
+            self.makeEllipsoid(noOutput)
         elif (self.shape == "cube"):
-            print((f"Cube side length = {self.size[0]} nm"))
+            if not noOutput: print((f"Cube side length = {self.size[0]} nm"))
         elif (self.shape == "rectangular cuboid"):
-            print((f"Rectangular cuboid side lengths = {self.size} nm"))
+            if not noOutput: print((f"Rectangular cuboid side lengths = {self.size} nm"))
         elif (self.shape == "supercell"):
-            print((f"Supercell side length = {self.size} nm"))
+            if not noOutput: print((f"Supercell side length = {self.size} nm"))
             if len(self.size) != 3: sys.exit("Please enter lengths along a,b and c axis, i.e. size=[l_a,l_b,l_c]")
-            self.makeSuperCell()
+            self.makeSuperCell(noOutput)
         elif (self.shape == "wire"):
-            print((f"Wire in the {self.direction} direction. Length x width = {self.size[1]} x {self.size[0]} nm"))
-            print((f"Reference plane = {self.refPlane}, {self.nRot}-th order rotation around {self.direction}"))
+            if not noOutput: print((f"Wire in the {self.direction} direction. Length x width = {self.size[1]} x {self.size[0]} nm"))
+            if not noOutput: print((f"Reference plane = {self.refPlane}, {self.nRot}-th order rotation around {self.direction}"))
             if not pNMBu.isPlaneParrallel2Line(self.refPlane, self.direction):
                 print(f"{fg.RED}Warning! The reference truncation plane is not parallel to {self.direction}. Are you sure?{fg.OFF}")
                 suggestedPlane = pNMBu.returnPlaneParallel2Line(self.direction)
                 print(f"Among other possibilities, you can try {suggestedPlane}")
             else:
-                print(f"{fg.GREEN}The reference truncation plane is parallel to {self.direction}{fg.OFF}")
-            self.makeSuperCell()
-            self.makeWire()
+                if not noOutput: print(f"{fg.GREEN}The reference truncation plane is parallel to {self.direction}{fg.OFF}")
+            self.makeSuperCell(noOutput)
+            self.makeWire(noOutput)
         self.nAtoms=len(self.NP.get_positions())
-        print(f"Total number of atoms = {self.nAtoms}")
+        if not noOutput: print(f"Total number of atoms = {self.nAtoms}")
 
     def prop(self):
         print(self)

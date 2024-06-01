@@ -28,7 +28,7 @@ class fccCubo:
                  aseView=True,
                  thresholdCoreSurface = 1.,
                  skipSymmetryAnalyzis = False,
-                 silent = False,
+                 noOutput = False,
                  calcPropOnly = False,
                 ):
         self.element = element
@@ -38,11 +38,11 @@ class fccCubo:
         self.nAtomsPerShell = [0]
         self.interShellDistance = self.Rnn / self.interShellF
         self.imageFile = pNMBu.imageNameWithPathway("cubo-C.png")
-        if not silent: vID.centerTitle(f"{nShell} shells cuboctahedron")
+        if not noOutput: vID.centerTitle(f"{nShell} shells cuboctahedron")
 
-        if not silent: self.prop()
+        if not noOutput: self.prop()
         if not calcPropOnly:
-            self.coords(silent)
+            self.coords(noOutput)
             if aseView: view(self.NP)
             if postAnalyzis:
                 self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
@@ -137,8 +137,8 @@ class fccCubo:
             #     print("i, CoordV ",i,CoordVertices[i])
         return CoordVertices, edges, faces3, faces4
 
-    def coords(self,silent):
-        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
+    def coords(self,noOutput):
+        if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         # central atom = "1st shell"
         c = [[0., 0., 0.]]
@@ -257,7 +257,7 @@ class fccTrTd:
                  aseView=True,
                  thresholdCoreSurface = 1.,
                  skipSymmetryAnalyzis = False,
-                 silent = False,
+                 noOutput = False,
                  calcPropOnly = False,
                 ):
         self.element = element
@@ -265,7 +265,7 @@ class fccTrTd:
         self.nAtoms = 0
         self.cog = np.array([0., 0., 0.])
         self.nLayer = int(nLayer-1)
-        self.Tdprop = pNP.regfccTd(self.element,self.Rnn,self.nLayer+1,silent=True,calcPropOnly=True) 
+        self.Tdprop = pNP.regfccTd(self.element,self.Rnn,self.nLayer+1,noOutput=True,calcPropOnly=True) 
         self.interLayerDistance = self.Tdprop.interLayerDistance()
         isTrTd,self.nAtomsPerEdge = self.NumberOfTdEdgeAtomsValid4ATrTd()
         if not isTrTd:
@@ -279,11 +279,11 @@ class fccTrTd:
         else:
             self.nAtomsPerEdge = int(self.nAtomsPerEdge)
         self.imageFile = pNMBu.imageNameWithPathway("trTd-C.png")
-        if not silent: vID.centerTitle(f"Truncated fcc Td, made from a {nLayer} layers Td")
+        if not noOutput: vID.centerTitle(f"Truncated fcc Td, made from a {nLayer} layers Td")
           
-        if not silent: self.prop()
+        if not noOutput: self.prop()
         if not calcPropOnly:
-            self.coords(silent)
+            self.coords(noOutput)
             if aseView: view(self.NP)
             if postAnalyzis:
                 self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
@@ -356,11 +356,11 @@ class fccTrTd:
     #         print(f"Will remove atoms just above plane {hkld[0]:.2f} {hkld[1]:.2f} {hkld[2]:.2f} d:{hkld[3]:.3f}")
     #     return np.array(trPlanes)
 
-    def coords(self,silent):
-        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
+    def coords(self,noOutput):
+        if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         vID.centertxt("Generation of the coordinates of the tetrahedron",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
-        Td = pNP.regfccTd(self.element,self.Rnn,self.nLayer+1,postAnalyzis=False,silent=True)
+        Td = pNP.regfccTd(self.element,self.Rnn,self.nLayer+1,postAnalyzis=False,noOutput=True)
         self.NP0 = Td.NP.copy()
         aseTd = Td.NP
         vID.centertxt("Removing atoms ",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
@@ -428,10 +428,10 @@ class fccTrOh:
                  aseView=True,
                  thresholdCoreSurface = 1.,
                  skipSymmetryAnalyzis = False,
-                 silent = False,
+                 noOutput = False,
                  calcPropOnly = False,
                 ):
-        self.Ohprop = pNP.regfccOh(element,Rnn,nOrder,silent=True,calcPropOnly=True)
+        self.Ohprop = pNP.regfccOh(element,Rnn,nOrder,noOutput=True,calcPropOnly=True)
         self.element = element
         self.Rnn = Rnn
         self.nAtoms = 0
@@ -450,11 +450,11 @@ class fccTrOh:
         else:
             self.nAtomsPerEdge = int(self.nAtomsPerEdge)
         self.imageFile = pNMBu.imageNameWithPathway("trOh-C.png")
-        if not silent: vID.centerTitle(f"Truncated fcc octahedron, made from a {nOrder}th order Oh")
+        if not noOutput: vID.centerTitle(f"Truncated fcc octahedron, made from a {nOrder}th order Oh")
           
-        if not silent: self.prop()
+        if not noOutput: self.prop()
         if not calcPropOnly:
-            self.coords(silent)
+            self.coords(noOutput)
             if aseView: view(self.NP)
             if postAnalyzis:
                 self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
@@ -509,11 +509,11 @@ class fccTrOh:
         nTrOh = N - 2*(N-1)/3
         return nTrOh.is_integer(), nTrOh
 
-    def coords(self,silent):
-        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
+    def coords(self,noOutput):
+        if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         vID.centertxt("Generation of the coordinates of the octahedron",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
-        Oh = pNP.regfccOh(self.element,self.Rnn,self.nOrder,postAnalyzis=False,silent=True)
+        Oh = pNP.regfccOh(self.element,self.Rnn,self.nOrder,postAnalyzis=False,noOutput=True)
         self.NP0 = Oh.NP.copy()
         aseOh = Oh.NP
         vID.centertxt("Removing atoms ",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
@@ -582,17 +582,17 @@ class fccTrCube:
                  aseView=True,
                  thresholdCoreSurface = 1.,
                  skipSymmetryAnalyzis = False,
-                 silent = False,
+                 noOutput = False,
                  calcPropOnly = False,
                 ):
-        self.cubeProp = pNP.cube('fcc',element,Rnn,nOrder,silent=True,calcPropOnly=True)
+        self.cubeProp = pNP.cube('fcc',element,Rnn,nOrder,noOutput=True,calcPropOnly=True)
         self.element = element
         self.Rnn = Rnn
         self.nAtoms = 0
         self.cog = np.array([0., 0., 0.])
         self.nOrder = nOrder
         # self.imageFile = pNMBu.imageNameWithPathway("cube-C.png")
-        if not silent: vID.centerTitle(f"fcc truncated cube")
+        if not noOutput: vID.centerTitle(f"fcc truncated cube")
         # self.imageFile = pNMBu.imageNameWithPathway("trOh-C.png")
         # isTrCube,self.nAtomsPerEdge = self.NumberOfCubeEdgeAtomsValid4ATrCube()
         # if not isTrCube:
@@ -606,9 +606,9 @@ class fccTrCube:
         # else:
         #     self.nAtomsPerEdge = int(self.nAtomsPerEdge)
           
-        if not silent: self.prop()
+        if not noOutput: self.prop()
         if not calcPropOnly:
-            self.coords(silent)
+            self.coords(noOutput)
             if aseView: view(self.NP)
             if postAnalyzis:
                 self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
@@ -663,8 +663,8 @@ class fccTrCube:
         nTrCube = N - 2*(N-1)/3
         return nTrCube.is_integer(), nTrCube
 
-    def coords(self,silent):
-        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
+    def coords(self,noOutput):
+        if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         def findVertices(c):
             eps = 1.e-4
             max = np.max(c)
@@ -675,7 +675,7 @@ class fccTrCube:
             return indexV, coordV
         chrono = pNMBu.timer(); chrono.chrono_start()
         vID.centertxt("Generation of the coordinates of the cube",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
-        aseCube = pNP.cube('fcc',self.element,self.Rnn,self.nOrder,silent=True,postAnalyzis=False).NP
+        aseCube = pNP.cube('fcc',self.element,self.Rnn,self.nOrder,noOutput=True,postAnalyzis=False).NP
         vID.centertxt("Cube moved to origin",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         c2cog = pNMBu.center2cog(aseCube.get_positions())
         aseCube.set_positions(c2cog)

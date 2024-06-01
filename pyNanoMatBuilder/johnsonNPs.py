@@ -28,13 +28,13 @@ class fcctbp:
                  aseView=True,
                  thresholdCoreSurface = 1.,
                  skipSymmetryAnalyzis = False,
-                 silent = False,
+                 noOutput = False,
                  calcPropOnly = False,
                 ):
         self.element = element
         self.Rnn = Rnn
         self.nLayerTd = int(nLayerTd)
-        self.Tdprop = pNP.regfccTd(self.element,self.Rnn,self.nLayerTd,silent=True,calcPropOnly=True)
+        self.Tdprop = pNP.regfccTd(self.element,self.Rnn,self.nLayerTd,noOutput=True,calcPropOnly=True)
         self.nLayer = 2*self.nLayerTd - 1
         self.nAtoms = 0
         self.nAtomsPerLayer = []
@@ -47,11 +47,11 @@ class fcctbp:
         self.heightOfBiPyramid = 2*self.Tdprop.heightOfPyramid()
         self.imageFile = pNMBu.imageNameWithPathway("tbp-C.png")
 
-        if not silent: vID.centerTitle(f"fcc trigonal bipyramid with {nLayerTd} shells per pyramid")
+        if not noOutput: vID.centerTitle(f"fcc trigonal bipyramid with {nLayerTd} shells per pyramid")
 
-        if not silent: self.prop()
+        if not noOutput: self.prop()
         if not calcPropOnly:
-            self.coords(silent)
+            self.coords(noOutput)
             if aseView: view(self.NP)
             if postAnalyzis:
                 self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
@@ -63,11 +63,11 @@ class fcctbp:
     def edgeLength(self):
         return self.Tdprop.edgeLength()
 
-    def coords(self,silent):
-        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
+    def coords(self,noOutput):
+        if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         vID.centertxt("Generation of the coordinates of the tetrahedron",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
-        Td = pNP.regfccTd(self.element,self.Rnn,self.nLayerTd+1,postAnalyzis=False,silent=True)
+        Td = pNP.regfccTd(self.element,self.Rnn,self.nLayerTd+1,postAnalyzis=False,noOutput=True)
         aseTd = Td.NP
         self.NP0 = aseTd.copy()
         c = aseTd.get_positions()
@@ -145,7 +145,7 @@ class epbpyM:
                  aseView=True,
                  thresholdCoreSurface = 1.,
                  skipSymmetryAnalyzis = False,
-                 silent = False,
+                 noOutput = False,
                  calcPropOnly = False,
                 ):
         self.element=element
@@ -168,11 +168,11 @@ class epbpyM:
             self.imageFile = pNMBu.imageNameWithPathway("InoD-C.png")
         else: #Elongated MArks decahedron
             self.imageFile = pNMBu.imageNameWithPathway("MarksD-C.png")
-        if not silent: vID.centerTitle(f"Pentagonal bipyramid with {sizeP} atoms/edge, a x{sizeE} elongation (Ino) and a x{Marks} edge truncation (Marks)")
+        if not noOutput: vID.centerTitle(f"Pentagonal bipyramid with {sizeP} atoms/edge, a x{sizeE} elongation (Ino) and a x{Marks} edge truncation (Marks)")
 
-        if not silent: self.prop()
+        if not noOutput: self.prop()
         if not calcPropOnly:
-            self.coords(silent)
+            self.coords(noOutput)
             if aseView: view(self.NP)
             if postAnalyzis:
                 self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
@@ -259,8 +259,8 @@ class epbpyM:
         if (debug): print("\nIndices of couples of truncation planes:\n",indicesOfTruncationPlanes)
         return planes, indicesOfTruncationPlanes
 
-    def coords(self,silent):
-        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
+    def coords(self,noOutput):
+        if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         c = []
         # print(self.nAtomsPerLayer)
         indexVertexAtoms = []

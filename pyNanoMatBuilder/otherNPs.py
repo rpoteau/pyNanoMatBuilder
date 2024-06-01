@@ -28,13 +28,13 @@ class fcctpt:
                  aseView=True,
                  thresholdCoreSurface = 1.,
                  skipSymmetryAnalyzis = False,
-                 silent = False,
+                 noOutput = False,
                  calcPropOnly = False,
                 ):
         self.element = element
         self.Rnn = Rnn
         self.nLayerTd = int(nLayerTd)
-        self.tbpprop = jNP.fcctbp(self.element,self.Rnn,self.nLayerTd,silent=True,calcPropOnly=True)
+        self.tbpprop = jNP.fcctbp(self.element,self.Rnn,self.nLayerTd,noOutput=True,calcPropOnly=True)
         self.nLayertbp = 2*self.nLayerTd - 1
         self.nLayer = nLayer*2+1 
         self.nAtoms = 0
@@ -44,11 +44,11 @@ class fcctpt:
         if self.nLayer > self.nLayertbp:
             sys.exit(f"Number of layers of the triangular platelet ({self.nLayer}) cannot be > to the total number of layers of the trigonal bipyramid {self.nLayertbp}")
         self.imageFile = pNMBu.imageNameWithPathway("tpt-C.png")
-        if not silent: vID.centerTitle(f"fcc triangulat platelet with {nLayer*2+1} remaining shells, made from a trigonal bipyramid with {nLayerTd} shells per pyramid")
+        if not noOutput: vID.centerTitle(f"fcc triangulat platelet with {nLayer*2+1} remaining shells, made from a trigonal bipyramid with {nLayerTd} shells per pyramid")
 
-        if not silent: self.prop()
+        if not noOutput: self.prop()
         if not calcPropOnly:
-            self.coords(silent)
+            self.coords(noOutput)
             if aseView: view(self.NP)
             if postAnalyzis:
                 self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
@@ -60,11 +60,11 @@ class fcctpt:
     def edgeLength(self):
         return self.tbpprop.edgeLength()
 
-    def coords(self,silent):
-        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
+    def coords(self,noOutput):
+        if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         vID.centertxt("Generation of the coordinates of the trigonal bipyramid, based on the fcc tetrahedron",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
-        tbp = jNP.fcctbp(self.element,self.Rnn,self.nLayerTd+1,postAnalyzis=False,silent=True)
+        tbp = jNP.fcctbp(self.element,self.Rnn,self.nLayerTd+1,postAnalyzis=False,noOutput=True)
         self.NP0 = tbp.NP.copy()
         asetpt = tbp.NP
         nAtoms = asetpt.get_global_number_of_atoms()
