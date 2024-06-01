@@ -23,13 +23,30 @@ class fccCubo:
     def __init__(self,
                  element: str='Au',
                  Rnn: float=2.7,
-                 nShell: int=1):
+                 nShell: int=1,
+                 postAnalyzis=True,
+                 aseView=True,
+                 thresholdCoreSurface = 1.,
+                 skipSymmetryAnalyzis = False,
+                 silent = False,
+                 calcPropOnly = False,
+                ):
         self.element = element
         self.Rnn = Rnn
         self.nShell = nShell
         self.nAtoms = 0
         self.nAtomsPerShell = [0]
         self.interShellDistance = self.Rnn / self.interShellF
+        self.imageFile = pNMBu.imageNameWithPathway("cubo-C.png")
+        if not silent: vID.centerTitle(f"{nShell} shells cuboctahedron")
+
+        if not silent: self.prop()
+        if not calcPropOnly:
+            self.coords(silent)
+            if aseView: view(self.NP)
+            if postAnalyzis:
+                self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
+                if aseView: view(self.NPcs)
           
     def __str__(self):
         return(f"Cuboctahedron with {self.nShell} shell(s) and Rnn = {self.Rnn}")
@@ -120,7 +137,8 @@ class fccCubo:
             #     print("i, CoordV ",i,CoordVertices[i])
         return CoordVertices, edges, faces3, faces4
 
-    def coords(self):
+    def coords(self,silent):
+        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         # central atom = "1st shell"
         c = [[0., 0., 0.]]
@@ -180,7 +198,7 @@ class fccCubo:
             c.extend(coordFace4At)
             indexFace4Atoms.extend(range(nAtoms0,self.nAtoms))
 
-        print(self.nAtoms)
+        print(f"Total number of atoms = {self.nAtoms}")
         print(self.nAtomsPerShell)
         aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
             
@@ -188,10 +206,12 @@ class fccCubo:
         # print(indexEdgeAtoms)
         # print(indexFaceAtoms)
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-        return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFace3Atoms,indexFace4Atoms]
+        self.NP = aseObject
     
     def prop(self):
+        vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
+        pNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)
         print("number of vertices = ",self.nVertices)
         print("number of edges = ",self.nEdges)
@@ -210,6 +230,14 @@ class fccCubo:
         print("total number of atoms = ",self.nAtomsAnalytic())
         print("Dual polyhedron: rhombic dodecahedron")
 
+    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface):
+        pNMBu.moi(self.NP)
+        if not skipSymmetryAnalyzis: pNMBu.MolSym(self.NP)
+        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
+            pNMBu.coreSurface(self.NP.get_positions(),thresholdCoreSurface)
+        self.NPcs = self.NP.copy()
+        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
+
 ###########################################################################################################
 class fccTrTd:
     nFaces3 = 4
@@ -224,14 +252,21 @@ class fccTrTd:
     def __init__(self,
                  element: str='Au',
                  Rnn: float=2.7,
-                 nLayer: int=1):
-        self.Td = pNP.regfccTd(element,Rnn,nLayer)
+                 nLayer: int=1,
+                 postAnalyzis=True,
+                 aseView=True,
+                 thresholdCoreSurface = 1.,
+                 skipSymmetryAnalyzis = False,
+                 silent = False,
+                 calcPropOnly = False,
+                ):
         self.element = element
         self.Rnn = Rnn
         self.nAtoms = 0
-        self.interLayerDistance = self.Td.interLayerDistance()
         self.cog = np.array([0., 0., 0.])
         self.nLayer = int(nLayer-1)
+        self.Tdprop = pNP.regfccTd(self.element,self.Rnn,self.nLayer+1,silent=True,calcPropOnly=True) 
+        self.interLayerDistance = self.Tdprop.interLayerDistance()
         isTrTd,self.nAtomsPerEdge = self.NumberOfTdEdgeAtomsValid4ATrTd()
         if not isTrTd:
             listOfPossiblenLayers = self.magicEdgeNumberOfTd2MakeATrTd(int(1.2*nLayer))
@@ -243,7 +278,17 @@ class fccTrTd:
                      f"to see all possible values between 1 and N")
         else:
             self.nAtomsPerEdge = int(self.nAtomsPerEdge)
+        self.imageFile = pNMBu.imageNameWithPathway("trTd-C.png")
+        if not silent: vID.centerTitle(f"Truncated fcc Td, made from a {nLayer} layers Td")
           
+        if not silent: self.prop()
+        if not calcPropOnly:
+            self.coords(silent)
+            if aseView: view(self.NP)
+            if postAnalyzis:
+                self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
+                if aseView: view(self.NPcs)
+
     def __str__(self):
         return(f"Truncated tetrahedron based on a {self.nLayer+1} layer(s) Td and Rnn = {self.Rnn}")
    
@@ -257,7 +302,7 @@ class fccTrTd:
     def edgeLength(self):
         # a truncated Td is constructed by truncating all 4 vertices of a regular tetrahedron
         # at one third of the original edge length, hence the remaining edge length is Td.edgeLength/3
-        return self.Td.edgeLength()/3
+        return self.Tdprop.edgeLength()/3
 
     def radiusCircumscribedSphere(self):
         return self.radiusCSF*self.edgeLength()
@@ -311,14 +356,14 @@ class fccTrTd:
     #         print(f"Will remove atoms just above plane {hkld[0]:.2f} {hkld[1]:.2f} {hkld[2]:.2f} d:{hkld[3]:.3f}")
     #     return np.array(trPlanes)
 
-    def coords(self):
+    def coords(self,silent):
+        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
-        Td = pNP.regfccTd(self.element,self.Rnn,self.nLayer+1)
-        vID.centertxt("Generation of the coordinates of the tetrahedron",bgc='#007a7a',size='14',weight='bold')
-        aseTd,atTd = Td.coords()
-        view(aseTd)
-        del atTd
-        vID.centertxt("Removing atoms ",bgc='#007a7a',size='14',weight='bold')
+        vID.centertxt("Generation of the coordinates of the tetrahedron",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        Td = pNP.regfccTd(self.element,self.Rnn,self.nLayer+1,postAnalyzis=False,silent=True)
+        self.NP0 = Td.NP.copy()
+        aseTd = Td.NP
+        vID.centertxt("Removing atoms ",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         print('First searching for the coordinates of the vertices (atoms 1-4) and of the cog')
         coordVertices = aseTd.get_positions()[0:4]
         print("Now calculating the coordinates of the planes orthogonal the the cog-vertex directions")
@@ -333,10 +378,12 @@ class fccTrTd:
         nAtoms = aseTrTd.get_global_number_of_atoms()
         print(f"Total number of atoms = {nAtoms}")
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-        return aseTrTd,aseTd
+        self.NP = aseTrTd
 
     def prop(self):
+        vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
+        pNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)
         print("number of vertices = ",self.nVertices)
         print("number of edges = ",self.nEdges)
@@ -353,6 +400,14 @@ class fccTrTd:
         print("dual polyhedron: triakis tetrahedron")
         print(f"coordinates of the center of gravity = {self.cog}")
 
+    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface):
+        pNMBu.moi(self.NP)
+        if not skipSymmetryAnalyzis: pNMBu.MolSym(self.NP)
+        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
+            pNMBu.coreSurface(self.NP.get_positions(),thresholdCoreSurface)
+        self.NPcs = self.NP.copy()
+        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
+
 ###########################################################################################################
 class fccTrOh:
     nFaces4 = 6
@@ -368,12 +423,19 @@ class fccTrOh:
     def __init__(self,
                  element: str='Au',
                  Rnn: float=2.7,
-                 nOrder: int=1):
-        self.Oh = pNP.regfccOh(element,Rnn,nOrder)
+                 nOrder: int=1,
+                 postAnalyzis=True,
+                 aseView=True,
+                 thresholdCoreSurface = 1.,
+                 skipSymmetryAnalyzis = False,
+                 silent = False,
+                 calcPropOnly = False,
+                ):
+        self.Ohprop = pNP.regfccOh(element,Rnn,nOrder,silent=True,calcPropOnly=True)
         self.element = element
         self.Rnn = Rnn
         self.nAtoms = 0
-        self.interLayerDistance = self.Oh.interLayerDistance
+        self.interLayerDistance = self.Ohprop.interLayerDistance
         self.cog = np.array([0., 0., 0.])
         self.nOrder = nOrder
         isTrOh,self.nAtomsPerEdge = self.NumberOfOhEdgeAtomsValid4ATrOh()
@@ -387,6 +449,16 @@ class fccTrOh:
                      f"to see all possible values between 1 and N")
         else:
             self.nAtomsPerEdge = int(self.nAtomsPerEdge)
+        self.imageFile = pNMBu.imageNameWithPathway("trOh-C.png")
+        if not silent: vID.centerTitle(f"Truncated fcc octahedron, made from a {nOrder}th order Oh")
+          
+        if not silent: self.prop()
+        if not calcPropOnly:
+            self.coords(silent)
+            if aseView: view(self.NP)
+            if postAnalyzis:
+                self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
+                if aseView: view(self.NPcs)
           
     def __str__(self):
         return(f"Truncated octahedron based on a {self.nOrder} order Oh (i.e. {self.nOrder+1} atoms lie on an edge) and Rnn = {self.Rnn}")
@@ -401,7 +473,7 @@ class fccTrOh:
     def edgeLength(self):
         # a truncated Oh is constructed by truncating all 6 vertices of a regular octahedron
         # at one third of the original edge length, hence the remaining edge length is Oh.edgeLength/3
-        return self.Oh.edgeLength()/3
+        return self.Ohprop.edgeLength()/3
 
     def radiusCircumscribedSphere(self):
         return self.radiusCSF*self.edgeLength()
@@ -418,7 +490,7 @@ class fccTrOh:
     
     def volume(self):
         el = self.edgeLength()
-        return self.Oh.volume() - 6*(el**3*np.sqrt(2)/6)
+        return self.Ohprop.volume() - 6*(el**3*np.sqrt(2)/6)
 
     def magicEdgeNumberOfOh2MakeATrOh(self, index: int):
         '''
@@ -437,14 +509,14 @@ class fccTrOh:
         nTrOh = N - 2*(N-1)/3
         return nTrOh.is_integer(), nTrOh
 
-    def coords(self):
+    def coords(self,silent):
+        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
-        Oh = pNP.regfccOh(self.element,self.Rnn,self.nOrder)
-        vID.centertxt("Generation of the coordinates of the octahedron",bgc='#007a7a',size='14',weight='bold')
-        aseOh,atOh = Oh.coords()
-        view(aseOh)
-        del atOh
-        vID.centertxt("Removing atoms ",bgc='#007a7a',size='14',weight='bold')
+        vID.centertxt("Generation of the coordinates of the octahedron",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        Oh = pNP.regfccOh(self.element,self.Rnn,self.nOrder,postAnalyzis=False,silent=True)
+        self.NP0 = Oh.NP.copy()
+        aseOh = Oh.NP
+        vID.centertxt("Removing atoms ",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         print('First searching for the coordinates of the vertices (atoms 1-6) and of the cog')
         coordVertices = aseOh.get_positions()[0:6]
         print("Now calculating the coordinates of the planes orthogonal the the cog-vertex directions")
@@ -453,15 +525,16 @@ class fccTrOh:
         trPlanes = pNMBu.calculateTruncationPlanesFromVertices(planesAtVertices,self.cutFromVertexAt,Oh.nAtomsPerEdge)
         AtomsAbovePlanes = pNMBu.truncateAboveEachPlane(trPlanes,aseOh.get_positions())
         
-        aseTrOh = aseOh.copy()
-        del aseTrOh[AtomsAbovePlanes]
-        nAtoms = aseTrOh.get_global_number_of_atoms()
+        del aseOh[AtomsAbovePlanes]
+        nAtoms = aseOh.get_global_number_of_atoms()
         print(f"Total number of atoms = {nAtoms}")
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-        return aseTrOh,aseOh
+        self.NP = aseOh
 
     def prop(self):
+        vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
+        pNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)
         print("number of vertices = ",self.nVertices)
         print("number of edges = ",self.nEdges)
@@ -481,6 +554,14 @@ class fccTrOh:
         print("dual polyhedron: triakis hexahedron")
         print(f"coordinates of the center of gravity = {self.cog}")
 
+    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface):
+        pNMBu.moi(self.NP)
+        if not skipSymmetryAnalyzis: pNMBu.MolSym(self.NP)
+        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
+            pNMBu.coreSurface(self.NP.get_positions(),thresholdCoreSurface)
+        self.NPcs = self.NP.copy()
+        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
+
 ###########################################################################################################
 class fccTrCube:
     nFaces3 = 8
@@ -496,13 +577,23 @@ class fccTrCube:
     def __init__(self,
                  element: str='Au',
                  Rnn: float=2.7,
-                 nOrder: int=1):
-        self.cube = pNP.cube('fcc',element,Rnn,nOrder)
+                 nOrder: int=1,
+                 postAnalyzis=True,
+                 aseView=True,
+                 thresholdCoreSurface = 1.,
+                 skipSymmetryAnalyzis = False,
+                 silent = False,
+                 calcPropOnly = False,
+                ):
+        self.cubeProp = pNP.cube('fcc',element,Rnn,nOrder,silent=True,calcPropOnly=True)
         self.element = element
         self.Rnn = Rnn
         self.nAtoms = 0
         self.cog = np.array([0., 0., 0.])
         self.nOrder = nOrder
+        # self.imageFile = pNMBu.imageNameWithPathway("cube-C.png")
+        if not silent: vID.centerTitle(f"fcc truncated cube")
+        # self.imageFile = pNMBu.imageNameWithPathway("trOh-C.png")
         # isTrCube,self.nAtomsPerEdge = self.NumberOfCubeEdgeAtomsValid4ATrCube()
         # if not isTrCube:
         #     listOfPossiblenLayers = self.magicEdgeNumberOfCube2MakeATrCube(int(1.2*nOrder))
@@ -514,6 +605,14 @@ class fccTrCube:
         #              f"to see all possible values between 1 and N")
         # else:
         #     self.nAtomsPerEdge = int(self.nAtomsPerEdge)
+          
+        if not silent: self.prop()
+        if not calcPropOnly:
+            self.coords(silent)
+            if aseView: view(self.NP)
+            if postAnalyzis:
+                self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
+                if aseView: view(self.NPcs)
           
     def __str__(self):
         return(f"Truncated cube based on a {self.nOrder}x{self.nOrder}x{self.nOrder} cube (i.e. {self.nOrder+1} atoms lie on an edge) and Rnn = {self.Rnn}")
@@ -528,7 +627,7 @@ class fccTrCube:
     def edgeLength(self):
         # a truncated Oh is constructed by truncating all 6 vertices of a regular octahedron
         # at one third of the original edge length, hence the remaining edge length is Oh.edgeLength/3
-        return self.cube.edgeLength()/3
+        return self.cubeProp.edgeLength()/3
 
     def radiusCircumscribedSphere(self):
         return self.radiusCSF*self.edgeLength()
@@ -564,7 +663,8 @@ class fccTrCube:
         nTrCube = N - 2*(N-1)/3
         return nTrCube.is_integer(), nTrCube
 
-    def coords(self):
+    def coords(self,silent):
+        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         def findVertices(c):
             eps = 1.e-4
             max = np.max(c)
@@ -574,20 +674,20 @@ class fccTrCube:
             coordV = c[indexV]
             return indexV, coordV
         chrono = pNMBu.timer(); chrono.chrono_start()
-        vID.centertxt("Generation of the coordinates of the cube",bgc='#007a7a',size='14',weight='bold')
-        aseCube = self.cube.coords()
-        vID.centertxt("Cube moved to origin",bgc='#007a7a',size='14',weight='bold')
+        vID.centertxt("Generation of the coordinates of the cube",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        aseCube = pNP.cube('fcc',self.element,self.Rnn,self.nOrder,silent=True,postAnalyzis=False).NP
+        vID.centertxt("Cube moved to origin",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         c2cog = pNMBu.center2cog(aseCube.get_positions())
         aseCube.set_positions(c2cog)
-        view(aseCube)
-        vID.centertxt("Removing atoms ",bgc='#007a7a',size='14',weight='bold')
+        self.NP0 = aseCube.copy()
+        vID.centertxt("Removing atoms ",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         print('First searching for the coordinates of the vertices and of the cog')
         indexV, coordVertices = findVertices(aseCube.get_positions())
         print("Vertices = atoms ",indexV)
         print("Now calculating the coordinates of the planes orthogonal the the cog-vertex directions")
         planesAtVertices = pNMBu.planeAtVertices(coordVertices, self.cog)
         #trCube = truncation all 6 vertices of a regular octahedron at one third of the original edge length
-        trPlanes = pNMBu.calculateTruncationPlanesFromVertices(planesAtVertices,self.cutFromVertexAt,self.cube.nAtomsPerEdge)
+        trPlanes = pNMBu.calculateTruncationPlanesFromVertices(planesAtVertices,self.cutFromVertexAt,self.cubeProp.nAtomsPerEdge)
         AtomsAbovePlanes = pNMBu.truncateAboveEachPlane(trPlanes,aseCube.get_positions())
         
         aseTrCube = aseCube.copy()
@@ -595,10 +695,12 @@ class fccTrCube:
         nAtoms = aseTrCube.get_global_number_of_atoms()
         print(f"Total number of atoms = {nAtoms}")
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-        return aseTrCube,aseCube
+        self.NP = aseTrCube
 
     def prop(self):
+        vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
+        # pNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)
         print("number of vertices = ",self.nVertices)
         print("number of edges = ",self.nEdges)
@@ -617,3 +719,10 @@ class fccTrCube:
         print("dual polyhedron: Triakis octahedron")
         print(f"coordinates of the center of gravity = {self.cog}")
 
+    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface):
+        pNMBu.moi(self.NP)
+        if not skipSymmetryAnalyzis: pNMBu.MolSym(self.NP)
+        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
+            pNMBu.coreSurface(self.NP.get_positions(),thresholdCoreSurface)
+        self.NPcs = self.NP.copy()
+        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol

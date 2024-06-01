@@ -23,36 +23,55 @@ class fcctbp:
     def __init__(self,
                  element: str='Au',
                  Rnn: float=2.7,
-                 nLayerTd: int=1):
+                 nLayerTd: int=1,
+                 postAnalyzis=True,
+                 aseView=True,
+                 thresholdCoreSurface = 1.,
+                 skipSymmetryAnalyzis = False,
+                 silent = False,
+                 calcPropOnly = False,
+                ):
         self.element = element
         self.Rnn = Rnn
         self.nLayerTd = int(nLayerTd)
-        self.Td = pNP.regfccTd(self.element,self.Rnn,self.nLayerTd)
+        self.Tdprop = pNP.regfccTd(self.element,self.Rnn,self.nLayerTd,silent=True,calcPropOnly=True)
         self.nLayer = 2*self.nLayerTd - 1
         self.nAtoms = 0
         self.nAtomsPerLayer = []
-        self.interLayerDistance = self.Td.interLayerDistance()
+        self.interLayerDistance = self.Tdprop.interLayerDistance()
         self.nAtomsPerEdge = self.nLayerTd+1
         self.cog = np.array([0., 0., 0.])
-        self.fveAngle = self.Td.fveAngle
-        self.fefAngle = self.Td.fefAngle
-        self.vcvAngle = self.Td.vcvAngle
-        self.heightOfBiPyramid = 2*self.Td.heightOfPyramid()
+        self.fveAngle = self.Tdprop.fveAngle
+        self.fefAngle = self.Tdprop.fefAngle
+        self.vcvAngle = self.Tdprop.vcvAngle
+        self.heightOfBiPyramid = 2*self.Tdprop.heightOfPyramid()
+        self.imageFile = pNMBu.imageNameWithPathway("tbp-C.png")
+
+        if not silent: vID.centerTitle(f"fcc trigonal bipyramid with {nLayerTd} shells per pyramid")
+
+        if not silent: self.prop()
+        if not calcPropOnly:
+            self.coords(silent)
+            if aseView: view(self.NP)
+            if postAnalyzis:
+                self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
+                if aseView: view(self.NPcs)
 
     def __str__(self):
         return(f"Regular fcc double tetrahedron of {self.element} with {self.nLayer+1} layer(s) and Rnn = {self.Rnn}")
 
     def edgeLength(self):
-        return self.Td.edgeLength()
+        return self.Tdprop.edgeLength()
 
-    def coords(self):
+    def coords(self,silent):
+        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
-        vID.centertxt("Generation of the coordinates of the tetrahedron",bgc='#007a7a',size='14',weight='bold')
-        Td = pNP.regfccTd(self.element,self.Rnn,self.nLayerTd+1)
-        aseTd,atTd = Td.coords()
-        del atTd
+        vID.centertxt("Generation of the coordinates of the tetrahedron",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        Td = pNP.regfccTd(self.element,self.Rnn,self.nLayerTd+1,postAnalyzis=False,silent=True)
+        aseTd = Td.NP
+        self.NP0 = aseTd.copy()
         c = aseTd.get_positions()
-        vID.centertxt("Applying mirror reflection w.r.t. facet defined by atoms (0,1,2) ",bgc='#007a7a',size='14',weight='bold')
+        vID.centertxt("Applying mirror reflection w.r.t. facet defined by atoms (0,1,2) ",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         mirrorPlane = [0,1,2]
         cMirrorPlane = []
         for at in mirrorPlane:
@@ -69,10 +88,11 @@ class fcctbp:
         aseObject = ase.Atoms(self.element*nAtoms, positions=c)
         print(f"Total number of atoms = {nAtoms}")
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-        return aseObject
+        self.NP = aseObject
         
     def prop(self):
         print(self)
+        pNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)
         print("number of vertices = ",self.nVertices)
         print("number of edges = ",self.nEdges)
@@ -82,16 +102,24 @@ class fcctbp:
         print(f"inter-layer distance = {self.interLayerDistance:.2f} Å")
         print(f"number of atoms per edge = {self.nAtomsPerEdge}")
         print(f"height of bipyramid = {self.heightOfBiPyramid*0.1:.2f} nm")
-        print(f"area = {6*self.Td.area()/4*1e-2:.1f} nm2")
-        print(f"volume = {2*self.Td.volume()*1e-3:.1f} nm3")
-        print(f"face-vertex-edge angle = {self.Td.fveAngle:.1f}°")
-        print(f"face-edge-face (dihedral) angle = {self.Td.fefAngle:.1f}°")
-        print(f"vertex-center-vertex (tetrahedral bond) angle = {self.Td.vcvAngle:.1f}°")
-        # print("number of atoms per layer = ",self.Td.nAtomsPerLayerAnalytic())
+        print(f"area = {6*self.Tdprop.area()/4*1e-2:.1f} nm2")
+        print(f"volume = {2*self.Tdprop.volume()*1e-3:.1f} nm3")
+        print(f"face-vertex-edge angle = {self.Tdprop.fveAngle:.1f}°")
+        print(f"face-edge-face (dihedral) angle = {self.Tdprop.fefAngle:.1f}°")
+        print(f"vertex-center-vertex (tetrahedral bond) angle = {self.Tdprop.vcvAngle:.1f}°")
+        # print("number of atoms per layer = ",self.Tdprop.nAtomsPerLayerAnalytic())
         # print("total number of atoms = ",self.nAtomsAnalytic())
         print("Dual polyhedron: triangular prism")
         print("Indexes of vertex atoms = [0,1,2,3] by construction")
         print(f"coordinates of the center of gravity = {self.cog}")
+
+    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface):
+        pNMBu.moi(self.NP)
+        if not skipSymmetryAnalyzis: pNMBu.MolSym(self.NP)
+        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
+            pNMBu.coreSurface(self.NP.get_positions(),thresholdCoreSurface)
+        self.NPcs = self.NP.copy()
+        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
 
 ###########################################################################################################
 class epbpyM:
@@ -112,7 +140,14 @@ class epbpyM:
                  Rnn: float=2.7,
                  sizeP: int=1,
                  sizeE: int=0,
-                 Marks: int=0):
+                 Marks: int=0,
+                 postAnalyzis=True,
+                 aseView=True,
+                 thresholdCoreSurface = 1.,
+                 skipSymmetryAnalyzis = False,
+                 silent = False,
+                 calcPropOnly = False,
+                ):
         self.element=element
         self.Rnn = Rnn
         self.sizeP = sizeP
@@ -125,6 +160,23 @@ class epbpyM:
         self.nAtomsPerEdgeOfEP = self.sizeE+1
         self.cog = np.array([0., 0., 0.])
         self.interCompactPlanesDistance = self.interCompactPlanesF * self.Rnn
+        if self.Marks == 0 and self.sizeE == 0: #pentagonal bpy
+            self.imageFile = pNMBu.imageNameWithPathway("pbpy-C.png")
+        elif self.Marks != 0 and self.sizeE == 0: #Marks decahedron
+            self.imageFile = pNMBu.imageNameWithPathway("MarksD-C.png")
+        elif self.Marks == 0 and self.sizeE != 0: #Ino decahedron
+            self.imageFile = pNMBu.imageNameWithPathway("InoD-C.png")
+        else: #Elongated MArks decahedron
+            self.imageFile = pNMBu.imageNameWithPathway("MarksD-C.png")
+        if not silent: vID.centerTitle(f"Pentagonal bipyramid with {sizeP} atoms/edge, a x{sizeE} elongation (Ino) and a x{Marks} edge truncation (Marks)")
+
+        if not silent: self.prop()
+        if not calcPropOnly:
+            self.coords(silent)
+            if aseView: view(self.NP)
+            if postAnalyzis:
+                self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
+                if aseView: view(self.NPcs)
 
     def __str__(self):
         if self.Marks == 0:
@@ -207,7 +259,8 @@ class epbpyM:
         if (debug): print("\nIndices of couples of truncation planes:\n",indicesOfTruncationPlanes)
         return planes, indicesOfTruncationPlanes
 
-    def coords(self):
+    def coords(self,silent):
+        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         c = []
         # print(self.nAtomsPerLayer)
         indexVertexAtoms = []
@@ -288,11 +341,12 @@ class epbpyM:
         aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
 
         self.cog = pNMBu.centerOfGravity(c)
-        print(self.nAtoms)
-        return aseObject,[indexVertexAtoms,indexEdgePCAtoms,indexFace3Atoms,indexCoreAtoms]
+        print(f"Total number of atoms = {self.nAtoms}")
+        self.NP = aseObject
 
     def prop(self):
         print(self)
+        pNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)
         if self.sizeE == 0 and self.Marks == 0:
             print("number of vertices = ",self.nVerticesPbpy)
@@ -328,3 +382,11 @@ class epbpyM:
         elif self.sizeE != 0 and self.Marks == 0:
             print("Dual polyhedron: pentagonal bifrustum")
         print(f"coordinates of the center of gravity = {self.cog}")
+
+    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface):
+        pNMBu.moi(self.NP)
+        if not skipSymmetryAnalyzis: pNMBu.MolSym(self.NP)
+        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
+            pNMBu.coreSurface(self.NP.get_positions(),thresholdCoreSurface)
+        self.NPcs = self.NP.copy()
+        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol

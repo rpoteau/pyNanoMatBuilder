@@ -1,3 +1,6 @@
+from visualID import  fg, hl, bg
+import visualID as vID
+
 import sys
 import numpy as np
 import pyNanoMatBuilder.utils as pNMBu
@@ -24,7 +27,14 @@ class bccrDD:
     def __init__(self,
                  element: str='Au',
                  Rnn: float=2.7,
-                 nShell: int=1):
+                 nShell: int=1,
+                 postAnalyzis=True,
+                 aseView=True,
+                 thresholdCoreSurface = 1.,
+                 skipSymmetryAnalyzis = False,
+                 silent = False,
+                 calcPropOnly = False,
+                ):
         self.element = element
         self.Rnn = Rnn
         self.nShell = nShell
@@ -32,6 +42,17 @@ class bccrDD:
         self.nAtomsPerShell = [0]
         self.interShellDistance3 = self.Rnn / self.interShellF3
         self.interShellDistance4 = self.Rnn / self.interShellF4
+        self.cog = np.array([0., 0., 0.])
+        self.imageFile = pNMBu.imageNameWithPathway("bccrdd-C.png")
+        if not silent: vID.centerTitle(f"{nShell} shells bcc rhombic dodecahedron ")
+
+        if not silent: self.prop()
+        if not calcPropOnly:
+            self.coords(silent)
+            if aseView: view(self.NP)
+            if postAnalyzis:
+                self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
+                if aseView: view(self.NPcs)
           
     def __str__(self):
         return(f"Bcc rhombic dodecahedron with {self.nShell} shell(s) and Rnn = {self.Rnn}")
@@ -129,7 +150,8 @@ class bccrDD:
             faces = np.array(faces)
         return CoordVertices, edges, faces
 
-    def coords(self):
+    def coords(self,silent):
+        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         # central atom = "1st shell"
         c = [[0., 0., 0.]]
@@ -176,15 +198,19 @@ class bccrDD:
             c.extend(coordFaceAt)
             indexFaceAtoms.extend(range(nAtoms0,self.nAtoms))
 
-        print(self.nAtoms)
+        print(f"Total number of atoms = {self.nAtoms}")
         print(self.nAtomsPerShell)
         aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
 
+        self.cog = pNMBu.centerOfGravity(c)
+
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-        return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms]
+        self.NP = aseObject
     
     def prop(self):
+        vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
+        pNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)
         print("number of vertices = ",self.nVertices)
         print("number of edges = ",self.nEdges)
@@ -206,6 +232,15 @@ class bccrDD:
         print("cumulative number of atoms per shell = ",self.nAtomsPerShellCumulativeAnalytic())
         print("total number of atoms = ",self.nAtomsAnalytic())
         print("Dual polyhedron: ")
+        print(f"coordinates of the center of gravity = {self.cog}")
+
+    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface):
+        pNMBu.moi(self.NP)
+        if not skipSymmetryAnalyzis: pNMBu.MolSym(self.NP)
+        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
+            pNMBu.coreSurface(self.NP.get_positions(),thresholdCoreSurface)
+        self.NPcs = self.NP.copy()
+        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
 
 ###########################################################################################################
 class fccdrDD:
@@ -223,7 +258,14 @@ class fccdrDD:
     def __init__(self,
                  element: str='Au',
                  Rnn: float=2.7,
-                 nShell: int=1):
+                 nShell: int=1,
+                 postAnalyzis=True,
+                 aseView=True,
+                 thresholdCoreSurface = 1.,
+                 skipSymmetryAnalyzis = False,
+                 silent = False,
+                 calcPropOnly = False,
+                ):
         self.element = element
         self.Rnn = Rnn
         self.nShell = nShell
@@ -231,6 +273,17 @@ class fccdrDD:
         self.nAtomsPerShell = [0]
         self.interShellDistance = self.Rnn / self.interShellF
         self.interShellDistanceTB = self.Rnn / self.interShellFTB
+        self.cog = np.array([0., 0., 0.])
+        self.imageFile = pNMBu.imageNameWithPathway("fccrdd-C.png")
+        if not silent: vID.centerTitle(f"{nShell} shells fcc rhombic dodecahedron")
+
+        if not silent: self.prop()
+        if not calcPropOnly:
+            self.coords(silent)
+            if aseView: view(self.NP)
+            if postAnalyzis:
+                self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
+                if aseView: view(self.NPcs)
           
     def __str__(self):
         return(f"Dihedral rhombic dodecahedron (drDD) with {self.nShell} shell(s) and Rnn = {self.Rnn}")
@@ -328,7 +381,8 @@ class fccdrDD:
             faces4 = np.array(faces4)
         return CoordVertices, edges, faces3, faces4
 
-    def coords(self):
+    def coords(self,silent):
+        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         # central atom = "1st shell"
         c = [[0., 0., 0.]]
@@ -386,15 +440,17 @@ class fccdrDD:
             c.extend(coordFaceAt)
             indexFaceAtoms.extend(range(nAtoms0,self.nAtoms))
 
-        print(self.nAtoms)
+        print(f"Total number of atoms = {self.nAtoms}")
         print(self.nAtomsPerShell)
         aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
             
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-        return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms]
+        self.NP = aseObject
     
     def prop(self):
+        vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
+        pNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)
         print("number of vertices = ",self.nVertices)
         print("number of edges = ",self.nEdges)
@@ -417,4 +473,13 @@ class fccdrDD:
         print("total number of atoms = ",self.nAtomsAnalytic())
         print("Dual polyhedron: ")
         print("Comment: It can be seen as a cuboctahedron with square pyramids augmented on the top and bottom")
+        print(f"coordinates of the center of gravity = {self.cog}")
+
+    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface):
+        pNMBu.moi(self.NP)
+        if not skipSymmetryAnalyzis: pNMBu.MolSym(self.NP)
+        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
+            pNMBu.coreSurface(self.NP.get_positions(),thresholdCoreSurface)
+        self.NPcs = self.NP.copy()
+        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
 

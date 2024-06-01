@@ -1,3 +1,6 @@
+from visualID import  fg, hl, bg
+import visualID as vID
+
 import sys
 import numpy as np
 import pyNanoMatBuilder.utils as pNMBu
@@ -5,6 +8,7 @@ import ase
 from ase.build import bulk, make_supercell, cut
 from ase.visualize import view
 from ase.cluster.cubic import FaceCenteredCubic
+import os
 
 ###########################################################################################################
 class regfccOh:
@@ -21,7 +25,14 @@ class regfccOh:
     def __init__(self,
                  element: str='Au',
                  Rnn: float = 2.7,
-                 nOrder: int = 1):
+                 nOrder: int = 1,
+                 postAnalyzis=True,
+                 aseView=True,
+                 thresholdCoreSurface = 1.,
+                 skipSymmetryAnalyzis = False,
+                 silent = False,
+                 calcPropOnly = False,
+                ):
         self.element = element
         self.Rnn = Rnn
         self.nOrder = nOrder
@@ -30,6 +41,16 @@ class regfccOh:
         self.nAtomsPerEdge = self.nOrder+1
         self.interLayerDistance = self.Rnn/self.interShellF
         self.cog = np.array([0., 0., 0.])
+        self.imageFile = pNMBu.imageNameWithPathway("fccOh-C.png")
+        if not silent: vID.centerTitle(f"{nOrder}th order regular fcc Octahedron")
+
+        if not silent: self.prop()
+        if not calcPropOnly:
+            self.coords(silent)
+            if aseView: view(self.NP)
+            if postAnalyzis:
+                self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
+                if aseView: view(self.NPcs)
           
     def __str__(self):
         return(f"Regular octahedron of order {self.nOrder} (i.e. {self.nOrder+1} atoms lie on an edge) and Rnn = {self.Rnn}")
@@ -110,7 +131,8 @@ class regfccOh:
             faces = np.array(faces)
         return CoordVertices, edges, faces
 
-    def coords(self):
+    def coords(self,silent):
+        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         c = []
         # print(self.nAtomsPerLayer)
@@ -181,17 +203,18 @@ class regfccOh:
         c.extend(coordCoreAt)
         indexCoreAtoms.extend(range(nAtoms0,self.nAtoms))
 
-        print(self.nAtoms)
-        print(self.nAtomsPerLayer)
+        print(f"Total number of atoms = {self.nAtoms}")
         aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
 
         self.cog = pNMBu.centerOfGravity(c)
       
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-        return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms,indexCoreAtoms]
+        self.NP = aseObject
             
     def prop(self):
+        vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
+        pNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)
         print("number of vertices = ",self.nVertices)
         print("number of edges = ",self.nEdges)
@@ -213,6 +236,15 @@ class regfccOh:
         print("Dual polyhedron: cube")
         print("Indexes of vertex atoms = [0,1,2,3,4,5] by construction")
         print(f"coordinates of the center of gravity = {self.cog}")
+        return
+
+    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface):
+        pNMBu.moi(self.NP)
+        if not skipSymmetryAnalyzis: pNMBu.MolSym(self.NP)
+        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
+            pNMBu.coreSurface(self.NP.get_positions(),thresholdCoreSurface)
+        self.NPcs = self.NP.copy()
+        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
 
 ###########################################################################################################
 class regIco:
@@ -229,13 +261,30 @@ class regIco:
     def __init__(self,
                  element: str='Au',
                  Rnn: float=2.7,
-                 nShell: int=1):
+                 nShell: int=1,
+                 postAnalyzis=True,
+                 aseView=True,
+                 thresholdCoreSurface = 1.,
+                 skipSymmetryAnalyzis = False,
+                 silent = False,
+                 calcPropOnly = False,
+                ):
         self.element=element
         self.Rnn = Rnn
         self.nShell = nShell
         self.nAtoms = 0
         self.nAtomsPerShell = [0]
         self.interShellDistance = self.Rnn / self.interShellF
+        self.imageFile = pNMBu.imageNameWithPathway("ico-C.png")
+        if not silent: vID.centerTitle(f"{nShell} shells icosahedron")
+          
+        if not silent: self.prop()
+        if not calcPropOnly:
+            self.coords(silent)
+            if aseView: view(self.NP)
+            if postAnalyzis:
+                self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
+                if aseView: view(self.NPcs)
           
     def __str__(self):
         return(f"Regular icosahedron with {self.nShell} shell(s) and Rnn = {self.Rnn}")
@@ -324,7 +373,8 @@ class regIco:
             faces = np.array(faces)
         return CoordVertices, edges, faces
 
-    def coords(self):
+    def coords(self,silent):
+        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         # central atom = "1st shell"
         c = [[0., 0., 0.]]
@@ -371,7 +421,7 @@ class regIco:
             c.extend(coordFaceAt)
             indexFaceAtoms.extend(range(nAtoms0,self.nAtoms))
 
-        print(self.nAtoms)
+        print(f"Total number of atoms = {self.nAtoms}")
         print(self.nAtomsPerShell)
         aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
             
@@ -379,10 +429,12 @@ class regIco:
         # print(indexEdgeAtoms)
         # print(indexFaceAtoms)
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-        return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms]
+        self.NP=aseObject
     
     def prop(self):
+        vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
+        pNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)
         print("number of vertices = ",self.nVertices)
         print("number of edges = ",self.nEdges)
@@ -402,6 +454,14 @@ class regIco:
         print("total number of atoms = ",self.nAtomsAnalytic())
         print("Dual polyhedron: dodecahedron")
 
+    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface):
+        pNMBu.moi(self.NP)
+        if not skipSymmetryAnalyzis: pNMBu.MolSym(self.NP)
+        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
+            pNMBu.coreSurface(self.NP.get_positions(),thresholdCoreSurface)
+        self.NPcs = self.NP.copy()
+        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
+
 ###########################################################################################################
 class regfccTd:
     nFaces = 4
@@ -419,7 +479,14 @@ class regfccTd:
     def __init__(self,
                  element: str='Au',
                  Rnn: float=2.7,
-                 nLayer: int=1):
+                 nLayer: int=1,
+                 postAnalyzis=True,
+                 aseView=True,
+                 thresholdCoreSurface = 1.,
+                 skipSymmetryAnalyzis = False,
+                 silent = False,
+                 calcPropOnly = False,
+                ):
         self.element = element
         self.Rnn = Rnn
         self.nLayer = nLayer
@@ -427,6 +494,18 @@ class regfccTd:
         self.nAtomsPerLayer = []
         self.nAtomsPerEdge = self.nLayer
         self.cog = np.array([0., 0., 0.])
+        self.imageFile = pNMBu.imageNameWithPathway("fccTd-C.png")
+        self.NP = None
+        if not silent: vID.centerTitle(f"fcc tetrahedron: {nLayer} atoms/edge = number of layers")
+          
+        if not silent: self.prop()
+
+        if not calcPropOnly:
+           self.coords(silent)
+           if aseView: view(self.NP)
+           if postAnalyzis:
+               self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
+               if aseView: view(self.NPcs)
           
     def __str__(self):
         return(f"Regular tetrahedron with {self.nLayer} layer(s) and Rnn = {self.Rnn}")
@@ -499,7 +578,8 @@ class regfccTd:
             faces = np.array(faces)
         return CoordVertices, edges, faces
 
-    def coords(self):
+    def coords(self,silent):
+        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         c = []
         # print(self.nAtomsPerLayer)
@@ -558,17 +638,19 @@ class regfccTd:
         c.extend(coordCoreAt)
         indexCoreAtoms.extend(range(nAtoms0,self.nAtoms))
 
-        print(self.nAtoms)
+        print(f"Total number of atoms = {self.nAtoms}")
         print(self.nAtomsPerLayer)
         aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
 
         self.cog = pNMBu.centerOfGravity(c)
         
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-        return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms,indexCoreAtoms]
+        self.NP = aseObject
     
     def prop(self):
+        vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
+        pNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)
         print("number of vertices = ",self.nVertices)
         print("number of edges = ",self.nEdges)
@@ -593,6 +675,14 @@ class regfccTd:
         print("Indexes of vertex atoms = [0,1,2,3] by construction")
         print(f"coordinates of the center of gravity = {self.cog}")
 
+    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface):
+        pNMBu.moi(self.NP)
+        if not skipSymmetryAnalyzis: pNMBu.MolSym(self.NP)
+        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
+            pNMBu.coreSurface(self.NP.get_positions(),thresholdCoreSurface)
+        self.NPcs = self.NP.copy()
+        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
+
 ###########################################################################################################
 class regDD:
     nFaces = 12
@@ -607,13 +697,30 @@ class regDD:
     def __init__(self,
                  element: str='Au',
                  Rnn: float=2.7,
-                 nShell: int=1):
+                 nShell: int=1,
+                 postAnalyzis=True,
+                 aseView=True,
+                 thresholdCoreSurface = 1.,
+                 skipSymmetryAnalyzis = False,
+                 silent = False,
+                 calcPropOnly = False,
+                ):
         self.element = element
         self.Rnn = Rnn
         self.nShell = nShell
         self.nAtoms = 0
         self.nAtomsPerShell = [0]
         self.interShellDistance = self.Rnn / self.interShellF
+        self.imageFile = pNMBu.imageNameWithPathway("rDD-C.png")
+        vID.centerTitle(f"{nShell} shells regular dodecahedron")
+          
+        if not silent: self.prop()
+        if not calcPropOnly:
+            self.coords(silent)
+            if aseView: view(self.NP)
+            if postAnalyzis:
+                self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
+                if aseView: view(self.NPcs)
           
     def __str__(self):
         return(f"Regular dodecahedron with {self.nShell} shell(s) and Rnn = {self.Rnn}")
@@ -701,7 +808,8 @@ class regDD:
             faces = np.array(faces)
         return CoordVertices, edges, faces
 
-    def coords(self):
+    def coords(self,silent):
+        vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         # central atom = "1st shell"
         c = [[0., 0., 0.]]
@@ -773,15 +881,17 @@ class regDD:
             c.extend(coordFaceAt)
             indexFaceAtoms.extend(range(nAtoms0,self.nAtoms))
 
-        print(self.nAtoms)
+        print(f"Total number of atoms = {self.nAtoms}")
         print(self.nAtomsPerShell)
         aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
                 
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-        return aseObject,[indexVertexAtoms,indexEdgeAtoms,indexFaceAtoms]
+        self.NP = aseObject
     
     def prop(self):
+        vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
+        pNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)
         print("number of vertices = ",self.nVertices)
         print("number of edges = ",self.nEdges)
@@ -800,6 +910,14 @@ class regDD:
         print("total number of atoms = ",self.nAtomsAnalytic())
         print("Dual polyhedron: icosahedron")
 
+    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface):
+        pNMBu.moi(self.NP)
+        if not skipSymmetryAnalyzis: pNMBu.MolSym(self.NP)
+        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
+            pNMBu.coreSurface(self.NP.get_positions(),thresholdCoreSurface)
+        self.NPcs = self.NP.copy()
+        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
+
 ###########################################################################################################
 class cube:
     nFaces = 6
@@ -814,7 +932,14 @@ class cube:
                  crystalStructure='fcc',
                  element='Au',
                  Rnn: float=2.7,
-                 nOrder: int=1):
+                 nOrder: int=1,
+                 postAnalyzis=True,
+                 aseView=True,
+                 thresholdCoreSurface = 1.,
+                 skipSymmetryAnalyzis = False,
+                 silent = False,
+                 calcPropOnly = False,
+                ):
         self.crystalStructure = crystalStructure
         self.element = element
         self.Rnn = Rnn
@@ -823,6 +948,16 @@ class cube:
         self.nAtoms = 0
         self.nAtomsPerShell = [0]
         self.cog = np.array([0., 0., 0.])
+        self.imageFile = pNMBu.imageNameWithPathway("cube-C.png")
+        if not silent: vID.centerTitle(f"{nOrder}x{nOrder}x{nOrder} {self.crystalStructure} cube")
+          
+        if not silent: self.prop()
+        if not calcPropOnly:
+            self.coords(silent)
+            if aseView: view(self.NP)
+            if postAnalyzis:
+                self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
+                if aseView: view(self.NPcs)
           
     def __str__(self):
         return(f"{self.nOrder}x{self.nOrder}x{self.nOrder} fcc cube with Rnn = {self.Rnn}")
@@ -882,7 +1017,7 @@ class cube:
     def area(self):
         el = self.edgeLength()
         return 6 * el**2
-    
+
     def volume(self):
         el = self.edgeLength()
         return el**3
@@ -896,7 +1031,8 @@ class cube:
     #     self.nAtoms=natoms
     #     return fcc
 
-    def coords(self):
+    def coords(self,silent):
+        if not silent: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
         if self.crystalStructure == 'fcc':
             cube = bulk(self.element, 'fcc', a=self.latticeConstant(), cubic=True)
@@ -913,10 +1049,12 @@ class cube:
         self.nAtoms=natoms
         self.cog = pNMBu.centerOfGravity(sc.get_positions())
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-        return sc
+        self.NP = sc
         
     def prop(self):
+        vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
+        pNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)
         print("number of vertices = ",self.nVertices)
         print("number of edges = ",self.nEdges)
@@ -936,3 +1074,11 @@ class cube:
         elif self.crystalStructure == 'bcc':
             print("total number of atoms = ",self.nAtomsbccAnalytic())
         print("Dual polyhedron: octahedron")
+
+    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface):
+        pNMBu.moi(self.NP)
+        if not skipSymmetryAnalyzis: pNMBu.MolSym(self.NP)
+        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
+            pNMBu.coreSurface(self.NP.get_positions(),thresholdCoreSurface)
+        self.NPcs = self.NP.copy()
+        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol

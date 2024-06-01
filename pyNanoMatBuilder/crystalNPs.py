@@ -1,4 +1,5 @@
-import sys
+import sys, os, pathlib
+import re
 import math
 import numpy as np
 import pyNanoMatBuilder.utils as pNMBu
@@ -15,27 +16,95 @@ class Crystal:
     
     def __init__(self,
                  crystal: str='Au',
+                 userDefCif: str=None,
                  shape: str='sphere',
                  size: float=[2,2,2], #nm
                  direction: float=[0,0,1],
                  refPlane: float=[1,0,0],
                  nRot: int=6,
                  pbc: bool=False,
-                 dbFolder: str='cif_database'):
+                 threshold: float=1e-3,
+                 dbFolder: str='cif_database',
+                 postAnalyzis=True,
+                 aseView=True,
+                 thresholdCoreSurface = 1.,
+                 skipSymmetryAnalyzis = False,
+                ):
         self.dbFolder = dbFolder #database folder that contains cif files
         self.crystal = crystal # see list with the pNMBu.ciflist() command
-        self.shape = shape # 'sphere', 'ellipsoid', 'cube'
+        self.shape = shape # 'sphere', 'ellipsoid', 'cube', 'wire'
         self.size = size
         self.direction = direction
         self.refPlane = refPlane
         self.nRot = nRot
         self.pbc = pbc
+        self.threshold = threshold
         self.nAtoms = 0
         self.cif = None
         self.cifname = None
+        self.userDefCif = userDefCif
+        if self.userDefCif is not None: self.loadExternalCif()
+
+        match self.shape:
+            case "sphere":
+                self.imageFile = pNMBu.imageNameWithPathway("sphere-C.png")
+            case "ellipsoid":
+                self.imageFile = pNMBu.imageNameWithPathway("ellipsoid-C.png")
+            case "wire":
+                print("image does not exist yet")
+                self.imageFile = pNMBu.imageNameWithPathway("underConstruction.png")
+            case _:
+                sys.exit("Shape {self.shape} is unknown")
+        vID.centerTitle(f"{self.crystal} {self.shape}")
+
+        self.bulk()
+        if aseView: view(self.cif)
+        self.prop()
+        self.makeNP()
+        if aseView: 
+            view(self.sc)
+            view(self.NP)
+        if postAnalyzis:
+            self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface)
+            if aseView: view(self.NPcs)
           
     def __str__(self):
         return(f"Crystal = {self.crystal} {self.shape}")
+
+    def loadExternalCif(self):
+        self.cif = io.read(self.userDefCif)
+        path2extCif = pathlib.Path(self.userDefCif)
+        if not path2extCif.exists():
+            sys.exit(f"file {self.userDefCif} not found. Check the file name or its location")
+        cifFile =  open(self.userDefCif, 'r')
+        name1 = "_chemical_name_systematic"
+        name2 = "_chemical_formula_sum"
+        name3 = "_chemical_formula_moiety"
+        cifFileLines = cifFile.readlines()
+        re_name_systematic = re.compile(name1)
+        re_name_sum = re.compile(name2)
+        re_name_moiety = re.compile(name3)
+        crystal1 = None
+        crystal2 = None
+        crystal3 = None
+        for line in cifFileLines:
+            if re_name_systematic.search(line):
+                parts = line.split()
+                crystal1 = ' '.join(parts[1:])
+            if re_name_sum.search(line):
+                parts = line.split()
+                crystal2 = ' '.join(parts[1:])
+            if re_name_moiety.search(line):
+                parts = line.split()
+                crystal3 = ' '.join(parts[1:])
+        cifFile.close()
+        if crystal1 is not None:
+            self.crystal = crystal1
+        elif crystal3 is not None:
+            self.crystal = crystal3
+        elif crystal2 is not None:
+            self.crystal = crystal2
+        else: self.crystal = "unknown"
 
     def print_unitcell(self):
         unitcell = self.cif.cell.cellpar()
@@ -56,38 +125,37 @@ class Crystal:
         V = cellpar_to_cell(unitcell)
         return unitcell, V
 
-    def bulk(self,
-             fformat: str='cif',
-             crystal: str=None,
-             pNMBlib: bool=True):
-        '''
-        input:
-            - fformat = file format, either 'cif' or 'poscar'
-            - crystal = name of the crystal
-            - pNMBlib, Boolean = pypyNanoMatBuilder library of cf files (default: True). If False, pNMB will look for user-defined files
-              in the default user folder
-        returns:
-            - cif or poscar file
-            - name of the cif or POSCAR file
-        '''
-        import os
+    def bulk(self):
+        print("self.userDefCif = ",self.userDefCif)
 
-        path2cif = os.path.join(pNMBu.pNMB_location(),self.dbFolder)
-        match self.crystal.upper():
-            case "RU":
-                self.cifname = "9008513_Ru_hcp.cif"
-            case "PT":
-                self.cifname = "9012957_Pt_fcc.cif"
-            case "AU":
-                self.cifname = "9008463_Au_fcc.cif"
-            case _:
-                sys.exit(f"The database does not contain bulk parameters for the {self.crystal} crystal.\nPlease provide a cif file")
-        self.cif = io.read(os.path.join(path2cif,self.cifname))
-        self.print_unitcell()
+        if self.userDefCif is None:
+            path2cif = os.path.join(pNMBu.pNMB_location(),self.dbFolder)
+            match self.crystal.upper():
+                case "NACL":
+                    self.cifname = "cod1000041_NaCl.cif"
+                case "TIO2 RUTILE":
+                    self.cifname = "cod9015662-TiO2-rutile.cif"
+                case "TIO2 ANATASE":
+                    self.cifname = "cod90159291-TiO2-anatase.cif"
+                case "RU":
+                    self.cifname = "cod9008513_Ru_hcp.cif"
+                case "PT":
+                    self.cifname = "cod9012957_Pt_fcc.cif"
+                case "AU":
+                    self.cifname = "cod9008463_Au_fcc.cif"
+                case _:
+                    sys.exit(f"The database does not contain bulk parameters for the {self.crystal} crystal.\nPlease provide a cif file")
+            self.cif = io.read(os.path.join(path2cif,self.cifname))
+        else:
+            self.cif = io.read(self.userDefCif)
+            path2extCif = pathlib.Path(self.userDefCif)
+            self.cifname = pathlib.Path(*path2extCif.parts[-1:])
+        print(f"cif parameters for {self.crystal} found in {self.cifname}")
         return 
 
     def makeSuperCell(self):
-        view(self.cif)
+        chrono = pNMBu.timer(); chrono.chrono_start()
+        vID.centertxt(f"Making a multiple cell",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         extendSizeByFactor = 1.1
         if (self.shape == 'sphere'):
             # first calculate the size of the supercell
@@ -126,33 +194,40 @@ class Crystal:
         sc.translate(-V[1]/2)
         sc.translate(-V[2]/2)
         print(f"Center of Mass after translation of the supercell: {sc.get_center_of_mass()} Å")
-        view(sc)
-        return sc
+        self.sc = sc.copy()
+        nAtoms=len(self.sc.get_positions())
+        print(f"Total number of atoms = {nAtoms}")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         
-    def makeSphere(self,sc):
-        com = sc.get_center_of_mass()
-        print(self.size,self.size[0])
+    def makeSphere(self):
+        vID.centertxt(f"Removing atoms to make a sphere",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        chrono = pNMBu.timer(); chrono.chrono_start()
+        com = self.sc.get_center_of_mass()
         sphereRadius = self.size[0]
         delAtom = []
-        for atomCoord in sc.positions:
+        for atomCoord in self.sc.positions:
             delAtom.extend(pNMBu.Rbetween2Points(com,atomCoord)/10 > [sphereRadius])
-        del sc[delAtom]
-        view(sc)
-        return sc
+        self.NP = self.sc.copy()
+        del self.NP[delAtom]
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
                 
-    def makeEllipsoid(self,sc):
-        com = sc.get_center_of_mass()
+    def makeEllipsoid(self):
+        vID.centertxt(f"Removing atoms to make an ellipsoid",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        chrono = pNMBu.timer(); chrono.chrono_start()
+        com = self.sc.get_center_of_mass()
         size = np.array(self.size)*10 #nm to angstrom
         def outside(coord,com,size):
             return (coord[0]-com[0])**2/(size[0])**2+(coord[1]-com[1])**2/(size[1])**2+(coord[2]-com[2])**2/(size[2])**2
         delAtom = []
-        for atom in sc.positions:
+        for atom in self.sc.positions:
             delAtom.extend([outside(atom,com,size) > 1])
-        del sc[delAtom]
-        view(sc)
-        return sc
+        self.NP = self.sc.copy()
+        del self.NP[delAtom]
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
 
-    def makeWire(self,sc):
+    def makeWire(self):
+        vID.centertxt(f"Removing atoms to make a wire",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        chrono = pNMBu.timer(); chrono.chrono_start()
         if self.refPlane is None: self.refPlane = pNMBu.returnPlaneParallel2Line(self.direction,[1,0,0],debug=True)
         trPlanes = pNMBu.planeRotation(self,self.refPlane,self.direction,self.nRot)
         for i,p in enumerate(trPlanes):
@@ -167,37 +242,28 @@ class Crystal:
             trPlanes = np.append(trPlanes,ptop)
             trPlanes = np.append(trPlanes,pbottom)
             trPlanes = np.reshape(trPlanes,(self.nRot+2,4))
-        AtomsAbovePlanes = pNMBu.truncateAbovePlanes(trPlanes,sc.positions)
-        del sc[AtomsAbovePlanes]
-        nAtoms = sc.get_global_number_of_atoms()
-        vID.centertxt("Nanowire moved to the center of the unitcell",bgc='#007a7a',size='14',weight='bold')
-        sc.center()
-        view(sc)
-        return sc
+        AtomsAbovePlanes = pNMBu.truncateAbovePlanes(trPlanes,self.sc.positions,eps=self.threshold)
+        self.NP = self.sc.copy()
+        del self.NP[AtomsAbovePlanes]
+        nAtoms = self.NP.get_global_number_of_atoms()
+        vID.centertxt(f"Nanowire moved to the center of the unitcell",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        self.NP.center()
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
                 
     def makeNP(self):
         import os
-        print(self)
-        # print(f"Crystal = {self.crystal}")
-        chrono = pNMBu.timer(); chrono.chrono_start()
-
-        self.bulk()
-        
-        vID.centertxt("Unit cell properties",bgc='#007a7a',size='14',weight='bold')
-        print(f"cif parameters for {self.crystal} found in {self.cifname}")
-
         vID.centertxt("Builder",bgc='#007a7a',size='14',weight='bold')
         if (self.size is None):
             self.length = [2,2,2]
             print(f"length parameter set up as = {self.size} nm")
         if (self.shape == "sphere"):
             print((f"Sphere radius = {self.size[0]} nm"))
-            sc = self.makeSuperCell()
-            NP = self.makeSphere(sc)
+            self.makeSuperCell()
+            self.makeSphere()
         elif (self.shape == "ellipsoid"):
             print((f"Ellipsoid radii = {self.size} nm"))
-            sc = self.makeSuperCell()
-            NP = self.makeEllipsoid(sc)
+            self.makeSuperCell()
+            self.makeEllipsoid()
         elif (self.shape == "cube"):
             print((f"Cube side length = {self.size[0]} nm"))
         elif (self.shape == "rectangular cuboid"):
@@ -205,7 +271,7 @@ class Crystal:
         elif (self.shape == "supercell"):
             print((f"Supercell side length = {self.size} nm"))
             if len(self.size) != 3: sys.exit("Please enter lengths along a,b and c axis, i.e. size=[l_a,l_b,l_c]")
-            NP = self.makeSuperCell()
+            self.makeSuperCell()
         elif (self.shape == "wire"):
             print((f"Wire in the {self.direction} direction. Length x width = {self.size[1]} x {self.size[0]} nm"))
             print((f"Reference plane = {self.refPlane}, {self.nRot}-th order rotation around {self.direction}"))
@@ -215,11 +281,21 @@ class Crystal:
                 print(f"Among other possibilities, you can try {suggestedPlane}")
             else:
                 print(f"{fg.GREEN}The reference truncation plane is parallel to {self.direction}{fg.OFF}")
-            sc = self.makeSuperCell()
-            NP = self.makeWire(sc)
-        else:
-            sys.exit("Shape {self.shape} is unknown")
-        self.nAtoms=len(NP.get_positions())
+            self.makeSuperCell()
+            self.makeWire()
+        self.nAtoms=len(self.NP.get_positions())
         print(f"Total number of atoms = {self.nAtoms}")
-        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-        return NP
+
+    def prop(self):
+        print(self)
+        pNMBu.plotImageInPropFunction(self.imageFile)
+        vID.centertxt("Unit cell properties",bgc='#007a7a',size='14',weight='bold')
+        self.print_unitcell()
+
+    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface):
+        pNMBu.moi(self.NP)
+        if not skipSymmetryAnalyzis: pNMBu.MolSym(self.NP)
+        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
+            pNMBu.coreSurface(self.NP.get_positions(),thresholdCoreSurface)
+        self.NPcs = self.NP.copy()
+        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol

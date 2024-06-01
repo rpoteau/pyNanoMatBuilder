@@ -250,7 +250,6 @@ def optimizeEMT(model: Atoms, pathway="./coords/model", fthreshold=0.05):
     import numpy as np
     from ase.io import write
     from ase import Atoms
-    from ase.visualize import view
     from ase.calculators.emt import EMT
     chrono = timer(); chrono.chrono_start()
     vID.centerTitle(f"ase EMT calculator & Quasi Newton algorithm for geometry optimization")
@@ -263,7 +262,6 @@ def optimizeEMT(model: Atoms, pathway="./coords/model", fthreshold=0.05):
     print(f"{fg.BLUE}Optimization steps saved in {pathway+'_.opt'} (binary file){fg.OFF}")
     print(f"{fg.RED}Optimized geometry saved in {pathway+'_opt.xyz'}{fg.OFF}")
     chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-    view(model)
     return model
 
 ##############################################################################################
@@ -524,7 +522,7 @@ def planeRotation(Crystal, refPlane, rotAxis, nRot=6, debug=False):
     vID.centertxt(f"Projection of the {pRef[0]} reference truncation plane around the {rotAxis} axis, after projection in the cartesian coordinate system",bgc='#007a7a',size='14',weight='bold')
     pRefCart = lattice_cart(Crystal,pRef,True,True)
     rotAxisCart = lattice_cart(Crystal,aRot,True,True)
-    vID.centertxt(f"{nRot}th order rotation around {rotAxisCart} of the {pRefCart[0]} truncation plane",bgc='#007a7a',size='14',weight='bold')
+    vID.centertxt(f"{nRot}th order rotation around {rotAxisCart} of the {pRefCart[0]} truncation plane",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
     planesCart = []
     for i in range(0,nRot):
         angle = i*360/nRot
@@ -533,17 +531,54 @@ def planeRotation(Crystal, refPlane, rotAxis, nRot=6, debug=False):
         # print("rot around axis = ",x)
         planesCart.append(x)
     if (debug): print(np.array(planesCart))
-    vID.centertxt(f"Just for your knowledge: indexes of the {nRot} cartesian planes after projection to the {Crystal.cif.cell.get_bravais_lattice()} unitcell",bgc='#007a7a',size='14',weight='bold')
+    vID.centertxt(f"Just for your knowledge: indexes of the {nRot} cartesian planes after projection to the {Crystal.cif.cell.get_bravais_lattice()} unitcell",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
     planesHCP = lattice_cart(Crystal,np.array(planesCart),False,True)
     if (debug):
-        vID.centertxt(f"Normalized HCP planes",bgc='#007a7a',size='14',weight='bold')
+        vID.centertxt(f"Normalized HCP planes",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         for i,p in enumerate(planesHCP):
             print(i,normV(p))
         print()
-        vID.centertxt(f"Normalized cartesian planes",bgc='#007a7a',size='14',weight='bold')
+        vID.centertxt(f"Normalized cartesian planes",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         for i,p in enumerate(planesCart):
             print(i,normV(p))
     return np.array(planesCart)
+
+def alignV1WithV2_returnR(v1,v2=np.array([0, 0, 1])):
+    """
+    returns the rotation matrix [rMat] between two vectors using scipy, so that rMat@v1 is aligned with v2
+    uses the align_vectors function of scipy.spatial.transform, align_vectors(a, b)
+    in which when a single vector is given for a and b, the shortest distance rotation that aligns b to a is returned
+    - input:
+        - two vectors given as numpy arrays, in the order v1, v2
+    - returns the (3,3) rotation matrix that aligns v1 with v2
+    """
+    from scipy.spatial.transform import Rotation
+    import numpy as np
+    import sys
+    v1 = np.reshape(v1, (1, -1))
+    v2 = np.reshape(v2, (1, -1))
+    rMat = Rotation.align_vectors(v2, v1)
+    rMat = rMat[0].as_matrix()
+    v1_rot = rMat@v1[0]
+    aligned = np.allclose(v1_rot / np.linalg.norm(v1_rot), v2 / np.linalg.norm(v2))
+    if not aligned: sys.exit(f"Was unable to align {v1} with {v2}. Check your data")
+    return rMat
+
+def rotateMoltoAlignItWithAxis(coords,axis,targetAxis=np.array([0, 0, 1])):
+    '''
+    returns coordinates after rotation made to align axis with targetAxis
+    - input:
+        - coords = natoms x 3 numpy array
+        - axis, targetAxis = directions given under the form [u,v,w]
+    - returns a (natoms,3) numpy array
+    '''
+    import numpy as np
+    if isinstance(axis, list):
+        axis = np.array(axis)
+    if isinstance(targetAxis, list):
+        targetAxis = np.array(targetAxis)
+    rMat = alignV1WithV2_returnR(axis,targetAxis)
+    return np.array(rMat@coords.transpose()).transpose()
 
 ##############################################################################################
 ######################################## cut above planes
@@ -620,7 +655,7 @@ def truncateAbovePlanes(planes: np.ndarray,
     '''
 
     import numpy as np
-    vID.centertxt(f"Plane truncation (all planes condition: {allP}, delete above planes: {delAbove}, initial number of atoms = {len(coords)})",bgc='#007a7a',size='14',weight='bold')
+    vID.centertxt(f"Plane truncation (all planes condition: {allP}, delete above planes: {delAbove}, initial number of atoms = {len(coords)})",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
     
     if allP:
         delAtoms = np.ones(len(coords), dtype=bool)
@@ -636,18 +671,42 @@ def truncateAbovePlanes(planes: np.ndarray,
             elif delAbove and not allP:
                 delAtoms[i] = delAtoms[i] or signedDistance > eps
             elif not delAbove and allP:
-                delAtoms[i] = delAtoms[i] and signedDistance < eps
+                delAtoms[i] = delAtoms[i] and signedDistance < -eps
             elif not delAbove and not allP:
-                delAtoms[i] = delAtoms[i] or signedDistance < eps
+                delAtoms[i] = delAtoms[i] or signedDistance < -eps
         nOfDeletedAtoms = np.count_nonzero(delAtoms) - nOfDeletedAtoms
-        print(f"- plane", [f"{x: .2f}" for x in p],f"> {nOfDeletedAtoms} atoms deleted")
         if debug:
+            print(f"- plane", [f"{x: .2f}" for x in p],f"> {nOfDeletedAtoms} atoms deleted")
             for i,a in enumerate(delAtoms):
                 if a: print(f"@{i}",end=',')
             print("",end='\n')
     delAtoms = np.array(delAtoms)
-    print(f"{len(coords)-np.count_nonzero(delAtoms)} atoms remaining")
+    if delAbove:
+        print(f"{len(coords)-np.count_nonzero(delAtoms)} atoms lie below the plane(s)")
+    else:
+        print(f"{np.count_nonzero(delAtoms)} atoms lie below the plane(s)")
     return delAtoms
+
+def returnPointsThatLieInPlanes(planes: np.ndarray,
+                                coords: np.ndarray,
+                                debug: bool=False,
+                                threshold: float=1e-3):
+    import numpy as np
+    vID.centertxt(f"Find all points that lie in the given planes",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+    AtomsInPlane = np.zeros(len(coords), dtype=bool)
+    for p in planes:
+        for i,c in enumerate(coords):
+            signedDistance = Pt2planeSignedDistance(p,c)
+            AtomsInPlane[i] = AtomsInPlane[i] or np.abs(signedDistance) < threshold
+        nOfAtomsInPlane = np.count_nonzero(AtomsInPlane)
+        if debug:
+            print(f"- plane", [f"{x: .2f}" for x in p],f"> {nOfAtomsInPlane} atoms lie in the planes")
+            for i,a in enumerate(delAtoms):
+                if a: print(f"@{i}",end=',')
+            print("",end='\n')
+    AtomsInPlane = np.array(AtomsInPlane)
+    print(f"{np.count_nonzero(AtomsInPlane)} atoms lie in the plane(s)")
+    return AtomsInPlane
 
 def deleteElementsOfAList(t,
                           list2Delete: bool):
@@ -745,6 +804,36 @@ def delAtomsWithCN(coords: np.ndarray,
         if cn == targetCN: tabDelAtoms.append(i)
     tabDelAtoms = np.array(tabDelAtoms)
     return tabDelAtoms
+
+def findNeighbours(coords,Rmax):
+    '''
+    for all atoms i, returns the list of all atoms j within an arbitrarily determined cutoff distance Rmax from atom i
+    - input:
+        - coords = numpy array with the N-atoms cartesian coordinates
+        - Rmax = cutoff distance
+    - returns:
+        - list of lists (len(list[i]) = number of nearest neighbours of atom i)
+    '''
+    vID.centertxt(f"Building a table of nearest neighbours",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+    chrono = timer(); chrono.chrono_start()
+    nAtoms = len(coords)
+    nn = [ [] for _ in range(nAtoms)]
+    for i in range(nAtoms):
+        for j in range(i):
+            if RAB(coords,i,j) < Rmax:
+                nn[i].append(j)
+                nn[j].append(i)
+    chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+    return nn
+
+def printNeighbours(nn):
+    '''
+    prints the list of nearest neighbours of each atom
+    - input:
+        - nn = nearest neighbours given as a list of list - such as the nn provided by the neighbours() function
+    '''
+    for i,nni in enumerate(nn):
+        print(f"Atom {i:6} has {len(nni):2} NN: {nni}")
 
 ##############################################################################################
 ######################################## symmetry
@@ -993,3 +1082,36 @@ def lattice_cart(Crystal,vectors,Bravais2cart=True,printV=False):
             Estr = [f"{vp: .2f}" for vp in Vproj[i]]
             print(f"{Bstr}{B} > {Estr}{E}")
     return Vproj 
+##############################################################################################
+######################################## Misc for plots
+def imageNameWithPathway(imgName):
+    path2image= os.path.join(pNMB_location(),'figs')
+    imgNameWithPathway = os.path.join(path2image,imgName)
+    return imgNameWithPathway
+
+def plotImageInPropFunction(imageFile):
+    import matplotlib.pyplot as plt
+    import matplotlib.image as mpimg
+    image = mpimg.imread(imageFile)
+    plt.figure(figsize=(2, 10))
+    plt.imshow(image,interpolation='nearest')
+    plt.axis('off')
+    plt.show()
+
+##############################################################################################
+######################################## Core/surface identification / Convec Hull analysis
+def coreSurface(coords,threshold):
+    from scipy.spatial import ConvexHull
+    vID.centertxt("Core/Surface analyzis",bgc='#007a7a',size='14',weight='bold')
+    chrono = timer(); chrono.chrono_start()
+    vID.centertxt(f"Convex Hull analyzis",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+    hull = ConvexHull(coords)
+    chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+    # print(hull.simplices)
+    # print(hull.vertices)
+    # print(hull.neighbors)
+    # print(hull.equations)
+    chrono = timer(); chrono.chrono_start()
+    surfaceAtoms= returnPointsThatLieInPlanes(hull.equations,coords,threshold=threshold)
+    chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+    return [hull.vertices,hull.simplices,hull.neighbors,hull.equations],surfaceAtoms
