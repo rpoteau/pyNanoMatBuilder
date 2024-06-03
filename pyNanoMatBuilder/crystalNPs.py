@@ -19,9 +19,15 @@ class Crystal:
                  userDefCif: str=None,
                  shape: str='sphere',
                  size: float=[2,2,2], #nm
-                 direction: float=[0,0,1],
-                 refPlane: float=[1,0,0],
-                 nRot: int=6,
+                 directionsPPD: np.ndarray=np.array([[1,0,0],[0,1,0],[0,0,1]]),
+                 buildPPD: str='xyz',
+                 directionWire: float=[0,0,1],
+                 refPlaneWire: float=[1,0,0],
+                 nRotWire: int=6,
+                 surfacesWulff: np.ndarray=None,
+                 eSurfacesWulff: np.ndarray=None,
+                 sizesWulff: np.ndarray=None,
+                 aseSymPrec: float=1e-4,
                  pbc: bool=False,
                  threshold: float=1e-3,
                  dbFolder: str='cif_database',
@@ -36,9 +42,15 @@ class Crystal:
         self.crystal = crystal # see list with the pNMBu.ciflist() command
         self.shape = shape # 'sphere', 'ellipsoid', 'cube', 'wire'
         self.size = size
-        self.direction = direction
-        self.refPlane = refPlane
-        self.nRot = nRot
+        self.directionsPPD = directionsPPD
+        self.buildPPD = buildPPD
+        self.directionWire = directionWire
+        self.refPlaneWire = refPlaneWire
+        self.nRotWire = nRotWire
+        self.surfacesWulff = surfacesWulff
+        self.eSurfacesWulff = eSurfacesWulff
+        self.sizesWulff = sizesWulff
+        self.aseSymPrec = aseSymPrec
         self.pbc = pbc
         self.threshold = threshold
         self.nAtoms = 0
@@ -53,7 +65,10 @@ class Crystal:
             case "ellipsoid":
                 self.imageFile = pNMBu.imageNameWithPathway("ellipsoid-C.png")
             case "wire":
-                print("image does not exist yet")
+                self.imageFile = pNMBu.imageNameWithPathway("underConstruction.png")
+            case "parallepiped":
+                self.imageFile = pNMBu.imageNameWithPathway("underConstruction.png")
+            case "Wulff":
                 self.imageFile = pNMBu.imageNameWithPathway("underConstruction.png")
             case _:
                 sys.exit("Shape {self.shape} is unknown")
@@ -109,26 +124,13 @@ class Crystal:
             self.crystal = crystal2
         else: self.crystal = "unknown"
 
-    def print_unitcell(self):
-        unitcell = self.cif.cell.cellpar()
-        bl = self.cif.cell.get_bravais_lattice()
-        print(f"Bravais lattice: {bl}")
-        print(f"Chemical formula: {self.cif.get_chemical_formula()}")
-        print(f"Crystal family = {bl.crystal_family} (lattice system = {bl.lattice_system})")
-        print(f"Name = {bl.longname} (Pearson symbol = {bl.pearson_symbol})")
-        print(f"Variant names = {bl.variant_names}")
-        print()
-        print(f"a: {unitcell[0]:.3f} Å, b: {unitcell[1]:.3f} Å, c: {unitcell[2]:.3f} Å. (c/a = {unitcell[2]/unitcell[0]:.3f})")
-        print(f"α: {unitcell[3]:.3f} °, β: {unitcell[4]:.3f} °, γ: {unitcell[5]:.3f} °")
-        print()
-        print(f"Volume: {self.cif.cell.volume:.3f} Å3")
-
     def return_unitcell(self):
         unitcell = self.cif.cell.cellpar()
         V = cellpar_to_cell(unitcell)
         return unitcell, V
 
     def bulk(self, noOutput):
+        from ase.spacegroup import get_spacegroup
 
         if self.userDefCif is None:
             path2cif = os.path.join(pNMBu.pNMB_location(),self.dbFolder)
@@ -152,6 +154,8 @@ class Crystal:
             self.cif = io.read(self.userDefCif)
             path2extCif = pathlib.Path(self.userDefCif)
             self.cifname = pathlib.Path(*path2extCif.parts[-1:])
+
+        self.sg = get_spacegroup(self.cif,symprec=self.aseSymPrec)
         if not noOutput: print(f"cif parameters for {self.crystal} found in {self.cifname}")
         return 
 
@@ -165,7 +169,7 @@ class Crystal:
             Ma = int(np.round(extendSizeByFactor * sphereRadius*2*10/self.cif.cell.lengths()[0]))
             Mb = int(np.round(extendSizeByFactor * sphereRadius*2*10/self.cif.cell.lengths()[1]))
             Mc = int(np.round(extendSizeByFactor * sphereRadius*2*10/self.cif.cell.lengths()[2]))
-        elif (self.shape == 'ellipsoid' or self.shape == 'supercell'):
+        elif (self.shape == 'ellipsoid' or self.shape == 'supercell' or self.shape == 'parallepiped'):
             # first calculate the size of the supercell
             Ma = int(np.round(extendSizeByFactor * self.size[0]*2*10/self.cif.cell.lengths()[0]))
             Mb = int(np.round(extendSizeByFactor * self.size[1]*2*10/self.cif.cell.lengths()[1]))
@@ -178,6 +182,14 @@ class Crystal:
             Ma = int(np.round(extendSizeByFactor * maxDim*10/self.cif.cell.lengths()[0]))
             Mb = int(np.round(extendSizeByFactor * maxDim*10/self.cif.cell.lengths()[1]))
             Mc = int(np.round(extendSizeByFactor * maxDim*10/self.cif.cell.lengths()[2]))
+        elif (self.shape == 'Wulff'):
+            if np.argmax(self.sizesWulff) == 1:
+                maxDim = self.sizesWulff[1]
+            else:
+                maxDim = np.max(self.sizesWulff)
+            Ma = int(np.round(extendSizeByFactor * 2*maxDim*10/self.cif.cell.lengths()[0]))
+            Mb = int(np.round(extendSizeByFactor * 2*maxDim*10/self.cif.cell.lengths()[1]))
+            Mc = int(np.round(extendSizeByFactor * 2*maxDim*10/self.cif.cell.lengths()[2]))
         #finds the nearest even numbers
         Ma = math.ceil(Ma / 2.) * 2
         Mb = math.ceil(Mb / 2.) * 2
@@ -190,7 +202,7 @@ class Crystal:
         # print(sc.cell.cellpar())
         # print(cellpar_to_cell(sc.cell.cellpar()))
         V = cellpar_to_cell(sc.cell.cellpar())
-        if not noOutput: print(f"Center of Mass: {sc.get_center_of_mass()} Å")
+        if not noOutput: print(f"Center of Mass:", [f"{c:.2f}" for c in sc.get_center_of_mass()]," Å")
         if not noOutput: print("Now translating the supercell")
         sc.translate(-V[0]/2)
         sc.translate(-V[1]/2)
@@ -230,61 +242,115 @@ class Crystal:
     def makeWire(self,noOutput):
         if not noOutput: vID.centertxt(f"Removing atoms to make a wire",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
-        if self.refPlane is None: self.refPlane = pNMBu.returnPlaneParallel2Line(self.direction,[1,0,0],debug=True)
-        trPlanes = pNMBu.planeRotation(self,self.refPlane,self.direction,self.nRot)
+        if self.refPlaneWire is None: self.refPlaneWire = pNMBu.returnPlaneParallel2Line(self.directionWire,[1,0,0],debug=True)
+        trPlanes = pNMBu.planeRotation(self,self.refPlaneWire,self.directionWire,self.nRotWire)
         for i,p in enumerate(trPlanes):
             trPlanes[i] = pNMBu.normV(p)
         radius = 10*self.size[0]/2
-        tradius = np.full((self.nRot,1),-radius)
+        tradius = np.full((self.nRotWire,1),-radius)
         trPlanes = np.append(trPlanes,tradius,axis=1)
         if not self.pbc:
             halfLength = 10*self.size[1]/2
-            ptop = np.append(pNMBu.normV(self.direction),-halfLength)
-            pbottom = np.append(-pNMBu.normV(self.direction),-halfLength)
+            ptop = np.append(pNMBu.normV(self.directionWire),-halfLength)
+            pbottom = np.append(-pNMBu.normV(self.directionWire),-halfLength)
             trPlanes = np.append(trPlanes,ptop)
             trPlanes = np.append(trPlanes,pbottom)
-            trPlanes = np.reshape(trPlanes,(self.nRot+2,4))
+            trPlanes = np.reshape(trPlanes,(self.nRotWire+2,4))
         AtomsAbovePlanes = pNMBu.truncateAbovePlanes(trPlanes,self.sc.positions,eps=self.threshold)
         self.NP = self.sc.copy()
         del self.NP[AtomsAbovePlanes]
         nAtoms = self.NP.get_global_number_of_atoms()
-        vID.centertxt(f"Nanowire moved to the center of the unitcell",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        if not noOutput: vID.centertxt(f"Nanowire moved to the center of the unitcell",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         self.NP.center()
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-                
+
+    def makeParallelepiped(self,noOutput):
+        if not noOutput: vID.centertxt(f"Removing atoms to make a parallelepiped",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        chrono = pNMBu.timer(); chrono.chrono_start()
+        if self.buildPPD == "xyz":
+            trPlanes = self.directionsPPD
+        else:
+            trPlanes = pNMBu.lattice_cart(self,self.directionsPPD,Bravais2cart=True,printV=True)
+        for i,p in enumerate(trPlanes): trPlanes[i] = pNMBu.normV(p)
+        # 6 planes defined to cut between 
+        # [-a/2 direction, a/2 direction], [-b/2 direction, b/2 direction], [-c/2 direction, c/2 direction]
+        size = -np.array(self.size)*10/2 #nm!
+        size = np.append(size,size,axis=0)
+        trPlanes = np.append(trPlanes,-trPlanes,axis=0)
+        trPlanes = np.append(trPlanes,size.reshape(6,1),axis=1)
+        AtomsAbovePlanes = pNMBu.truncateAbovePlanes(trPlanes,self.sc.positions,eps=self.threshold,debug=False)
+        self.NP = self.sc.copy()
+        del self.NP[AtomsAbovePlanes]
+        nAtoms = self.NP.get_global_number_of_atoms()
+        self.NP.center()
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+
+    def makeWulff(self,noOutput):
+        if not noOutput: vID.centertxt(f"Calculating truncation distances",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        chrono = pNMBu.timer(); chrono.chrono_start()
+        trPlanes = self.surfacesWulff
+        for i,p in enumerate(trPlanes):
+            trPlanes[i] = pNMBu.normV(p)
+        if len(self.sizesWulff) == len(self.surfacesWulff): 
+            sizes = -np.array(sizesWulff)*10
+            trPlanes = np.append(trPlanes,sizes.reshape(len(self.surfacesWulff),1),axis=1)
+        elif len(self.sizesWulff) == 1:
+            sizes = []
+            mostStableE = min(self.eSurfacesWulff)
+            for i, e in enumerate(self.eSurfacesWulff):
+                sizes.append(self.sizesWulff[0]*10*self.eSurfacesWulff[i]/mostStableE)
+                print(f"{sizes =}")
+            sizes = -np.array(sizes)
+            trPlanes = np.append(trPlanes,sizes.reshape(len(self.surfacesWulff),1),axis=1)
+        AtomsAbovePlanes = pNMBu.truncateAbovePlanes(trPlanes,self.sc.positions,allP=False,eps=self.threshold,debug=True)
+        self.NP = self.sc.copy()
+        del self.NP[AtomsAbovePlanes]
+        nAtoms = self.NP.get_global_number_of_atoms()
+        self.NP.center()
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+
     def makeNP(self,noOutput):
         import os
         if not noOutput: vID.centertxt("Builder",bgc='#007a7a',size='14',weight='bold')
-        if (self.size is None):
+        if self.size is None:
             self.length = [2,2,2]
             if not noOutput: print(f"length parameter set up as = {self.size} nm")
-        if (self.shape == "sphere"):
-            if not noOutput: print((f"Sphere radius = {self.size[0]} nm"))
+        if self.shape == "sphere":
+            if not noOutput: print(f"Sphere radius = {self.size[0]} nm")
             self.makeSuperCell(noOutput)
             self.makeSphere(noOutput)
-        elif (self.shape == "ellipsoid"):
-            if not noOutput: print((f"Ellipsoid radii = {self.size} nm"))
+        elif self.shape == "ellipsoid":
+            if not noOutput: print(f"Ellipsoid radii = {self.size} nm")
             self.makeSuperCell(noOutput)
             self.makeEllipsoid(noOutput)
-        elif (self.shape == "cube"):
-            if not noOutput: print((f"Cube side length = {self.size[0]} nm"))
-        elif (self.shape == "rectangular cuboid"):
-            if not noOutput: print((f"Rectangular cuboid side lengths = {self.size} nm"))
-        elif (self.shape == "supercell"):
-            if not noOutput: print((f"Supercell side length = {self.size} nm"))
+        elif self.shape == "parallepiped":
+            if not noOutput: print(f"Parallepiped side length = {self.size} nm, directions = {list(self.directionsPPD)}")
+            self.makeSuperCell(noOutput)
+            self.makeParallelepiped(noOutput)
+        elif self.shape == "supercell":
+            if not noOutput: print(f"Supercell side length = {self.size} nm")
             if len(self.size) != 3: sys.exit("Please enter lengths along a,b and c axis, i.e. size=[l_a,l_b,l_c]")
             self.makeSuperCell(noOutput)
-        elif (self.shape == "wire"):
-            if not noOutput: print((f"Wire in the {self.direction} direction. Length x width = {self.size[1]} x {self.size[0]} nm"))
-            if not noOutput: print((f"Reference plane = {self.refPlane}, {self.nRot}-th order rotation around {self.direction}"))
-            if not pNMBu.isPlaneParrallel2Line(self.refPlane, self.direction):
-                print(f"{fg.RED}Warning! The reference truncation plane is not parallel to {self.direction}. Are you sure?{fg.OFF}")
-                suggestedPlane = pNMBu.returnPlaneParallel2Line(self.direction)
+        elif self.shape == "wire":
+            if not noOutput: print(f"Wire in the {self.directionWire} directionWire. Length x width = {self.size[1]} x {self.size[0]} nm")
+            if not noOutput: print(f"Reference plane = {self.refPlaneWire}, {self.nRotWire}-th order rotation around {self.directionWire}")
+            if not pNMBu.isPlaneParrallel2Line(self.refPlaneWire, self.directionWire):
+                print(f"{fg.RED}Warning! The reference truncation plane is not parallel to {self.directionWire}. Are you sure?{fg.OFF}")
+                suggestedPlane = pNMBu.returnPlaneParallel2Line(self.directionWire)
                 print(f"Among other possibilities, you can try {suggestedPlane}")
             else:
-                if not noOutput: print(f"{fg.GREEN}The reference truncation plane is parallel to {self.direction}{fg.OFF}")
+                if not noOutput: print(f"{fg.GREEN}The reference truncation plane is parallel to {self.directionWire}{fg.OFF}")
             self.makeSuperCell(noOutput)
             self.makeWire(noOutput)
+        elif self.shape == "Wulff":
+            if self.surfacesWulff == None:
+                sys.exit("Wulff construction requested, but no planes were given. Define them with the 'surfacesWulff' variable")
+            if self.eSurfacesWulff == None and self.sizesWulff == None: 
+                sys.exit("Either 'eSurfacesWulff' or 'sizesWulff' variables must be set up")
+            if len(self.surfacesWulff) != len(self.eSurfacesWulff) and len(self.surfacesWulff) != len(self.sizesWulff):
+                sys.exit("'surfacesWulff' and ('eSurfacesWulff' or 'sizesWulff') lists have different dimensions")
+            self.makeSuperCell(noOutput)
+            self.makeWulff(noOutput)
         self.nAtoms=len(self.NP.get_positions())
         if not noOutput: print(f"Total number of atoms = {self.nAtoms}")
 
@@ -292,7 +358,7 @@ class Crystal:
         print(self)
         pNMBu.plotImageInPropFunction(self.imageFile)
         vID.centertxt("Unit cell properties",bgc='#007a7a',size='14',weight='bold')
-        self.print_unitcell()
+        pNMBu.print_ase_unitcell(self)
 
     def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface):
         pNMBu.moi(self.NP)

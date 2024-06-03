@@ -6,6 +6,8 @@ from ase.atoms import Atoms
 from ase.io import write
 import os
 
+from pyNanoMatBuilder import data
+
 ##############################################################################################
 ######################################## time
 from datetime import datetime
@@ -56,6 +58,65 @@ class timer:
         print(f'{fg.BLUE}Duration : {self.hdelay_ms(time.time() - _chrono_start)}{fg.OFF}')
 
 ##############################################################################################
+######################################## ase unitcells and symmetry analyzis
+def print_ase_unitcell(system):
+    unitcell = system.cif.cell.cellpar()
+    bl = system.cif.cell.get_bravais_lattice()
+    print(f"Bravais lattice: {bl}")
+    print(f"Chemical formula: {system.cif.get_chemical_formula()}")
+    print(f"Crystal family = {bl.crystal_family} (lattice system = {bl.lattice_system})")
+    print(f"Name = {bl.longname} (Pearson symbol = {bl.pearson_symbol})")
+    print(f"Variant names = {bl.variant_names}")
+    print()
+    print(f"From ase: space group number = {system.sg.no}      Hermann-Mauguin symbol for the space group = {system.sg.symbol}")
+    print()
+    print(f"a: {unitcell[0]:.3f} Å, b: {unitcell[1]:.3f} Å, c: {unitcell[2]:.3f} Å. (c/a = {unitcell[2]/unitcell[0]:.3f})")
+    print(f"α: {unitcell[3]:.3f} °, β: {unitcell[4]:.3f} °, γ: {unitcell[5]:.3f} °")
+    print()
+    print(f"Volume: {system.cif.cell.volume:.3f} Å3")
+
+def listCifsOfTheDatabase():
+    from ase import io
+    import pathlib
+    import glob
+    from ase.spacegroup import get_spacegroup
+    import re
+    
+    path2cifFolder = os.path.join(pNMB_location(),'cif_database')
+    print(f"path to cif database = {path2cifFolder}")
+    
+    sgITField = "_space_group_IT_number"
+    sgHMField = "_symmetry_space_group_name_H-M"
+    
+    class Crystal:
+        pass
+        
+    for cif in glob.glob(f'{path2cifFolder}/*.cif'):
+        path2cifFile = pathlib.Path(cif)
+        cifName = pathlib.Path(*path2cifFile.parts[-1:])
+        vID.centertxt(f"{cifName}",size=14,weight='bold')
+        cifContent = io.read(cif)
+        cifFile =  open(cif, 'r')
+        cifFileLines = cifFile.readlines()
+        re_sgIT = re.compile(sgITField)
+        re_sgHM = re.compile(sgHMField)
+        for line in cifFileLines: 
+            if re_sgIT.search(line): sgIT = ' '.join(line.split()[1:])
+            if re_sgHM.search(line): sgHM = ' '.join(line.split()[1:])
+        cifFile.close()
+        sg = get_spacegroup(cifContent,symprec=1e-4)
+        c = Crystal()
+        c.cif = cifContent
+        c.sg = sg
+        print_ase_unitcell(c)
+        color="vID.fg.RED"
+        print()
+        if int(sgIT) == sg.no:
+            print(f"{vID.fg.GREEN}Symmetry in the cif file = {sgIT}   {sgHM}{vID.hl.BOLD} in agreement with the ase symmetry analyzis{vID.fg.OFF}")
+        else:
+            print(f"{vID.fg.RED}Symmetry in the cif file = {sgIT}   {sgHM}{vID.hl.BOLD} disagrees with the ase symmetry analyzis{vID.fg.OFF}")
+
+##############################################################################################
 ######################################## coupling with pymatgen in order to find the symmetry
 def MolSym(aseobject: Atoms,
            getEquivalentAtoms: bool=False):
@@ -80,7 +141,7 @@ def MolSym(aseobject: Atoms,
 
 ##############################################################################################
 ######################################## Folder pathways
-def ciflist(dbFolder='cif_database'):
+def ciflist(dbFolder=data.pNMBvar.dbFolder):
     import os
     path2cif = os.path.join(pNMB_location(),dbFolder)
     print(os.listdir(path2cif))
@@ -519,7 +580,7 @@ def planeRotation(Crystal, refPlane, rotAxis, nRot=6, debug=False):
     '''
     pRef = np.array([refPlane])
     aRot = np.array([rotAxis])
-    vID.centertxt(f"Projection of the {pRef[0]} reference truncation plane around the {rotAxis} axis, after projection in the cartesian coordinate system",bgc='#007a7a',size='14',weight='bold')
+    vID.centertxt(f"Projection of the {pRef[0]} reference truncation plane around the {rotAxis} axis, after projection in the cartesian coordinate system",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
     pRefCart = lattice_cart(Crystal,pRef,True,True)
     rotAxisCart = lattice_cart(Crystal,aRot,True,True)
     vID.centertxt(f"{nRot}th order rotation around {rotAxisCart} of the {pRefCart[0]} truncation plane",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
@@ -661,21 +722,33 @@ def truncateAbovePlanes(planes: np.ndarray,
         delAtoms = np.ones(len(coords), dtype=bool)
     else:
         delAtoms = np.zeros(len(coords), dtype=bool)
-    eps =1e-3
     nOfDeletedAtoms = 0
     for p in planes:
+        if allP:
+            delAtomsP = np.ones(len(coords), dtype=bool)
+        else:
+            delAtomsP = np.zeros(len(coords), dtype=bool)
         for i,c in enumerate(coords):
             signedDistance = Pt2planeSignedDistance(p,c)
             if delAbove and allP:
                 delAtoms[i] = delAtoms[i] and signedDistance > eps
             elif delAbove and not allP:
                 delAtoms[i] = delAtoms[i] or signedDistance > eps
+                delAtomsP[i] = signedDistance > eps
             elif not delAbove and allP:
                 delAtoms[i] = delAtoms[i] and signedDistance < -eps
             elif not delAbove and not allP:
                 delAtoms[i] = delAtoms[i] or signedDistance < -eps
+                delAtomsP[i] = signedDistance < -eps
         nOfDeletedAtoms = np.count_nonzero(delAtoms) - nOfDeletedAtoms
-        if debug:
+        nOfDeletedAtomsP = np.count_nonzero(delAtomsP)
+        if debug and not allP:
+            print(f"- plane", [f"{x: .2f}" for x in p],f"> {nOfDeletedAtomsP} atoms deleted")
+            for i,a in enumerate(delAtomsP):
+                if a: print(f"@{i}",end=',')
+            print("",end='\n')
+        if debug and allP:
+            print("allP")
             print(f"- plane", [f"{x: .2f}" for x in p],f"> {nOfDeletedAtoms} atoms deleted")
             for i,a in enumerate(delAtoms):
                 if a: print(f"@{i}",end=',')
@@ -1077,6 +1150,7 @@ def lattice_cart(Crystal,vectors,Bravais2cart=True,printV=False):
         B = 'C'
         E = 'B'
     if printV:
+        print("Change of basis")
         for i,V in enumerate(vectors):
             Bstr = [f"{v: .2f}" for v in V]
             Estr = [f"{vp: .2f}" for vp in Vproj[i]]
@@ -1106,11 +1180,10 @@ def coreSurface(coords,threshold):
     chrono = timer(); chrono.chrono_start()
     vID.centertxt(f"Convex Hull analyzis",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
     hull = ConvexHull(coords)
+    print("Found:")
+    print(f"  - {len(hull.vertices)} vertices")
+    print(f"  - {len(hull.simplices)} simplices")
     chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-    # print(hull.simplices)
-    # print(hull.vertices)
-    # print(hull.neighbors)
-    # print(hull.equations)
     chrono = timer(); chrono.chrono_start()
     surfaceAtoms= returnPointsThatLieInPlanes(hull.equations,coords,threshold=threshold)
     chrono.chrono_stop(hdelay=False); chrono.chrono_show()
