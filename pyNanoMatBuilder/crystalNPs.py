@@ -257,6 +257,7 @@ class Crystal:
         self.NP = self.sc.copy()
         del self.NP[AtomsAbovePlanes]
         nAtoms = self.NP.get_global_number_of_atoms()
+        self.trPlanes = trPlanes
         if not noOutput: vID.centertxt(f"Nanowire moved to the center of the unitcell",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         self.NP.center()
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
@@ -285,6 +286,7 @@ class Crystal:
         del self.NP[AtomsAbovePlanes]
         nAtoms = self.NP.get_global_number_of_atoms()
         self.NP.center()
+        self.trPlanes = trPlanes
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
 
     def makeWulff(self,noOutput):
@@ -327,6 +329,7 @@ class Crystal:
         del self.NP[AtomsAbovePlanes]
         nAtoms = self.NP.get_global_number_of_atoms()
         self.NP.center()
+        self.trPlanes = trPlanes
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
 
     def makeNP(self,noOutput):
@@ -372,6 +375,7 @@ class Crystal:
             self.makeSuperCell(noOutput)
             self.makeWulff(noOutput)
         self.nAtoms=len(self.NP.get_positions())
+        self.cog = self.NP.get_center_of_mass()
         if not noOutput: print(f"Total number of atoms = {self.nAtoms}")
 
     def prop(self):

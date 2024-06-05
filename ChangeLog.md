@@ -1,12 +1,12 @@
 **Development of a pre-release version -> date-based versioning**
 
 ## 20250605
+### added
+- abstract in README.md
+- `defWulffShapeForJMol()` function in `utils.py`: return the jmol command to plot the Wulff shape 
 
 ### changed
 - `normal2MillerPlane()` called before `pNMBu.lattice_cart()` in `crystal.makeWulff()` & `crystal.makeParallelepiped()`, and before `pNMBu.planeRotation()` in `crystal.makeWire()`
-
-### added
-- abstract in README.md 
 
 ## 20250603
 ### added

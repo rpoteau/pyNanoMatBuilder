@@ -545,6 +545,19 @@ def AngleBetweenVV(lineDV,planeNV):
         alpha = 180*np.arccos(np.clip(numerator/denominator,-1,1))/np.pi
     return alpha
 
+def signedAngleBetweenVV(v1,v2):
+    '''
+    returns, between [0°,360°] the signed angle, in degrees, between two vectors
+    '''
+    import numpy as np
+    n = [1,1,1]
+    cosTh = np.dot(v1,v2)
+    sinTh = np.dot(np.cross(v1,v2),n)
+    angle = np.rad2deg(np.arctan2(sinTh,cosTh))
+    if angle >= 0: return angle
+    else: return 360+angle
+    return angle
+
 def normal2MillerPlane(Crystal,MillerIndexes,printN=True):
     '''
     returns the normal direction to the plane defined by h,k,l Miller indices is defined as [n1 n2 n3] = (hkl) x G*,
@@ -882,6 +895,96 @@ def writexyz(filename,atoms):
         line2write+='%s'%str(element_array[i])+'\t %.8f'%float(coord[i,0])+'\t %.8f'%float(coord[i,1])+'\t %.8f'%float(coord[i,2])+'\n'
     with open(filename,'w') as file:
         file.write(line2write)
+
+def defWulffShapeForJMol(Crystal):
+    from scipy.spatial import HalfspaceIntersection
+    from scipy.spatial import ConvexHull
+    import networkx as nx
+    import scipy as sp
+    
+    cog = Crystal.cog
+    feasible_point = np.array([0., 0., 0.])
+    hs = HalfspaceIntersection(Crystal.trPlanes, feasible_point)
+    vertices = hs.intersections + cog
+    hull = ConvexHull(vertices)
+    faces = hull.simplices
+    neighbours = hull.neighbors
+    
+    def sortVCW(V,C):
+        '''
+        sort the vertices of a planar polygon clockwise
+        - input:
+            - V = list of vertices of a given polygon
+            - C = coordinates of all vertices
+        '''
+        coords = []
+        for v in V: coords.append(C[v])
+        cog = np.mean(coords,axis=0)
+        radialV = coords-cog
+        angle = []
+        V = list(V)
+        for i in range(len(radialV)):
+            angle.append(signedAngleBetweenVV(radialV[0],radialV[i]))
+        ind = np.argsort(angle)
+        Vs = np.array(list(V))
+        return Vs[ind]
+    
+    def isCoplanar(p1,p2,tolAngle=0.1):
+        angle = AngleBetweenVV(p1[0:3],p2[0:3])
+        return (abs(angle) < tolAngle or abs(angle-180) <= tolAngle)
+        
+    def reduceFaces(F,coordsVertices):
+    
+        flatten = lambda l: [item for sublist in l for item in sublist]
+    
+        # create a graph in which nodes represent triangles
+        # nodes are connected if the corresponding triangles are adjacent and coplanar
+        G = nx.Graph()
+        G.add_nodes_from(range(len(F)))
+        pList = []
+        for i,f in enumerate(F):
+            planeDef = []
+            for v in f:
+                planeDef.append(coordsVertices[v])
+            planeDef = np.array(planeDef)
+            pList.append(planeFittingLSF(planeDef,printEq=False))
+    
+        for i,p1 in enumerate(pList):
+            for n in neighbours[i]:
+                p2 = pList[n]
+                if isCoplanar(p1,p2):
+                    G.add_edge(i,n)
+        components = list(nx.connected_components(G))
+        simplified = [set(flatten(F[index] for index in component)) for component in components]
+    
+        return simplified
+    vID.centertxt("copy/paste this command line in jmol",bgc='#007a7a',size='14',weight='bold')
+        
+    new_faces = reduceFaces(faces,vertices)
+    new_facesS = []
+    for i,nf in enumerate(new_faces):
+        new_facesS.append(sortVCW(nf,vertices).tolist())
+    cmd = ""
+    for i,nf in enumerate(new_facesS):
+        cmd += "draw facet" + str(i) + " polygon "
+        cmd += '['
+        for at in nf:
+            cmd+=f"{{{vertices[at][0]:.4f},{vertices[at][1]:.4f},{vertices[at][2]:.4f}}},"
+        cmd+="]; "
+    cmd += "color $facet* translucent 70 [x828282]" 
+    cmde = ""
+    index = 0
+    for nf in new_facesS:
+        nfcycle = np.append(nf,nf[0])
+        for i, at in enumerate(nfcycle[:-1]):
+            cmde += "draw line" + str(index) + " ["
+            cmde += f"{{{vertices[at][0]:.4f},{vertices[at][1]:.4f},{vertices[at][2]:.4f}}},"
+            cmde += f"{{{vertices[nfcycle[i+1]][0]:.4f},{vertices[nfcycle[i+1]][1]:.4f},{vertices[nfcycle[i+1]][2]:.4f}}},"
+            cmde += "] width 0.2; "
+            index += 1
+    cmde += "color $line* [x828282]; "
+    cmd = cmde + cmd
+    return cmd
 
 #######################################################################
 ######################################## coordination numbers
