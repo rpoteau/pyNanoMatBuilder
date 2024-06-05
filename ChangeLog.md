@@ -1,22 +1,45 @@
 **Development of a pre-release version -> date-based versioning**
 
+## 20250605
+
+### changed
+- `normal2MillerPlane()` called before `pNMBu.lattice_cart()` in `crystal.makeWulff()` & `crystal.makeParallelepiped()`, and before `pNMBu.planeRotation()` in `crystal.makeWire()`
+
+### added
+- abstract in README.md 
+
+## 20250603
+### added
+- `normal2MillerPlane()` function in `utils.py`: returns the the normal direction (*n*1, *n2*, *n*3) to the plane defined by *h*,*k*,*l* Miller  indices (calculated as [n1 n2 n3] = (hkl) x G*, where G* is the reciprocal metric tensor). (*n*1, *n2*, *n*3) are returned as the closest integers to the float numbers calculated by this equation. This calculation is mandatory for non-orthogonal basis sets
+
+### changed
+- `return_unitcell()` function moved from `CrystalNPs.py` to `utils.py` and renamed `returnUnitcellData()`. Now associates unitcell variables to a `Crystal` class instance:
+    - Bravais lattice, as `ucBL`
+    - space group calculated by `ase`, as `ucSG`
+    - unitcell, as `ucUnitcell`
+    - a,b,c = f(x,y,z) vectors, as `ucV`
+    - volume as, `ucVolume`
+    - reciprocal lattice, as `ucReciprocal`
+    - chemical formula as, `ucFormula`
+
 ## 20250603
 ### added
 - `pNMBvar` dataclass in `data.py`. So far, defines only `dbFolder = 'cif_database'`
+- new `symWulff` instance boolean variable of the `Crystal` class (default `True`). If `True` all symmetry operations of the crystal space group are applied to all `surfaceWulff` truncation planes
 
 ### changed
 - the listing of all cif files contained in the `dbFolder`, with the symmetry properties and unit cell values has been transformed as a `listCifsOfTheDatabase()` function, available in `utils.py`
 
 ## 20250602
 ### added
-- **new `makeWulff()` function**, with its associated variables: `surfacesWulff`, `eSurfacesWulff`, `sizesWulff`. *This is a basic implementation, still a lot of work to do to account for symmetry*
-- and by the way, `ase.spacegroup.get_spacegroup(ase_Atoms_object)` tested in the sandbox notebook. Interesting, but does not find the right group for hcp. Can be fixed by setting up `symprec` as 1e-4 instead of the 1e-5 default). Finally it will probably do the job to generate all symmetry equivalent planes of a given crystal
 - in the `Crystal` class:
+    - **new `makeWulff()` function**, with its associated variables: `surfacesWulff`, `eSurfacesWulff`, `sizesWulff`. *This is a basic implementation, still a lot of work to do to account for symmetry*
     - `ase.spacegroup.get_spacegroup(ase_Atoms_object,symprec=1e-4)` added in the `bulk()` function
     - `sg` instance object is available, it is a Spacegroup object of ase
     - the space group number and Hermann-Mauguin symbol are printed by `print_unitcell()`
     - new `aseSymPrec` instantiation variable, set to 1e-4 by default
 - in `pyNanoMatBuilder.ipynb` notebook: new *List all cif files available in the database* section, that prints basic crystal info, and compares the ase symmetry analyzis with the space group info available in the cif files. A warning is triggered if they differ
+- and regarding crystal symmetries, `ase.spacegroup.get_spacegroup(ase_Atoms_object)` tested in the sandbox notebook. Interesting, but does not find the right group for Ru hcp. Can be fixed by setting up `symprec` as 1e-4 instead of the 1e-5 default). Finally it will probably do the job to generate all symmetry equivalent planes of a given crystal
 
 ### changed
 - on the graphical documentation, a distinction is made between *atomically precise* NPs and NP *shapes*

@@ -3,6 +3,7 @@ import re
 import math
 import numpy as np
 import pyNanoMatBuilder.utils as pNMBu
+from pyNanoMatBuilder import data
 from ase.build import bulk
 from ase import io
 from ase.visualize import view
@@ -27,16 +28,17 @@ class Crystal:
                  surfacesWulff: np.ndarray=None,
                  eSurfacesWulff: np.ndarray=None,
                  sizesWulff: np.ndarray=None,
+                 symWulff: bool = True,
                  aseSymPrec: float=1e-4,
                  pbc: bool=False,
                  threshold: float=1e-3,
-                 dbFolder: str='cif_database',
-                 postAnalyzis=True,
-                 aseView=True,
+                 dbFolder: str=data.pNMBvar.dbFolder,
+                 postAnalyzis: bool = True,
+                 aseView: bool = True,
                  thresholdCoreSurface = 1.,
-                 skipSymmetryAnalyzis = False,
-                 noOutput = False,
-                 calcPropOnly = False,
+                 skipSymmetryAnalyzis: bool = False,
+                 noOutput: bool = False,
+                 calcPropOnly: bool = False,
                 ):
         self.dbFolder = dbFolder #database folder that contains cif files
         self.crystal = crystal # see list with the pNMBu.ciflist() command
@@ -50,6 +52,7 @@ class Crystal:
         self.surfacesWulff = surfacesWulff
         self.eSurfacesWulff = eSurfacesWulff
         self.sizesWulff = sizesWulff
+        self.symWulff = symWulff
         self.aseSymPrec = aseSymPrec
         self.pbc = pbc
         self.threshold = threshold
@@ -124,13 +127,7 @@ class Crystal:
             self.crystal = crystal2
         else: self.crystal = "unknown"
 
-    def return_unitcell(self):
-        unitcell = self.cif.cell.cellpar()
-        V = cellpar_to_cell(unitcell)
-        return unitcell, V
-
     def bulk(self, noOutput):
-        from ase.spacegroup import get_spacegroup
 
         if self.userDefCif is None:
             path2cif = os.path.join(pNMBu.pNMB_location(),self.dbFolder)
@@ -155,14 +152,15 @@ class Crystal:
             path2extCif = pathlib.Path(self.userDefCif)
             self.cifname = pathlib.Path(*path2extCif.parts[-1:])
 
-        self.sg = get_spacegroup(self.cif,symprec=self.aseSymPrec)
+        
+        pNMBu.returnUnitcellData(self)
         if not noOutput: print(f"cif parameters for {self.crystal} found in {self.cifname}")
         return 
 
     def makeSuperCell(self,noOutput):
         chrono = pNMBu.timer(); chrono.chrono_start()
         if not noOutput: vID.centertxt(f"Making a multiple cell",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
-        extendSizeByFactor = 1.1
+        extendSizeByFactor = 1.3
         if (self.shape == 'sphere'):
             # first calculate the size of the supercell
             sphereRadius = self.size[0]
@@ -175,21 +173,19 @@ class Crystal:
             Mb = int(np.round(extendSizeByFactor * self.size[1]*2*10/self.cif.cell.lengths()[1]))
             Mc = int(np.round(extendSizeByFactor * self.size[2]*2*10/self.cif.cell.lengths()[2]))
         elif (self.shape == 'wire'):
-            if np.argmax(self.size) == 1:
-                maxDim = self.size[1]
-            else:
-                maxDim = self.size[0]*1.5 # add space
-            Ma = int(np.round(extendSizeByFactor * maxDim*10/self.cif.cell.lengths()[0]))
-            Mb = int(np.round(extendSizeByFactor * maxDim*10/self.cif.cell.lengths()[1]))
-            Mc = int(np.round(extendSizeByFactor * maxDim*10/self.cif.cell.lengths()[2]))
+            maxDim = np.max(self.size)*10*1.5
+            Ma = int(np.round(extendSizeByFactor * maxDim/self.cif.cell.lengths()[0]))
+            Mb = int(np.round(extendSizeByFactor * maxDim/self.cif.cell.lengths()[1]))
+            Mc = int(np.round(extendSizeByFactor * maxDim/self.cif.cell.lengths()[2]))
         elif (self.shape == 'Wulff'):
             if np.argmax(self.sizesWulff) == 1:
-                maxDim = self.sizesWulff[1]
+                maxDim = self.sizesWulff[0]*10*1.5
             else:
-                maxDim = np.max(self.sizesWulff)
-            Ma = int(np.round(extendSizeByFactor * 2*maxDim*10/self.cif.cell.lengths()[0]))
-            Mb = int(np.round(extendSizeByFactor * 2*maxDim*10/self.cif.cell.lengths()[1]))
-            Mc = int(np.round(extendSizeByFactor * 2*maxDim*10/self.cif.cell.lengths()[2]))
+                maxDim = np.max(self.sizesWulff)*10*1.5
+            print(f"{maxDim = }")
+            Ma = int(np.round(extendSizeByFactor * maxDim/self.cif.cell.lengths()[0]))
+            Mb = int(np.round(extendSizeByFactor * maxDim/self.cif.cell.lengths()[1]))
+            Mc = int(np.round(extendSizeByFactor * maxDim/self.cif.cell.lengths()[2]))
         #finds the nearest even numbers
         Ma = math.ceil(Ma / 2.) * 2
         Mb = math.ceil(Mb / 2.) * 2
@@ -242,8 +238,9 @@ class Crystal:
     def makeWire(self,noOutput):
         if not noOutput: vID.centertxt(f"Removing atoms to make a wire",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
-        if self.refPlaneWire is None: self.refPlaneWire = pNMBu.returnPlaneParallel2Line(self.directionWire,[1,0,0],debug=True)
-        trPlanes = pNMBu.planeRotation(self,self.refPlaneWire,self.directionWire,self.nRotWire)
+        if self.refPlaneWire is None: self.refPlaneWire = pNMBu.returnPlaneParallel2Line(self.directionWire,[1,0,0],debug=False)
+        normal = pNMBu.normal2MillerPlane(self,self.refPlaneWire,printN=True)
+        trPlanes = pNMBu.planeRotation(self,normal,self.directionWire,self.nRotWire)
         for i,p in enumerate(trPlanes):
             trPlanes[i] = pNMBu.normV(p)
         radius = 10*self.size[0]/2
@@ -270,7 +267,12 @@ class Crystal:
         if self.buildPPD == "xyz":
             trPlanes = self.directionsPPD
         else:
-            trPlanes = pNMBu.lattice_cart(self,self.directionsPPD,Bravais2cart=True,printV=True)
+            if not noOutput: printN = True
+            else: printN = False
+            normal = []
+            for d in self.directionsPPD:
+                normal.append(pNMBu.normal2MillerPlane(self,d,printN=True))
+            trPlanes = pNMBu.lattice_cart(self,normal,Bravais2cart=True,printV=True)
         for i,p in enumerate(trPlanes): trPlanes[i] = pNMBu.normV(p)
         # 6 planes defined to cut between 
         # [-a/2 direction, a/2 direction], [-b/2 direction, b/2 direction], [-c/2 direction, c/2 direction]
@@ -288,21 +290,39 @@ class Crystal:
     def makeWulff(self,noOutput):
         if not noOutput: vID.centertxt(f"Calculating truncation distances",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         chrono = pNMBu.timer(); chrono.chrono_start()
-        trPlanes = self.surfacesWulff
-        for i,p in enumerate(trPlanes):
-            trPlanes[i] = pNMBu.normV(p)
-        if len(self.sizesWulff) == len(self.surfacesWulff): 
-            sizes = -np.array(sizesWulff)*10
-            trPlanes = np.append(trPlanes,sizes.reshape(len(self.surfacesWulff),1),axis=1)
-        elif len(self.sizesWulff) == 1:
+        trPlanes = []
+        if self.eSurfacesWulff is None: sizes = []
+        if self.eSurfacesWulff is not None: 
             sizes = []
-            mostStableE = min(self.eSurfacesWulff)
-            for i, e in enumerate(self.eSurfacesWulff):
-                sizes.append(self.sizesWulff[0]*10*self.eSurfacesWulff[i]/mostStableE)
-                print(f"{sizes =}")
-            sizes = -np.array(sizes)
-            trPlanes = np.append(trPlanes,sizes.reshape(len(self.surfacesWulff),1),axis=1)
-        AtomsAbovePlanes = pNMBu.truncateAbovePlanes(trPlanes,self.sc.positions,allP=False,eps=self.threshold,debug=True)
+            eSurf = []
+        for i,p in enumerate(self.surfacesWulff):
+            if self.symWulff:
+                symP = self.ucSG.equivalent_lattice_points(p)
+                normal = []
+                for sp in symP:
+                    normal.append(pNMBu.normal2MillerPlane(self,sp,printN=True))
+                trPlanes += list(normal)
+                if self.eSurfacesWulff is None: sizes.append(len(symP)*[self.sizesWulff[i]])
+                if self.eSurfacesWulff is not None: eSurf += (len(symP)*[self.eSurfacesWulff[i]])
+            else:
+                trPlanes.append(pNMBu.normal2MillerPlane(self,p,printN=True))
+                if self.eSurfacesWulff is None: sizes.append(self.sizesWulff[i])
+                if self.eSurfacesWulff is not None: eSurf.append(self.eSurfacesWulff[i])
+        trPlanes = np.array(trPlanes)
+        trPlanes = pNMBu.lattice_cart(self,trPlanes,Bravais2cart=True,printV=True)
+        for i,p in enumerate(trPlanes): trPlanes[i] = pNMBu.normV(p)
+        # print(trPlanes.tolist())
+        if self.eSurfacesWulff is None: 
+            sizes = -np.array(sizes)*10/2
+            trPlanes = np.append(trPlanes,sizes.reshape(len(trPlanes),1),axis=1)
+        else:
+            mostStableE = min(eSurf)
+            for i, e in enumerate(eSurf):
+                sizes.append(-self.sizesWulff[0]*10*e/2/mostStableE)
+            sizes = np.array(sizes)
+            trPlanes = np.append(trPlanes,sizes.reshape(len(trPlanes),1),axis=1)
+        # print(trPlanes)
+        AtomsAbovePlanes = pNMBu.truncateAbovePlanes(trPlanes,self.sc.positions,allP=False,eps=self.threshold,debug=False)
         self.NP = self.sc.copy()
         del self.NP[AtomsAbovePlanes]
         nAtoms = self.NP.get_global_number_of_atoms()

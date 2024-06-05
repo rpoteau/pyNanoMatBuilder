@@ -1,5 +1,5 @@
 10870
-Lattice="64.3118 0.0 0.0 0.0 64.3118 0.0 0.0 0.0 65.0914" Properties=species:S:1:pos:R:3:spacegroup_kinds:I:1 pbc="T T T"
+Lattice="82.6866 0.0 0.0 0.0 82.6866 0.0 0.0 0.0 76.9262" Properties=species:S:1:pos:R:3:spacegroup_kinds:I:1 pbc="T T T"
 O      -28.96226789     -10.58746789      -0.00000000        1
 O      -28.96226789      -5.99376789      -8.87610000        1
 O      -28.45898211      -8.29061789      -7.39675000        1

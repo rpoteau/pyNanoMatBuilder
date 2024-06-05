@@ -4,11 +4,15 @@ import numpy as np
 
 from ase.atoms import Atoms
 from ase.io import write
+from ase.geometry import cellpar_to_cell
+from ase.spacegroup import get_spacegroup
 import os
+
+from scipy import linalg
 
 from pyNanoMatBuilder import data
 
-##############################################################################################
+#######################################################################
 ######################################## time
 from datetime import datetime
 import datetime, time
@@ -57,23 +61,43 @@ class timer:
     def chrono_show(self):
         print(f'{fg.BLUE}Duration : {self.hdelay_ms(time.time() - _chrono_start)}{fg.OFF}')
 
-##############################################################################################
+#######################################################################
 ######################################## ase unitcells and symmetry analyzis
+def returnUnitcellData(system):
+    '''
+    system is an instance of the Crystal class
+    '''
+    system.ucUnitcell = system.cif.cell.cellpar()
+    system.ucV = cellpar_to_cell(system.ucUnitcell)
+    system.ucBL = system.cif.cell.get_bravais_lattice()
+    system.ucSG = get_spacegroup(system.cif,symprec=system.aseSymPrec)
+    system.ucVolume = system.cif.cell.volume
+    system.ucReciprocal = np.array(system.cif.cell.reciprocal())
+    system.ucFormula = system.cif.get_chemical_formula()
+    system.G = G(system)
+    system.Gstar = Gstar(system)
+
 def print_ase_unitcell(system):
-    unitcell = system.cif.cell.cellpar()
-    bl = system.cif.cell.get_bravais_lattice()
+    '''
+    system is an instance of the Crystal class
+    '''
+    unitcell = system.ucUnitcell
+    bl = system.ucBL
+    formula = system.ucFormula
+    volume = system.ucVolume
+    sg = system.ucSG
     print(f"Bravais lattice: {bl}")
-    print(f"Chemical formula: {system.cif.get_chemical_formula()}")
+    print(f"Chemical formula: {formula}")
     print(f"Crystal family = {bl.crystal_family} (lattice system = {bl.lattice_system})")
     print(f"Name = {bl.longname} (Pearson symbol = {bl.pearson_symbol})")
     print(f"Variant names = {bl.variant_names}")
     print()
-    print(f"From ase: space group number = {system.sg.no}      Hermann-Mauguin symbol for the space group = {system.sg.symbol}")
+    print(f"From ase: space group number = {sg.no}      Hermann-Mauguin symbol for the space group = {sg.symbol}")
     print()
     print(f"a: {unitcell[0]:.3f} Å, b: {unitcell[1]:.3f} Å, c: {unitcell[2]:.3f} Å. (c/a = {unitcell[2]/unitcell[0]:.3f})")
     print(f"α: {unitcell[3]:.3f} °, β: {unitcell[4]:.3f} °, γ: {unitcell[5]:.3f} °")
     print()
-    print(f"Volume: {system.cif.cell.volume:.3f} Å3")
+    print(f"Volume: {volume:.3f} Å3")
 
 def listCifsOfTheDatabase():
     from ase import io
@@ -104,19 +128,19 @@ def listCifsOfTheDatabase():
             if re_sgIT.search(line): sgIT = ' '.join(line.split()[1:])
             if re_sgHM.search(line): sgHM = ' '.join(line.split()[1:])
         cifFile.close()
-        sg = get_spacegroup(cifContent,symprec=1e-4)
         c = Crystal()
         c.cif = cifContent
-        c.sg = sg
+        c.aseSymPrec = 1e-4
+        returnUnitcellData(c)
         print_ase_unitcell(c)
         color="vID.fg.RED"
         print()
-        if int(sgIT) == sg.no:
+        if int(sgIT) == c.ucSG.no:
             print(f"{vID.fg.GREEN}Symmetry in the cif file = {sgIT}   {sgHM}{vID.hl.BOLD} in agreement with the ase symmetry analyzis{vID.fg.OFF}")
         else:
             print(f"{vID.fg.RED}Symmetry in the cif file = {sgIT}   {sgHM}{vID.hl.BOLD} disagrees with the ase symmetry analyzis{vID.fg.OFF}")
 
-##############################################################################################
+#######################################################################
 ######################################## coupling with pymatgen in order to find the symmetry
 def MolSym(aseobject: Atoms,
            getEquivalentAtoms: bool=False):
@@ -139,7 +163,7 @@ def MolSym(aseobject: Atoms,
     else:
         return pg, []
 
-##############################################################################################
+#######################################################################
 ######################################## Folder pathways
 def ciflist(dbFolder=data.pNMBvar.dbFolder):
     import os
@@ -151,7 +175,7 @@ def pNMB_location():
     path = pathlib.Path(pyNanoMatBuilder.__file__)
     return pathlib.Path(*path.parts[0:-2])
 
-##############################################################################################
+#######################################################################
 ######################################## Vectors and distances
 def RAB(coord,a,b):
     import numpy as np
@@ -258,7 +282,7 @@ def centerToVertices(coordVertices: np.ndarray,
         directions.append(v - cog)
     return np.array(directions), np.array(distances)
 
-##############################################################################################
+#######################################################################
 ######################################## Fill edges and facets
 def MakeFaceCoord(Rnn,f,coord,nAtomsOnFaces,coordFaceAt):
     import numpy as np
@@ -290,7 +314,7 @@ def MakeFaceCoord(Rnn,f,coord,nAtomsOnFaces,coordFaceAt):
             nAtomsOnFaces += 1
     return nAtomsOnFaces,coordFaceAt
 
-##############################################################################################
+#######################################################################
 ######################################## Momenta of inertia
 def moi(model: Atoms):
     import numpy as np
@@ -304,7 +328,7 @@ def moi(model: Atoms):
     model.dim = 2*np.sqrt(5*model.moiM)
     print(f"Size of the ellipsoid = {model.dim[0]*0.1:.2f} {model.dim[1]*0.1:.2f} {model.dim[2]*0.1:.2f} nm")
 
-##############################################################################################
+#######################################################################
 ######################################## Geometry optimization
 def optimizeEMT(model: Atoms, pathway="./coords/model", fthreshold=0.05):
     from varname import nameof, argname
@@ -325,7 +349,7 @@ def optimizeEMT(model: Atoms, pathway="./coords/model", fthreshold=0.05):
     chrono.chrono_stop(hdelay=False); chrono.chrono_show()
     return model
 
-##############################################################################################
+#######################################################################
 ######################################## Planes & Directions
 def planeFittingLSF(coords: np.float64,
                     printErrors: bool=False,
@@ -414,7 +438,8 @@ def convertuvwh2hkld(plane: np.float64,
     return hkld
 
 def hklPlaneFitting(coords: np.float64,
-                   printErrors: bool=False):
+                    printEq: bool=True,
+                    printErrors: bool=False):
     '''
     Context: finding the Miller indices of a plane, if relevant
     Consists in a least-square fitting of the equation of a plane hx + ky + lz + d = 0
@@ -426,7 +451,7 @@ def hklPlaneFitting(coords: np.float64,
     - returns a numpy array [h k l d], where h, k, and l are as close as possible to integers
     '''
     plane = planeFittingLSF(coords,printErrors)
-    plane = convertuvwh2hkld(plane)
+    plane = convertuvwh2hkld(plane, printEq)
     return plane
 
 def shortestPoint2PlaneVectorDistance(plane:np.ndarray,
@@ -520,6 +545,21 @@ def AngleBetweenVV(lineDV,planeNV):
         alpha = 180*np.arccos(np.clip(numerator/denominator,-1,1))/np.pi
     return alpha
 
+def normal2MillerPlane(Crystal,MillerIndexes,printN=True):
+    '''
+    returns the normal direction to the plane defined by h,k,l Miller indices is defined as [n1 n2 n3] = (hkl) x G*,
+    where G* is the reciprocal metric tensor (G* = G-1)
+
+    the convertuvwh2hkld() function applied here converts real plane indexes to integers
+    '''
+    normal = MillerIndexes@Crystal.Gstar
+    normal = np.append(normal,0.0) #trick because convertuvwh2hkld() converts (u v w h) planes
+    normalI = convertuvwh2hkld(normal,False)[0:3]
+    if printN: 
+        print(f"Normal to the ({MillerIndexes[0]:2} {MillerIndexes[1]:2} {MillerIndexes[2]:2}) user-defined plane > [{normal[0]: .3e} {normal[1]: .3e} {normal[2]: .3e}]",\
+              f" = [{normalI[0]: .2f} {normalI[1]: .2f} {normalI[2]: .2f}]")
+    return normalI
+
 def isPlaneParrallel2Line(v1,v2,tol=1e-5):
     '''
     returns a boolean
@@ -580,10 +620,14 @@ def planeRotation(Crystal, refPlane, rotAxis, nRot=6, debug=False):
     '''
     pRef = np.array([refPlane])
     aRot = np.array([rotAxis])
-    vID.centertxt(f"Projection of the {pRef[0]} reference truncation plane around the {rotAxis} axis, after projection in the cartesian coordinate system",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+    msg = f"Projection of the ({pRef[0][0]: .2f} {pRef[0][1]: .2f} {pRef[0][2]: .2f}) reference truncation plane around the "\
+          f"[{rotAxis[0]: .2f}  {rotAxis[1]: .2f}  {rotAxis[2]: .2f}] axis, after projection in the cartesian coordinate system"
+    vID.centertxt(msg,bgc='#cbcbcb',size='12',fgc='b',weight='bold')
     pRefCart = lattice_cart(Crystal,pRef,True,True)
     rotAxisCart = lattice_cart(Crystal,aRot,True,True)
-    vID.centertxt(f"{nRot}th order rotation around {rotAxisCart} of the {pRefCart[0]} truncation plane",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+    msg = f"{nRot}th order rotation around {rotAxisCart[0][0]: .2f} {rotAxisCart[0][1]: .2f} {rotAxisCart[0][2]: .2f}"\
+          f"of the ({pRefCart[0][0]: .2f} {pRefCart[0][1]: .2f} {pRefCart[0][2]: .2f}) truncation plane"
+    vID.centertxt(msg,bgc='#cbcbcb',size='12',fgc='b',weight='bold')
     planesCart = []
     for i in range(0,nRot):
         angle = i*360/nRot
@@ -592,7 +636,7 @@ def planeRotation(Crystal, refPlane, rotAxis, nRot=6, debug=False):
         # print("rot around axis = ",x)
         planesCart.append(x)
     if (debug): print(np.array(planesCart))
-    vID.centertxt(f"Just for your knowledge: indexes of the {nRot} cartesian planes after projection to the {Crystal.cif.cell.get_bravais_lattice()} unitcell",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+    vID.centertxt(f"Just for your knowledge: indexes of the {nRot} normal directions to the truncation planes after projection to the {Crystal.cif.cell.get_bravais_lattice()} unitcell",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
     planesHCP = lattice_cart(Crystal,np.array(planesCart),False,True)
     if (debug):
         vID.centertxt(f"Normalized HCP planes",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
@@ -600,8 +644,6 @@ def planeRotation(Crystal, refPlane, rotAxis, nRot=6, debug=False):
             print(i,normV(p))
         print()
         vID.centertxt(f"Normalized cartesian planes",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
-        for i,p in enumerate(planesCart):
-            print(i,normV(p))
     return np.array(planesCart)
 
 def alignV1WithV2_returnR(v1,v2=np.array([0, 0, 1])):
@@ -641,7 +683,7 @@ def rotateMoltoAlignItWithAxis(coords,axis,targetAxis=np.array([0, 0, 1])):
     rMat = alignV1WithV2_returnR(axis,targetAxis)
     return np.array(rMat@coords.transpose()).transpose()
 
-##############################################################################################
+#######################################################################
 ######################################## cut above planes
 def calculateTruncationPlanesFromVertices(planes, cutFromVertexAt, nAtomsPerEdge, debug=False):
     n = int(round(1/cutFromVertexAt))
@@ -745,13 +787,13 @@ def truncateAbovePlanes(planes: np.ndarray,
         if debug and not allP:
             print(f"- plane", [f"{x: .2f}" for x in p],f"> {nOfDeletedAtomsP} atoms deleted")
             for i,a in enumerate(delAtomsP):
-                if a: print(f"@{i}",end=',')
+                if a: print(f"@{i+1}",end=',')
             print("",end='\n')
         if debug and allP:
             print("allP")
             print(f"- plane", [f"{x: .2f}" for x in p],f"> {nOfDeletedAtoms} atoms deleted")
             for i,a in enumerate(delAtoms):
-                if a: print(f"@{i}",end=',')
+                if a: print(f"@{i+1}",end=',')
             print("",end='\n')
     delAtoms = np.array(delAtoms)
     if delAbove:
@@ -775,7 +817,7 @@ def returnPointsThatLieInPlanes(planes: np.ndarray,
         if debug:
             print(f"- plane", [f"{x: .2f}" for x in p],f"> {nOfAtomsInPlane} atoms lie in the planes")
             for i,a in enumerate(delAtoms):
-                if a: print(f"@{i}",end=',')
+                if a: print(f"@{i+1}",end=',')
             print("",end='\n')
     AtomsInPlane = np.array(AtomsInPlane)
     print(f"{np.count_nonzero(AtomsInPlane)} atoms lie in the plane(s)")
@@ -798,7 +840,7 @@ def deleteElementsOfAList(t,
     tloc = np.delete(tloc,list2Delete,axis=0)
     return list(tloc)
 
-##############################################################################################
+#######################################################################
 ######################################## coupling with Jmol & DebyeCalculator
 def saveCoords_DrawJmol(asemol,prefix,scriptJ=""):
     path2Jmol = '/usr/local/src/jmol-14.32.50'
@@ -841,7 +883,7 @@ def writexyz(filename,atoms):
     with open(filename,'w') as file:
         file.write(line2write)
 
-##############################################################################################
+#######################################################################
 ######################################## coordination numbers
 def calculateCN(coords,Rmax):
     '''
@@ -908,7 +950,7 @@ def printNeighbours(nn):
     for i,nni in enumerate(nn):
         print(f"Atom {i:6} has {len(nni):2} NN: {nni}")
 
-##############################################################################################
+#######################################################################
 ######################################## symmetry
 def reflection(plane,points,doItForAtomsThatLieInTheReflectionPlane=False):
     '''
@@ -933,7 +975,7 @@ def reflection(plane,points,doItForAtomsThatLieInTheReflectionPlane=False):
             pr.append(ptmp)
     return np.array(pr)
 
-##############################################################################################
+#######################################################################
 ######################################## rotation
 def Rx(a):
     ''' returns the R/x rotation matrix'''
@@ -1016,7 +1058,7 @@ def rotationMolAroundAxis(coords, angle, axis):
     normalizedAxis = normV(axis)
     return np.array(RotationMatrixFromAxisAngle(normalizedAxis,angle)@coords.transpose()).transpose()
 
-##############################################################################################
+#######################################################################
 ######################################## magic numbers
 def magicNumbers(cluster,i):
     match cluster:
@@ -1059,7 +1101,7 @@ def magicNumbers(cluster,i):
         case _:
             sys.exit(f"The {cluster} cluster is unknown")
 
-##############################################################################################
+#######################################################################
 ######################################## Bravais
 def interPlanarSpacing(plane: np.ndarray,
                        unitcell: np.ndarray,
@@ -1139,7 +1181,8 @@ def lattice_cart(Crystal,vectors,Bravais2cart=True,printV=False):
     - returns an array of projected vectors
     '''
     import numpy as np
-    unitcell, Vuc = Crystal.return_unitcell()
+    unitcell = Crystal.ucUnitcell
+    Vuc = Crystal.ucV
     if Bravais2cart:
         Vproj = (vectors@Vuc)
         B = 'B'
@@ -1152,11 +1195,32 @@ def lattice_cart(Crystal,vectors,Bravais2cart=True,printV=False):
     if printV:
         print("Change of basis")
         for i,V in enumerate(vectors):
-            Bstr = [f"{v: .2f}" for v in V]
-            Estr = [f"{vp: .2f}" for vp in Vproj[i]]
-            print(f"{Bstr}{B} > {Estr}{E}")
+            Bstr = f"{V[0]: .2f} {V[1]: .2f} {V[2]: .2f}"
+            Vp = Vproj[i]
+            Estr = f"{Vp[0]: .2f} {Vp[1]: .2f} {Vp[2]: .2f}"
+            print(f"({Bstr}){B} > ({Estr}){E}")
     return Vproj 
-##############################################################################################
+
+def G(Crystal):
+    a = Crystal.ucUnitcell[0]
+    b = Crystal.ucUnitcell[1]
+    c = Crystal.ucUnitcell[2]
+    alpha = Crystal.ucUnitcell[3]*np.pi/180.
+    beta = Crystal.ucUnitcell[4]*np.pi/180.
+    gamma = Crystal.ucUnitcell[5]*np.pi/180.
+    ca = np.cos(alpha)
+    cb = np.cos(beta)
+    cg = np.cos(gamma)
+    GG = np.array([[      a**2, a * b * cg, a * c * cb],
+                  [a * b * cg,       b**2, b * c * ca],
+                  [a * c * cb, b * c * ca,       c**2]])
+    return GG
+
+def Gstar(Crystal):
+    Gmat = G(Crystal)
+    return linalg.inv(Gmat)
+
+#######################################################################
 ######################################## Misc for plots
 def imageNameWithPathway(imgName):
     path2image= os.path.join(pNMB_location(),'figs')
@@ -1172,8 +1236,8 @@ def plotImageInPropFunction(imageFile):
     plt.axis('off')
     plt.show()
 
-##############################################################################################
-######################################## Core/surface identification / Convec Hull analysis
+#######################################################################
+######################################## Core/surface identification / Convex Hull analysis
 def coreSurface(coords,threshold):
     from scipy.spatial import ConvexHull
     vID.centertxt("Core/Surface analyzis",bgc='#007a7a',size='14',weight='bold')
