@@ -1355,3 +1355,66 @@ def coreSurface(coords,threshold):
     surfaceAtoms= returnPointsThatLieInPlanes(hull.equations,coords,threshold=threshold)
     chrono.chrono_stop(hdelay=False); chrono.chrono_show()
     return [hull.vertices,hull.simplices,hull.neighbors,hull.equations],surfaceAtoms
+
+############################################ Functions for Debye Calculations (I(q) and PDF ) ############################################
+def clean_xyz(filename):
+    """
+    Function used to remove the 5th colum in the xyz file produced by ase.io.write
+    """
+    dtype = {'names': ('element', 'x', 'y', 'z'),
+             'formats': ('U2', float, float, float)}    
+    element,x,y,z=np.loadtxt(filename,unpack=True,skiprows=2 , usecols=(0, 1, 2, 3), dtype=dtype)
+    outfile=os.path.dirname(filename)+'/'+os.path.basename(filename).split('.')[0]+'_forDebyeCalc.xyz'
+    nb_atoms=len(x)
+    line2write=str(nb_atoms)+'\n'
+    line2write+='\n'
+    for i in range(nb_atoms):
+        line2write+=str(element[i])+'\t %.8f'%x[i] + '\t %.8f'%y[i] + '\t %.8f'%z[i] +'\n'
+    with open(outfile,'w') as file:
+        file.write(line2write)
+    return outfile
+    
+def calc_iq(xyzfile:str,qmin:float,qmax:float,qstep:float,biso:float):
+    from debyecalculator import DebyeCalculator
+    import torch
+    
+    """
+    xyz file: path to file produced by pyNMP- as this file contains 5 columns, it should be cleaned using the clean_xyz function
+    qmin: min q value on which the Debye equation is computed
+    qmax: max q value on which the Debye equation is computed
+    qstep: step between successive q points
+    biso: term for isotropic atomic displacement parameter
+    """
+    if torch.cuda.is_available():
+        device='cuda'
+    else:
+        device='cpu'  
+    calc = DebyeCalculator(qmin=qmin,qmax=qmax,qstep=qstep,device=device,biso=biso)
+    strufile=clean_xyz(xyzfile)
+    Q, I =calc.iq(structure_source=strufile)
+    os.system('rm %s'%strufile)
+    return Q,I
+    
+
+def calc_gr(xyzfile:str,rmin:float,rmax:float,rstep:float,biso:float=0,qdamp:float=0):
+    from debyecalculator import DebyeCalculator
+    import torch
+    
+    """
+    xyz file: path to file produced by pyNMP- as this file contains 5 columns, it should be cleaned using the clean_xyz function
+    qmin: min q value on which the Debye equation is computed
+    qmax: max q value on which the Debye equation is computed
+    qstep: step between successive q points
+    biso: term for isotropic atomic displacement parameter
+    qdamp: parameter to accune for PDF damping linked to truncation 
+    """
+    if torch.cuda.is_available():
+        device='cuda'
+    else:
+        device='cpu'  
+    calc = DebyeCalculator(rmin=rmin,rmax=rmax,rstep=rstep,device=device,biso=biso,qdamp=qdamp)
+    strufile=clean_xyz(xyzfile)
+    r, G =calc.gr(structure_source=strufile)
+    os.system('rm %s'%strufile)
+    return r,G    
+
