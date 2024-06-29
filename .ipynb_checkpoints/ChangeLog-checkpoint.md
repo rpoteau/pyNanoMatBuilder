@@ -1,16 +1,181 @@
-**Development of a pre-release version -> date-based versioning**
+# Development of a pre-release version -> date-based versioning
 
-## 20250605
+## 20240629
 ### added
-- abstract in README.md
-- `defWulffShapeForJMol()` function in `utils.py`: return the jmol command to plot the Wulff shape 
+- `utils.py`: `noOutput` added in
+    - `calculateTruncationPlanesFromVertices()`
+    - `truncateAboveEachPlane()`
 
 ### changed
-- `normal2MillerPlane()` called before `pNMBu.lattice_cart()` in `crystal.makeWulff()` & `crystal.makeParallelepiped()`, and before `pNMBu.planeRotation()` in `crystal.makeWire()`
+- `aseView` set to `False` by default
+- `noOutput` and `aseView` chase continued in:
+    - `platonicNPs.py`
+    - `archimedeanNPs.py`
+    - `catalanNPs.py`
+    - `johnsonNPs.py`
+    - `otherNPs.py`
 
-## 20250603
+## 20240628
 ### added
-- `normal2MillerPlane()` function in `utils.py`: returns the the normal direction (*n*1, *n2*, *n*3) to the plane defined by *h*,*k*,*l* Miller  indices (calculated as [n1 n2 n3] = (hkl) x G*, where G* is the reciprocal metric tensor). (*n*1, *n2*, *n*3) are returned as the closest integers to the float numbers calculated by this equation. This calculation is mandatory for non-orthogonal basis sets
+- `data.py`:
+    - new `pyNMBimg.IMGdf` dataframe, that contains an information necessary to define `self.imageFile`
+    - `setdAsNegative(planes)`: returns each plane [a b c d] of the `planes` array as [-a -b -c -d] if d is positive
+    - `data.WulffShapes`: new `hcpsph2` (Nørskov *et al*, [10.1126/science.1106435](https://dx.doi.org/10.1126/science.1106435))
+- `crystalNPs.py`:
+    - `self.WulffShape` now defined from `self.shape` in `__init__` instead of `makeWulff()`
+    - `self.trPlanes` initialized to `None` in `__init__`
+
+### changed
+- graphical documentation updated with a general Wulff structure
+
+### fixed
+- `utils.py`:
+    - `defCrystalShapeForJMol()` returns a jMol command if `trPlanes` is not `None`
+- several functions were recently modified to accept`noOutput` as argument; the `aseView` argument is now taken into account here and there (#12). Also added:
+    - `printN = not noOutput` and `printV = not noOutput` as argument to `normal2MillerPlane()` & `lattice_cart()` in `crystalNPs.py` > `makeWire()` and `makeParallelepiped()`
+    - `noOutput` added as argument of `planeRotation()`
+
+## 20240626
+### changed
+- `data.py`:
+    - `bccrdd`, `trbccrdd`, `ttrbccrdd`, `cub`, `trcub` and `dicotd` predifined Wulff shapes renamed `bccrDD`, `trbccrDD`, `ttrbccrDD`, `cube`, `trcube` and `dicoTd`
+- graphical documentation updated with the pre-defined Wulff structures
+
+## 20240625
+### added
+- `utils.py`:
+    - `saveCoords_DrawJmol()`:
+        - `boundaries` option (default: `False`). If Wulff shapes or any other boundary-defined structure (such as wires), facet plots with the time-consuming `./figs/script-facettes-345PtLight.spt` jmol script is useless. Set as `False` to unactivate it, as well as the bonds and atoms drawing, since they are defined in the `jMolCS` script
+        - `noOutput=True` option
+    - `path2Jmol` defined locally in `saveCoords_DrawJmol()` is now defined in the `pyNMBvar` class of `data.py`
+
+### fixed
+*doing and undoing... is is still work?*
+- `crystalNPs.py`: in `makeSuperCell()`
+```
+        sc.translate(-V[0]/2)
+        sc.translate(-V[1]/2)
+        sc.translate(-V[2]/2)
+```
+    is back...
+
+## 20240623
+### fixed
+- `crystalNPs.py`: in `makeSuperCell()`, `sc.center(about=(0.0,0.0,0.0))` replaces:
+
+```
+        sc.translate(-V[0]/2)
+        sc.translate(-V[1]/2)
+        sc.translate(-V[2]/2)
+```
+
+    Check in all examples that everything is consistent with this centering
+
+## 20240622
+### added
+- `utils.py`:
+    - `scaleUnitCell()`: scales the unit cell size so that the nearest NN distance is scaled to the `scaleDmin2` input parameter (see `scaleDmin2` variable of the `Crystal` class)
+    - `saveCN4JMol()`: saves coordination numbers in a CN.dat file, and print the jmol command to link atom colors and atom CNs
+    - `plotPalette()`: plots a 1D palette colors, with names
+    - `rgb2hex()`: converts rgb numbers to #hex code, under the form [xAABBCC] - this is for jMol
+- `crystalNPs.py`:
+    - new `setSymbols2` variable (array). Can be associated to `scaleDmin2` in order to start from a given cif file and change the atom(s) as new ones. The number of chemical symbols must fit the number of atoms of the reference unit cell
+
+### changed
+- `crystalNPs.py`:
+    - `noOutput` variable now also effective whith `chrono` calls and various print commands in `makeWulff()`
+    - new `scaledR` variable is now effective
+- `utils.py`:
+    - point group returned as `pg` property of `aseobject: Atoms` object
+    - `noOutput` variable now also effective whith `chrono` calls and various `print` commands in `MolSym()`, `moi()`, `returnPointsThatLieInPlanes()`, `defCrystalShapeForJMol()`, `reduceHullFacets()`, ` kDTreeCN()`, `truncateAbovePlanes()`
+- `pyNanoMatBuilder.ipynb` renamed as `pyNMB-examples.ipynb
+- `pNNBu`, `pNMBdata`, `pNMBvar`, `pNMBcif` shortcuts renamed as `pyNMBu`, `pyNMBvar`, `pyNMBdata`, `pyNMBcif`
+
+## 20240619
+### added
+- `utils.py`:
+    - new `kDTreeCN()` function, that returns the list (`nn`) and number (`CN`) of nearest neighbours of each atom; distances are returned as well if returnD is `True` (based on the very efficient `KDtree()` function of scikit-learn)
+- `crystalNPs.py`:
+    - new `scaleDmin2` variable: if not `None`, all coordinates are scaled so that the nearest neighbour distance in the crystal becomes scaleDmin2 (**under development**)
+
+## 20240609
+### added
+- `SandBox-doNotDelete-dev.ipynb`:
+    - test of the `KDTree` algorithm for the nearest neighbour search
+
+## 20240609
+### added
+- `pyNanoMatBuilder.ipynb`:
+    - *Find all symmetry-equivalent planes* subsection in the *Miscellaneous* section, aka use of the `ase.spacegroup.Spacegroup` tools
+
+## 20240608
+### added
+- `crystalNPs.py`
+  - new `jmolCrystalShape` boolean variable (default: `False`)
+- `utils.py`
+    - `coreSurface()`
+        - receives `Crystal` instance as parameter instead of the coordinates, so that now it is possible to use or return associated properties (`Crystal.trPlanes`, `Crystal.jMolCS`, `Crystal.NP.get_positions()`)
+        - now also calls `defCrystalShapeForJMol(Crystal)`
+
+### changed
+- `utils.py`
+    - `defWulffShapeForJMol()` renamed as `defCrystalShapeForJMol()`
+    - reduction of Hull facets (simplices) that was part of `defWulffShapeForJMol()` is now an external `reduceHullFacets()` function
+- `crystalNPs.py`
+    - `defCrystalShapeForJMol()` is called at the end of `makeNP()` if `jmolCrystalShape` is True and the jmol command is returned as `self.jmolCS`
+- `platonicNPs.py`, `cube` class: coordinates centered in [0,0,0] (was made necessary for the crystal shape calculation)
+```
+        coords = sc.get_positions()
+        oldcog = sc.get_center_of_mass()
+        coords = coords - oldcog
+        sc.set_positions(coords)
+```
+- `platonicNPs.py`, `archimedeanNPs.py`, `catalanNPs.py`
+    - in `propPostMake()`, `self` is passed as an argument to `pNMBu.coreSurface()`, instead of the array of atomic coordinates
+    - `self.cog = self.NP.get_center_of_mass()` added at the end of the `coords()` functions
+ 
+### fixed
+- `utils.py`
+    - in very borderline cases `linalg.eig` returned complex numbers in `planeFittingLSF()`, the complex part being 0j => returned variable is now `np.array([u,v,w,h]).real`
+
+## 20240607
+### changed
+- `pyNanoMatBuilder.ipynb`:
+    - two main parts, namely *Crystal structure-based shapes* and *Magic number clusters and nanoparticles*
+ 
+### added
+- `pyNanoMatBuilder.ipynb`:
+    - all predefined Wulff crystals are displayed in a *List of the pre-defined Wulff shapes in the `data.WulffShapes.WSdf` pandas dataframe* section, at the end of the notebook
+- `crystalNPs.py`
+    - in `predefinedParameters4WulffShapes`, a warning is displayed if the expected lattice system of the Wulff shape is not the same as that of the Bravais lattice system of the cif file 
+
+### fixed
+- `signedAngleBetweenVV()` function in `utils.py`: was using an arbitrary normal vector. It is now calculated in `defWulffShapeForJMol()` and passed as an argument of `signedAngleBetweenVV()` 
+
+## 20240606
+### added
+- `data.py`
+    - declaration of a `WSdf` pandas dataframe in a new `WulffShapes` class: contains the energy and plane parameters of some remarkable Wulff structures, as well as the lattice system  and Bravais lattice(s) consistent with each Wulff shape
+- `crystalNPs.py`
+    - `predefinedParameters4WulffShapes()` function in the `Crystal` class, called if `Crystal.shape` contains `Wulff` followed by the ":" separator and a shortcut associated to a given shape (list in the `WulffShapes.WSdf` dataframe - see index of `WSdf`). Reads the `WSdf` pandas dataframe and initializes `self.eSurfacesWulff` and `elf.surfacesWulff` if the user-defined shortcut is found in the `WSdf` dataframe. Otherwise an error message is returned and `pyNanoMatBuilder` stops
+
+### changed
+- names of cif files and shortcut top address them are now also stored as a `CIFdf` pandas dataframe in a new `pNMBcif` class, created in `data.py`. Shortcuts are declared as the index of the dataframe, whilst cif filenames are available in the `cif file` column of `CIFdf`. `pyNanoMatBuilder` stops if the shortcut (case-independent) is not found in `CIFdf`
+
+## 20240605
+### added
+- abstract in README.md
+- `defWulffShapeForJMol()` function in `utils.py`: return the jmol command to plot the Wulff shape
+- `signedAngleBetweenVV()` function in `utils.py`, introduced for `defWulffShapeForJMol()`: calculates the signe angle between two vectors. Useful to reorder the vertices of a polygon
+
+### changed
+- `crystalNPs.py`
+    - `normal2MillerPlane()` called before `pNMBu.lattice_cart()` in `crystal.makeWulff()` & in `crystal.makeParallelepiped()`, and before `pNMBu.planeRotation()` in `crystal.makeWire()`
+
+## 20240603
+### added
+- `utils.py`
+    - `normal2MillerPlane()` function: returns the the normal direction (*n*1, *n2*, *n*3) to the plane defined by *h*,*k*,*l* Miller  indices (calculated as [n1 n2 n3] = (hkl) x G*, where G* is the reciprocal metric tensor). (*n*1, *n2*, *n*3) are returned as the closest integers to the float numbers calculated by this equation. This calculation is mandatory for non-orthogonal basis sets
 
 ### changed
 - `return_unitcell()` function moved from `CrystalNPs.py` to `utils.py` and renamed `returnUnitcellData()`. Now associates unitcell variables to a `Crystal` class instance:
@@ -22,7 +187,7 @@
     - reciprocal lattice, as `ucReciprocal`
     - chemical formula as, `ucFormula`
 
-## 20250603
+## 20240603
 ### added
 - `pNMBvar` dataclass in `data.py`. So far, defines only `dbFolder = 'cif_database'`
 - new `symWulff` instance boolean variable of the `Crystal` class (default `True`). If `True` all symmetry operations of the crystal space group are applied to all `surfaceWulff` truncation planes
@@ -30,7 +195,7 @@
 ### changed
 - the listing of all cif files contained in the `dbFolder`, with the symmetry properties and unit cell values has been transformed as a `listCifsOfTheDatabase()` function, available in `utils.py`
 
-## 20250602
+## 20240602
 ### added
 - in the `Crystal` class:
     - **new `makeWulff()` function**, with its associated variables: `surfacesWulff`, `eSurfacesWulff`, `sizesWulff`. *This is a basic implementation, still a lot of work to do to account for symmetry*
@@ -45,7 +210,7 @@
 - on the graphical documentation, a distinction is made between *atomically precise* NPs and NP *shapes*
 - `print_unitcell()` of the `Crystal` class renamed as `print_ase_unitcell()` and moved in `utils.py`
 
-## 20250601
+## 20240601
 ### added
 - cif coordinates for TiO2 rutile, TiO2 anatase, NaCl
 - in the `Crystal` class, it is now possible to load a cif file that does not belong to the database, using the new `userDefCif` keyword. The `loadExternalCif()` function is called if `userDefCif` is not `None`, *i.e.* it contains the path to a cif file
@@ -59,25 +224,25 @@
 - `silent` variable renamed as `noOutput` in all classes
 - in `crystalNPs.py`, `direction`, `nRot` and `refPlane` renamed `directionWire`, `nRotWire` and `refPlaneWire`
 
-## 20250531
+## 20240531
 ### changed
-- changes previously done to the `Crystal` class in the **20250529** version applied to the classes of:
+- changes previously done to the `Crystal` class in the **20240529** version applied to the classes of:
     - `otherNPs.py`
 
-## 20250530
+## 20240530
 ### added
 - because classes of `platonicNPs.py` can be used as generators for other polyhedra (truncated NPs, etc), new keywords are introduced:
     - `silent`: does not print anything
     - `calcPropOnly`: does not calculate the coordinates 
 
 ### changed
-- changes previously done to the `Crystal` class in the **20250529** version applied to the classes of:
+- changes previously done to the `Crystal` class in the **20240529** version applied to the classes of:
     - `platonicNPs.py`
     - `archimedeanNPs.py`
     - `catalanNPs.py`
     - `johnsonNPs.py`
 
-## 20250529
+## 20240529
 ### added
 - new *Convert the images to base64 code* section in the notebook. The intent is to embed images of nanoparticles in the log of the GUI that is under development. Base64 encoding of the `~/figs/*-C.png` files are now available in the same folder (*embedding not implemented yet*)
 - in `utils.py`
@@ -101,7 +266,7 @@
       - calls to the ase viewer are made only if a `aseView` variable is `True` (default)
 - in `utils.py`, the `vID.centertxt()` style of sub-subprocesses is changed as black fg on grey bg and font size 12 (example: `vID.centertxt(f"Convex Hull analyzis",bgc='#cbcbcb',size='12',fgc='b',weight='bold')`)
 
-## 20250528
+## 20240528
 ### added
 - `ImagePathway()` and `plotImageInPropFunction()` in `utils.py`: their purpose is to draw the schematic representation of the NPs, as they appear in the documentation
 - `prop()` function in the `Crystal` class of `crystalNPs.py`
