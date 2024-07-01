@@ -1,5 +1,12 @@
 # Development of a pre-release version -> date-based versioning
 
+## 20240630
+### added
+- `utils.py`:
+    - very basic rdf calculator `rdf()` for finite size compounds, *i.e.* without PBC
+    - `createDir()` utility
+- `SandBox-doNotDelete-dev.ipynb`: **RDF profiles** section, made to create rdf profiles for a machine learning tutorial, which will soon be added to the [pyPhysChem github repository](https://github.com/rpoteau/pyPhysChem)
+
 ## 20240629
 ### added
 - `utils.py`: `noOutput` added in

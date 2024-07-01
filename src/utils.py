@@ -356,7 +356,7 @@ def moi(model: Atoms,
 
 #######################################################################
 ######################################## Geometry optimization
-def optimizeEMT(model: Atoms, pathway="./coords/model", fthreshold=0.05):
+def optimizeEMT(model: Atoms, saveCoords=True, pathway="./coords/model", fthreshold=0.05):
     from varname import nameof, argname
     import numpy as np
     from ase.io import write
@@ -369,9 +369,10 @@ def optimizeEMT(model: Atoms, pathway="./coords/model", fthreshold=0.05):
     from ase.optimize import QuasiNewton
     dyn = QuasiNewton(model, trajectory=pathway+'.opt')
     dyn.run(fmax=fthreshold)
-    write(pathway+"_opt.xyz", model)
-    print(f"{fg.BLUE}Optimization steps saved in {pathway+'_.opt'} (binary file){fg.OFF}")
-    print(f"{fg.RED}Optimized geometry saved in {pathway+'_opt.xyz'}{fg.OFF}")
+    if saveCoords:
+        write(pathway+"_opt.xyz", model)
+        print(f"{fg.BLUE}Optimization steps saved in {pathway+'_.opt'} (binary file){fg.OFF}")
+        print(f"{fg.RED}Optimized geometry saved in {pathway+'_opt.xyz'}{fg.OFF}")
     chrono.chrono_stop(hdelay=False); chrono.chrono_show()
     return model
 
@@ -1573,3 +1574,72 @@ def coreSurface(Crystal: Atoms,
     surfaceAtoms = returnPointsThatLieInPlanes(Crystal.trPlanes,coords,noOutput=noOutput,threshold=threshold)
     if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
     return [hull.vertices,hull.simplices,hull.neighbors,hull.equations],surfaceAtoms
+
+#######################################################################
+######################################## basic rdf profile
+def rdf(NP: Atoms,
+        dr: float=0.05,
+        sigma: float=2,
+        ncores: int=1,
+        noOutput: bool=True
+       ):
+    '''
+    rdf - g(r) - calculator for non-PBC systems
+    arguments:
+        - NP = ase Atoms object
+        - dr = determines the spacing between successive radii over which g(r) is computed. Default: 0.05
+        - sigma = standard deviation for Gaussian kernel. Default: 2
+        - ncores = number of jobs to schedule for parallel processing (only used by query_ball_point() of scipy.spatial.KDTree). Default: 1
+        - noOutput = do not print anything. Default: True
+
+    returns:
+        - r and g(r)
+
+    wann know more? Read https://doi.org/10.1021/acs.chemrev.1c00237
+    '''
+    from ase.atoms import Atoms
+    from ase.visualize import view
+    from scipy.spatial import KDTree
+    from scipy.spatial import distance
+    from scipy.ndimage import gaussian_filter1d
+    from scipy.signal import find_peaks
+    if not noOutput: vID.centertxt("Basic RDF profile calculation",bgc='#007a7a',size='14',weight='bold')
+    com = NP.get_center_of_mass()
+    # view(NP)
+    coords = NP.get_positions()
+    if not noOutput: chrono = timer(); chrono.chrono_start()
+    tree = KDTree(coords)
+    dist = distance.cdist(coords,[com])
+    rMax = np.max(dist)
+    dMax = 1.05*2*rMax
+    radii = np.arange(dr, dMax, dr)
+    if not noOutput: print(f"dMax = {dMax:.2f} (number of points = {len(radii)})")
+    g_r = np.zeros(len(radii))
+    dist = distance.pdist(coords)
+    for ir, r in enumerate(radii):
+        for i,c in enumerate(coords):
+            neighbours = tree.query_ball_point(c,r,return_length=True,workers=ncores) - tree.query_ball_point(c,r-dr,return_length=True,workers=ncores)
+            g_r[ir] += neighbours
+    g_r = gaussian_filter1d(g_r,sigma=sigma,mode='nearest')
+    g_r = np.divide(g_r,radii)
+    peaks, _ = find_peaks(g_r)
+    if not noOutput: print(f"First peak found at: {radii[peaks[0]]:.2f} Å. g(r) = {g_r[peaks[0]]:.2f}")
+    g_r = g_r/g_r[peaks[0]]
+    radii = radii/radii[peaks[0]]
+    if not noOutput: print("(Intensity and position of the returned RDF profile normalized w.r.t. this first peak)")
+    if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+    return radii, g_r, len(radii)
+
+#######################################################################
+######################################## simple file management utilities
+def createDir(path2,forceDel=False):
+    import os
+    import shutil
+    if os.path.isdir(path2) and not forceDel:
+        print(f"{path2} already exists. No need to recreate it")
+    if os.path.isdir(path2) and forceDel:
+        print(f"{fg.RED}Previously created {path2} is deleted{fg.OFF}")
+        shutil.rmtree(path2)
+    if (os.path.isdir(path2) and forceDel) or not os.path.isdir(path2):
+        print(f"{fg.BLUE}{path2} is created{fg.OFF}")
+        os.mkdir(path2)
