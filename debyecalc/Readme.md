@@ -1,5 +1,6 @@
-This folder contains code for Debye calculations.
-Debye calculations are based on debyecalculator package. It allows computations of scattering curves S(q) and pair distribution functions G(r) from xyz files generated using pyNanoMatBuilder library.
+This folder contains code for Debye calculations. 
+Required packages: debyecalculator, torch
+
 
 At the present time, 2 functions are implemented:
 - calcSofQ (structure file, qmin, qmax,qstep,biso)
