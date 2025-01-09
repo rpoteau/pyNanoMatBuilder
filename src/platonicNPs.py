@@ -85,10 +85,10 @@ class regfccOh:
         return n
     
     def edgeLength(self):
-        return self.Rnn**self.nOrder
+        return self.Rnn*self.nOrder #Angs
 
     def radiusCircumscribedSphere(self):
-        return self.radiusCSF*self.edgeLength()
+        return self.radiusCSF*self.edgeLength() #angs
 
     def radiusInscribedSphere(self):
         return self.radiusISF*self.edgeLength()
@@ -244,7 +244,19 @@ class regfccOh:
         return
 
     def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface, noOutput):
-        pyNMBu.moi(self.NP, noOutput)
+        import math
+        self.moi=pyNMBu.moi(self.NP, noOutput)
+        self.dim=[0,0,0]
+        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))    # MOI mass normalized (m of each atoms=1)
+        # find the size using the MOI mass normalized 
+        a=np.sqrt(10*self.moisize[0]) #arete https://www.vcalc.com/collection/?uuid=1a8912a2-f145-11e9-8682-bc764e2038f2
+        self.dim[0] =a*math.sqrt(2) #diameter of the circumscribed sphere
+        self.dim[1] = self.dim[0]
+        self.dim[2] = self.dim[0]
+        #https://fr.wikipedia.org/wiki/Dod%C3%A9ca%C3%A8dre_r%C3%A9gulier#:~:text=Les%2020%20%C3%97%206%20%3D%2012,sur%20les%20faces%20du%20poly%C3%A8dre.
+        if not noOutput:
+            print(f"Size of the octahedron (diameter of the circumscribed sphere) :  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
+            print(f"Edge  of the icosahedron:  { a* 0.1:.2f}   nm")
         if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
         # [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
         #     pyNMBu.coreSurface(self.NP.get_positions(),thresholdCoreSurface)
@@ -255,13 +267,13 @@ class regfccOh:
 
 ###########################################################################################################
 class regIco:
-    nFaces = 20
+    nFaces = 20 #par définition
     nEdges = 30
     nVertices = 12
-    phi = (1 + np.sqrt(5))/2 # golden ratio
+    phi = (1 + np.sqrt(5))/2 # golden ratio, utile pour retrouver dimension voir wikipedia
     edgeLengthF = 1
     radiusCSF = np.sqrt(10 + 2*np.sqrt(5))/4
-    interShellF = 1/radiusCSF
+    interShellF = 1/radiusCSF #distance entre couches
 #    interShellF = np.sqrt(2*(1-1/np.sqrt(5)))
     radiusISF = np.sqrt(3) * (3 + np.sqrt(5))/12
   
@@ -296,7 +308,7 @@ class regIco:
                 self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface, noOutput)
                 if aseView: view(self.NPcs)
           
-    def __str__(self):
+    def __str__(self): #fonction prédéfinie, si tu print ico, ça retourne ça et pas init
         return(f"Regular icosahedron with {self.nShell} shell(s) and Rnn = {self.Rnn}")
     
     def nAtomsF(self,i):
@@ -441,10 +453,10 @@ class regIco:
         if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         self.NP=aseObject
         self.cog = self.NP.get_center_of_mass()
-        if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
-        if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)
+        print("self.trPlane")
+        print(self.trPlanes)
     
-    def prop(self):
+    def prop(self): #properties
         vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
         pyNMBu.plotImageInPropFunction(self.imageFile)
@@ -468,12 +480,29 @@ class regIco:
         print("Dual polyhedron: dodecahedron")
 
     def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface, noOutput):
-        pyNMBu.moi(self.NP, noOutput)
+        import math
+        self.moi=pyNMBu.moi(self.NP, noOutput)
+        self.dim=[0,0,0]
+        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))    # MOI mass normalized (m of each atoms=1)
+        # find the size using the MOI mass normalized 
+        a=np.sqrt((10*self.moisize[0])/((1+math.sqrt(5))/2)**2) #arete https://www.vcalc.com/collection/?uuid=1a8912a2-f145-11e9-8682-bc764e2038f2
+        self.dim[0] =a*math.sqrt(((1+math.sqrt(5))/2)*math.sqrt(5)) #diameter of the circumscribed sphere
+        self.dim[1] = self.dim[0]
+        self.dim[2] = self.dim[0]
+        #https://fr.wikipedia.org/wiki/Dod%C3%A9ca%C3%A8dre_r%C3%A9gulier#:~:text=Les%2020%20%C3%97%206%20%3D%2012,sur%20les%20faces%20du%20poly%C3%A8dre.
+        if not noOutput:
+            print(f"Size of the icosahedron  (diameter of the circumscribed sphere) :  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
+            print(f"Edge  of the icosahedron:  { a* 0.1:.2f}   nm")
+
+
         if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
         [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
             pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
         self.NPcs = self.NP.copy()
         self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
+        if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
+        if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)
+
 
 ###########################################################################################################
 class regfccTd:
@@ -695,7 +724,20 @@ class regfccTd:
         print(f"coordinates of the center of gravity = {self.cog}")
 
     def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface,noOutput):
-        pyNMBu.moi(self.NP, noOutput)
+        import math
+        self.moi=pyNMBu.moi(self.NP, noOutput)
+        self.dim=[0,0,0]
+        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))    # MOI mass normalized (m of each atoms=1)
+        # find the size using the MOI mass normalized 
+        a=np.sqrt(20*self.moisize[0]) # side length https://www.vcalc.com/collection/?uuid=1a8912a2-f145-11e9-8682-bc764e2038f2
+        self.dim[0] = 2*a*math.sqrt(3/8) #diameter of the circumscribed sphere
+        self.dim[1] = self.dim[0]
+        self.dim[2] = self.dim[0]
+        #https://fr.wikipedia.org/wiki/Dod%C3%A9ca%C3%A8dre_r%C3%A9gulier#:~:text=Les%2020%20%C3%97%206%20%3D%2012,sur%20les%20faces%20du%20poly%C3%A8dre.
+        if not noOutput:
+            print(f"Size of the tetrahedron (diameter of the circumscribed sphere) :  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
+            print(f"Edge  of the tetrahedron:  { a* 0.1:.2f}   nm")
+        
         if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
         [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
             pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
@@ -936,12 +978,25 @@ class regDD:
         print("Dual polyhedron: icosahedron")
 
     def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface,noOutput):
-        pyNMBu.moi(self.NP, noOutput)
+        import math
+        self.moi=pyNMBu.moi(self.NP, noOutput)
+        self.dim=[0,0,0]
+        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))    # MOI mass normalized (m of each atoms=1)
+        # find the size using the MOI mass normalized 
+        a=np.sqrt((150*self.moisize[0])/(39*((1+math.sqrt(5))/2)+28)) #arete https://www.vcalc.com/collection/?uuid=1a8912a2-f145-11e9-8682-bc764e2038f2
+        self.dim[0] = 2*a*math.cos(36*math.pi/180)*math.sqrt(3) 
+        self.dim[1] = self.dim[0]
+        self.dim[2] = self.dim[0]
+        #https://fr.wikipedia.org/wiki/Dod%C3%A9ca%C3%A8dre_r%C3%A9gulier#:~:text=Les%2020%20%C3%97%206%20%3D%2012,sur%20les%20faces%20du%20poly%C3%A8dre.
+        if not noOutput:
+            print(f"Size of the dodecahedron (diameter of the circumscribed sphere) :  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
+            print(f"Edge  of the dodecahedron:  { a* 0.1:.2f}   nm")
         if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
         [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
             pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
         self.NPcs = self.NP.copy()
         self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
+        
 
 ###########################################################################################################
 class cube:
@@ -956,8 +1011,9 @@ class cube:
     def __init__(self,
                  crystalStructure='fcc',
                  element='Au',
-                 Rnn: float=2.7,
-                 nOrder: int=1,
+                 Rnn: float=2.7, #distance with closest neighboor
+                 nOrder: int=1, #number of unit cells
+                 size: int= 0, #size in Angs
                  postAnalyzis=True,
                  aseView: bool=False,
                  thresholdCoreSurface = 1.,
@@ -970,6 +1026,7 @@ class cube:
         self.element = element
         self.Rnn = Rnn
         self.nOrder = nOrder
+        self.size= size*10 #in angs
         self.nAtomsPerEdge = nOrder+1
         self.nAtoms = 0
         self.nAtomsPerShell = [0]
@@ -977,6 +1034,9 @@ class cube:
         self.cog = np.array([0., 0., 0.])
         self.imageFile = pyNMBu.imageNameWithPathway("cube-C.png")
         self.trPlanes = None
+
+
+        
         if not noOutput: vID.centerTitle(f"{nOrder}x{nOrder}x{nOrder} {self.crystalStructure} cube")
           
         if not noOutput: self.prop()
@@ -1060,15 +1120,23 @@ class cube:
     #     return fcc
 
     def coords(self,noOutput):
+        #crystalline structure
         if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pyNMBu.timer(); chrono.chrono_start()
         if self.crystalStructure == 'fcc':
             cube = bulk(self.element, 'fcc', a=self.latticeConstant(), cubic=True)
         elif self.crystalStructure == 'bcc':
             cube = bulk(self.element, 'bcc', a=self.latticeConstant(), cubic=True)
-        if not noOutput: print(f"Now making a {self.nOrder}x{self.nOrder}x{self.nOrder} fcc supercell...")
-        M = [[self.nOrder, 0, 0], [0, self.nOrder, 0], [0, 0, self.nOrder]]
-        sc=make_supercell(cube, M)
+        #creating supercell depending the entries of user : size of the cube in Angs or nOrder (number of cells)
+        if self.size==0 : #if not size given
+            if not noOutput: print(f"Now making a {self.nOrder}x{self.nOrder}x{self.nOrder} fcc supercell...")
+            M = [[self.nOrder, 0, 0], [0, self.nOrder, 0], [0, 0, self.nOrder]]
+            sc=make_supercell(cube, M)
+        else : 
+            self.n_cells = int(self.size/ self.latticeConstant())
+            M = [[self.n_cells, 0, 0], [0, self.n_cells, 0], [0, 0, self.n_cells]]
+            sc=make_supercell(cube, M)
+       
         # now add last layers
         if not noOutput: print(f"... and adding the upper layers")
         sc = cut(sc,extend=1.05)
@@ -1110,9 +1178,133 @@ class cube:
         print("Dual polyhedron: octahedron")
 
     def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface, noOutput):
-        pyNMBu.moi(self.NP, noOutput)
+        self.moi=pyNMBu.moi(self.NP, noOutput)
+        self.dim=[0,0,0]
+        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))   # MOI mass normalized (m of each atoms=1)
+        # find the size using the MOI mass normalized
+        self.dim[0] = np.sqrt(6*self.moisize[0])
+        self.dim[1] = np.sqrt(6*self.moisize[1])
+        self.dim[2] = np.sqrt(6*self.moisize[2])
+        if not noOutput:
+            print(f"Length of the cube  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
+   
+                
         if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
         [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
             pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
         self.NPcs = self.NP.copy()
         self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
+
+# NEW
+
+class hollow_shapes:
+    #cube
+    '''
+        input:
+            - full_cube = instance of the class Cube
+            - hollow_size = size of the hollow wanted in Angstrom
+        returns:
+            - None
+    '''
+    def __init__(self,
+                 full_cube,
+                 hollow_size: int=0,#Angs?
+                 postAnalyzis=True,
+                 aseView: bool=False,
+                 thresholdCoreSurface = 1.,
+                 skipSymmetryAnalyzis = False,
+                 jmolCrystalShape: bool=True,
+                 noOutput = False,
+                 calcPropOnly= False
+                ):
+        if not isinstance(full_cube, cube):
+            raise TypeError("full_cube must be an instance of the Class Cube")
+        self.full_cube= full_cube
+        self.hollow_size = hollow_size 
+        self.cog = np.array([0., 0., 0.])
+        
+        if not calcPropOnly:
+            self.create_hollow(noOutput)
+            # if aseView: view(self.NP)
+            if postAnalyzis:
+                self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface, noOutput=noOutput)
+            # #     if aseView: view(self.NPcs)
+    
+    def __str__(self):
+        if self.full_cube.size==0 :
+            return(f" cube with order of{self.full_cube.nOrder}, with hollow thickness of {self.hollow_size} Angstrom and with Rnn = {self.full_cube.Rnn}")
+        else :
+             return(f" fcc cube with size {self.full_cube.size} Angstrom with hollow thickness of {self.hollow_size} Angstrom and with Rnn = {self.full_cube.Rnn}")
+    
+    def create_hollow(self,noOutput) :
+        '''
+        Create a hollow using planes that defines a cube [h k l d] with d= +/- size of the hollow/2
+        '''
+
+        if not noOutput: print(f"Creating a hollow of {self.hollow_size} nm ")
+        half_inner_cube_size=10*self.hollow_size/2
+        self.NP=self.full_cube.NP.copy()
+        print("Number of atoms in the cube before creating the hollow", len(self.NP))
+        full_positions = self.full_cube.NP.get_positions()
+
+    
+           # the 6 planes that define the hollow (cube)
+        planes_with_dist = np.array([
+            [0, 0, 1, -half_inner_cube_size],
+            [0, 0, -1, -half_inner_cube_size],  
+            [0, 1, 0, -half_inner_cube_size],    
+            [0, -1, 0, -half_inner_cube_size],  
+            [1, 0, 0, -half_inner_cube_size],   
+            [-1, 0, 0, -half_inner_cube_size]
+        ])   
+        
+        delAbove= False
+        # delete atoms above/under the 6 planes
+        # for plane in planes_with_directions:
+        current_positions = self.NP.get_positions()
+        #     print(f"Plan used: {plane}, delAbove={delAbove}")
+            
+        AtomsUnderPlanes = pyNMBu.truncateAbovePlanes(
+            planes=planes_with_dist,
+            coords=current_positions,
+            allP= True,
+            delAbove=delAbove,
+            debug=False,        
+            noOutput=False,
+            eps= 0.001, #tolérance de distance
+            )
+        del self.NP[AtomsUnderPlanes]
+       
+           
+        print(f"Number of atoms in the final hollow cube : {len(self.NP)}")
+       #if not noOutput:
+           # print(f"Number of atoms to remove: {self.NP[AtomsUnderPlanes]}")
+        
+        
+        
+    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface, noOutput):
+        self.moi=pyNMBu.moi(self.NP, noOutput)
+        self.dim=[0,0,0]
+        print(self.moi)
+        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))   # MOI mass normalized (m of each atoms=1)
+        # find the size using the MOI mass normalized
+        self.dim[0] = np.sqrt(6*self.moisize[0])
+        self.dim[1] = np.sqrt(6*self.moisize[1])
+        self.dim[2] = np.sqrt(6*self.moisize[2])
+        if not noOutput:
+            print(f"Length of the cube  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")  
+        if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
+        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
+            pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
+        self.NPcs = self.NP.copy()
+        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol     
+        # #nAtoms = self.NP.get_global_number_of_atoms()
+        # natoms = len(sc.positions)
+        # self.nAtoms=natoms
+        # self.cog = pyNMBu.centerOfGravity(sc.get_positions())
+        # if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+        self.cog = self.NP.get_center_of_mass()
+        # #if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes) ?????
+        # if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput) 
+        
+            

@@ -9,7 +9,7 @@ class pyNMBdata:
 
 class pyNMBvar:
     dbFolder = 'cif_database'
-    path2Jmol = '/usr/local/src/jmol-14.32.50'
+    path2Jmol = '/usr/local/src/jmol-16.3.5'
 
 class WulffShapes:
     data = ({

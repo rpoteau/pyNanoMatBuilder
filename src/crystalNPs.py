@@ -22,10 +22,12 @@ class Crystal:
                  setSymbols2: np.ndarray=None,
                  userDefCif: str=None,
                  shape: str='sphere',
-                 size: float=[2,2,2], #nm
+                 size: float=[2,2,2],
                  directionsPPD: np.ndarray=np.array([[1,0,0],[0,1,0],[0,0,1]]),
                  buildPPD: str='xyz',
                  directionWire: float=[0,0,1],
+                 #NEW CYLINDER
+                 directionCylinder: float=[0,0,1],
                  refPlaneWire: float=[1,0,0],
                  nRotWire: int=6,
                  surfacesWulff: np.ndarray=None,
@@ -38,7 +40,7 @@ class Crystal:
                  threshold: float=1e-3,
                  dbFolder: str=data.pyNMBvar.dbFolder,
                  postAnalyzis: bool=True,
-                 aseView: bool=False,
+                 aseView: bool= False,
                  thresholdCoreSurface = 1.,
                  skipSymmetryAnalyzis: bool = False,
                  noOutput: bool = False,
@@ -46,11 +48,13 @@ class Crystal:
                 ):
         self.dbFolder = dbFolder #database folder that contains cif files
         self.crystal = crystal # see list with the pyNMBu.ciflist() command
-        self.shape = shape.strip(' ') # 'sphere', 'ellipsoid', 'cube', 'wire', 'Wulff'
+        self.shape = shape.strip(' ') # 'sphere', 'ellipsoid', 'cube', 'wire', 'Wulff', 'cylinder'
         self.size = size
         self.directionsPPD = directionsPPD
         self.buildPPD = buildPPD
         self.directionWire = directionWire
+        #NEW for cylinder
+        self.directionCylinder = directionCylinder
         self.refPlaneWire = refPlaneWire
         self.nRotWire = nRotWire
         self.surfacesWulff = surfacesWulff
@@ -66,6 +70,7 @@ class Crystal:
         self.cifname = None
         self.userDefCif = userDefCif
         self.trPlanes = None
+        self.dim=[0,0,0] # main dimensions for files 
         if "Wulff" in self.shape :
             self.WulffShape = self.shape.split(":")
             if len(self.WulffShape) == 2:
@@ -75,24 +80,26 @@ class Crystal:
                 self.WulffShape = None
 
         if self.userDefCif is not None: self.loadExternalCif()
-
-        if self.shape in data.pyNMBimg.IMGdf.index:
-            self.imageFile = pyNMBu.imageNameWithPathway(data.pyNMBimg.IMGdf["png file"].loc[self.shape])
-        else:
-            sys.exit("Shape {self.shape} is unknown")
+        #NEW CYLINDER
+        # if self.shape in data.pyNMBimg.IMGdf.index:
+        #     self.imageFile = pyNMBu.imageNameWithPathway(data.pyNMBimg.IMGdf["png file"].loc[self.shape])
+        # else:
+        #     sys.exit("Shape {self.shape} is unknown")
         if not noOutput: vID.centerTitle(f"{self.crystal} {self.shape}")
 
         self.bulk(noOutput)
         if scaleDmin2 is not None: pyNMBu.scaleUnitCell(self,scaleDmin2,noOutput=noOutput)
         if setSymbols2 is not None: self.cif.set_chemical_symbols(setSymbols2)
         if aseView: view(self.cif)
-        if not noOutput: self.prop()
+         
+        
         if not calcPropOnly:
             self.makeNP(noOutput)
             if aseView: 
                 view(self.sc)
                 view(self.NP)
             if postAnalyzis:
+                self.prop(noOutput)
                 self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface, noOutput)
                 if aseView: view(self.NPcs)
         # self.NP.center() #must be done before the surface calculation, since the Hull analysis assulmes that the structure is centered in [0,0,0]
@@ -135,6 +142,46 @@ class Crystal:
             self.crystal = crystal2
         else: self.crystal = "unknown"
 
+    # def real_size(self):
+    #     positions=self.NP.get_positions()
+    #     x_min, y_min, z_min = positions.min(axis=0) #columns
+    #     x_max, y_max, z_max = positions.max(axis=0)
+    #     xlength=x_max-x_min
+    #     ylength=y_max-y_min
+    #     zlength=z_max-z_min
+    #     return xlength,ylength,zlength
+    
+    # #NEW
+    # def radiusInscribedSphere(self):
+    #     if self.shape == 'sphere' :
+    #         return self.size[0]
+    #     if self.shape == 'cylinder' :
+    #         return self.size[0]
+    #     if self.shape == 'ellipsoid' :
+    #         return min(self.size)
+                
+
+    #     #not done yet   
+    #     if self.shape == 'parallepiped' :
+            
+    #     if self.shape == 'wire' :
+    #         return 
+
+    # def radiusCircumscribedSphere(self):
+    #     if self.shape == 'sphere' :
+    #         return self.size[0]
+    #     if self.shape == 'cylinder' :
+    #         return np.sqrt((self.size[0]/2)**2*+(self.size[1]/2)**2)
+    #     if self.shape == 'ellipsoid' :
+    #         return max(self.size)
+    #     #not done yet
+    #     if self.shape == 'parallepiped' :
+            
+    #     if self.shape == 'wire' :
+            
+            
+
+            
     def bulk(self, noOutput):
 
         if self.userDefCif is None:
@@ -181,9 +228,17 @@ class Crystal:
             Ma = int(np.round(extendSizeByFactor * maxDim/self.cif.cell.lengths()[0]))
             Mb = int(np.round(extendSizeByFactor * maxDim/self.cif.cell.lengths()[1]))
             Mc = int(np.round(extendSizeByFactor * maxDim/self.cif.cell.lengths()[2]))
+        #NEW CYLINDER
+        elif (self.shape == 'cylinder'):
+            cylinderRadius = self.size[0]
+            half_height=self.size[1]
+            Ma = int(np.round(extendSizeByFactor * cylinderRadius*2*10/self.cif.cell.lengths()[0]))
+            Mb = int(np.round(extendSizeByFactor * cylinderRadius*2*10/self.cif.cell.lengths()[1]))
+            Mc = int(np.round(extendSizeByFactor * half_height*10/self.cif.cell.lengths()[2]))
         elif ('Wulff' in self.shape):
             if np.argmax(self.sizesWulff) == 1:
                 maxDim = self.sizesWulff[0]*10*1.5
+                print('maxDim',maxDim)
             else:
                 maxDim = np.max(self.sizesWulff)*10*1.5
             # print(f"{maxDim = }")
@@ -238,7 +293,8 @@ class Crystal:
         self.NP = self.sc.copy()
         del self.NP[delAtom]
         if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-                
+        
+               
     def makeEllipsoid(self,noOutput):
         if not noOutput: vID.centertxt(f"Removing atoms to make an ellipsoid",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         if not noOutput: chrono = pyNMBu.timer(); chrono.chrono_start()
@@ -252,7 +308,8 @@ class Crystal:
         self.NP = self.sc.copy()
         del self.NP[delAtom]
         if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-
+        #NEW
+         
     def makeWire(self,noOutput):
         if not noOutput: vID.centertxt(f"Removing atoms to make a wire",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         if not noOutput: chrono = pyNMBu.timer(); chrono.chrono_start()
@@ -279,7 +336,38 @@ class Crystal:
         if not noOutput: vID.centertxt(f"Nanowire moved to the center of the unitcell",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         # self.NP.center()
         if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+        #NEW
+        
 
+    def makeCylinder(self,noOutput): #in def init, the two entries are specified : size=[diameter,length] and directionCylinder=[h,k,l]
+        """
+        Create a cylinder along the direction [hkl], [radius,length] are specified by user in the class Crystal
+        """
+    
+        if not noOutput: vID.centertxt(f"Removing atoms to make a cylinder",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        if not noOutput: chrono = pyNMBu.timer(); chrono.chrono_start()
+        #dimension
+        radius = 10*self.size[0]/2 
+        radius_squared=radius**2
+        half_height = 10 * self.size[1] / 2
+        axis=np.array(self.directionCylinder)
+        com = self.sc.get_center_of_mass()
+        #delAtom = []
+    
+    
+        #delete atoms in the supercell
+        delAtom = [i for i, pos in enumerate(self.sc.positions) if pyNMBu.isnt_inside_cylinder(pos,radius, radius_squared, half_height)]
+        
+        #rotating the coordinates again to have the hkl orientation
+        self.sc.positions= pyNMBu.rotateMoltoAlignItWithAxis(self.sc.positions,axis,targetAxis=np.array([0, 0, 1]))
+        self.NP = self.sc.copy()
+        del self.NP[delAtom]
+    
+        if not noOutput: vID.centertxt(f"Nanocylinder moved to the center of the unitcell",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        # self.NP.center()
+        if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+        #NEW
+      
     def makeParallelepiped(self,noOutput):
         if not noOutput: vID.centertxt(f"Removing atoms to make a parallelepiped",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         if not noOutput: chrono = pyNMBu.timer(); chrono.chrono_start()
@@ -304,7 +392,8 @@ class Crystal:
         #self.NP.center()
         self.trPlanes = trPlanes
         if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-
+        
+  
     def makeWulff(self,noOutput):
         if not noOutput: vID.centertxt(f"Calculating truncation distances",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         if not noOutput: chrono = pyNMBu.timer(); chrono.chrono_start()
@@ -348,6 +437,7 @@ class Crystal:
         nAtoms = self.NP.get_global_number_of_atoms()
         # self.NP.center()
         self.trPlanes = trPlanes
+        print(' self.trPlanes', self.trPlanes)
         if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
 
     def makeNP(self,noOutput):
@@ -378,11 +468,17 @@ class Crystal:
             if not pyNMBu.isPlaneParrallel2Line(self.refPlaneWire, self.directionWire):
                 print(f"{bg.DARKREDB}Warning! The reference truncation plane is not parallel to {self.directionWire}. Are you sure?{fg.OFF}")
                 suggestedPlane = pyNMBu.returnPlaneParallel2Line(self.directionWire)
-                print(f"Among other possibilities, you can try {suggestedPlane}")
+                print(f"Among other possibilities, you can try {suggestedPlane}")            
             else:
                 if not noOutput: print(f"{bg.LIGHTGREENB}The reference truncation plane is parallel to {self.directionWire}{fg.OFF}")
             self.makeSuperCell(noOutput)
             self.makeWire(noOutput)
+
+        #NEW CYLINDER
+        elif self.shape == "cylinder":  
+            if not noOutput: print(f"Cylinder in the {self.directionCylinder} directionCylinder. Length x width = {self.size[1]} x {self.size[0]} nm")
+            self.makeSuperCell(noOutput)
+            self.makeCylinder(noOutput)
         elif "Wulff" in self.shape :
             if self.WulffShape is not None:
                 self.predefinedParameters4WulffShapes(noOutput)
@@ -424,18 +520,109 @@ class Crystal:
             display(data.WulffShapes.WSdf)
             sys.exit(f"{fg.RED}{bg.LIGHTREDB}The {self.WulffShape} Wulff shape is not a pre-defined shortcut "\
                     "in the WSdf dataframe (see data.py and the index column of the table just above){fg.OFF}")
+  
+   
+    def prop(self,noOutput):
         
-
-    def prop(self):
-        print(self)
-        pyNMBu.plotImageInPropFunction(self.imageFile)
+        #pyNMBu.plotImageInPropFunction(self.imageFile)
         vID.centertxt("Unit cell properties",bgc='#007a7a',size='14',weight='bold')
         pyNMBu.print_ase_unitcell(self)
+        vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
+        print(self)
+        if "Wulff" in self.shape :
+            distances = np.linalg.norm(self.NP.positions- self.cog, axis=1)
+            self.radiusCircumscribedSphere= np.max(distances)
+            
 
-    def propPostMake(self,skipSymmetryAnalyzis, thresholdCoreSurface, noOutput):
-        pyNMBu.moi(self.NP, noOutput)
+            
+            self.radiusInscribedSphere= np.min(distances)
+            self.dim[0]= self.radiusCircumscribedSphere      # main dimensions for files 
+            self.dim[1]= self.dim[0]
+            self.dim[2]= self.dim[0]
+            if not noOutput : 
+                print(f"diameters of the circumscribed sphere: {self.radiusCircumscribedSphere * 2* 0.1:.2f}  {self.radiusCircumscribedSphere* 2 * 0.1:.2f}  {self.radiusCircumscribedSphere* 2* 0.1:.2f} nm")
+                print(f"diameters of the inscribed sphere: { self.radiusInscribedSphere* 2* 0.1:.2f}  {self.radiusInscribedSphere* 2 * 0.1:.2f}  {self.radiusInscribedSphere * 2* 0.1:.2f} nm")
+               
+
+    def propPostMake(self,skipSymmetryAnalyzis, thresholdCoreSurface, noOutput): #accès aux faces voisines etc
+        
+        self.moi=pyNMBu.moi(self.NP, noOutput)
+        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))# MOI mass normalized (m of each atoms=1)
+
+        # find the size using the MOI mass normalized
+        if self.shape == 'ellipsoid': # https://scienceworld.wolfram.com/physics/MomentofInertiaEllipsoid.html
+            self.dim[0] = 2*np.sqrt((5 *self.moisize[1] + 5 * self.moisize[2] - 5 * self.moisize[0]) / 2)
+            self.dim[1] = 2*np.sqrt((5 * self.moisize[0] + 5 * self.moisize[2] - 5 * self.moisize[1]) / 2)
+            self.dim[2] = 2*np.sqrt((5 * self.moisize[0] + 5 * self.moisize[1] - 5 * self.moisize[2]) / 2)
+            if not noOutput:
+                print(f"Diameters of the ellipsoid  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
+        if self.shape == 'sphere': #wikipedia
+            self.dim[0] = 2 * np.sqrt(5 / 2 * self.moisize[0])  # même formule pour les 3 directions avec Ix, Iy, Iz égaux
+            self.dim[1] = 2 * np.sqrt(5 / 2 * self.moisize[0])
+            self.dim[2] = 2 * np.sqrt(5 / 2 * self.moisize[0])
+            if not noOutput:
+                print(f"Diameter of the sphere = {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
+        if self.shape == 'cylinder': #wikipedia
+            self.dim[0] = np.sqrt(12 * self.moisize[1] - 6 * self.moisize[0]) #longest distance
+            self.dim[1] = 2 * np.sqrt(2 * self.moisize[0]) 
+            self.dim[2] = 2 * np.sqrt(2 * self.moisize[0])
+            if not noOutput:
+                print(f"Size of the cylinder= {self.dim[0] * 0.1:.2f} {self.dim[1] * 0.1:.2f} {self.dim[2] * 0.1:.2f} nm")
+                
+        if self.shape == 'parallepiped': #wikipedia
+            self.dim[0] = np.sqrt(6 *(self.moisize[1] + self.moisize[2] - self.moisize[0])) #longest distance
+            self.dim[1] = np.sqrt(6 * (self.moisize[0] + self.moisize[2] - self.moisize[1])) # 2nd longest distance
+            self.dim[2] = np.sqrt(6 * (self.moisize[0] + self.moisize[1] - self.moisize[2])) # 3rd longest distance
+            if not noOutput:
+                print(f"Size of the parallepiped=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
+
+        if self.shape == 'wire': #wikipedia
+            if self.nRotWire==4 :
+                self.dim[0]=np.sqrt(12*self.moisize[1]-6*self.moisize[0]) #longest distance
+                self.dim[1]=np.sqrt(6*self.moisize[0])
+                self.dim[2]=np.sqrt(6*self.moisize[0])
+                if not noOutput:
+                    print(f"Size of the wire=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
+            if self.nRotWire==6 :
+                self.dim[0]=np.sqrt(12*self.moisize[1]-6*self.moisize[0]) #longest distance
+                self.dim[1]=2*np.sqrt(2*self.moisize[0])
+                self.dim[2]=2*np.sqrt(2*self.moisize[0])
+                if not noOutput:
+                    print(f"Size of the wire=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
+
+        #NEW WULFF PREDEFINED
+        # if "Wulff" and "cube" in self.shape :
+        #     self.dim[0] = np.sqrt(6*self.moisize[0])
+        #     self.dim[1] = np.sqrt(6*self.moisize[1])
+        #     self.dim[2] = np.sqrt(6*self.moisize[2])
+        #     if not noOutput:
+        #         print(f"Length of the cube  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
+
+
+        # if "Wulff" and "Oh" in self.shape :
+        #     a=np.sqrt(10*self.moisize[0]) #arete https://www.vcalc.com/collection/?uuid=1a8912a2-f145-11e9-8682-bc764e2038f2
+        #     self.dim[0] =a*math.sqrt(2) #diameter of the circumscribed sphere
+        #     self.dim[1] = self.dim[0]
+        #     self.dim[2] = self.dim[0]
+        #     #https://fr.wikipedia.org/wiki/Dod%C3%A9ca%C3%A8dre_r%C3%A9gulier#:~:text=Les%2020%20%C3%97%206%20%3D%2012,sur%20les%20faces%20du%20poly%C3%A8dre.
+        #     if not noOutput:
+        #         print(f"Size of the octahedron (diameter of the circumscribed sphere) :  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
+        #         print(f"Edge  of the icosahedron:  { a* 0.1:.2f}   nm")
+
+
+        # if "Wulff" and "hcpwire" in self.shape :
+        #     self.dim[0]=np.sqrt(12*self.moisize[1]-6*self.moisize[0]) #longest distance
+        #     self.dim[1]=2*np.sqrt(2*self.moisize[0])
+        #     self.dim[2]=2*np.sqrt(2*self.moisize[0])
+        #     if not noOutput:
+               # print(f"Size of the wire=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm") 
+        
+
         if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
         [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
             pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
         self.NPcs = self.NP.copy()
         self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
+       
+        
+        

@@ -1,4 +1,51 @@
-# Development of a pre-release version -> date-based versioning
+0# Development of a pre-release version -> date-based versioning
+## 20241220
+
+### added 
+- in every class of NPS (for every shapes except hollow shapes): MOI mass normalized (m of each atoms=1) : self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))`
+-  `crystalNPs.py` :  main dimensions calculated from MOI normalized (in an array [d1,d2,d3] with d1>d2>d3) for : sphere, ellipsoid, cylinder, wire (for nRot=4 and nRot=6), parallepiped 
+-  `platonicNPs.py` :  main dimensions calculated from MOI normalized for : regfccOh regIco  regfccTd regDD cube (not working with hollow cube)
+### changed
+-  `utils.py`:
+      - `writexyz_generalized()`: updated function that writes xyz files (with dictionnaries and good file names with numerotation), inputs : path and instance of a class. Example of use in 2.2.6  `pyNMB-examples-sanspbcolonnes` with the use of loops
+        
+### changed
+-  `platonicNPs.py`:
+      - `class regfccOh` : `radiusCircumscribedSphere(self)` error in the formula, changed and working now
+    
+## 20241218
+### added
+-  `utils.py`:
+      - `get_moments_of_inertia_for_size(self, vectors=False)` : Get the moments of inertia along the principal axes with
+    mass normalisation. Units of the moments of inertia are angstrom**2
+      - `moi_size(model: Atoms,noOutput: bool=False,)` : Returns the 3 moments of inertia along the principal axes with mass normalization to get acces to size informations
+### changed
+-  `propPostMake(self,skipSymmetryAnalyzis, thresholdCoreSurface, noOutput)`: the size of the crystals are calculated using the pNMBu.moi_size() function
+
+## 20241211
+### added
+-  `utils.py`:
+      - `writexyz_generalized()`: function that writes xyz files (with dictionnaries and good file names), inputs : path and instance of a class.
+        Possibility to create multiple files if the instanciation of the class is in a loop (loop on the size of atoms for example), cf `pyNMB-examples-sanspbcolonnes`.
+### changed
+-  `utilsDC.py`:
+      - `create_iqfiles_from_xyzfiles(self, path_of_xyzfiles, path_of_csvfiles)`: dictionnaries are added in the csv files
+
+
+## 20241206
+### added
+- `utilsDC.py`:
+    - imports for Debye calculations
+    - functions that plot I=f(q), S=f(q), F=f(q), G=f(r)
+    - functions that create multiple csv files containing scattering data calculated from xyx/cif files/ ASE object
+  
+- `DebyeTest.ipynb` : tests the new utilities from utilsDC.py
+
+- `coords_test_debye` : new repository containing xyz and cif files to use as examples in DebyeTest.ipynb
+
+- `csv_files` : new repository that will contain csv files created by user when they will try DebyeTest.ipynb
+
+
 
 ## 20240630
 ### added

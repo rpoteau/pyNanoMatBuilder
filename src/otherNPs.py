@@ -114,6 +114,8 @@ class fcctpt:
 
     def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface, noOutput):
         pyNMBu.moi(self.NP, noOutput=noOutput)
+        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))# MOI mass normalized (m of each atoms=1)
+
         if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
         [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
             pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)

@@ -1,9 +1,9 @@
 import visualID as vID
 from visualID import  fg, hl, bg
 import numpy as np
-
+#ASE import
 from ase.atoms import Atoms
-from ase.io import write
+#from ase.io import write
 from ase.geometry import cellpar_to_cell
 from ase.spacegroup import get_spacegroup
 import os
@@ -11,6 +11,7 @@ import os
 from scipy import linalg
 
 from pyNanoMatBuilder import data
+
 
 #######################################################################
 ######################################## time
@@ -349,10 +350,68 @@ def moi(model: Atoms,
     if not noOutput: print(f"Moments of inertia = {model.moi[0]:.2f} {model.moi[1]:.2f} {model.moi[2]:.2f} amu.Å2")
     model.masses = model.get_masses()
     model.M = model.masses.sum()
-    model.moiM = model.moi/model.M
+    model.moiM = model.moi/(model.M)
+    moiM=model.moiM
     if not noOutput: print(f"Moments of inertia / M = {model.moiM[0]:.2f} {model.moiM[1]:.2f} {model.moiM[2]:.2f} amu.Å2")
-    model.dim = 2*np.sqrt(5*model.moiM)
-    if not noOutput: print(f"Size of the ellipsoid = {model.dim[0]*0.1:.2f} {model.dim[1]*0.1:.2f} {model.dim[2]*0.1:.2f} nm")
+    return moiM
+   
+
+    
+
+#NEW
+def get_moments_of_inertia_for_size(self, vectors=False): #from ASE but with mass modification
+    '''
+    Get the moments of inertia along the principal axes with
+    mass normalisation.
+    The three principal moments of inertia are computed from the
+    eigenvalues of the symmetric inertial tensor. Periodic boundary
+    conditions are ignored. 
+    Units of the moments of inertia are angstrom**2.
+    '''
+    com = self.get_center_of_mass()
+    positions = self.get_positions()
+    #number_atoms=len(positions)
+    positions -= com  # translate center of mass to origin
+    masses = self.get_masses()
+
+    # Initialize elements of the inertial tensor
+    I11 = I22 = I33 = I12 = I13 = I23 = 0.0
+    for i in range(len(self)):
+        x, y, z = positions[i]
+        m = 1
+        I11 += m * (y ** 2 + z ** 2)
+        I22 += m * (x ** 2 + z ** 2)
+        I33 += m * (x ** 2 + y ** 2)
+        I12 += -m * x * y
+        I13 += -m * x * z
+        I23 += -m * y * z
+
+    Itensor = np.array([[I11, I12, I13],
+                        [I12, I22, I23],
+                        [I13, I23, I33]])
+
+    evals, evecs = np.linalg.eigh(Itensor) #valeurs propes de la matrice 
+    if vectors:
+        return evals, evecs.transpose()
+    else:
+        return evals
+
+
+def moi_size(model: Atoms, # normalized moment of inertia with masses=1
+        noOutput: bool=False,
+       ):
+    '''
+    Returns the 3 moments of inertia along the principal axes with mass normalization to get acces to size informations
+    '''
+
+    model.moi_size_all = get_moments_of_inertia_for_size(model)
+    positions = model.get_positions()
+    number_atoms=len(positions)
+    model.moi_size = model.moi_size_all/(number_atoms)
+    if not noOutput: print(f"Moments of inertia with mass=1/ M = {model.moi_size[0]:.2f} {model.moi_size[1]:.2f} {model.moi_size[2]:.2f} Å2")
+    return [model.moi_size[0],model.moi_size[1],model.moi_size[2]]
+  
+
 
 #######################################################################
 ######################################## Geometry optimization
@@ -777,6 +836,7 @@ def truncateAboveEachPlane(planes: np.ndarray,
     delAtoms = []
 
     eps =1e-3
+    
     for p in planes:
         for i,c in enumerate(coords):
             signedDistance = Pt2planeSignedDistance(p,c)
@@ -800,12 +860,13 @@ def truncateAbovePlanes(planes: np.ndarray,
                         delAbove: bool = True,
                         debug: bool=False,
                         noOutput: bool=False,
-                        eps: float=1e-3):
+                        eps: float=1e-3,
+                        depth_max: float=None):
     '''
     - input: 
         - planes = numpy array with all [u v w d] plane definitions
         - coords = (N,3) numpy array will all coordinates
-        - allP = deleted atoms must lie above ALL planes (default: False)
+        - allP = deleted atoms must lie simultaneously above ALL individual planes (default: False)
         - delAbove = if True (default) delete atoms that lie above the planes + eps = 1e-3 (default). Delete atoms below the
                      planes otherwise (use with precaution, could return no atoms as a function of their definition)
         - debug: if True (default is False) print atoms that match the allP/delAbove planes conditions
@@ -824,6 +885,7 @@ def truncateAbovePlanes(planes: np.ndarray,
         delAtoms = np.zeros(len(coords), dtype=bool)
     nOfDeletedAtoms = 0
     for p in planes:
+       
         if allP:
             delAtomsP = np.ones(len(coords), dtype=bool)
         else:
@@ -834,13 +896,13 @@ def truncateAbovePlanes(planes: np.ndarray,
                 delAtoms[i] = delAtoms[i] and signedDistance > eps
             elif delAbove and not allP:
                 delAtoms[i] = delAtoms[i] or signedDistance > eps
-                delAtomsP[i] = signedDistance > eps
+                delAtomsP[i] = signedDistance > eps 
             elif not delAbove and allP:
                 delAtoms[i] = delAtoms[i] and signedDistance < -eps
             elif not delAbove and not allP:
-                delAtoms[i] = delAtoms[i] or signedDistance < -eps
-                delAtomsP[i] = signedDistance < -eps
-        nOfDeletedAtoms = np.count_nonzero(delAtoms) - nOfDeletedAtoms
+                delAtoms[i] = delAtoms[i] or signedDistance < -eps 
+                delAtomsP[i] = signedDistance < -eps 
+        nOfDeletedAtoms = np.count_nonzero(delAtoms)
         nOfDeletedAtomsP = np.count_nonzero(delAtomsP)
         if debug and not allP:
             print(f"- plane", [f"{x: .2f}" for x in p],f"> {nOfDeletedAtomsP} atoms deleted")
@@ -848,7 +910,7 @@ def truncateAbovePlanes(planes: np.ndarray,
                 if a: print(f"@{i+1}",end=',')
             print("",end='\n')
         if debug and allP:
-            print("allP")
+            print("allP is True => deletion of all atoms that simultaneously lie above/below each plane")
             print(f"- plane", [f"{x: .2f}" for x in p],f"> {nOfDeletedAtoms} atoms deleted")
             for i,a in enumerate(delAtoms):
                 if a: print(f"@{i+1}",end=',')
@@ -907,7 +969,7 @@ def saveCoords_DrawJmol(asemol, prefix, scriptJ="", boundaries=False, noOutput=T
     from pyNanoMatBuilder import data
     path2Jmol = data.pyNMBvar.path2Jmol
     fxyz = "./figs/"+prefix+".xyz"
-    write(fxyz, asemol)
+    writexyz(fxyz, asemol)
     # jmolscript = 'cpk 0; wireframe 0.025; script "./figs/script-facettes-3-4RuLight.spt"; facettes34rulight; draw * opaque; color atoms black; set zShadePower 1; set specularPower 80; pngon; write image 1024 1024 ./figs/'
     if not boundaries:
         jmolscript = scriptJ + '; frank off; cpk 0; wireframe 0.05; script "./figs/script-facettes-345PtLight.spt"; facettes345ptlight; draw * opaque;'
@@ -948,6 +1010,65 @@ def writexyz(filename,atoms):
     with open(filename,'w') as file:
         file.write(line2write)
 
+# NEW WRITE XYZ
+def writexyz_generalized(path,instance_class,number):
+    '''
+    simple xyz writing, with atomic symbols/x/y/z and no other information sometimes misunderstood by some utilities, such as DebyeCalculator
+    input : 
+            - path : path in which the xyz files are created
+            - instance_class: instance of the class used
+
+    Note : Dimensions are in Å, MOI are in amu.Å², normalized MOI in Å²
+    '''
+    # verify if the path does exist
+    if not os.path.isdir(path):
+        raise FileNotFoundError(f"Directory '{path}'does not exist.")
+
+    # extract attributes from the class to write the dictionnary and the name of the file
+    if isinstance(instance_class,object):
+        number2=0
+        metadata = instance_class.__dict__.copy() # Get all attributes
+        element=instance_class.element
+        crystalStructure= instance_class.crystalStructure 
+        shape= instance_class.__class__.__name__ 
+        NP=instance_class.NP
+        element_array=NP.get_chemical_symbols()
+        MOI=instance_class.moi #amu.angs²
+        MOI_normalized=instance_class.moisize  #angs²
+        dim_main=instance_class.dim
+        #dim_seconday=...
+        number_atoms=instance_class.nAtoms
+        radius1=instance_class.radiusCircumscribedSphere #angs
+        radius2=instance_class.radiusInscribedSphere #angs
+        composition={}
+        
+        for elements in element_array:
+            if elements in composition:
+                composition[elements]+=1
+            else:
+                composition[elements]=1
+    
+    
+        coord=NP.get_positions()
+        natoms=len(element_array) 
+        #write the filename
+        filename= f"{element}_{crystalStructure}_{'{:07d}'.format(number)}_{'{:07d}'.format(number2)}.xyz"
+        full_path = os.path.join(path, filename)
+        print('full_path:',full_path)
+        line2write='%d \n'%natoms
+        dictionnary=dict([('composition', composition), ('crystal structure',crystalStructure), ('shape', shape ), ('MOI', MOI ),('MOInormalized', MOI_normalized),('main dimensions', dim_main), ('number of atoms', number_atoms)])
+        line2write+='%s \n'%dictionnary
+        #print('line2write=',line2write)
+        
+        # writing of the coordinates
+        for i in range(natoms):
+            line2write+='%s'%str(element_array[i])+'\t %.8f'%float(coord[i,0])+'\t %.8f'%float(coord[i,1])+'\t %.8f'%float(coord[i,2])+'\n'
+        with open(full_path,'w') as file:
+            file.write(line2write)
+    else :
+        print('Objet is not a class instance')
+
+
 def reduceHullFacets(Crystal: Atoms,
                      noOutput: bool=False,
                     ):
@@ -966,7 +1087,7 @@ def reduceHullFacets(Crystal: Atoms,
     # print("Crystal.trPlanes in reduceHullFacets")
     # print(Crystal.trPlanes)
     # print('------------------------------------------')
-    hs = HalfspaceIntersection(Crystal.trPlanes, feasible_point)
+    hs = HalfspaceIntersection(Crystal.trPlanes, feasible_point,qhull_options="QJ")
     vertices = hs.intersections + cog
     hull = ConvexHull(vertices)
     faces = hull.simplices
@@ -1643,3 +1764,16 @@ def createDir(path2,forceDel=False):
     if (os.path.isdir(path2) and forceDel) or not os.path.isdir(path2):
         print(f"{fg.BLUE}{path2} is created{fg.OFF}")
         os.mkdir(path2)
+
+
+# New : for cylinder
+
+def isnt_inside_cylinder(position, radius, radius_squared, half_height): 
+    if abs(position[0])>radius or  abs(position[1])>radius or abs(position[2]) > half_height : #coord défini dans writexyz
+        return True
+    if position[0]**2+ position[1]**2 > radius_squared :
+        return True
+    return False
+
+
+
