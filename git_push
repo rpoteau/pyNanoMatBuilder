@@ -9,7 +9,7 @@ else
 fi
 echo "---------------------------------------------------------------"
 echo "First finding if there are large files in [sub]folders"
-find . -size +90M -printf '%P\n' > .LargeFiles
+find . -size +49M -printf '%P\n' > .LargeFiles
 cat .gitignore_base .LargeFiles > .gitignore
 echo "Content of the .gitignore file"
 cat .gitignore
