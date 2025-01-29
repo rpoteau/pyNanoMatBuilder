@@ -988,7 +988,9 @@ def DrawJmol(mol,prefix,scriptJ=""):
     print(jmolcmd)
     os.system(jmolcmd)
 
-def writexyz(filename,atoms):
+def writexyz(filename: str,
+             atoms: Atoms,
+             wa: str='w'):
     '''
     simple xyz writing, with atomic symbols/x/y/z and no other information sometimes misunderstood by some utilities, such as DebyeCalculator
     '''
@@ -1007,7 +1009,7 @@ def writexyz(filename,atoms):
     line2write+='%s\n'%str(composition)
     for i in range(natoms):
         line2write+='%s'%str(element_array[i])+'\t %.8f'%float(coord[i,0])+'\t %.8f'%float(coord[i,1])+'\t %.8f'%float(coord[i,2])+'\n'
-    with open(filename,'w') as file:
+    with open(filename,wa) as file:
         file.write(line2write)
 
 # NEW WRITE XYZ
@@ -1071,6 +1073,7 @@ def writexyz_generalized(path,instance_class,number):
 
 def reduceHullFacets(Crystal: Atoms,
                      noOutput: bool=False,
+                     tolAngle: float=2.0,
                     ):
     '''
     previous hull.simplices mut have been saved as Crystal.trPlanes
@@ -1087,7 +1090,10 @@ def reduceHullFacets(Crystal: Atoms,
     # print("Crystal.trPlanes in reduceHullFacets")
     # print(Crystal.trPlanes)
     # print('------------------------------------------')
-    hs = HalfspaceIntersection(Crystal.trPlanes, feasible_point,qhull_options="QJ")
+    #hs = HalfspaceIntersection(Crystal.trPlanes, feasible_point,qhull_options="QJ")
+    hs = HalfspaceIntersection(Crystal.trPlanes, feasible_point)
+    # print("hs.intersections")
+    # print(hs.intersections)
     vertices = hs.intersections + cog
     hull = ConvexHull(vertices)
     faces = hull.simplices
@@ -1118,7 +1124,7 @@ def reduceHullFacets(Crystal: Atoms,
         Vs = np.array(list(V))
         return Vs[ind]
     
-    def isCoplanar(p1,p2,tolAngle=0.1):
+    def isCoplanar(p1,p2,tolAngle=tolAngle):
         angle = AngleBetweenVV(p1[0:3],p2[0:3])
         return (abs(angle) < tolAngle or abs(angle-180) <= tolAngle)
         
@@ -1192,6 +1198,7 @@ def defCrystalShapeForJMol(Crystal: Atoms,
         cmd = cmde + cmd
     else: #sphere, ellipsoid
         cmd = ""
+    if not noOutput: print("Jmol command: ",cmd)
     return cmd
 
 def saveCN4JMol(Crystal: Atoms,
@@ -1689,7 +1696,13 @@ def coreSurface(Crystal: Atoms,
     if not noOutput: print(f"  - {len(hull.vertices)} vertices")
     if not noOutput: print(f"  - {len(hull.simplices)} simplices")
     Crystal.trPlanes = hull.equations
-    _ = defCrystalShapeForJMol(Crystal,noOutput=noOutput)
+    # print("Crystal.trplanes inside coreSurface")
+    # print(Crystal.trPlanes)
+    # print(np.unique(Crystal.trPlanes, axis=0, return_counts=True))
+    # print(Crystal.trPlanes.shape)
+    #_ = defCrystalShapeForJMol(Crystal,noOutput=noOutput)
+    # print("Crystal.trplanes inside coreSurface after defCrystalShapeForJMol")
+    # print(Crystal.trPlanes)
     if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
     if not noOutput: chrono = timer(); chrono.chrono_start()
     surfaceAtoms = returnPointsThatLieInPlanes(Crystal.trPlanes,coords,noOutput=noOutput,threshold=threshold)

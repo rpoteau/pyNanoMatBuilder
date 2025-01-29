@@ -212,9 +212,6 @@ class regfccOh:
         if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         self.NP = aseObject
         self.cog = self.NP.get_center_of_mass()
-        if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
-
-        if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)
 
     def prop(self):
         vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
@@ -264,6 +261,8 @@ class regfccOh:
             pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
         self.NPcs = self.NP.copy()
         self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
+        if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
+        if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)
 
 ###########################################################################################################
 class regIco:
@@ -453,8 +452,6 @@ class regIco:
         if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         self.NP=aseObject
         self.cog = self.NP.get_center_of_mass()
-        print("self.trPlane")
-        print(self.trPlanes)
     
     def prop(self): #properties
         vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
@@ -692,8 +689,6 @@ class regfccTd:
         if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         self.NP = aseObject
         self.cog = self.NP.get_center_of_mass()
-        if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
-        if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)
     
     def prop(self):
         vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
@@ -743,6 +738,8 @@ class regfccTd:
             pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
         self.NPcs = self.NP.copy()
         self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
+        if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
+        if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)
 
 ###########################################################################################################
 class regDD:
@@ -952,8 +949,6 @@ class regDD:
         if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         self.NP = aseObject
         self.cog = self.NP.get_center_of_mass()
-        if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
-        if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)
     
     def prop(self):
         vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
@@ -996,6 +991,8 @@ class regDD:
             pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
         self.NPcs = self.NP.copy()
         self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
+        if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
+        if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)
         
 
 ###########################################################################################################
@@ -1150,8 +1147,6 @@ class cube:
         sc.set_positions(coordsNP)
         self.NP = sc
         self.cog = self.NP.get_center_of_mass()
-        if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
-        if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)
         
     def prop(self):
         vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
@@ -1194,6 +1189,8 @@ class cube:
             pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
         self.NPcs = self.NP.copy()
         self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
+        if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
+        if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)
 
 # NEW
 
@@ -1304,7 +1301,7 @@ class hollow_shapes:
         # self.cog = pyNMBu.centerOfGravity(sc.get_positions())
         # if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         self.cog = self.NP.get_center_of_mass()
-        # #if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes) ?????
-        # if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput) 
+        if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
+        if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)
         
             

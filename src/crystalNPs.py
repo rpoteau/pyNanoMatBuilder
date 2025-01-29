@@ -80,7 +80,7 @@ class Crystal:
                 self.WulffShape = None
 
         if self.userDefCif is not None: self.loadExternalCif()
-        #NEW CYLINDER
+        
         # if self.shape in data.pyNMBimg.IMGdf.index:
         #     self.imageFile = pyNMBu.imageNameWithPathway(data.pyNMBimg.IMGdf["png file"].loc[self.shape])
         # else:
@@ -437,7 +437,7 @@ class Crystal:
         nAtoms = self.NP.get_global_number_of_atoms()
         # self.NP.center()
         self.trPlanes = trPlanes
-        print(' self.trPlanes', self.trPlanes)
+        #print(' self.trPlanes', self.trPlanes)
         if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
 
     def makeNP(self,noOutput):
@@ -504,6 +504,7 @@ class Crystal:
             self.eSurfacesWulff = data.WulffShapes.WSdf["relative energies"].loc[self.WulffShape]
             self.surfacesWulff = data.WulffShapes.WSdf["planes"].loc[self.WulffShape]
             self.symWulff = data.WulffShapes.WSdf["apply symmetry"].loc[self.WulffShape]
+            self.MOIshape=data.WulffShapes.WSdf['MOI for size'].loc[self.WulffShape]
             if not noOutput: 
                 print(f"{hl.BOLD}Selected shape{hl.OFF}")
                 display(data.WulffShapes.WSdf.loc[self.WulffShape])
@@ -525,104 +526,46 @@ class Crystal:
     def prop(self,noOutput):
         
         #pyNMBu.plotImageInPropFunction(self.imageFile)
-        vID.centertxt("Unit cell properties",bgc='#007a7a',size='14',weight='bold')
-        pyNMBu.print_ase_unitcell(self)
-        vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
-        print(self)
-        if "Wulff" in self.shape :
-            distances = np.linalg.norm(self.NP.positions- self.cog, axis=1)
-            self.radiusCircumscribedSphere= np.max(distances)
-            
+        if not noOutput : #added
+            vID.centertxt("Unit cell properties",bgc='#007a7a',size='14',weight='bold')
+            pyNMBu.print_ase_unitcell(self)
+            vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
+            print(self)
+                
+ 
 
-            
-            self.radiusInscribedSphere= np.min(distances)
-            self.dim[0]= self.radiusCircumscribedSphere      # main dimensions for files 
-            self.dim[1]= self.dim[0]
-            self.dim[2]= self.dim[0]
-            if not noOutput : 
-                print(f"diameters of the circumscribed sphere: {self.radiusCircumscribedSphere * 2* 0.1:.2f}  {self.radiusCircumscribedSphere* 2 * 0.1:.2f}  {self.radiusCircumscribedSphere* 2* 0.1:.2f} nm")
-                print(f"diameters of the inscribed sphere: { self.radiusInscribedSphere* 2* 0.1:.2f}  {self.radiusInscribedSphere* 2 * 0.1:.2f}  {self.radiusInscribedSphere * 2* 0.1:.2f} nm")
-               
-
+        
     def propPostMake(self,skipSymmetryAnalyzis, thresholdCoreSurface, noOutput): #accès aux faces voisines etc
         
         self.moi=pyNMBu.moi(self.NP, noOutput)
         self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))# MOI mass normalized (m of each atoms=1)
-
-        # find the size using the MOI mass normalized
-        if self.shape == 'ellipsoid': # https://scienceworld.wolfram.com/physics/MomentofInertiaEllipsoid.html
-            self.dim[0] = 2*np.sqrt((5 *self.moisize[1] + 5 * self.moisize[2] - 5 * self.moisize[0]) / 2)
-            self.dim[1] = 2*np.sqrt((5 * self.moisize[0] + 5 * self.moisize[2] - 5 * self.moisize[1]) / 2)
-            self.dim[2] = 2*np.sqrt((5 * self.moisize[0] + 5 * self.moisize[1] - 5 * self.moisize[2]) / 2)
-            if not noOutput:
-                print(f"Diameters of the ellipsoid  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
-        if self.shape == 'sphere': #wikipedia
-            self.dim[0] = 2 * np.sqrt(5 / 2 * self.moisize[0])  # même formule pour les 3 directions avec Ix, Iy, Iz égaux
-            self.dim[1] = 2 * np.sqrt(5 / 2 * self.moisize[0])
-            self.dim[2] = 2 * np.sqrt(5 / 2 * self.moisize[0])
-            if not noOutput:
-                print(f"Diameter of the sphere = {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
-        if self.shape == 'cylinder': #wikipedia
-            self.dim[0] = np.sqrt(12 * self.moisize[1] - 6 * self.moisize[0]) #longest distance
-            self.dim[1] = 2 * np.sqrt(2 * self.moisize[0]) 
-            self.dim[2] = 2 * np.sqrt(2 * self.moisize[0])
-            if not noOutput:
-                print(f"Size of the cylinder= {self.dim[0] * 0.1:.2f} {self.dim[1] * 0.1:.2f} {self.dim[2] * 0.1:.2f} nm")
-                
-        if self.shape == 'parallepiped': #wikipedia
-            self.dim[0] = np.sqrt(6 *(self.moisize[1] + self.moisize[2] - self.moisize[0])) #longest distance
-            self.dim[1] = np.sqrt(6 * (self.moisize[0] + self.moisize[2] - self.moisize[1])) # 2nd longest distance
-            self.dim[2] = np.sqrt(6 * (self.moisize[0] + self.moisize[1] - self.moisize[2])) # 3rd longest distance
-            if not noOutput:
-                print(f"Size of the parallepiped=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
-
-        if self.shape == 'wire': #wikipedia
-            if self.nRotWire==4 :
-                self.dim[0]=np.sqrt(12*self.moisize[1]-6*self.moisize[0]) #longest distance
-                self.dim[1]=np.sqrt(6*self.moisize[0])
-                self.dim[2]=np.sqrt(6*self.moisize[0])
-                if not noOutput:
-                    print(f"Size of the wire=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
-            if self.nRotWire==6 :
-                self.dim[0]=np.sqrt(12*self.moisize[1]-6*self.moisize[0]) #longest distance
-                self.dim[1]=2*np.sqrt(2*self.moisize[0])
-                self.dim[2]=2*np.sqrt(2*self.moisize[0])
-                if not noOutput:
-                    print(f"Size of the wire=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
-
-        #NEW WULFF PREDEFINED
-        # if "Wulff" and "cube" in self.shape :
-        #     self.dim[0] = np.sqrt(6*self.moisize[0])
-        #     self.dim[1] = np.sqrt(6*self.moisize[1])
-        #     self.dim[2] = np.sqrt(6*self.moisize[2])
-        #     if not noOutput:
-        #         print(f"Length of the cube  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
-
-
-        # if "Wulff" and "Oh" in self.shape :
-        #     a=np.sqrt(10*self.moisize[0]) #arete https://www.vcalc.com/collection/?uuid=1a8912a2-f145-11e9-8682-bc764e2038f2
-        #     self.dim[0] =a*math.sqrt(2) #diameter of the circumscribed sphere
-        #     self.dim[1] = self.dim[0]
-        #     self.dim[2] = self.dim[0]
-        #     #https://fr.wikipedia.org/wiki/Dod%C3%A9ca%C3%A8dre_r%C3%A9gulier#:~:text=Les%2020%20%C3%97%206%20%3D%2012,sur%20les%20faces%20du%20poly%C3%A8dre.
-        #     if not noOutput:
-        #         print(f"Size of the octahedron (diameter of the circumscribed sphere) :  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
-        #         print(f"Edge  of the icosahedron:  { a* 0.1:.2f}   nm")
-
-
-        # if "Wulff" and "hcpwire" in self.shape :
-        #     self.dim[0]=np.sqrt(12*self.moisize[1]-6*self.moisize[0]) #longest distance
-        #     self.dim[1]=2*np.sqrt(2*self.moisize[0])
-        #     self.dim[2]=2*np.sqrt(2*self.moisize[0])
-        #     if not noOutput:
-               # print(f"Size of the wire=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm") 
+        if not "Wulff" in self.shape :
+            self.MOIshape=self.shape     
+        pyNMBu.MOI_shapes(self, noOutput)
         
 
         if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
-        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
-            pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
-        self.NPcs = self.NP.copy()
-        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
+        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms = pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
+        # print('self.equations',self.equations)
        
         
+        self.NPcs = self.NP.copy()
+        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
         
+        
+        #inscribed sphere and circumscribed
+        distances = np.linalg.norm(self.NP.positions- self.cog, axis=1)
+        self.radiusCircumscribedSphere= np.max(distances)
+        distances = [
+        abs(d) / np.sqrt(a**2 + b**2 + c**2)  # Formule de la distance point-plan
+        for a, b, c, d in self.equations
+        ]
+        self.radiusInscribedSphere= np.min(distances)
+        if not noOutput: vID.centertxt("Diameters of the inscribed and circumscribed sphere using the Hull equations",bgc='#007a7a',size='14',weight='bold')
+        if not noOutput : 
+            print(f"diameters of the circumscribed sphere: {self.radiusCircumscribedSphere * 2* 0.1:.2f}  {self.radiusCircumscribedSphere* 2 * 0.1:.2f}  {self.radiusCircumscribedSphere* 2* 0.1:.2f} nm")
+            print(f"diameters of the inscribed sphere: { self.radiusInscribedSphere* 2* 0.1:.2f}  {self.radiusInscribedSphere* 2 * 0.1:.2f}  {self.radiusInscribedSphere * 2* 0.1:.2f} nm")
+
+
+            # print('trplanes',self.trPlanes)
+            # print('self.equations',self.equations)

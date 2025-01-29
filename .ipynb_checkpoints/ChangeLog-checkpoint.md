@@ -1,10 +1,14 @@
-0# Development of a pre-release version -> date-based versioning
-## 20241220
+# Development of a pre-release version -> date-based versioning
 
+## 20250111
+- `platonicNPs.py`: the call to `pyNMBu.defCrystalShapeForJMol` is now made in `propPostMake()` (moved from `__init__`, it was obviously wrong)
+- `utils.py`: in the function `reduceHullFacets()`, `HalfspaceIntersection()` <as called with the option `qhull_options="QJ"` (joggles each input coordinate), which was not working in most cases
+
+## 20241220
 ### added 
 - in every class of NPS (for every shapes except hollow shapes): MOI mass normalized (m of each atoms=1) : self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))`
--  `crystalNPs.py` :  main dimensions calculated from MOI normalized (in an array [d1,d2,d3] with d1>d2>d3) for : sphere, ellipsoid, cylinder, wire (for nRot=4 and nRot=6), parallepiped 
--  `platonicNPs.py` :  main dimensions calculated from MOI normalized for : regfccOh regIco  regfccTd regDD cube (not working with hollow cube)
+-  `crystalNPs.py`:  main dimensions calculated from MOI normalized (in an array [d1,d2,d3] with d1>d2>d3) for : sphere, ellipsoid, cylinder, wire (for nRot=4 and nRot=6), parallepiped 
+-  `platonicNPs.py`:  main dimensions calculated from MOI normalized for : regfccOh regIco  regfccTd regDD cube (not working with hollow cube)
 ### changed
 -  `utils.py`:
       - `writexyz_generalized()`: updated function that writes xyz files (with dictionnaries and good file names with numerotation), inputs : path and instance of a class. Example of use in 2.2.6  `pyNMB-examples-sanspbcolonnes` with the use of loops

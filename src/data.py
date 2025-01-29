@@ -103,6 +103,22 @@ class WulffShapes:
                  'hcpsph2': [2.76,3.07,3.15,3.51,3.39,3.41],
                 'hcpwire': [1.0],
                  },
+        
+           'MOI for size': {
+                       'cube': 'cube',
+                     'trcube': 'cube',
+                       'cubo': 'cube',
+                         'Oh': 'Oh',
+                       'trOh': 'sphere',
+                     'dicoTd': 'dicoTd',
+                     'bccrDD': 'bccrDD',
+                   'trbccrDD': 'bccrDD',
+                  'ttrbccrDD': 'bccrDD',
+                     'rhcubo': 'sphere',
+                     'hcpsph1': 'hcpsph',
+                     'hcpsph2': 'hcpsph',
+                    'hcpwire': 'wire',
+                 },
                 'comment': {
                    'cube': 'cutting length from the cube''s vertex c = 0',
                  'trcube': 'r3 = sqr((17+12sqr(2))/3)/2; r8 = (1+sqr(2))/3',
