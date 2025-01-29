@@ -3,7 +3,7 @@ from visualID import  fg, hl, bg
 import numpy as np
 #ASE import
 from ase.atoms import Atoms
-#from ase.io import write
+from ase.io import write
 from ase.geometry import cellpar_to_cell
 from ase.spacegroup import get_spacegroup
 import os
@@ -11,7 +11,10 @@ import os
 from scipy import linalg
 
 from pyNanoMatBuilder import data
-
+import pathlib
+import re
+from ase.io import read
+from ase.spacegroup import get_spacegroup
 
 #######################################################################
 ######################################## time
@@ -1009,16 +1012,16 @@ def writexyz(filename: str,
     line2write+='%s\n'%str(composition)
     for i in range(natoms):
         line2write+='%s'%str(element_array[i])+'\t %.8f'%float(coord[i,0])+'\t %.8f'%float(coord[i,1])+'\t %.8f'%float(coord[i,2])+'\n'
-    with open(filename,wa) as file:
+    with open(filename,'w') as file:
         file.write(line2write)
 
 # NEW WRITE XYZ
-def writexyz_generalized(path,instance_class,number):
+def writexyz_generalized_platonic(path,instance_class,number):
     '''
     simple xyz writing, with atomic symbols/x/y/z and no other information sometimes misunderstood by some utilities, such as DebyeCalculator
     input : 
             - path : path in which the xyz files are created
-            - instance_class: instance of the class used
+            - instance_class: instance of the platonic class 
 
     Note : Dimensions are in Å, MOI are in amu.Å², normalized MOI in Å²
     '''
@@ -1054,14 +1057,13 @@ def writexyz_generalized(path,instance_class,number):
         coord=NP.get_positions()
         natoms=len(element_array) 
         #write the filename
-        filename= f"{element}_{crystalStructure}_{'{:07d}'.format(number)}_{'{:07d}'.format(number2)}.xyz"
+        filename= f"{element}_{crystalStructure}_{shape}_{'{:07d}'.format(number)}_{'{:07d}'.format(number2)}.xyz"
         full_path = os.path.join(path, filename)
         print('full_path:',full_path)
         line2write='%d \n'%natoms
         dictionnary=dict([('composition', composition), ('crystal structure',crystalStructure), ('shape', shape ), ('MOI', MOI ),('MOInormalized', MOI_normalized),('main dimensions', dim_main), ('number of atoms', number_atoms)])
         line2write+='%s \n'%dictionnary
-        #print('line2write=',line2write)
-        
+
         # writing of the coordinates
         for i in range(natoms):
             line2write+='%s'%str(element_array[i])+'\t %.8f'%float(coord[i,0])+'\t %.8f'%float(coord[i,1])+'\t %.8f'%float(coord[i,2])+'\n'
@@ -1069,6 +1071,85 @@ def writexyz_generalized(path,instance_class,number):
             file.write(line2write)
     else :
         print('Objet is not a class instance')
+
+
+def writexyz_generalized_crystals(self,path,instance_class_crystals, number):
+    '''
+    simple xyz writing, with atomic symbols/x/y/z and no other information sometimes misunderstood by some utilities, such as DebyeCalculator
+    input : 
+            - path : path in which the xyz files are created
+            - instance_class_crystals: instance of the crystal class
+
+    Note : Dimensions are in Å, MOI are in amu.Å², normalized MOI in Å²
+    '''
+    # verify if the path does exist
+    if not os.path.isdir(path):
+        raise FileNotFoundError(f"Directory '{path}'does not exist.")
+    
+    # extract attributes from the class to write the dictionnary and the name of the file
+    if isinstance(instance_class_crystals,object):
+        element=self.cif_name.split()[0]
+        crystalStructure=self.crystal_type
+        print('instance_class_crystals.crystal',instance_class_crystals.crystal)
+        number2=0
+        metadata = instance_class_crystals.__dict__.copy() # Get all attributes
+        shape= instance_class_crystals.shape
+        #type of shapes : wulff or not ?
+        if "Wulff" in shape: 
+            wulff= True
+        else :
+            wulff= False
+        NP=instance_class_crystals.NP
+        element_array=NP.get_chemical_symbols()
+        MOI=instance_class_crystals.moi #amu.angs²
+        MOI_normalized=instance_class_crystals.moisize  #angs²
+        dim_main=instance_class_crystals.dim
+        #dim_secondary=...
+        number_atoms=instance_class_crystals.nAtoms
+        radius1=instance_class_crystals.radiusCircumscribedSphere #angs
+        radius2=instance_class_crystals.radiusInscribedSphere #angs
+        composition={}
+        
+        for elements in element_array:
+            if elements in composition:
+                composition[elements]+=1
+            else:
+                composition[elements]=1
+
+        coord=NP.get_positions()
+        natoms=len(element_array) 
+    
+        
+        # write the xyz file and cif file
+        filename_xyz= f"{element}_{crystalStructure}_{shape.split()[1]}_{'{:07d}'.format(number)}_{'{:07d}'.format(number2)}.xyz"
+        full_path = os.path.join(path, filename_xyz)
+        print('xyz file created:',full_path)
+        line2write='%d \n'%natoms
+        dictionnary=dict([('composition', composition), ('crystal structure',crystalStructure), ('shape', shape ), ('MOI', MOI ),('MOInormalized', MOI_normalized),('inscribed sphere radius', radius2), ('circumscribed sphere radius', radius1),('number of atoms', number_atoms),  ("wulff", wulff) ])
+        line2write+='%s \n'%dictionnary
+        # writing of the coordinates
+        for i in range(natoms):
+            line2write+='%s'%str(element_array[i])+'\t %.8f'%float(coord[i,0])+'\t %.8f'%float(coord[i,1])+'\t %.8f'%float(coord[i,2])+'\n'
+        with open(full_path,'w') as file:
+            file.write(line2write)
+        
+        # write the cif files using the function write from ASE.io
+        filename_cif = filename_xyz.replace('.xyz', '.cif')
+        new_path = os.path.join(path, filename_cif)
+        print('cif file created:',new_path)
+        write(new_path, instance_class_crystals.NP)     
+  
+    else :
+        print('Objet is not a class instance')
+
+       
+        
+
+
+
+
+
+
 
 
 def reduceHullFacets(Crystal: Atoms,
@@ -1790,3 +1871,92 @@ def isnt_inside_cylinder(position, radius, radius_squared, half_height):
 
 
 
+# NEW : MOI size based on shapes 
+
+
+def MOI_shapes(self, noOutput) :
+    import math
+
+    if self.MOIshape == 'ellipsoid': # https://scienceworld.wolfram.com/physics/MomentofInertiaEllipsoid.html
+        self.dim[0] = 2*np.sqrt((5 *self.moisize[1] + 5 * self.moisize[2] - 5 * self.moisize[0]) / 2)
+        self.dim[1] = 2*np.sqrt((5 * self.moisize[0] + 5 * self.moisize[2] - 5 * self.moisize[1]) / 2)
+        self.dim[2] = 2*np.sqrt((5 * self.moisize[0] + 5 * self.moisize[1] - 5 * self.moisize[2]) / 2)
+        if not noOutput:
+            print(f"Diameters of the ellipsoid (calculated from MOI) { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
+    if self.MOIshape == 'sphere': #wikipedia
+        self.dim[0] = 2 * np.sqrt(5 / 2 * self.moisize[0])  # même formule pour les 3 directions avec Ix, Iy, Iz égaux
+        self.dim[1] = 2 * np.sqrt(5 / 2 * self.moisize[0])
+        self.dim[2] = 2 * np.sqrt(5 / 2 * self.moisize[0])
+        if not noOutput:
+            print(f"Diameter of the sphere (calculated from MOI) = {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
+    if self.MOIshape == 'cylinder': #wikipedia
+        self.dim[0] = np.sqrt(12 * self.moisize[1] - 6 * self.moisize[0]) #longest distance
+        self.dim[1] = 2 * np.sqrt(2 * self.moisize[0]) 
+        self.dim[2] = 2 * np.sqrt(2 * self.moisize[0])
+        if not noOutput:
+            print(f"Size of the cylinder (calculated from MOI)= {self.dim[0] * 0.1:.2f} {self.dim[1] * 0.1:.2f} {self.dim[2] * 0.1:.2f} nm")
+            
+    if self.MOIshape == 'parallepiped': #wikipedia
+        self.dim[0] = np.sqrt(6 *(self.moisize[1] + self.moisize[2] - self.moisize[0])) #longest distance
+        self.dim[1] = np.sqrt(6 * (self.moisize[0] + self.moisize[2] - self.moisize[1])) # 2nd longest distance
+        self.dim[2] = np.sqrt(6 * (self.moisize[0] + self.moisize[1] - self.moisize[2])) # 3rd longest distance
+        if not noOutput:
+            print(f"Size of the parallepiped (calculated from MOI)=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
+
+    if  self.MOIshape == "wire" :  #wikipedia usual wire of hcp wire of predefinened wulff forms
+        if self.nRotWire==4 :
+            self.dim[0]=np.sqrt(12*self.moisize[1]-6*self.moisize[0]) #longest distance
+            self.dim[1]=np.sqrt(6*self.moisize[0])
+            self.dim[2]=np.sqrt(6*self.moisize[0])
+            if not noOutput:
+                print(f"Size of the wire (calculated from MOI)=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
+        if self.nRotWire==6 or "hcpwire" in self.shape:
+            self.dim[0]=np.sqrt(12*self.moisize[1]-6*self.moisize[0]) #longest distance
+            self.dim[1]=2*np.sqrt(2*self.moisize[0])
+            self.dim[2]=2*np.sqrt(2*self.moisize[0])
+            if not noOutput:
+                print(f"Size of the wire (calculated from MOI)=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
+
+    # NEW WULFF PREDEFINED
+    if self.MOIshape == 'cube':  #
+        self.dim[0] = np.sqrt(6*self.moisize[0])
+        self.dim[1] = np.sqrt(6*self.moisize[1])  
+        self.dim[2] = np.sqrt(6*self.moisize[2])
+        if not noOutput:
+            print(f"Length of the cube (calculated from MOI)=  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
+
+
+    if self.MOIshape == 'Oh':
+        a=np.sqrt(10*self.moisize[0]) #arete https://www.vcalc.com/collection/?uuid=1a8912a2-f145-11e9-8682-bc764e2038f2
+        self.dim[0] =2*a*math.sqrt(2)/2 #diameter of the circumscribed sphere https://en.wikipedia.org/wiki/Octahedron
+        self.dim[1] = self.dim[0]
+        self.dim[2] = self.dim[0]
+        if not noOutput:
+            print(f"Size of the octahedron (diameter of the circumscribed sphere) (calculated from MOI) :  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
+            # print(f"Edge  of the octahedron:  { a* 0.1:.2f}   nm")
+
+
+    if self.MOIshape == "hcpsph" :  #https://mathworld.wolfram.com/Spheroid.html
+        self.dim[0]= 2 *np.sqrt(5/2*self.moisize[2])#longest distance
+        self.dim[1]=2 *np.sqrt(5/2*self.moisize[2])#longest distance
+        #self.dim[2]=2 *np.sqrt(5*self.moisize[0]-5/2*self.moisize[2]) not working well
+
+        #calculate c using basic formula
+        positions=self.NP.get_positions()
+        positions=self.NP.get_positions()
+        x_min, y_min, z_min = positions.min(axis=0) #columns
+        x_max, y_max, z_max = positions.max(axis=0) 
+        self.dim[2]=z_max-z_min
+        if not noOutput:
+           print(f"Size of the spheroid (calculated from MOI)=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm") 
+        
+
+    if self.MOIshape == "bccrDD": 
+        a=np.sqrt((150*self.moisize[0])/(39*((1+math.sqrt(5))/2)+28)) #arete https://www.vcalc.com/collection/?uuid=1a8912a2-f145-11e9-8682-bc764e2038f2
+        self.dim[0] = 2*a*math.cos(36*math.pi/180)*math.sqrt(3) 
+        self.dim[1] = self.dim[0]
+        self.dim[2] = self.dim[0]
+        #https://fr.wikipedia.org/wiki/Dod%C3%A9ca%C3%A8dre_r%C3%A9gulier#:~:text=Les%2020%20%C3%97%206%20%3D%2012,sur%20les%20faces%20du%20poly%C3%A8dre.
+        if not noOutput:
+            print(f"Size of the dodecahedron (diameter of the circumscribed sphere) (calculated from MOI) :  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
+            print(f"Edge  of the dodecahedron:  { a* 0.1:.2f}   nm")
