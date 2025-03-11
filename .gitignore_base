@@ -20,3 +20,4 @@ rdfs/**
 Thumbs.db
 */Thumbs.db
 *.orig*
+*.swp
