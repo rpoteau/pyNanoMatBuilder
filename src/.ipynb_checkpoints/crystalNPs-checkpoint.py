@@ -10,18 +10,45 @@ from ase import io
 from ase.visualize import view
 from ase.build.supercells import make_supercell
 from ase.geometry import cellpar_to_cell
-
 from visualID import  fg, hl, bg
 import visualID as vID
 
 class Crystal:
+    """
+    A class for generating XYZ and CIF files of crystalline nanoparticles (NPs) 
+    of various shapes and sizes, based on user-defined compounds (either by 
+    name, e.g., "Fe bcc", or from a CIF file). The supported nanoparticle 
+    shapes include:
+
+    - Spheres
+    - Ellipsoids
+    - Parallelepipeds
+    - Wires with different cross-sections
+    - Wulff constructions: cube, octahedron, cuboctahedron, dodecahedron, 
+      spheroids, and their truncated versions
+
+    Key Features:
+    - Allows to choose the NP size and shape.
+    - Supports Wulff construction with customizable surface energies.
+    - Enables the creation of wires with defined orientations and cross-sections.
+    - Can analyze the structure in detail, including symmetry and properties.
+    - Offers options for core/surface differentiation based on a threshold.
+    - Generates outputs in XYZ and CIF formats for visualization and simulations.
+    - Provides compatibility with jMol for 3D visualization.
     
+    Additional Notes:
+    - The symmetry analysis can be skipped to speed up computations.
+    - Periodic boundary conditions (PBC) can be enabled if needed.
+    - Customizable precision thresholds for structural analysis.
+    """
+
     def __init__(self,
                  crystal: str='Au',
                  scaleDmin2: float=None,
                  setSymbols2: np.ndarray=None,
                  userDefCif: str=None,
                  shape: str='sphere',
+                 MOIshape=None,
                  size: float=[2,2,2],
                  directionsPPD: np.ndarray=np.array([[1,0,0],[0,1,0],[0,0,1]]),
                  buildPPD: str='xyz',
@@ -46,9 +73,49 @@ class Crystal:
                  noOutput: bool = False,
                  calcPropOnly: bool = False,
                 ):
+        """
+        Initialize the class with all necessary parameters.
+
+        Args:
+            userDefCif (str, optional): Path to a user-defined CIF file.
+            shape (str): Shape of the nanoparticle (NP). Options:
+                - 'sphere'
+                - 'ellipsoid'
+                - 'parallelepiped'
+                - 'wire'
+                - 'Wulff: ...' (various Wulff constructions)
+            size (list): List defining the NP size. The required number of elements depends on the shape:
+                - Sphere: [diameter]
+                - Ellipsoid / Parallelepiped: [size_x, size_y, size_z]
+                - Wire: [cross-section diameter, length]
+            directionsPPD (np.ndarray): Array defining the three directions of the parallelepiped.
+            buildPPD (str): Specifies the coordinate system used to build the NP:
+                - "xyz" for Cartesian coordinates.
+                - "abc" for the lattice parameter system.
+            directionWire (list): Growth direction of the wire (e.g., [0,0,1]).
+            directionCylinder (list): Growth direction of the cylinder (e.g., [0,0,1]).
+            refPlaneWire (list): Miller indices of the reference plane, which is rotated around "directionWire" to generate the wire.
+            nRotWire (int): Number of sides in the wire's cross-section (i.e., number of rotations of refPlaneWire around "directionWire").
+            surfacesWulff (np.ndarray, optional): Array of Miller indices defining the surfaces used in Wulff constructions (e.g., [[1,1,1], [0,0,1]]).
+            eSurfacesWulff (np.ndarray, optional): Array of surface energies corresponding to the surfaces in Wulff constructions.
+            sizesWulff (np.ndarray): Array defining the size of the Wulff construction (e.g., distance between truncated planes, equivalent to NP diameter).
+            jmolCrystalShape (bool): If True, generates a JMOL script for visualization.
+            aseSymPrec (float): Precision threshold for ASE symmetry calculations (default: 1e-4).
+            pbc (bool): If True, applies periodic boundary conditions (PBC).
+            threshold (float): Precision threshold for plane truncation (distance threshold for keeping atoms).
+            dbFolder (str): Path to the database folder containing CIF files and other information (e.g., for Wulff constructions).
+            postAnalyzis (bool): If True, prints additional NP information (e.g., cell parameters, moments of inertia, inscribed/circumscribed sphere diameters, etc.).
+            aseView (bool): If True, enables visualization of the NP using ASE.
+            thresholdCoreSurface (float): Precision threshold for core/surface differentiation (distance threshold for retaining atoms).
+            skipSymmetryAnalyzis (bool): If False, performs an atomic structure analysis using pymatgen.
+            noOutput (bool): If False, prints details about the NP structure.
+            calcPropOnly (bool): If False, generates the atomic structure of the NP.
+     
+        """
         self.dbFolder = dbFolder #database folder that contains cif files
         self.crystal = crystal # see list with the pyNMBu.ciflist() command
         self.shape = shape.strip(' ') # 'sphere', 'ellipsoid', 'cube', 'wire', 'Wulff', 'cylinder'
+        self.MOIshape=MOIshape
         self.size = size
         self.directionsPPD = directionsPPD
         self.buildPPD = buildPPD
@@ -80,7 +147,7 @@ class Crystal:
                 self.WulffShape = None
 
         if self.userDefCif is not None: self.loadExternalCif()
-        #NEW CYLINDER
+        
         # if self.shape in data.pyNMBimg.IMGdf.index:
         #     self.imageFile = pyNMBu.imageNameWithPathway(data.pyNMBimg.IMGdf["png file"].loc[self.shape])
         # else:
@@ -108,11 +175,24 @@ class Crystal:
         return(f"Crystal = {self.crystal} {self.shape}")
 
     def loadExternalCif(self):
-        self.cif = io.read(self.userDefCif)
+        """
+        Load an external CIF file and extract the crystal name.
+        This method checks if a CIF file is already loaded to avoid redundant loading.
+        The method extracts the crystal name from the CIF file using predefined CIF tags.
+        Raises:
+            SystemExit: If the CIF file is not found.
+
+
+        """
+        if hasattr(self, 'cif'):  
+            return  #Check if `self.cif` already exists to prevent reloading.
+        else :
+            self.cif = io.read(self.userDefCif)
         path2extCif = pathlib.Path(self.userDefCif)
         if not path2extCif.exists():
             sys.exit(f"file {self.userDefCif} not found. Check the file name or its location")
         cifFile =  open(self.userDefCif, 'r')
+        #Search for specific CIF tags that contain the crystal name:
         name1 = "_chemical_name_systematic"
         name2 = "_chemical_formula_sum"
         name3 = "_chemical_formula_moiety"
@@ -142,50 +222,23 @@ class Crystal:
             self.crystal = crystal2
         else: self.crystal = "unknown"
 
-    # def real_size(self):
-    #     positions=self.NP.get_positions()
-    #     x_min, y_min, z_min = positions.min(axis=0) #columns
-    #     x_max, y_max, z_max = positions.max(axis=0)
-    #     xlength=x_max-x_min
-    #     ylength=y_max-y_min
-    #     zlength=z_max-z_min
-    #     return xlength,ylength,zlength
-    
-    # #NEW
-    # def radiusInscribedSphere(self):
-    #     if self.shape == 'sphere' :
-    #         return self.size[0]
-    #     if self.shape == 'cylinder' :
-    #         return self.size[0]
-    #     if self.shape == 'ellipsoid' :
-    #         return min(self.size)
-                
 
-    #     #not done yet   
-    #     if self.shape == 'parallepiped' :
-            
-    #     if self.shape == 'wire' :
-    #         return 
-
-    # def radiusCircumscribedSphere(self):
-    #     if self.shape == 'sphere' :
-    #         return self.size[0]
-    #     if self.shape == 'cylinder' :
-    #         return np.sqrt((self.size[0]/2)**2*+(self.size[1]/2)**2)
-    #     if self.shape == 'ellipsoid' :
-    #         return max(self.size)
-    #     #not done yet
-    #     if self.shape == 'parallepiped' :
-            
-    #     if self.shape == 'wire' :
-            
-            
 
             
     def bulk(self, noOutput):
-
+        """
+        Retrieve bulk parameters for the crystal structure.
+        This function uses either:
+        - a CIF file provided by the user (`self.userDefCif`).
+        - a CIF file stored in the internal database (`pyNanoMatBuilder`).
+        Args:
+            noOutput (bool): If False, details are printed.
+    
+        Raises:
+            SystemExit: If the crystal is not found in the database and no external CIF file is provided.
+        """
         if self.userDefCif is None:
-            path2cif = os.path.join(pyNMBu.pyNMB_location(),self.dbFolder)
+            path2cif = os.path.join(pyNMBu.pyNMB_location(),self.dbFolder) #If no external CIF given, searches for a matching CIF file in the internal database.
             # if not noOutput: vID.centertxt(f"List of stored cif files in pyNanoMatBuilder ('{self.dbFolder}' folder)",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
             # if not noOutput: display(data.pyNMBcif.CIFdf)
             if  self.crystal.upper() in data.pyNMBcif.CIFdf.index.str.upper():
@@ -209,17 +262,26 @@ class Crystal:
         return 
 
     def makeSuperCell(self,noOutput):
+        """
+        Creates a supercell based on the defined nanoparticle shape and size.
+        Args:
+            noOutput (bool): If False, details are printed.
+        
+        The function determines the appropriate supercell dimensions based on the particle shape and size,
+        then constructs and translates the supercell to be centered at the origin.
+        """
+        
         if not noOutput: chrono = pyNMBu.timer(); chrono.chrono_start()
         if not noOutput: vID.centertxt(f"Making a multiple cell",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
-        extendSizeByFactor = 1.06
+        extendSizeByFactor = 1.06 # Small extension factor to ensure sufficient cell size
+
+        # Determine supercell dimensions based on the nanoparticle shape
         if (self.shape == 'sphere'):
-            # first calculate the size of the supercell
-            sphereRadius = self.size[0]
+            sphereRadius = self.size[0]/2
             Ma = int(np.round(extendSizeByFactor * sphereRadius*2*10/self.cif.cell.lengths()[0]))
             Mb = int(np.round(extendSizeByFactor * sphereRadius*2*10/self.cif.cell.lengths()[1]))
             Mc = int(np.round(extendSizeByFactor * sphereRadius*2*10/self.cif.cell.lengths()[2]))
         elif (self.shape == 'ellipsoid' or self.shape == 'supercell' or self.shape == 'parallepiped'):
-            # first calculate the size of the supercell
             Ma = int(np.round(extendSizeByFactor * self.size[0]*2*10/self.cif.cell.lengths()[0]))
             Mb = int(np.round(extendSizeByFactor * self.size[1]*2*10/self.cif.cell.lengths()[1]))
             Mc = int(np.round(extendSizeByFactor * self.size[2]*2*10/self.cif.cell.lengths()[2]))
@@ -245,6 +307,8 @@ class Crystal:
             Ma = int(np.round(extendSizeByFactor * maxDim/self.cif.cell.lengths()[0]))
             Mb = int(np.round(extendSizeByFactor * maxDim/self.cif.cell.lengths()[1]))
             Mc = int(np.round(extendSizeByFactor * maxDim/self.cif.cell.lengths()[2]))
+            
+        # Define minimum supercell size (at least 20 Å per direction)
         Ma1nm =  int(np.round(20/self.cif.cell.lengths()[0]))
         Mb1nm =  int(np.round(20/self.cif.cell.lengths()[1]))
         Mc1nm =  int(np.round(20/self.cif.cell.lengths()[2]))
@@ -252,12 +316,15 @@ class Crystal:
         Mb1nm = min(Mb1nm,Mb)
         Mc1nm = min(Mc1nm,Mc)
         if not noOutput: print(f"First making a {Ma1nm}x{Mb1nm}x{Mc1nm} supercell")
+        
+        # Generate the initial supercell
         M1nm = [[Ma1nm, 0, 0], [0, Mb1nm, 0], [0, 0, Mc1nm]]
         sc1nm=make_supercell(self.cif,M1nm)
+        
+        # Scale up the supercell size (find the nearest even numbers)
         Ma = Ma/Ma1nm
         Mb = Mb/Mb1nm
         Mc = Mc/Mc1nm
-        #finds the nearest even numbers
         Ma = math.ceil(Ma / 2.) * 2
         Mb = math.ceil(Mb / 2.) * 2
         Mc = math.ceil(Mc / 2.) * 2
@@ -270,6 +337,8 @@ class Crystal:
         # print(sc.cell.cellpar())
         # print(cellpar_to_cell(sc.cell.cellpar()))
         V = cellpar_to_cell(sc.cell.cellpar())
+        
+        # Center the supercell at the origin
         if not noOutput: print(f"Center of Mass:", [f"{c:.2f}" for c in sc.get_center_of_mass()]," Å")
         if not noOutput: print("Now translating the supercell to O")
         #sc.center(about=(0.0,0.0,0.0))
@@ -277,57 +346,133 @@ class Crystal:
         sc.translate(-V[1]/2)
         sc.translate(-V[2]/2)
         if not noOutput: print(f"Center of Mass after translation of the supercell: {sc.get_center_of_mass()} Å")
+            
+        # Store the final supercell and print atom count
         self.sc = sc.copy()
         nAtoms=len(self.sc.get_positions())
         if not noOutput: print(f"Total number of atoms = {nAtoms}")
         if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         
     def makeSphere(self,noOutput):
+        """
+        Create a spherical nanoparticle (NP) by removing atoms outside the defined radius (calculated from the diameter in nm).  
+        Args:
+            noOutput (bool): If False, details are printed.
+        """
         if not noOutput: vID.centertxt(f"Removing atoms to make a sphere",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         if not noOutput: chrono = pyNMBu.timer(); chrono.chrono_start()
+        
+        # Get the center of mass of the structure
         com = self.sc.get_center_of_mass()
-        sphereRadius = self.size[0]
+        
+        # Compute sphere radius from the provided diameter
+        sphereRadius = self.size[0]/2
+        
+        # Identify atoms to delete (atoms with a distance greater than the radius)
         delAtom = []
         for atomCoord in self.sc.positions:
             delAtom.extend(pyNMBu.Rbetween2Points(com,atomCoord)/10 > [sphereRadius])
         self.NP = self.sc.copy()
         del self.NP[delAtom]
         if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+        # Real sizes
+        positions = self.NP.get_positions()
+        mins = np.min(positions, axis=0)  #  Min coordinates
+        maxs = np.max(positions, axis=0)  # Max coordinates
+        a_real = (maxs[0]-mins[0])/2  # Semi-axis a               In theory a=b=c but in practice not really
+
         
-               
+        self.spheres_axes = a_real 
+        print('self.spheres_axes', self.spheres_axes)
     def makeEllipsoid(self,noOutput):
+        """
+        Create an ellipsoidal nanoparticle (NP) by removing atoms outside the defined ellipsoid.
+        Args:
+            noOutput (bool): If False, details are printed.
+        """
         if not noOutput: vID.centertxt(f"Removing atoms to make an ellipsoid",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         if not noOutput: chrono = pyNMBu.timer(); chrono.chrono_start()
+
+        # Get the center of mass of the structure
         com = self.sc.get_center_of_mass()
-        size = np.array(self.size)*10 #nm to angstrom
+        
+        # Convert the provided size from a diameter in nm to a radius in Ångström for each axis
+        size = (np.array(self.size)/2)*10 
+        
         def outside(coord,com,size):
+            """
+            Calculate if an atom is outside the ellipsoid.
+            Args:
+                coord (array-like): Atom position coordinates.
+                com (array-like): Center of mass coordinates.
+                size (array-like): Half sizes of the ellipsoid along each axis.
+    
+            Returns:
+                bool: True if the atom is outside the ellipsoid, False otherwise.
+            """
             return (coord[0]-com[0])**2/(size[0])**2+(coord[1]-com[1])**2/(size[1])**2+(coord[2]-com[2])**2/(size[2])**2
+
+        # Identify atoms to delete (atoms outside the ellipsoid)
         delAtom = []
         for atom in self.sc.positions:
             delAtom.extend([outside(atom,com,size) > 1])
         self.NP = self.sc.copy()
         del self.NP[delAtom]
         if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-        #NEW
-         
+        # Real sizes
+        positions = self.NP.get_positions()
+        mins = np.min(positions, axis=0)  #  Min coordinates
+        maxs = np.max(positions, axis=0)  # Max coordinates
+        a_real = (maxs[0]-mins[0])/2  # Semi-axis a
+        b_real = (maxs[1]-mins[1])/2  # Semi-axis b
+        c_real = (maxs[2]-mins[2])/2  # Semi-axis c
+        
+        self.ellipsoid_axes = [a_real, b_real, c_real]  
+
     def makeWire(self,noOutput):
+        """
+        Create a nanowire by truncating atoms based on a defined reference plane and a growth direction.
+        Process:
+        - If no reference plane is provided, it calculates a default reference plane parallel to the wire's growth direction.
+        - It computes the normal of the reference plane and the planes of rotation for the wire cross-section.
+        - The wire is defined by a radius and length along the growth direction.
+        - The atoms outside the wire's shape are removed, and the resulting wire is moved to the center of the unit cell.
+    
+        Args:
+            noOutput (bool): If False, details are printed.
+        """
         if not noOutput: vID.centertxt(f"Removing atoms to make a wire",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         if not noOutput: chrono = pyNMBu.timer(); chrono.chrono_start()
+
+        # Calculate reference plane if not provided by the user
         if self.refPlaneWire is None: self.refPlaneWire = pyNMBu.returnPlaneParallel2Line(self.directionWire,[1,0,0],debug=False)
+            
+        # Get the normal of the reference plane    
         normal = pyNMBu.normal2MillerPlane(self,self.refPlaneWire,printN=not noOutput)
+        
+        # Generate the planes for rotation based on the normal and the wire growth direction
         trPlanes = pyNMBu.planeRotation(self,normal,self.directionWire,self.nRotWire,debug=False,noOutput=noOutput)
+
+        # Normalize each rotated plane
         for i,p in enumerate(trPlanes):
             trPlanes[i] = pyNMBu.normV(p)
+            
+        # Define the wire's radius (scaled from size input)   
         radius = 10*self.size[0]/2
         tradius = np.full((self.nRotWire,1),-radius)
         trPlanes = np.append(trPlanes,tradius,axis=1)
+
+        # If periodic boundary conditions aren't used
         if not self.pbc:
-            halfLength = 10*self.size[1]/2
-            ptop = np.append(pyNMBu.normV(self.directionWire),-halfLength)
-            pbottom = np.append(-pyNMBu.normV(self.directionWire),-halfLength)
+            halfLength = 10*self.size[1]/2 # Half the length of the wire
+            ptop = np.append(pyNMBu.normV(self.directionWire),-halfLength)  # Top plane of the wire
+            pbottom = np.append(-pyNMBu.normV(self.directionWire),-halfLength) # Bottom plane of the wire
+            # Add the top and bottom planes to the list of planes
             trPlanes = np.append(trPlanes,ptop)
             trPlanes = np.append(trPlanes,pbottom)
             trPlanes = np.reshape(trPlanes,(self.nRotWire+2,4))
+
+        # Identify atoms that lie above the defined planes (and should be removed)
         AtomsAbovePlanes = pyNMBu.truncateAbovePlanes(trPlanes,self.sc.positions,eps=self.threshold,noOutput=noOutput)
         self.NP = self.sc.copy()
         del self.NP[AtomsAbovePlanes]
@@ -336,29 +481,32 @@ class Crystal:
         if not noOutput: vID.centertxt(f"Nanowire moved to the center of the unitcell",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         # self.NP.center()
         if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-        #NEW
+        
         
 
     def makeCylinder(self,noOutput): #in def init, the two entries are specified : size=[diameter,length] and directionCylinder=[h,k,l]
         """
-        Create a cylinder along the direction [hkl], [radius,length] are specified by user in the class Crystal
+        Create a cylindrical nanoparticle (NP) by removing atoms outside the defined radius (calculated from the diameter in nm).  
+        Args:
+            noOutput (bool): If False, details are printed.
+      
         """
     
         if not noOutput: vID.centertxt(f"Removing atoms to make a cylinder",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         if not noOutput: chrono = pyNMBu.timer(); chrono.chrono_start()
-        #dimension
+        
+        # Define the cylinder's dimensions (scaled from size input)  
         radius = 10*self.size[0]/2 
         radius_squared=radius**2
         half_height = 10 * self.size[1] / 2
         axis=np.array(self.directionCylinder)
         com = self.sc.get_center_of_mass()
         #delAtom = []
-    
-    
-        #delete atoms in the supercell
+        
+        # Identify atoms to delete (atoms outside the cylinder)
         delAtom = [i for i, pos in enumerate(self.sc.positions) if pyNMBu.isnt_inside_cylinder(pos,radius, radius_squared, half_height)]
         
-        #rotating the coordinates again to have the hkl orientation
+        # Rotate the coordinates to th [0,0,1] orientation
         self.sc.positions= pyNMBu.rotateMoltoAlignItWithAxis(self.sc.positions,axis,targetAxis=np.array([0, 0, 1]))
         self.NP = self.sc.copy()
         del self.NP[delAtom]
@@ -366,25 +514,48 @@ class Crystal:
         if not noOutput: vID.centertxt(f"Nanocylinder moved to the center of the unitcell",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         # self.NP.center()
         if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
-        #NEW
+       
       
     def makeParallelepiped(self,noOutput):
+        """
+        Creates a parallelepiped-shaped nanoparticle (NP) by truncating atoms based on specified directions.
+        Process:
+        - If the `buildPPD` attribute is set to "xyz", the specified directions are used directly. 
+        Otherwise, the normal vectors for the directions are calculated, and a lattice transformation is applied.
+        - The parallelepiped shape is defined by six planes, and atoms outside the shape are removed.
+    
+        Args:
+            noOutput (bool): If False, details are printed.
+
+        """
         if not noOutput: vID.centertxt(f"Removing atoms to make a parallelepiped",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         if not noOutput: chrono = pyNMBu.timer(); chrono.chrono_start()
+        
+        
         if self.buildPPD == "xyz":
-            trPlanes = self.directionsPPD
+            trPlanes = self.directionsPPD  
+        
+        # If not 'xyz', calculate the normal vectors for each direction
         else:
             normal = []
             for d in self.directionsPPD:
                 normal.append(pyNMBu.normal2MillerPlane(self,d,printN=not noOutput))
-            trPlanes = pyNMBu.lattice_cart(self,normal,Bravais2cart=True,printV=not noOutput)
+            trPlanes = pyNMBu.lattice_cart(self,normal,Bravais2cart=True,printV=not noOutput) # Project from the Bravais basis to the cartesian coordinate system
+
+        # Normalize each of the planes
         for i,p in enumerate(trPlanes): trPlanes[i] = pyNMBu.normV(p)
-        # 6 planes defined to cut between 
-        # [-a/2 direction, a/2 direction], [-b/2 direction, b/2 direction], [-c/2 direction, c/2 direction]
+            
+       
+        # Define the parallepiped's dimensions (scaled from size input) 
         size = -np.array(self.size)*10/2 #nm!
         size = np.append(size,size,axis=0)
+        
+        # Define the 6 planes to truncate
+        # [-a/2 direction, a/2 direction], [-b/2 direction, b/2 direction], [-c/2 direction, c/2 direction]
         trPlanes = np.append(trPlanes,-trPlanes,axis=0)
         trPlanes = np.append(trPlanes,size.reshape(6,1),axis=1)
+        
+        # Identify atoms that lie outside the defined parallelepiped 
         AtomsAbovePlanes = pyNMBu.truncateAbovePlanes(trPlanes,self.sc.positions,eps=self.threshold,debug=False,noOutput=noOutput)
         self.NP = self.sc.copy()
         del self.NP[AtomsAbovePlanes]
@@ -395,13 +566,31 @@ class Crystal:
         
   
     def makeWulff(self,noOutput):
+        """
+        Calculate truncation distances for Wulff shapes.
+    
+        This function determines the truncation planes of a nanoparticle based on 
+        the provided surfaces and their corresponding energies. It then removes 
+        atoms that are above these planes, effectively truncating the nanoparticle.
+    
+        Parameters:
+        - noOutput (bool): If True, suppresses output messages.
+    
+        Attributes Updated:
+        - self.trPlanes (numpy array): Stores the normalized truncation planes and 
+          their respective truncation distances.
+        - self.NP (ASE Atoms object): The truncated nanoparticle.
+        
+        """
         if not noOutput: vID.centertxt(f"Calculating truncation distances",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         if not noOutput: chrono = pyNMBu.timer(); chrono.chrono_start()
-        trPlanes = []
+        trPlanes = [] # List to store truncation planes
         if self.eSurfacesWulff is None: sizes = []
         if self.eSurfacesWulff is not None: 
             sizes = []
             eSurf = []
+
+        # Loop over surface planes to compute truncation
         for i,p in enumerate(self.surfacesWulff):
             if self.symWulff:
                 symP = self.ucSG.equivalent_lattice_points(p)
@@ -416,20 +605,26 @@ class Crystal:
                 if self.eSurfacesWulff is None: sizes.append(self.sizesWulff[i])
                 if self.eSurfacesWulff is not None: eSurf.append(self.eSurfacesWulff[i])
         trPlanes = np.array(trPlanes)
+        # Convert Miller indices to Cartesian coordinates
         trPlanes = pyNMBu.lattice_cart(self,trPlanes,Bravais2cart=True,printV=not noOutput)
+        # Normalize the vectors
         for i,p in enumerate(trPlanes): trPlanes[i] = pyNMBu.normV(p)
         # print("inside makeWulff, just after trPlanes normalization. ",trPlanes.tolist())
         if self.eSurfacesWulff is None: 
             sizes = -np.array(sizes)*10/2
             trPlanes = np.append(trPlanes,sizes.reshape(len(trPlanes),1),axis=1)
+        
+        # If energy surfaces are used for truncation
         else:
-            mostStableE = min(eSurf)
+            mostStableE = min(eSurf) # Find the most stable energy surface
             for i, e in enumerate(eSurf):
                 sizes.append(-self.sizesWulff[0]*10*e/2/mostStableE)
             sizes = np.array(sizes)
             trPlanes = np.append(trPlanes,sizes.reshape(len(trPlanes),1),axis=1)
         # print("inside makeWulff, just after trPlanes size calculation. ",trPlanes)
         # print("sizes = ",sizes)
+
+        # Remove atoms above the truncation planes
         AtomsAbovePlanes = pyNMBu.truncateAbovePlanes(trPlanes,self.sc.positions,allP=False,\
                                                      eps=self.threshold,debug=False,noOutput=noOutput)
         self.NP = self.sc.copy()
@@ -437,21 +632,47 @@ class Crystal:
         nAtoms = self.NP.get_global_number_of_atoms()
         # self.NP.center()
         self.trPlanes = trPlanes
-        print(' self.trPlanes', self.trPlanes)
+        #print(' self.trPlanes', self.trPlanes)
         if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
 
     def makeNP(self,noOutput):
+        """
+        Generate a nanoparticle (NP) of a specified shape.
+    
+        This function constructs different types of nanoparticles based on the user-defined shape
+        and size. It supports spheres, ellipsoids, parallelepipeds, wires, cylinders, and Wulff 
+        constructions. 
+    
+        Parameters:
+        - noOutput (bool): If True, suppresses output messages.
+    
+        Attributes Updated:
+        - self.NP (ASE Atoms object): The created nanoparticle.
+        - self.nAtoms (int): The number of atoms of the nanoparticle.
+        - self.cog (array): The center of mass of the nanoparticle.
+        - self.trPlanes (numpy array): Truncation planes.
+        - self.jMolCS (object): JMol visualization object (if enabled).
+    
+        Notes:
+        - Calls specific shape generation methods depending on the requested nanoparticle type.
+        - Uses a supercell as a starting point for most shapes.
+        - Checks validity for Wulff construction parameters.
+        """
         import os
         if not noOutput: vID.centertxt("Builder",bgc='#007a7a',size='14',weight='bold')
-        if self.size is None:
+        # Default size if not provided
+        
+        if self.size is None: 
             self.length = [2,2,2]
             if not noOutput: print(f"length parameter set up as = {self.size} nm")
+                
+        # Construct different nanoparticle shapes        
         if self.shape == "sphere":
-            if not noOutput: print(f"Sphere radius = {self.size[0]} nm")
+            if not noOutput: print(f"Sphere radius = {self.size[0]/2} nm")
             self.makeSuperCell(noOutput)
             self.makeSphere(noOutput)
         elif self.shape == "ellipsoid":
-            if not noOutput: print(f"Ellipsoid radii = {self.size} nm")
+            if not noOutput: print(f"Ellipsoid radii = {self.size[0]/2} {self.size[1]/2} {self.size[2]/2} nm")
             self.makeSuperCell(noOutput)
             self.makeEllipsoid(noOutput)
         elif self.shape == "parallepiped":
@@ -482,6 +703,7 @@ class Crystal:
         elif "Wulff" in self.shape :
             if self.WulffShape is not None:
                 self.predefinedParameters4WulffShapes(noOutput)
+            # Ensure necessary parameters are defined
             if self.surfacesWulff == None:
                 sys.exit("Wulff construction requested, but no planes were given. Define them with the 'surfacesWulff' variable")
             if self.eSurfacesWulff == None and self.sizesWulff == None: 
@@ -490,20 +712,44 @@ class Crystal:
                 sys.exit("'surfacesWulff' and ('eSurfacesWulff' or 'sizesWulff') lists have different dimensions")
             self.makeSuperCell(noOutput)
             self.makeWulff(noOutput)
+            
+        # Final attributes update    
         self.nAtoms=len(self.NP.get_positions())
         # self.NP.center(about=(0.0,0.0,0.0))
         self.cog = self.NP.get_center_of_mass()
         if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
-        if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)
+
         if not noOutput: print(f"Total number of atoms = {self.nAtoms}")
 
     def predefinedParameters4WulffShapes(self,noOutput):
+        """
+        Assign pre-defined parameters for Wulff shapes.
+    
+        This function retrieves pre-defined properties (such as truncation planes, symmetry, 
+        and moments of inertia) for Wulff shapes from the `WulffShapes.WSdf` dataset. 
+        It also ensures that the selected shape is compatible with the Bravais lattice 
+        of the crystal structure.
+    
+        Parameters:
+        - noOutput (bool): If True, suppresses output messages.
+    
+        Attributes Updated:
+        - self.eSurfacesWulff (list): Relative surface energies for the Wulff shape.
+        - self.surfacesWulff (list): Miller indices of the truncation planes.
+        - self.symWulff (bool): Whether symmetry is applied to the Wulff shape.
+        - self.MOIshape (str): Moment of inertia shape identifier for size estimation.
+    
+        Notes:
+        - If the lattice system does not match the expected one, a warning is displayed.
+        """
+
         # if not noOutput: vID.centertxt("List of pre-defined Wulff shapes in pyNanoMatBuilder",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         # if not noOutput: display(data.WulffShapes.WSdf)
         if self.WulffShape in data.WulffShapes.WSdf.index:
             self.eSurfacesWulff = data.WulffShapes.WSdf["relative energies"].loc[self.WulffShape]
             self.surfacesWulff = data.WulffShapes.WSdf["planes"].loc[self.WulffShape]
             self.symWulff = data.WulffShapes.WSdf["apply symmetry"].loc[self.WulffShape]
+            self.MOIshape=data.WulffShapes.WSdf['MOI for size'].loc[self.WulffShape]
             if not noOutput: 
                 print(f"{hl.BOLD}Selected shape{hl.OFF}")
                 display(data.WulffShapes.WSdf.loc[self.WulffShape])
@@ -523,103 +769,59 @@ class Crystal:
   
    
     def prop(self,noOutput):
-        
+        """
+        Display unit cell and nanoparticle properties.
+    
+        Parameters:
+        - noOutput (bool): If True, suppresses output messages.
+    
+        Notes:
+        - Calls utility functions to print ASE unit cell properties.
+        """
         #pyNMBu.plotImageInPropFunction(self.imageFile)
-        vID.centertxt("Unit cell properties",bgc='#007a7a',size='14',weight='bold')
-        pyNMBu.print_ase_unitcell(self)
-        vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
-        print(self)
-        if "Wulff" in self.shape :
-            distances = np.linalg.norm(self.NP.positions- self.cog, axis=1)
-            self.radiusCircumscribedSphere= np.max(distances)
-            self.radiusInscribedSphere= np.min(distances)
-            self.dim[0]= self.radiusCircumscribedSphere      # main dimensions for files 
-            self.dim[1]= self.dim[0]
-            self.dim[2]= self.dim[0]
-            if not noOutput : 
-                print(f"diameters of the circumscribed sphere: {self.radiusCircumscribedSphere * 2* 0.1:.2f}  {self.radiusCircumscribedSphere* 2 * 0.1:.2f}  {self.radiusCircumscribedSphere* 2* 0.1:.2f} nm")
-                print(f"diameters of the inscribed sphere: { self.radiusInscribedSphere* 2* 0.1:.2f}  {self.radiusInscribedSphere* 2 * 0.1:.2f}  {self.radiusInscribedSphere * 2* 0.1:.2f} nm")
-               
+        if not noOutput : #added
+            vID.centertxt("Unit cell properties",bgc='#007a7a',size='14',weight='bold')
+            pyNMBu.print_ase_unitcell(self)
+            vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
+            print(self)
+           
 
-    def propPostMake(self,skipSymmetryAnalyzis, thresholdCoreSurface, noOutput): #accès aux faces voisines etc
-        
+    def propPostMake(self,skipSymmetryAnalyzis, thresholdCoreSurface, noOutput): 
+        """
+        Compute and store various post-construction properties of the nanoparticle.
+    
+        This function calculates moments of inertia (MOI), the inscribed and cicumscribed spheres, 
+        analyzes symmetry (if required), and identifies core and surface atoms.
+    
+        Parameters:
+        - skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
+        - thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
+        - noOutput (bool): If True, suppresses output messages.
+    
+        Attributes Updated:
+        - self.moi (array): Moment of inertia tensor.
+        - self.moisize (array): Normalized moments of inertia.
+        - self.MOIshape (str): Shape identifier used for size calculations.
+        - self.vertices, self.simplices, self.neighbors, self.equations (arrays): 
+          Geometric properties of the nanoparticle.
+        - self.NPcs (Atoms object): Copy of the nanoparticle with surface atoms visually marked.
+        - self.NP (Atoms object): Original nanoparticle.
+        """
+        # size from MOI
         self.moi=pyNMBu.moi(self.NP, noOutput)
         self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))# MOI mass normalized (m of each atoms=1)
-
-        # find the size using the MOI mass normalized
-        if self.shape == 'ellipsoid': # https://scienceworld.wolfram.com/physics/MomentofInertiaEllipsoid.html
-            self.dim[0] = 2*np.sqrt((5 *self.moisize[1] + 5 * self.moisize[2] - 5 * self.moisize[0]) / 2)
-            self.dim[1] = 2*np.sqrt((5 * self.moisize[0] + 5 * self.moisize[2] - 5 * self.moisize[1]) / 2)
-            self.dim[2] = 2*np.sqrt((5 * self.moisize[0] + 5 * self.moisize[1] - 5 * self.moisize[2]) / 2)
-            if not noOutput:
-                print(f"Diameters of the ellipsoid  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
-        if self.shape == 'sphere': #wikipedia
-            self.dim[0] = 2 * np.sqrt(5 / 2 * self.moisize[0])  # même formule pour les 3 directions avec Ix, Iy, Iz égaux
-            self.dim[1] = 2 * np.sqrt(5 / 2 * self.moisize[0])
-            self.dim[2] = 2 * np.sqrt(5 / 2 * self.moisize[0])
-            if not noOutput:
-                print(f"Diameter of the sphere = {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
-        if self.shape == 'cylinder': #wikipedia
-            self.dim[0] = np.sqrt(12 * self.moisize[1] - 6 * self.moisize[0]) #longest distance
-            self.dim[1] = 2 * np.sqrt(2 * self.moisize[0]) 
-            self.dim[2] = 2 * np.sqrt(2 * self.moisize[0])
-            if not noOutput:
-                print(f"Size of the cylinder= {self.dim[0] * 0.1:.2f} {self.dim[1] * 0.1:.2f} {self.dim[2] * 0.1:.2f} nm")
-                
-        if self.shape == 'parallepiped': #wikipedia
-            self.dim[0] = np.sqrt(6 *(self.moisize[1] + self.moisize[2] - self.moisize[0])) #longest distance
-            self.dim[1] = np.sqrt(6 * (self.moisize[0] + self.moisize[2] - self.moisize[1])) # 2nd longest distance
-            self.dim[2] = np.sqrt(6 * (self.moisize[0] + self.moisize[1] - self.moisize[2])) # 3rd longest distance
-            if not noOutput:
-                print(f"Size of the parallepiped=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
-
-        if self.shape == 'wire': #wikipedia
-            if self.nRotWire==4 :
-                self.dim[0]=np.sqrt(12*self.moisize[1]-6*self.moisize[0]) #longest distance
-                self.dim[1]=np.sqrt(6*self.moisize[0])
-                self.dim[2]=np.sqrt(6*self.moisize[0])
-                if not noOutput:
-                    print(f"Size of the wire=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
-            if self.nRotWire==6 :
-                self.dim[0]=np.sqrt(12*self.moisize[1]-6*self.moisize[0]) #longest distance
-                self.dim[1]=2*np.sqrt(2*self.moisize[0])
-                self.dim[2]=2*np.sqrt(2*self.moisize[0])
-                if not noOutput:
-                    print(f"Size of the wire=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
-
-        #NEW WULFF PREDEFINED
-        # if "Wulff" and "cube" in self.shape :
-        #     self.dim[0] = np.sqrt(6*self.moisize[0])
-        #     self.dim[1] = np.sqrt(6*self.moisize[1])
-        #     self.dim[2] = np.sqrt(6*self.moisize[2])
-        #     if not noOutput:
-        #         print(f"Length of the cube  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
-
-
-        # if "Wulff" and "Oh" in self.shape :
-        #     a=np.sqrt(10*self.moisize[0]) #arete https://www.vcalc.com/collection/?uuid=1a8912a2-f145-11e9-8682-bc764e2038f2
-        #     self.dim[0] =a*math.sqrt(2) #diameter of the circumscribed sphere
-        #     self.dim[1] = self.dim[0]
-        #     self.dim[2] = self.dim[0]
-        #     #https://fr.wikipedia.org/wiki/Dod%C3%A9ca%C3%A8dre_r%C3%A9gulier#:~:text=Les%2020%20%C3%97%206%20%3D%2012,sur%20les%20faces%20du%20poly%C3%A8dre.
-        #     if not noOutput:
-        #         print(f"Size of the octahedron (diameter of the circumscribed sphere) :  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
-        #         print(f"Edge  of the icosahedron:  { a* 0.1:.2f}   nm")
-
-
-        # if "Wulff" and "hcpwire" in self.shape :
-        #     self.dim[0]=np.sqrt(12*self.moisize[1]-6*self.moisize[0]) #longest distance
-        #     self.dim[1]=2*np.sqrt(2*self.moisize[0])
-        #     self.dim[2]=2*np.sqrt(2*self.moisize[0])
-        #     if not noOutput:
-               # print(f"Size of the wire=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm") 
-        
-
+        if not "Wulff" in self.shape :
+            self.MOIshape=self.shape  
+        if not self.MOIshape==None :
+            pyNMBu.MOI_shapes(self, noOutput)
         if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
-        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
-            pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
+        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms = pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
+        # print('self.equations',self.equations)
+        
+        # Generate JMol visualization if enabled
+        if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)
         self.NPcs = self.NP.copy()
         self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
-       
-        
-        
+        #inscribed sphere and circumscribed
+        pyNMBu.Inscribed_circumscribed_spheres(self,noOutput)
+ 

@@ -1,0 +1,8 @@
+6 
+{'composition': {'Co': 6}, 'crystal structure': 'hcp', 'shape': ' hcpsph1', 'MOI': array([2.082, 2.082, 2.095]), 'MOInormalized': array([2.082, 2.082, 2.095]), 'MOI_dim': array([4.577, 4.577, 2.034]), 'main_dim': array([1.769, 1.017]), 'secondary_dim': {'edges': {'edge_1': {'length': None, 'atoms_per_edge': None}, 'edge_2': {'length': None, 'atoms_per_edge': None}}}, 'truncation': False, 'number_of_atoms': 6, 'wulff': True, 'crystallization': {'state': 'crystalline', 'type': 'monocrystalline', 'subtype': 'random'}, 'wire_description': {'nRot': None, 'plane_rotated': None}} 
+Co	 -0.00000000	 -1.44746039	 -1.01715000
+Co	 -1.25356254	 -0.72373019	 1.01715000
+Co	 -1.25355000	 0.72375190	 -1.01715000
+Co	 1.25353746	 -0.72373019	 1.01715000
+Co	 1.25355000	 0.72375190	 -1.01715000
+Co	 -0.00001254	 1.44748210	 1.01715000

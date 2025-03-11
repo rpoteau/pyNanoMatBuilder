@@ -2,8 +2,12 @@ import visualID as vID
 from visualID import  fg, hl, bg
 import numpy as np
 #ASE import
+from ase import io
 from ase.atoms import Atoms
 from ase.io import write
+from ase.visualize import view
+from ase.io import read
+
 from ase.geometry import cellpar_to_cell
 from ase.spacegroup import get_spacegroup
 import os
@@ -13,24 +17,35 @@ from scipy import linalg
 from pyNanoMatBuilder import data
 import pathlib
 import re
-from ase.io import read
-from ase.spacegroup import get_spacegroup
+
+import importlib
+from pathlib import Path
+
 
 #######################################################################
 ######################################## time
 from datetime import datetime
 import datetime, time
 class timer:
-
+    """
+    Timer class to measure elapsed time in seconds and display it 
+    in the format hh:mm:ss ms.
+    """
     def __init__(self):
         _start_time   = None
         _end_time     = None
         _chrono_start = None
         _chrono_stop  = None
 
-    # Return human delay like 01:14:28 543ms
     # delay can be timedelta or seconds
     def hdelay_ms(self,delay):
+        """
+        Converts a delay into a human-readable format: hh:mm:ss ms.
+
+        Args:
+            delay: A timedelta object or a float representing a duration in seconds.
+        Return: A formatted string in hh:mm:ss ms.
+        """
         if type(delay) is not datetime.timedelta:
             delay=datetime.timedelta(seconds=delay)
         sec = delay.total_seconds()
@@ -41,36 +56,40 @@ class timer:
         return f'{hh:02.0f}:{mm:02.0f}:{ss:02.0f} {ms:03.0f}ms'
     
     def chrono_start(self):
+        """
+        Starts the chrono.
+        """
         global _chrono_start, _chrono_stop
         _chrono_start=time.time()
     
     # return delay in seconds or in humain format
     def chrono_stop(self, hdelay=False):
+        """
+        Stops the chrono and returns the elapsed time.
+        """
         global _chrono_start, _chrono_stop
         _chrono_stop = time.time()
         sec = _chrono_stop - _chrono_start
         if hdelay : return self.hdelay_ms(sec)
         return sec
 
-    def hdelay_ms(self,delay):
-        if type(delay) is not datetime.timedelta:
-            delay=datetime.timedelta(seconds=delay)
-        sec = delay.total_seconds()
-        hh = sec // 3600
-        mm = (sec // 60) - (hh * 60)
-        ss = sec - hh*3600 - mm*60
-        ms = (sec - int(sec))*1000
-        return f'{hh:02.0f}:{mm:02.0f}:{ss:02.0f} {ms:03.0f}ms'
     
     def chrono_show(self):
+        """
+        Prints the elapsed time.
+        """
         print(f'{fg.BLUE}Duration : {self.hdelay_ms(time.time() - _chrono_start)}{fg.OFF}')
 
 #######################################################################
 ######################################## ase unitcells and symmetry analyzis
 def returnUnitcellData(system):
-    '''
-    system is an instance of the Crystal class
-    '''
+    """
+    Function that calculates various unit cell properties from the `system.cif` object 
+    and assigns them to attributes within the `system` instance.
+
+    Args:
+        An instance of the Crystal class containing CIF file data.
+    """
     system.ucUnitcell = system.cif.cell.cellpar()
     system.ucV = cellpar_to_cell(system.ucUnitcell)
     system.ucBL = system.cif.cell.get_bravais_lattice()
@@ -83,7 +102,9 @@ def returnUnitcellData(system):
 
 def print_ase_unitcell(system: Atoms):
     '''
-    system is an instance of the Crystal class
+    Function that prints unitcell informations : chemical formula, bravais lattice, n° space group, cell parameters, volume, etc.
+    Args:
+        An instance of the Crystal class
     '''
     unitcell = system.ucUnitcell
     bl = system.ucBL
@@ -151,6 +172,28 @@ def scaleUnitCell(crystal: Atoms,
                   scaleDmin2: float,
                   noOutput: bool=False,
                   ):
+    """
+    Scales the unit cell of a given crystal structure to match a target nearest-neighbor distance.
+
+    This function expands the unit cell of the input crystal by creating a 2×2×2 supercell, 
+    then computes the nearest-neighbor distance and scales the entire structure to match the 
+    desired minimum nearest-neighbor distance.
+
+    Args:
+    - crystal (Atoms): An ASE Atoms object representing the initial crystal structure.
+    - scaleDmin2 (float): The target nearest-neighbor distance (in Å) after scaling.
+    - noOutput (bool): If True, suppresses output messages. 
+
+    Returns:
+    - None: The function modifies the input `crystal` object in place.
+
+    Notes:
+    - The function first generates a 2×2×2 supercell to ensure a representative environment.
+    - It computes the minimum nearest-neighbor distance (`Rmin`) using `kDTreeCN`.
+    - The structure is then uniformly scaled so that the new nearest-neighbor distance 
+      equals `scaleDmin2`.
+    - The ASE `set_cell` method is used with `scale_atoms=True` to adjust atomic positions accordingly.
+    """
     from ase.build.supercells import make_supercell
     if not noOutput: vID.centertxt(f"Scaling the unitcell",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
     M = [[2, 0, 0], [0, 2, 0], [0, 0, 2]]
@@ -171,6 +214,20 @@ def MolSym(aseobject: Atoms,
            getEquivalentAtoms: bool=False,
            noOutput: bool=False,
           ):
+    """
+    Performs symmetry analysis on a molecular structure using pymatgen's PointGroupAnalyzer.
+    This function computes the **point group** of a given ASE `Atoms` object and optionally 
+    returns equivalent atoms. 
+    Args:
+        aseobject: An ASE `Atoms` object representing the molecular structure.
+        getEquivalentAtoms: If True, returns the indices of symmetry-equivalent atoms.
+        noOutput: If False, details of the files are printed.
+    Return:
+        A tuple containing:
+        - `pg`: The point group symbol as a string.
+        - `equivalent_atoms`: A list of equivalent atom indices (if `getEquivalentAtoms=True`), otherwise an empty list.
+    """
+
     import pymatgen.core as pmg
     from pymatgen.io.ase import AseAtomsAdaptor as aaa
     from pymatgen.symmetry.analyzer import PointGroupAnalyzer
@@ -192,43 +249,203 @@ def MolSym(aseobject: Atoms,
         return pg, []
 
 #######################################################################
+######################################## cif files informations
+def get_crystal_type(self):
+    """
+    Find the Bravais lattice based on the space group number.
+    Returns:
+        str: Bravais lattice
+    """  
+    spacegroup_number = self.ucSG.no  # space group number
+    
+    # Bravais lattice based on space group number https://fr.wikipedia.org/wiki/Groupe_d%27espace
+    if 195 <= spacegroup_number <= 230:  # Cubic
+        if spacegroup_number == 225:
+            return 'fcc'
+        elif spacegroup_number == 229:
+            return 'bcc'
+        else:
+            return 'cubic'
+    elif 168 <= spacegroup_number <= 194:  # Hexagonal
+        return 'hcp'
+    elif 75 <= spacegroup_number <= 142:  # Tetragonal
+        return 'tetragonal'
+    elif 16 <= spacegroup_number <= 74:  # Orthorhombic
+        return 'orthorhombic'
+    elif 3 <= spacegroup_number <= 15:  # Monoclinic
+        return 'monoclinic'
+    elif 1 <= spacegroup_number <= 2:  # Triclinic
+        return 'triclinic'
+    else:
+        return 'unknown'
+   
+def FindInterAtomicDist(self) :
+    """
+    Computes the interatomic distance based on the Bravais lattice (fcc, bcc or hcp only).
+    Returns:
+        float: Interatomic distance
+    """   
+    import math
+    if self.crystal_type=='fcc':
+        d=self.parameters[0]*math.sqrt(2)/2
+    
+    if self.crystal_type=='bcc' :
+        d=self.parameters[0]*math.sqrt(3)/2
+    
+    if self.crystal_type=='hcp' :
+        d_a=self.parameters[0]
+        d_c=self.parameters[2]/2
+        if d_a>d_c: #if compact
+            d=d_c
+        if d_c>d_a: #if not compact
+            d=d_a
+
+    return d
+
+def extract_cif_info(self,cif_file):
+    """
+    Extract useful information from a CIF file.
+    Args:
+        cif_file: CIF file.
+    Returns:
+        dict: A dictionary containing extracted CIF information:
+            - 'cif_path' (Path): Absolute path to the CIF file.
+            - 'crystal_type' (str): The crystal type.
+            - 'Unitcell_param' (list): Unit cell parameters [a, b, c, α, β, γ].
+            - 'ucBL' (str): Bravais lattice type.
+
+    """   
+    structure = read(cif_file) # load structure with ase
+    
+    self.ucUnitcell = self.cif.cell.cellpar() #self.ucUnitcell[0]=a, self.ucUnitcell[1]=b, self.ucUnitcell[2]=c,  self.ucUnitcell[3]= α, etc
+    self.parameters=self.cif.cell.lengths() 
+    self.ucBL = self.cif.cell.get_bravais_lattice() #HEX, CUB etc
+    self.ucSG = get_spacegroup(self.cif,symprec= float(1e-2))
+    self.ucFormula = self.cif.get_chemical_formula()
+    self.crystal_type = get_crystal_type(self)
+    return {
+        # 'crystal_name': self.ucFormula,
+        'cif_path': cif_file,
+        'crystal_type' : self.crystal_type,
+        'Unitcell_param' : self.ucUnitcell,
+        'ucBL': self.ucBL
+        
+    }
+
+
+def load_cif(self, cif_file,noOutput):
+    """
+    Loads a CIF file and extracts its information if it has not been loaded before.
+    Args:
+        cif_file: a CIF file.
+        noOutput (bool): If False, prints the CIF file path.
+    Return:
+        dict: Extracted CIF information (from `extract_cif_info`).
+    Notes:
+    - CIF files are assumed to be stored in the "cif_database" directory.
+    - If the file has already been loaded, its information is retrieved from `self.loaded_cifs`. 
+        
+    """      
+    cif_folder = "cif_database"
+    path2cif = Path(os.path.join(cif_folder, cif_file)).resolve()
+    self.cif = io.read(path2cif)
+    if not noOutput :
+        print("Absolute path to CIF:", path2cif)
+    if not path2cif.exists():
+        raise FileNotFoundError(f"File {cif_file} not found.")
+    if path2cif not in self.loaded_cifs:
+        self.loaded_cifs[path2cif] = extract_cif_info(self,path2cif)
+    return self.loaded_cifs[path2cif]
+
+
+
+#######################################################################
 ######################################## Folder pathways
 def ciflist(dbFolder=data.pyNMBvar.dbFolder):
+    """
+    Function that prints the CIF files in the dataset.
+    Args:
+        dbFolder: The database folder name (default is `data.pyNMBvar.dbFolder`).
+    """
+ 
     import os
     path2cif = os.path.join(pyNMB_location(),dbFolder)
     print(os.listdir(path2cif))
         
 def pyNMB_location():
+    """
+    Returns the root directory of the pyNanoMatBuilder package.
+    """
     import pyNanoMatBuilder, pathlib, os
     path = pathlib.Path(pyNanoMatBuilder.__file__)
     return pathlib.Path(*path.parts[0:-2])
 
 #######################################################################
-######################################## Vectors and distances
+######################################## Coordinates, vectors, etc
 def RAB(coord,a,b):
     import numpy as np
-    """calculate the interatomic distance between two atoms a and b"""
+    """
+    Function that calculates the interatomic distance between two atoms "a" and "b".
+    Args:
+        coord (array-like): A list or array of 3D coordinates
+        a (str): Element (index of the starting point in the `coord` list).
+        b (str): Element (index of the starting point in the `coord` list).
+    Return:
+        The distance r between the two atoms.
+    """
     r = np.sqrt((coord[a][0]-coord[b][0])**2 + (coord[a][1]-coord[b][1])**2 + (coord[a][2]-coord[b][2])**2)
     return r
 
 def Rbetween2Points(p1,p2):
+    """
+    Function that calculates the interatomic distance between two points "p1" and "p2".
+    Args:
+        p1 (array-like): A list or array of 3D coordinates
+        p2 (array-like): A list or array of 3D coordinates
+    Return:
+        The distance r between the two points.
+    """
     import numpy as np
     r = np.sqrt((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2 + (p1[2]-p2[2])**2)
     return r
 
 def vector(coord,a,b):
+    """
+    Computes the vector from point `a` to point `b` given a list of coordinates.
+    Args:
+        coord (array-like): A list or array of 3D coordinates
+        a (str): Element (index of the starting point in the `coord` list).
+        b (str): Element (index of the starting point in the `coord` list).
+    Return:
+        A NumPy array representing the vector from `a` to `b`.
+    """
     import numpy as np
     v = [coord[b][0]-coord[a][0],coord[b][1]-coord[a][1],coord[b][2]-coord[a][2]]
     v = np.array(v)
     return v
 
 def vectorBetween2Points(p1,p2):
+    """
+    Computes the vector between two 3D points.
+    Args: 
+        p1: A list or array of 3D coordinates
+        p2: A list or array of 3D coordinates
+    Return:
+        A NumPy array representing the vector from `p1` to `p2`.
+    """
     import numpy as np
     v = [p2[0]-p1[0],p2[1]-p1[1],p2[2]-p1[2]]
     v = np.array(v)
     return v
 
 def coord2xyz(coord):
+    """
+    Extracts x, y, and z from a list of 3D coordinates.
+    Args:
+        A list or array of 3D coordinates in the format [[x1, y1, z1], [x2, y2, z2], ...].
+    Return:
+        Three NumPy arrays containing the x, y, and z coordinates separately.
+    """
     import numpy as np
     x = np.array(coord)[:,0]
     y = np.array(coord)[:,1]
@@ -237,22 +454,50 @@ def coord2xyz(coord):
 
 def vertex(x, y, z, scale):
     import numpy as np
-    """ Return vertex coordinates fixed to the unit sphere """
+    """ 
+    Returns vertex coordinates fixed to the unit sphere 
+    """
     length = np.sqrt(x**2 + y**2 + z**2)
     return [(i * scale) / length for i in (x,y,z)]
 
 def vertexScaled(x, y, z, scale):
     import numpy as np
-    """ Return vertex coordinates multiplied by the scale factor """
+    """ 
+    Returns vertex coordinates multiplied by the scale factor 
+    """
     return [i * scale for i in (x,y,z)]
 
     
 def RadiusSphereAfterV(V):
+    """
+    Computes the radius of a sphere given its volume.
+    Args:
+        V (float): Volume of the sphere in cubic units.
+
+    Returns:
+        float: Radius of the sphere.
+
+    Formula: R = (3V / (4π))^(1/3)
+       
+    """
     import numpy as np
     return (3*V/(4*np.pi))**(1/3)
 
 def centerOfGravity(c: np.ndarray,
                     select=None):
+    """
+    Computes the center of gravity (geometric center) of a set of points.
+
+    Args:
+        c (np.ndarray): An array of shape (N, 3) representing N atomic positions (x, y, z).
+        select (np.ndarray, optional): Indices of selected atoms to include in the calculation.
+                                       If None, all atoms are used.
+    Returns:
+        np.ndarray: A 3-element array representing the center of gravity coordinates (x, y, z).
+
+    Notes:
+    - The center of gravity is computed as the average of the selected atomic positions.
+    """
     import numpy as np
     if select is None:
         select = np.array((range(len(c))))
@@ -268,6 +513,17 @@ def centerOfGravity(c: np.ndarray,
     return np.array(cog)
 
 def center2cog(c: np.ndarray):
+    """
+    Centers a set of atomic coordinates to their center of gravity.
+    Args:
+        c (np.ndarray): An array of shape (N, 3) representing N atomic positions (x, y, z).
+    Returns:
+        np.ndarray: A new array of centered coordinates where the center of gravity is at (0,0,0).
+
+    Notes:
+    - Uses `centerOfGravity(c)` to compute the center of gravity.
+    - Each atomic position is shifted by subtracting the center of gravity.
+    """
     import numpy as np
     cog = centerOfGravity(c)
     c2cog = []
@@ -278,14 +534,23 @@ def center2cog(c: np.ndarray):
 
 def normOfV(V):
     '''
-    returns the norm of a vector V, [V0,V1,V2]
+    Returns the norm of a vector V.
+    Args:
+        V (np.ndarray): A 3-element array representing a vector [Vx, Vy, Vz].
+    Returns:
+        float: The norm of the vector.
     '''
     import numpy as np
     return np.sqrt(V[0]**2+V[1]**2+V[2]**2)
 
 def normV(V):
     '''
-    normalizes V and returns the result as an array
+    Computes the normalized unit vector of a vector V.
+    Args:
+        V (np.ndarray): A 3-element array representing a vector [Vx, Vy, Vz].
+    Returns:
+        np.ndarray: A 3-element array representing the normalized vector.
+        
     '''
     import numpy as np
     N = normOfV(V)
@@ -294,13 +559,15 @@ def normV(V):
 def centerToVertices(coordVertices: np.ndarray,
                      cog: np.ndarray):
     '''
-    returns the vector and distance between the center of gravity (cog) and each vertex of a polyhedron
-    input:
-        - coordVertices = coordinates of the vertices ((nvertices,3) numpy array)
-        - cog = center of gravity of the NP
-    returns:
-        - (cog-nvertices)x3 coordinates of the vectors (np.array)
-        - nvertices-cog distances (np.array)
+    Computes the vectors and distances between the center of gravity (cog) 
+    and each vertex of a polyhedron.
+    Args:
+        coordVertices (np.ndarray): Array of shape (n_vertices, 3) containing the coordinates of the vertices.
+        cog (np.ndarray): A 3-element array representing the center of gravity of the nanoparticle.
+    Returns:
+        tuple:
+            - directions (np.ndarray): Array of shape (n_vertices, 3) containing the vectors from cog to each vertex.
+            - distances (np.ndarray): Array of shape (n_vertices,) containing the distances from cog to each vertex.
     '''
     import numpy as np
     directions = []
@@ -312,7 +579,30 @@ def centerToVertices(coordVertices: np.ndarray,
 
 #######################################################################
 ######################################## Fill edges and facets
+
 def MakeFaceCoord(Rnn,f,coord,nAtomsOnFaces,coordFaceAt):
+    """
+    Interpolates atom positions on a given face of a polyhedron by distributing atoms 
+    between two relevant edges.
+
+    Args:
+        Rnn (float): Nearest neighbor distance.
+        f (list): List of vertex indices defining the face.
+        coord (np.ndarray): Array containing the coordinates of all atoms.
+        nAtomsOnFaces (int): Counter for the number of atoms placed on faces.
+        coordFaceAt (list): List of face atom coordinates to be updated.
+
+    Returns:
+        tuple: 
+            - nAtomsOnFaces (int): Updated count of face atoms.
+            - coordFaceAt (list): Updated list of coordinates of atoms placed on faces.
+
+    Method:
+        1. Determines two relevant edges based on the number of vertices in the face.
+        2. Interpolates atoms along these edges.
+        3. Fills the face by interpolating between interpolated edge atoms.
+    """
+ 
     import numpy as np
     # the idea here is to interpolate between edge atoms of two relevant edges
     # (for example two opposite edges of a squared face)
@@ -320,20 +610,28 @@ def MakeFaceCoord(Rnn,f,coord,nAtomsOnFaces,coordFaceAt):
     if (len(f) == 3):  #triangular facet
         edge1 = [f[1],f[0]]
         edge2 = [f[1],f[2]]
-    if (len(f) == 4):  #square facet 0-1-2-3-4-0
+    elif (len(f) == 4):  #square facet 0-1-2-3-4-0
         edge1 = [f[3],f[0]]
         edge2 = [f[2],f[1]]
-    if (len(f) == 5):  #pentagonal facet #not working
+    elif (len(f) == 5):  #pentagonal facet #not working
         edge1 = [f[1],f[0]]
         edge2 = [f[1],f[2]]
-    if (len(f) == 6):  #hexagonal facet #not working
+    elif (len(f) == 6):  #hexagonal facet #not working
         edge1 = [f[0],f[1]]
         edge2 = [f[5],f[4]]
+    else:
+        raise ValueError("Face type not supported (only 3, 4, 5, or 6 vertices).")
+        
+    # Determine the number of atoms along the edges
     nAtomsOnEdges = int((RAB(coord,f[1],f[0])+1e-6)/Rnn) - 1
     nIntervalsE = nAtomsOnEdges + 1
+
+    # Interpolate atoms along the edges
     for n in range(nAtomsOnEdges):
         CoordAtomOnEdge1 = coord[edge1[0]]+vector(coord,edge1[0],edge1[1])*(n+1) / nIntervalsE
         CoordAtomOnEdge2 = coord[edge2[0]]+vector(coord,edge2[0],edge2[1])*(n+1) / nIntervalsE
+
+        # Compute distance and interpolate atoms between edge atoms
         distBetween2EdgeAtoms = Rbetween2Points(CoordAtomOnEdge1,CoordAtomOnEdge2)
         nAtomsBetweenEdges = int((distBetween2EdgeAtoms+1e-6)/Rnn) - 1
         nIntervalsF = nAtomsBetweenEdges + 1
@@ -347,6 +645,15 @@ def MakeFaceCoord(Rnn,f,coord,nAtomsOnFaces,coordFaceAt):
 def moi(model: Atoms,
         noOutput: bool=False,
        ):
+    '''
+    Get the moments of inertia along the principal axes.
+    The three principal moments of inertia are computed from the
+    eigenvalues of the symmetric inertial tensor. 
+    
+    Notes:
+        Units of the moments of inertia are amu.angstrom**2.
+        Periodic boundary conditions are ignored. 
+    '''
     import numpy as np
     if not noOutput: vID.centertxt("Moments of inertia",bgc='#007a7a',size='14',weight='bold')
     model.moi = model.get_moments_of_inertia() # in amu*angstrom**2
@@ -359,17 +666,23 @@ def moi(model: Atoms,
     return moiM
    
 
-    
 
 #NEW
 def get_moments_of_inertia_for_size(self, vectors=False): #from ASE but with mass modification
     '''
     Get the moments of inertia along the principal axes with
-    mass normalisation.
-    The three principal moments of inertia are computed from the
-    eigenvalues of the symmetric inertial tensor. Periodic boundary
-    conditions are ignored. 
-    Units of the moments of inertia are angstrom**2.
+    mass normalisation.The three principal moments of inertia are computed from the
+    eigenvalues of the symmetric inertial tensor.
+    Args:
+        vectors (bool, optional): If True, returns both eigenvalues and eigenvectors.
+                                  If False, returns only eigenvalues (default: False).
+    Returns:
+        evals (np.ndarray): Principal moments of inertia (3 values).
+        evecs (np.ndarray, optional): Principal axes (3x3 matrix, columns are eigenvectors).
+
+    Notes:
+        Periodic boundary conditions are ignored. 
+        Units of the moments of inertia are angstrom**2.
     '''
     com = self.get_center_of_mass()
     positions = self.get_positions()
@@ -404,7 +717,11 @@ def moi_size(model: Atoms, # normalized moment of inertia with masses=1
         noOutput: bool=False,
        ):
     '''
-    Returns the 3 moments of inertia along the principal axes with mass normalization to get acces to size informations
+    Get the moments of inertia along the principal axes with mass normalization to acces  size informations.
+    The three principal moments of inertia are computed from the eigenvalues of the symmetric inertial tensor. 
+    
+    Note:
+        Units of the moments of inertia are angstrom**2.
     '''
 
     model.moi_size_all = get_moments_of_inertia_for_size(model)
@@ -418,8 +735,22 @@ def moi_size(model: Atoms, # normalized moment of inertia with masses=1
 
 #######################################################################
 ######################################## Geometry optimization
+
 def optimizeEMT(model: Atoms, saveCoords=True, pathway="./coords/model", fthreshold=0.05):
-    from varname import nameof, argname
+    """
+    Optimize the geometry of an atomic system using the EMT potential 
+    and the Quasi-Newton algorithm.
+
+    Args:
+        model (ase.Atoms): Atomic system to optimize.
+        saveCoords (bool, optional): If True, saves the optimized coordinates. Default is True.
+        pathway (str, optional): Path where to save the trajectory and final structure. Default is "./coords/model".
+        fthreshold (float, optional): Convergence threshold for forces (in eV/Å). Default is 0.05.
+
+    Returns:
+        ase.Atoms: Optimized atomic model.
+    """
+    # from varname import nameof, argname
     import numpy as np
     from ase.io import write
     from ase import Atoms
@@ -444,13 +775,15 @@ def planeFittingLSF(coords: np.float64,
                     printErrors: bool=False,
                     printEq: bool=True):
     '''
-    least-square fitting of the equation of a plane ux + vy + wz + h = 0
+    Least-square fitting of the equation of a plane ux + vy + wz + h = 0
     that passes as close as possible to a set of 3D points
-    - input
-        - coords: numpy array with shape (N,3) that contains the 3 coordinates for each of the N points
-        - printErrors: if True, prints the absolute error between the actual z coordinate of each points
+    Args:
+        - coords (np.ndarray): array with shape (N,3) that contains the 3 coordinates for each of the N points
+        - printErrors (bool): if True, prints the absolute error between the actual z coordinate of each points
         and the corresponding z-value calculated from the plane equation. The residue is also printed 
-    - returns a numpy array [u v w h]
+        - printEq (bool): if True, prints equation.
+    Returns:
+        numpy array([u v w h])
     '''
     import numpy as np
     from numpy import linalg as la
@@ -497,12 +830,13 @@ def planeFittingLSF(coords: np.float64,
 def convertuvwh2hkld(plane: np.float64,
                      prthkld: bool=True):
     '''
-    converts an ux + vy + wz + h = 0 equation of a plane, where u, v, w and h can be real numbers as 
+    Converts an ux + vy + wz + h = 0 equation of a plane, where u, v, w and h can be real numbers as 
     an hx + ky + lz + d = 0 equation, where h, k, and l are all integer numbers
-    - input:
-        - [u v w h] numpy array 
-        - prthkld: does print the result by default 
-    - returns an [h k l d] numpy array 
+    Args:
+        - plane (np.ndarray): [u v w h]  
+        - prthkld (bool): does print the result by default 
+    Returns
+        hkld (np.ndarray): [h k l d]
     '''
     import numpy as np
     from fractions import Fraction
@@ -527,14 +861,15 @@ def hklPlaneFitting(coords: np.float64,
                     printEq: bool=True,
                     printErrors: bool=False):
     '''
-    Context: finding the Miller indices of a plane, if relevant
+    Context: finding the Miller indices of a plane, if relevant.
     Consists in a least-square fitting of the equation of a plane hx + ky + lz + d = 0
     that passes as close as possible to a set of 3D points
-    - input
-        - coords: numpy array with shape (N,3) that contains the 3 coordinates for each of the N points
-        - printErrors: if True, prints the absolute error between the actual z coordinate of each points
+    Args:
+        coords (np.ndarray): array with shape (N,3) that contains the 3 coordinates for each of the N points
+        printErrors (bool): if True, prints the absolute error between the actual z coordinate of each points
         and the corresponding z-value calculated from the plane equation. The residue is also printed
-    - returns a numpy array [h k l d], where h, k, and l are as close as possible to integers
+    Returns:
+        plane (np.ndarray): [h k l d], where h, k, and l are as close as possible to integers
     '''
     plane = planeFittingLSF(coords,printErrors,printEq)
     plane = convertuvwh2hkld(plane, printEq)
@@ -543,11 +878,12 @@ def hklPlaneFitting(coords: np.float64,
 def shortestPoint2PlaneVectorDistance(plane:np.ndarray,
                                       point:np.ndarray):
     '''
-    returns the shortest distance, d, from a point X0 to a plane p (projection of X0 on p = P), as well as the PX0 vector 
-    - input:
-        - plane = [u v w h] definition of the p plane (numpy array)
-        - point = [x0 y0 z0] coordinates of the X0 point (numpy array)
-    returns the PX0 vector and ||PX0||
+    Returns the shortest distance, d, from a point X0 to a plane p (projection of X0 on p = P), as well as the PX0 vector 
+    Args:
+        plane (np.ndarray): [u v w h] definition of the p plane 
+        point (np.ndarray): [x0 y0 z0] coordinates of the X0 point 
+    Returns:
+        v,d (tuple): the PX0 vector and ||PX0||
     '''
     t = (plane[3] + np.dot(plane[0:3],point))/(plane[0]**2+plane[1]**2+plane[2]**2)
     v = -t*plane[0:3]
@@ -556,12 +892,13 @@ def shortestPoint2PlaneVectorDistance(plane:np.ndarray,
 
 def Pt2planeSignedDistance(plane,point):
     '''
-    returns the orthogonal distance of a given point X0 to the plane p in a metric space (projection of X0 on p = P), 
+    Returns the orthogonal distance of a given point X0 to the plane p in a metric space (projection of X0 on p = P), 
     with the sign determined by whether or not X0 is in the interior of p with respect to the center of gravity [0 0 0]
-    - input:
-        - plane = [u v w h] definition of the P plane (numpy array)
-        - point = [x0 y0 z0] coordinates of the X0 point (numpy array)
-    returns the signed modulus ±||PX0||
+    Args:
+        - plane (numpy array): [u v w h] definition of the P plane 
+        - point (numpy array): [x0 y0 z0] coordinates of the X0 point 
+    Returns:
+        the signed modulus ±||PX0||
     '''
     sd = (plane[3] + np.dot(plane[0:3],point))/np.sqrt(plane[0]**2+plane[1]**2+plane[2]**2)
     return sd
@@ -569,12 +906,13 @@ def Pt2planeSignedDistance(plane,point):
 def planeAtVertices(coordVertices: np.ndarray,
                     cog: np.ndarray):
     '''
-    returns the equation of the plane defined by vectors between the center of gravity (cog) and each vertex of a polyhedron
+    Returns the equation of the plane defined by vectors between the center of gravity (cog) and each vertex of a polyhedron
     and that is located at the vertex
-    input:
-        - coordVertices = coordinates of the vertices ((nvertices,3) numpy array)
-        - cog = center of gravity of the NP
-    returns the (cog-nvertices)x3 coordinates of the plane (np.array)
+    Args:
+        coordVertices (np.ndarray): coordinates of the vertices ((nvertices,3) numpy array)
+        cog (np.ndarray): center of gravity of the NP
+    Returns:
+        np.array(plane): the (cog-nvertices)x3 coordinates of the plane 
     '''
     import numpy as np
     planes = []
@@ -588,12 +926,13 @@ def planeAtVertices(coordVertices: np.ndarray,
 def planeAtPoint(plane: np.ndarray,
                  P0: np.ndarray):
     '''
-    given a former [a,b,c,d] plane as input, d is recalculated so that the plane passes through P0,
+    Given a former [a,b,c,d] plane as input, d is recalculated so that the plane passes through P0,
     a known point on the plane
-    input:
-        -plane: numpy array [a b c d]
-        -P0: numpy array with P0 coordinates [x0 y0 z0]
-    returns [a b c -(ax0+by0+cz0)]
+    Args:
+        -plane (np.ndarray): array [a b c d]
+        -P0 (np.ndarray): array with P0 coordinates [x0 y0 z0]
+    Returns 
+        planeAtp: [a b c -(ax0+by0+cz0)]
     '''
     d = np.dot(plane[0:3],P0)
     planeAtP = plane.copy()
@@ -603,7 +942,7 @@ def planeAtPoint(plane: np.ndarray,
 def normalizePlane(p):
     import numpy as np
     '''
-    normalizes the [a,b,c,d] coordinates of a plane
+    Normalizes the [a,b,c,d] coordinates of a plane
     - input: plane [a,b,c,d]
     returns [a/norm,b/norm,c/norm,d/norm] where norm=dsqrt(a**2+b**2+c**2)
     '''
@@ -611,6 +950,14 @@ def normalizePlane(p):
 
 def point2PlaneDistance(point: np.float64,
                               plane: np.float64):
+    """
+    Compute the shortest distance between a point and a plane in 3D space.
+    Args:
+        point (np.ndarray): A 3D point as [x, y, z].
+        plane (np.ndarray): A plane defined by [A, B, C, D] where Ax + By + Cz + D = 0.
+     Returns:
+        float: The shortest distance from the point to the plane.
+    """
     import numpy as np
     from numpy.linalg import norm
     distance = abs(np.dot(point,plane[0:3]) + plane[3]) / norm(plane[0:3])
@@ -618,7 +965,7 @@ def point2PlaneDistance(point: np.float64,
 
 def AngleBetweenVV(lineDV,planeNV):
     '''
-    returns the angle, in degrees, between two vectors
+    Returns the angle, in degrees, between two vectors
     '''
     import numpy as np
     ldv = np.array(lineDV)
@@ -932,6 +1279,19 @@ def returnPointsThatLieInPlanes(planes: np.ndarray,
                                 threshold: float=1e-3,
                                 noOutput: bool=False,
                                ):
+    """
+    Finds all points (atoms) that lie within the given planes based on a signed distance criterion.
+
+    Args:
+        planes (np.ndarray): A 2D array where each row represents a plane equation [a, b, c, d] for the plane ax + by + cz + d = 0.
+        coords (np.ndarray): A 2D array where each row is the coordinates of an atom [x, y, z].
+        debug (bool, optional): If True, prints additional debugging information. Defaults to False.
+        threshold (float, optional): The tolerance for the distance to the plane to consider a point as lying in the plane. Defaults to 1e-3.
+        noOutput (bool, optional): If True, suppresses the output messages. Defaults to False.
+
+    Returns:
+        np.ndarray: A boolean array where True indicates that the atom lies in one of the planes.
+    """
     import numpy as np
     if not noOutput: vID.centertxt(f"Find all points that lie in the given planes",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
     AtomsInPlane = np.zeros(len(coords), dtype=bool)
@@ -991,11 +1351,19 @@ def DrawJmol(mol,prefix,scriptJ=""):
     print(jmolcmd)
     os.system(jmolcmd)
 
+
+
+
+#######################################################################
+######################################## Function that writes xyz and cif files
+
+
+
 def writexyz(filename: str,
              atoms: Atoms,
              wa: str='w'):
     '''
-    simple xyz writing, with atomic symbols/x/y/z and no other information sometimes misunderstood by some utilities, such as DebyeCalculator
+    Simple xyz writing, with atomic symbols/x/y/z and no other information sometimes misunderstood by some utilities, such as DebyeCalculator.
     '''
     element_array=atoms.get_chemical_symbols()
     # extract composition in dict form
@@ -1015,36 +1383,410 @@ def writexyz(filename: str,
     with open(filename,'w') as file:
         file.write(line2write)
 
-# NEW WRITE XYZ
-def writexyz_generalized_platonic(path,instance_class,number):
-    '''
-    simple xyz writing, with atomic symbols/x/y/z and no other information sometimes misunderstood by some utilities, such as DebyeCalculator
-    input : 
-            - path : path in which the xyz files are created
-            - instance_class: instance of the platonic class 
+def writexyz_generalized_archimedean(self,structure, path, instance_class,number, noOutput:bool=True):
+    """
+    Function that creates xyz and cif files of Arcimedeans NPs containing their main information 
+    in a dictionary and their xyz coordinates.
 
-    Note : Dimensions are in Å, MOI are in amu.Å², normalized MOI in Å²
-    '''
-    # verify if the path does exist
+    Parameters:
+        - structure (str): "anatase", "rutile", "alpha", etc.
+        - path (str): Path where xyz/cif files will be created.
+        - instance_class (object): Instance of the platonic class.
+        - number (int): Used to track the size.
+        - noOutput (bool): If False, prints details about the files created.
+
+    Notes:
+        - Dimensions are in Å, MOI are in amu.Å², normalized MOI in Å².
+        - Filenames follow the format: Element_structure_shape_number_0000000.xyz
+    """  
+   
+    # Verify if the path exists
     if not os.path.isdir(path):
         raise FileNotFoundError(f"Directory '{path}'does not exist.")
 
-    # extract attributes from the class to write the dictionnary and the name of the file
+    # Extract attributes from the class to write the dictionnary and the name of the file
     if isinstance(instance_class,object):
         number2=0
+        crystalStructure=self.crystal_type
         metadata = instance_class.__dict__.copy() # Get all attributes
         element=instance_class.element
-        crystalStructure= instance_class.crystalStructure 
-        shape= instance_class.__class__.__name__ 
+        shape= instance_class.shape
         NP=instance_class.NP
         element_array=NP.get_chemical_symbols()
+
+        # Moment of inertia
         MOI=instance_class.moi #amu.angs²
         MOI_normalized=instance_class.moisize  #angs²
-        dim_main=instance_class.dim
-        #dim_seconday=...
-        number_atoms=instance_class.nAtoms
-        radius1=instance_class.radiusCircumscribedSphere #angs
-        radius2=instance_class.radiusInscribedSphere #angs
+        dim_MOI=np.round(np.array(instance_class.dim),3) #angs
+        
+        # Main dimensions, secondary dimensions and truncature
+        if instance_class.shape=='fccTrOh' or  instance_class.shape=='fccTrCube':
+            n_atoms_per_edges_1=instance_class.nAtomsPerEdge
+            truncated= True
+            number_truncated_atoms= int(n_atoms_per_edges_1*0.33) #gives the number of truncated atoms per edges
+            radius1=round(instance_class.radiusCircumscribedSphere(),3) #angs
+            radius2=round(instance_class.radiusInscribedSphere(),3) #angs
+        if instance_class.shape=='fccCubo' :
+            n_atoms_per_edges_1=instance_class.nShell+1
+            truncated= False
+            number_truncated_atoms= None
+            radius1=round(instance_class.radiusCircumscribedSphere(),3) #angs
+            radius2=round(instance_class.radiusInscribedSphere(),3) #angs 
+        if instance_class.shape=='fccTrTd' :
+            n_atoms_per_edges_1=instance_class.nAtomsPerEdge
+            truncated= True
+            number_truncated_atoms= int(n_atoms_per_edges_1*0.33)
+            radius1=round(instance_class.radiusCircumscribedSphere,3) #angs
+            radius2=round(instance_class.radiusInscribedSphere,3) #angs
+        edge_length_1=instance_class.edgeLength()
+        main_dim=np.array([2*radius1,2*radius2])
+
+        # Total number of atoms
+        number_atoms=int(instance_class.nAtoms)
+
+        # Composition
+        composition={}
+        for elements in element_array:
+            if elements in composition:
+                composition[elements]+=1
+            else:
+                composition[elements]=1
+                
+        coord=NP.get_positions()
+        natoms=len(element_array) 
+        
+        # Write the xyz file
+        filename_xyz= f"{element}_{structure}_{shape}_{'{:07d}'.format(number)}_{'{:07d}'.format(number2)}.xyz"
+        full_path = os.path.join(path, filename_xyz)
+        if not noOutput :
+            print(f' \x1B[3m xyz file created:{full_path} \x1B[0m')
+            
+        line2write='%d \n'%natoms
+        dictionnary = {
+            'composition': composition,
+            'crystal structure': crystalStructure,
+            'shape': shape,
+            'MOI': MOI,
+            'MOInormalized': MOI_normalized,
+            'MOI_dim': dim_MOI,
+            'main_dim': main_dim,
+            'secondary_dim': { 
+                'edges': {
+                    'edge_1': {'length': edge_length_1, 'atoms_per_edge': n_atoms_per_edges_1},
+                    'edge_2': {'length': None, 'atoms_per_edge': None}}},  # Only one type of edges for platonic NPs
+            'truncation': truncated,
+            # 'inscribed_sphere_radius': radius2,
+            # 'circumscribed_sphere_radius': radius1,
+            'number_of_atoms': number_atoms,
+            'wulff': False,
+            'crystallization': {
+                'state': 'crystalline',
+                'type': 'monocrystalline',
+                'subtype': 'random'
+            }
+            }
+        
+        line2write+='%s \n'%dictionnary
+
+        # Write the coordinates
+        for i in range(natoms):
+            line2write+='%s'%str(element_array[i])+'\t %.8f'%float(coord[i,0])+'\t %.8f'%float(coord[i,1])+'\t %.8f'%float(coord[i,2])+'\n'
+        with open(full_path,'w') as file:
+            file.write(line2write)
+
+
+        # Write the cif files using the function write from ASE.io
+        filename_cif = filename_xyz.replace('.xyz', '.cif')
+        new_path = os.path.join(path, filename_cif)
+        if not noOutput :
+            print(f' \x1B[3m cif file created:{new_path}\x1B[0m')
+        write(new_path, instance_class.NP)   
+        
+    else :
+        print('Objet is not a class instance')
+
+def writexyz_generalized_catalan(self,structure, path, instance_class,number, noOutput:bool=True):
+    """
+    Function that creates xyz and cif files of catalan NPs containing their main informations  
+    in a dictionary and their xyz coordinates.
+
+    Parameters:
+        - structure (str): "anatase", "rutile", "alpha", etc.
+        - path (str): Path where xyz/cif files will be created.
+        - instance_class (object): Instance of the platonic class.
+        - number (int): Used to track the size.
+        - noOutput (bool): If False, prints details about the files created.
+
+    Notes:
+        - Dimensions are in Å, MOI are in amu.Å², normalized MOI in Å².
+        - Filenames follow the format: Element_structure_shape_number_0000000.xyz
+    """  
+   
+    # Verify if the path exists
+    if not os.path.isdir(path):
+        raise FileNotFoundError(f"Directory '{path}'does not exist.")
+
+    # Extract attributes from the class to write the dictionnary and the name of the file
+    if isinstance(instance_class,object):
+        number2=0
+        crystalStructure=self.crystal_type
+        metadata = instance_class.__dict__.copy() # Get all attributes
+        element=instance_class.element
+        shape= instance_class.shape
+        NP=instance_class.NP
+        element_array=NP.get_chemical_symbols()
+
+        # Moment of inertia
+        MOI=instance_class.moi #amu.angs²
+        MOI_normalized=instance_class.moisize  #angs²
+        dim_MOI=np.round(np.array(instance_class.dim),3) #angs
+       
+          
+        
+        # Main and secondary dimensions
+        radius1=round(instance_class.radiusCircumscribedSphere,3) #angs
+        radius2=round(instance_class.radiusInscribedSphere,3) #angs
+        main_dim=np.array([2*radius1,2*radius2])
+        n_atoms_per_edges_1=instance_class.nShell+1
+        edge_length_1=instance_class.edgeLength()
+        truncated= False
+        number_truncated_atoms= None
+
+        # Total number of atoms
+        number_atoms=int(instance_class.nAtoms)
+
+        # Composition
+        composition={}
+        for elements in element_array:
+            if elements in composition:
+                composition[elements]+=1
+            else:
+                composition[elements]=1
+
+        coord=NP.get_positions()
+        natoms=len(element_array) 
+        
+        # Write the xye file
+        filename_xyz= f"{element}_{structure}_{shape}_{'{:07d}'.format(number)}_{'{:07d}'.format(number2)}.xyz"
+        full_path = os.path.join(path, filename_xyz)
+        if not noOutput :
+            print(f' \x1B[3m xyz file created:{full_path} \x1B[0m')
+            
+        line2write='%d \n'%natoms
+
+        dictionnary = {
+            'composition': composition,
+            'crystal structure': crystalStructure,
+            'shape': shape,
+            'MOI': MOI,
+            'MOInormalized': MOI_normalized,
+            'MOI_dim': dim_MOI,
+            'main_dim': main_dim,
+            'secondary_dim': { 
+                'edges': {
+                    'edge_1': {'length': edge_length_1, 'atoms_per_edge': n_atoms_per_edges_1},
+                    'edge_2': {'length': None, 'atoms_per_edge': None}}},  # Only one type of edges for catalan NPs
+            'truncation': truncated,
+            # 'inscribed_sphere_radius': radius2,
+            # 'circumscribed_sphere_radius': radius1,
+            'number_of_atoms': number_atoms,
+            'wulff': False,
+            'crystallization': {
+                'state': 'crystalline',
+                'type': 'monocrystalline',
+                'subtype': 'random'
+            }
+            }
+        
+        line2write+='%s \n'%dictionnary
+
+        # Write the coordinates
+        for i in range(natoms):
+            line2write+='%s'%str(element_array[i])+'\t %.8f'%float(coord[i,0])+'\t %.8f'%float(coord[i,1])+'\t %.8f'%float(coord[i,2])+'\n'
+        with open(full_path,'w') as file:
+            file.write(line2write)
+
+
+        # Write the cif files using the function write from ASE.io
+        filename_cif = filename_xyz.replace('.xyz', '.cif')
+        new_path = os.path.join(path, filename_cif)
+        if not noOutput :
+            print(f' \x1B[3m cif file created:{new_path}\x1B[0m')
+        write(new_path, instance_class.NP)   
+        
+    else :
+        print('Objet is not a class instance')
+
+def writexyz_generalized_otherNPs(self,structure, path, instance_class,number, noOutput:bool=True):
+    """
+    Function that creates xyz and cif files of other NPs containing their main informations
+    in a dictionary and their xyz coordinates.
+
+    Parameters:
+        - structure (str): "anatase", "rutile", "alpha", etc.
+        - path (str): Path where xyz/cif files will be created.
+        - instance_class (object): Instance of the platonic class.
+        - number (int): Used to track the size.
+        - noOutput (bool): If False, prints details about the files created.
+
+    Notes:
+        - Dimensions are in Å, MOI are in amu.Å², normalized MOI in Å².
+        - Filenames follow the format: Element_structure_shape_number_0000000.xyz
+    """  
+   
+    # Verify if the path exists
+    if not os.path.isdir(path):
+        raise FileNotFoundError(f"Directory '{path}'does not exist.")
+
+    # Extract attributes from the class to write the dictionnary and the name of the file
+    if isinstance(instance_class,object):
+        number2=0
+        crystalStructure=self.crystal_type
+        metadata = instance_class.__dict__.copy() # Get all attributes
+        element=instance_class.element
+        shape= instance_class.shape
+        NP=instance_class.NP
+        element_array=NP.get_chemical_symbols()
+
+        # Moment of inertia
+        MOI=instance_class.moi #amu.angs²
+        MOI_normalized=instance_class.moisize  #angs²
+        dim_MOI=np.round(np.array(instance_class.dim),3) #angs
+        
+        # Main dimensions
+        radius1=round(instance_class.radiusCircumscribedSphere,3) #angs
+        radius2=round(instance_class.radiusInscribedSphere,3) #angs
+        main_dim=np.array([2*radius1,2*radius2])
+       
+        # Secondary dimensions
+        n_atoms_per_edges_1=instance_class.nAtomsPerEdge+1
+        edge_length_1=instance_class.Rnn*(instance_class.nAtomsPerEdge)
+        n_atoms_per_edges_2=instance_class.nLayer
+        edge_length_2=instance_class.interLayerDistance*(instance_class.nLayer-1)
+        truncated= False
+        number_truncated_atoms= None
+ 
+        # Total number of atoms
+        number_atoms=int(instance_class.nAtoms)
+
+        # Composition
+        composition={}
+        for elements in element_array:
+            if elements in composition:
+                composition[elements]+=1
+            else:
+                composition[elements]=1
+
+        coord=NP.get_positions()
+        natoms=len(element_array) 
+        
+        # Write the file
+        filename_xyz= f"{element}_{structure}_{shape}_{'{:07d}'.format(number)}_{'{:07d}'.format(number2)}.xyz"
+        full_path = os.path.join(path, filename_xyz)
+        if not noOutput :
+            print(f' \x1B[3m xyz file created:{full_path} \x1B[0m')
+            
+        line2write='%d \n'%natoms
+
+        dictionnary = {
+            'composition': composition,
+            'crystal structure': crystalStructure,
+            'shape': shape,
+            'MOI': MOI,
+            'MOInormalized': MOI_normalized,
+            'MOI_dim': dim_MOI,
+            'main_dim': main_dim,
+            'secondary_dim': { 
+                'edges': {
+                    'edge_1': {'length': edge_length_1, 'atoms_per_edge': n_atoms_per_edges_1},
+                    'edge_2': {'length': edge_length_2, 'atoms_per_edge': n_atoms_per_edges_2}}},  # Only one type of edges for catalan NPs
+            'truncation': truncated,
+            # 'inscribed_sphere_radius': radius2,
+            # 'circumscribed_sphere_radius': radius1,
+            'number_of_atoms': number_atoms,
+            'wulff': False,
+            'crystallization': {
+                'state': 'crystalline',
+                'type': 'monocrystalline',
+                'subtype': 'random'
+            }
+            }
+        
+        line2write+='%s \n'%dictionnary
+
+        # Write the coordinates
+        for i in range(natoms):
+            line2write+='%s'%str(element_array[i])+'\t %.8f'%float(coord[i,0])+'\t %.8f'%float(coord[i,1])+'\t %.8f'%float(coord[i,2])+'\n'
+        with open(full_path,'w') as file:
+            file.write(line2write)
+
+
+        # Write the cif files using the function write from ASE.io
+        filename_cif = filename_xyz.replace('.xyz', '.cif')
+        new_path = os.path.join(path, filename_cif)
+        if not noOutput :
+            print(f' \x1B[3m cif file created:{new_path}\x1B[0m')
+        write(new_path, instance_class.NP)   
+        
+    else :
+        print('Objet is not a class instance')
+
+
+
+def writexyz_generalized_platonic(self,structure, path, instance_class,number, noOutput:bool=True):
+    """
+    Function that creates xyz and cif files of platonic NPs containing their main informations
+    in a dictionary and their xyz coordinates.
+
+    Parameters:
+        - structure (str): "anatase", "rutile", "alpha", etc.
+        - path (str): Path where xyz/cif files will be created.
+        - instance_class (object): Instance of the platonic class.
+        - number (int): Used to track the size.
+        - noOutput (bool): If False, prints details about the files created.
+
+    Notes:
+        - Dimensions are in Å, MOI are in amu.Å², normalized MOI in Å².
+        - Filenames follow the format: Element_structure_shape_number_0000000.xyz
+    """  
+   
+    # Verify if the path exists
+    if not os.path.isdir(path):
+        raise FileNotFoundError(f"Directory '{path}'does not exist.")
+
+    # Extract attributes from the class to write the dictionnary and the name of the file
+    if isinstance(instance_class,object):
+        number2=0
+        crystalStructure=self.crystal_type
+        metadata = instance_class.__dict__.copy() # Get all attributes
+        element=instance_class.element
+        shape= instance_class.shape
+        NP=instance_class.NP
+        element_array=NP.get_chemical_symbols()
+
+        # Moment of inertia
+        MOI=instance_class.moi #amu.angs²
+        MOI_normalized=instance_class.moisize  #angs²
+        dim_MOI=np.round(np.array(instance_class.dim),3) #angs
+        
+        # Main dimensions
+        radius1=round(instance_class.radiusCircumscribedSphere(),3) #angs
+        radius2=round(instance_class.radiusInscribedSphere(),3) #angs
+        main_dim=np.array([2*radius1,2*radius2])
+        
+        # Secondary dimensions
+        if instance_class.shape=='regfccOh' or instance_class.shape=='cube' :
+            n_atoms_per_edges_1=instance_class.nOrder+1
+        if instance_class.shape=='regIco' or instance_class.shape=='regDD':
+            n_atoms_per_edges_1=instance_class.nShell+1
+        if instance_class.shape=='regfccTd' :
+            n_atoms_per_edges_1=instance_class.nLayer
+        edge_length_1=instance_class.edgeLength()
+        
+        # Total number of atoms
+        number_atoms=int(instance_class.nAtoms)
+        
+        # Composition
         composition={}
         
         for elements in element_array:
@@ -1052,63 +1794,279 @@ def writexyz_generalized_platonic(path,instance_class,number):
                 composition[elements]+=1
             else:
                 composition[elements]=1
-    
-    
+
         coord=NP.get_positions()
         natoms=len(element_array) 
-        #write the filename
-        filename= f"{element}_{crystalStructure}_{shape}_{'{:07d}'.format(number)}_{'{:07d}'.format(number2)}.xyz"
-        full_path = os.path.join(path, filename)
-        print('full_path:',full_path)
+        
+        # Write the xyz file
+        filename_xyz= f"{element}_{structure}_{shape}_{'{:07d}'.format(number)}_{'{:07d}'.format(number2)}.xyz"
+        full_path = os.path.join(path, filename_xyz)
+        if not noOutput :
+            print(f' \x1B[3m xyz file created:{full_path} \x1B[0m')
+            
         line2write='%d \n'%natoms
-        dictionnary=dict([('composition', composition), ('crystal structure',crystalStructure), ('shape', shape ), ('MOI', MOI ),('MOInormalized', MOI_normalized),('main dimensions', dim_main), ('number of atoms', number_atoms)])
+
+        dictionnary = {
+            'composition': composition,
+            'crystal structure': crystalStructure,
+            'shape': shape,
+            'MOI': MOI,
+            'MOInormalized': MOI_normalized,
+            'MOI_dim': dim_MOI,
+            'main_dim': main_dim,
+            'secondary_dim': { 
+                'edges': {
+                    'edge_1': {'length': edge_length_1, 'atoms_per_edge': n_atoms_per_edges_1},
+                    'edge_2': {'length': None, 'atoms_per_edge': None}}},  # Only one type of edges for platonic NPs
+            'truncation': False,
+            # 'inscribed_sphere_radius': radius2,
+            # 'circumscribed_sphere_radius': radius1,
+            'number_of_atoms': number_atoms,
+            'wulff': False,
+            'crystallization': {
+                'state': 'crystalline',
+                'type': 'monocrystalline',
+                'subtype': 'random'
+            }
+            }
+        
         line2write+='%s \n'%dictionnary
 
-        # writing of the coordinates
+        # Write the coordinates
         for i in range(natoms):
             line2write+='%s'%str(element_array[i])+'\t %.8f'%float(coord[i,0])+'\t %.8f'%float(coord[i,1])+'\t %.8f'%float(coord[i,2])+'\n'
         with open(full_path,'w') as file:
             file.write(line2write)
+
+
+        # Write the cif files using the function write from ASE.io
+        filename_cif = filename_xyz.replace('.xyz', '.cif')
+        new_path = os.path.join(path, filename_cif)
+        if not noOutput :
+            print(f' \x1B[3m cif file created:{new_path}\x1B[0m')
+        write(new_path, instance_class.NP)   
+        
     else :
         print('Objet is not a class instance')
 
 
-def writexyz_generalized_crystals(self,path,instance_class_crystals, number):
+def writexyz_generalized_crystals(self,structure,path,instance_class_crystals, number,noOutput:bool=True):
     '''
-    simple xyz writing, with atomic symbols/x/y/z and no other information sometimes misunderstood by some utilities, such as DebyeCalculator
-    input : 
-            - path : path in which the xyz files are created
-            - instance_class_crystals: instance of the crystal class
-
-    Note : Dimensions are in Å, MOI are in amu.Å², normalized MOI in Å²
+    Function that creates xyz and cif files of crystals NPs containing their main informations
+    in a dictionary and their xyz coordinates.
+    Parameters:
+        - structure (str): "anatase", "rutile", "alpha", etc.
+        - path (str): Path where xyz/cif files will be created.
+        - instance_class (object): Instance of the platonic class.
+        - number (int): Used to track the size.
+        - noOutput (bool): If False, prints details about the files created.
+    
+    Notes:
+        - Dimensions are in Å, MOI are in amu.Å², normalized MOI in Å².
+        - Filenames follow the format: Element_structure_shape_number_0000000.xyz
+            
     '''
-    # verify if the path does exist
+    # Verify if the path does exist
     if not os.path.isdir(path):
         raise FileNotFoundError(f"Directory '{path}'does not exist.")
     
-    # extract attributes from the class to write the dictionnary and the name of the file
+    # Extract attributes from the class to write the dictionnary and the name of the file
     if isinstance(instance_class_crystals,object):
         element=self.cif_name.split()[0]
+        if structure== None : #example for NaCl, get the lattice for the name of the file
+            structure=self.crystal_type
+        
         crystalStructure=self.crystal_type
-        print('instance_class_crystals.crystal',instance_class_crystals.crystal)
-        number2=0
+        number2=0 # indicator for data augmentation in the files names
         metadata = instance_class_crystals.__dict__.copy() # Get all attributes
         shape= instance_class_crystals.shape
-        #type of shapes : wulff or not ?
+        
+        # 1) is it a wulff shape ? 2) if it's a wire : get nRot (number of edges of the cross section) and refplanewire (plane rotated to create the wire) 
+        nRot=None
+        plane_rotated=None
         if "Wulff" in shape: 
+            shape=shape.split(':')[1]
             wulff= True
-        else :
+            if "hcpwire" in shape :
+                nRot=int(6)
+                plane_rotated=np.array(instance_class_crystals.surfacesWulff)
+                
+        elif "wire" in shape :
             wulff= False
+            nRot=instance_class_crystals.nRotWire
+            plane_rotated=instance_class_crystals.refPlaneWire
+        else : 
+            wulff= False
+     
         NP=instance_class_crystals.NP
         element_array=NP.get_chemical_symbols()
-        MOI=instance_class_crystals.moi #amu.angs²
-        MOI_normalized=instance_class_crystals.moisize  #angs²
-        dim_main=instance_class_crystals.dim
-        #dim_secondary=...
-        number_atoms=instance_class_crystals.nAtoms
-        radius1=instance_class_crystals.radiusCircumscribedSphere #angs
-        radius2=instance_class_crystals.radiusInscribedSphere #angs
+
+        # Moment of inertia
+        MOI=np.round(instance_class_crystals.moi,3) #amu.angs²
+        MOI_normalized=np.round(instance_class_crystals.moisize,3)  #angs²
+        dim_MOI=np.round(np.array(instance_class_crystals.dim),3) #angs
+
+        #Truncation:
+        if 'tr' in shape:
+            truncated= True
+ 
+        else:
+            truncated= False
+
+        # Total number of atoms
+        number_atoms=int(instance_class_crystals.nAtoms)
+        
+        # Main dimensions
+        radius1=round(instance_class_crystals.radiusCircumscribedSphere,3) #angs
+        #diam1=round(radius1*2*0.1,2)
+        radius2=round(instance_class_crystals.radiusInscribedSphere,3) #angs
+        main_dim=np.array([2*radius1,2*radius2])
+
+        # Composition
         composition={}
+ 
+        for elements in element_array:
+            if elements in composition:
+                composition[elements]+=1
+            else:
+                composition[elements]=1
+
+        coord=NP.get_positions()
+        natoms=len(element_array) 
+        
+        # Write the xyz file 
+        if nRot==None :
+            filename_xyz= f"{element}_{structure}_{shape}_{'{:07d}'.format(number)}_{'{:07d}'.format(number2)}.xyz"
+        else :
+            filename_xyz= f"{element}_{structure}_{shape}_{nRot}_{'{:07d}'.format(number)}_{'{:07d}'.format(number2)}.xyz"
+        #filename_xyz= f"{element}_{structure}_{shape}_{diam1}.xyz"
+        full_path = os.path.join(path, filename_xyz)
+        if not noOutput :
+            print('xyz file created:',full_path)
+        line2write='%d \n'%natoms
+   
+        dictionnary = {
+            'composition': composition,
+            'crystal structure': crystalStructure,
+            'shape': shape,
+            'MOI': MOI,
+            'MOInormalized': MOI_normalized,
+            'MOI_dim': dim_MOI,
+            'main_dim': main_dim,
+            'secondary_dim': { 
+                'edges': {
+                    'edge_1': {'length': None, 'atoms_per_edge': None},
+                    'edge_2': {'length': None, 'atoms_per_edge': None}}},
+            'truncation':  truncated,
+            # 'inscribed_sphere_radius': radius2,
+            # 'circumscribed_sphere_radius': radius1,
+            'number_of_atoms': number_atoms,
+            'wulff': wulff,
+            'crystallization': {
+                'state': 'crystalline',
+                'type': 'monocrystalline',
+                'subtype': 'random'
+            },
+            'wire_description': {
+                'nRot': nRot,
+                'plane_rotated': plane_rotated
+            }
+            }
+
+
+        line2write+='%s \n'%dictionnary
+        
+        # Write the coordinates
+        for i in range(natoms):
+            line2write+='%s'%str(element_array[i])+'\t %.8f'%float(coord[i,0])+'\t %.8f'%float(coord[i,1])+'\t %.8f'%float(coord[i,2])+'\n'
+        with open(full_path,'w') as file:
+            file.write(line2write)
+        
+        # Write the cif files using the function write from ASE.io
+        filename_cif = filename_xyz.replace('.xyz', '.cif')
+        filename_script = filename_xyz.replace('.xyz', '.script')
+        new_path = os.path.join(path, filename_cif)
+        new_path_script = os.path.join(path, filename_script)
+
+        if not noOutput :
+            print('cif file created:',new_path)
+            print('script file created:',new_path_script)
+        write(new_path, instance_class_crystals.NP) 
+        with open(new_path_script, 'w') as f: f.write(instance_class_crystals.jMolCS)
+        
+    else :
+        print('Object is not a class instance')
+
+def writexyz_generalized_johnson(self,structure, path, instance_class,number, noOutput:bool=True):
+    """
+    Function that creates xyz and cif files of johnson NPs containing their main information
+    in a dictionary and their xyz coordinates.
+
+    Parameters:
+        - structure (str): "anatase", "rutile", "alpha", etc.
+        - path (str): Path where xyz/cif files will be created.
+        - instance_class (object): Instance of the platonic class.
+        - number (int): Used to track the size.
+        - noOutput (bool): If False, prints details about the files created.
+
+    Notes:
+        - Dimensions are in Å, MOI are in amu.Å², normalized MOI in Å².
+        - Filenames follow the format: Element_structure_shape_number_0000000.xyz
+    """  
+   
+    # Verify if the path exists
+    if not os.path.isdir(path):
+        raise FileNotFoundError(f"Directory '{path}'does not exist.")
+
+    # Extract attributes from the class to write the dictionnary and the name of the file
+    if isinstance(instance_class,object):
+        number2=0
+        crystalStructure=self.crystal_type
+        metadata = instance_class.__dict__.copy() # Get all attributes
+        element=instance_class.element
+        shape= instance_class.shape
+        NP=instance_class.NP
+        element_array=NP.get_chemical_symbols()
+
+        # Moment of inertia
+        MOI=instance_class.moi #amu.angs²
+        MOI_normalized=instance_class.moisize  #angs²
+        dim_MOI= None #angs  
+        
+        # Main dimensions: radiusCircumscribedSphere and radiusInscribedSphere
+        radius1=round(instance_class.radiusCircumscribedSphere,3) #angs
+        radius2=round(instance_class.radiusInscribedSphere,3) #angs
+        main_dim=np.array([2*radius1,2*radius2])
+        composition={}
+
+        # Secondary dimensions and truncation
+        if instance_class.shape=='fcctbp' :
+
+            n_atoms_per_edges_1=instance_class.nAtomsPerEdge
+            edge_length_1=instance_class.edgeLength()
+            n_atoms_per_edges_2=None 
+            edge_length_2=None
+            truncated= False
+            number_truncated_atoms= None
+        if instance_class.shape=='epbpyM' :
+            # Truncation
+            if not instance_class.Marks== int(0):
+                truncated= True
+                number_truncated_atoms= instance_class.Marks
+            else:
+                truncated= False
+                number_truncated_atoms= None
+            
+            # n_atoms_per_edges_1=instance_class.sizeP+1-instance_class.Marks # number of atoms per edges of pentagonal section after truncation
+            n_atoms_per_edges_1=instance_class.nAtomsPerEdgeOfPC_after_truncation()
+            edge_length_1=instance_class.edgeLength_after_truncation('PC')
+            # n_atoms_per_edges_2=instance_class.sizeE+1 # number of atoms per edges of elongated part
+            n_atoms_per_edges_2=instance_class.nAtomsPerEdgeOfEP
+            edge_length_2=instance_class.edgeLength('EP')
+   
+        # Total number of atoms
+        number_atoms=int(instance_class.nAtoms)
+
         
         for elements in element_array:
             if elements in composition:
@@ -1118,36 +2076,108 @@ def writexyz_generalized_crystals(self,path,instance_class_crystals, number):
 
         coord=NP.get_positions()
         natoms=len(element_array) 
-    
         
-        # write the xyz file and cif file
-        filename_xyz= f"{element}_{crystalStructure}_{shape.split()[1]}_{'{:07d}'.format(number)}_{'{:07d}'.format(number2)}.xyz"
+        # Write the xyz filename
+        filename_xyz= f"{element}_{structure}_{shape}_{'{:07d}'.format(number)}_{'{:07d}'.format(number2)}.xyz"
         full_path = os.path.join(path, filename_xyz)
-        print('xyz file created:',full_path)
+        if not noOutput :
+            print(f' \x1B[3m xyz file created:{full_path} \x1B[0m')
+            
         line2write='%d \n'%natoms
-        dictionnary=dict([('composition', composition), ('crystal structure',crystalStructure), ('shape', shape ), ('MOI', MOI ),('MOInormalized', MOI_normalized),('inscribed sphere radius', radius2), ('circumscribed sphere radius', radius1),('number of atoms', number_atoms),  ("wulff", wulff) ])
+
+        dictionnary = {
+            'composition': composition,
+            'crystal structure': crystalStructure,
+            'shape': shape,
+            'MOI': MOI,
+            'MOInormalized': MOI_normalized,
+            'MOI_dim': dim_MOI,
+            'main_dim': main_dim,
+            'secondary_dim': { 
+                'edges': {
+                    'edge_1': {'length': edge_length_1, 'atoms_per_edge': n_atoms_per_edges_1},
+                    'edge_2': {'length': edge_length_2, 'atoms_per_edge': n_atoms_per_edges_2}}},
+            'truncation': truncated,
+            # 'inscribed_sphere_radius': radius2,
+            # 'circumscribed_sphere_radius': radius1,
+            'number_of_atoms': number_atoms,
+            'wulff': False,
+            'crystallization': {
+                'state': 'crystalline',
+                'type': 'monocrystalline',
+                'subtype': 'twinned'
+            }
+            }
+        
         line2write+='%s \n'%dictionnary
-        # writing of the coordinates
+
+        # Write the coordinates
         for i in range(natoms):
             line2write+='%s'%str(element_array[i])+'\t %.8f'%float(coord[i,0])+'\t %.8f'%float(coord[i,1])+'\t %.8f'%float(coord[i,2])+'\n'
         with open(full_path,'w') as file:
             file.write(line2write)
-        
-        # write the cif files using the function write from ASE.io
+
+
+        # Write the cif files using the function write from ASE.io
         filename_cif = filename_xyz.replace('.xyz', '.cif')
         new_path = os.path.join(path, filename_cif)
-        print('cif file created:',new_path)
-        write(new_path, instance_class_crystals.NP)     
-  
+        if not noOutput :
+            print(f' \x1B[3m cif file created:{new_path}\x1B[0m')
+        write(new_path, instance_class.NP)   
+        
     else :
         print('Objet is not a class instance')
 
-       
-        
 
+def create_data_csv(path_of_files, path_of_csvfiles, noOutput):
+    """
+    Function that extracts the dictionaries of specified files and creates new CSV files that contain them.
+    Args:
+        path_of_files: Path of the directory containing the files.
+        path_of_csvfiles: Path of the directory where the CSV file will be created.
+        noOutput: If True, suppresses print statements.
+    Returns:
+        None
+    """
+    import os
+    number_created_files = 0
 
+    # Check if the directories exist 
+    if not os.path.isdir(path_of_files):
+        raise FileNotFoundError(f"Directory '{path_of_files}' does not exist.")
+    if not os.path.isdir(path_of_csvfiles):
+        raise FileNotFoundError(f"Directory '{path_of_csvfiles}' does not exist.")
 
+    # Loop through the files in the directory  
+    for filename in os.listdir(path_of_files):
+        if filename.endswith(".xyz") or filename.endswith(".csv"): 
+            if not noOutput:
+                print('File used:', filename)
+            
+            structure_source = os.path.join(path_of_files, filename)
+            base_name = os.path.splitext(os.path.basename(structure_source))[0]
+            csv_file_name = f"{base_name}_data.csv"
+            csv_file = os.path.join(path_of_csvfiles, csv_file_name)
+    
+            # Write the dictionary in the new CSV file
+            with open(csv_file, 'w') as csvfile:
+                number_created_files += 1
+                with open(structure_source, 'r') as file:
+                    lignes = file.readlines()  # Correction ici
+                    if len(lignes) >= 2: 
+                        line_metadata = lignes[1].strip()
+                        csvfile.write(f"{line_metadata}\n")
 
+                        if not noOutput:
+                            print(f"\n\033[1mNew file created: {csv_file}\033[0m\n")
+                    else:
+                        print(f"Error: File {filename} does not have enough lines.")
+
+        else:
+            if not noOutput:
+                print(f"File format error: {filename}")
+    
+    print('Total CSV files created:', number_created_files)
 
 
 
@@ -1157,7 +2187,19 @@ def reduceHullFacets(Crystal: Atoms,
                      tolAngle: float=2.0,
                     ):
     '''
-    previous hull.simplices mut have been saved as Crystal.trPlanes
+    Reduces the facets of the crystal shape based on convex hull and coplanarity of the faces.
+    
+    Args:
+        Crystal (Atoms): The crystal object containing the planes for the facet reduction.
+        feasible_point (np.ndarray): A feasible point for half-space intersection. Default is [0, 0, 0].
+        tolAngle (float): Tolerance angle to define coplanarity. Default is 2.0.
+        noOutput (bool): If True, suppresses output to the console. Default is False.
+        
+    Returns:
+        tuple: The vertices and reduced faces.
+    
+    Note:
+        previous hull.simplices mut have been saved as Crystal.trPlanes
     '''
     from scipy.spatial import HalfspaceIntersection
     from scipy.spatial import ConvexHull
@@ -1165,18 +2207,20 @@ def reduceHullFacets(Crystal: Atoms,
     import scipy as sp
     
     cog = Crystal.cog
-    feasible_point = np.array([0,0,0])
-
+    # feasible_point = np.array([0,0,0])
+    feasible_point=cog
     # print('------------------------------------------')
     # print("Crystal.trPlanes in reduceHullFacets")
     # print(Crystal.trPlanes)
     # print('------------------------------------------')
-    #hs = HalfspaceIntersection(Crystal.trPlanes, feasible_point,qhull_options="QJ")
+    # hs = HalfspaceIntersection(Crystal.trPlanes, feasible_point,qhull_options="Q0")
     hs = HalfspaceIntersection(Crystal.trPlanes, feasible_point)
     # print("hs.intersections")
     # print(hs.intersections)
-    vertices = hs.intersections + cog
+    # vertices = hs.intersections + cog
+    vertices = hs.intersections 
     hull = ConvexHull(vertices)
+
     faces = hull.simplices
     neighbours = hull.neighbors
     if not noOutput: vID.centertxt("Boundaries figure",bgc='#007a7a',size='14',weight='bold')
@@ -1187,7 +2231,7 @@ def reduceHullFacets(Crystal: Atoms,
     
     def sortVCW(V,C):
         '''
-        sort the vertices of a planar polygon clockwise
+        Sort the vertices of a planar polygon clockwise
         - input:
             - V = list of vertices of a given polygon
             - C = coordinates of all vertices
@@ -1206,11 +2250,16 @@ def reduceHullFacets(Crystal: Atoms,
         return Vs[ind]
     
     def isCoplanar(p1,p2,tolAngle=tolAngle):
+        '''
+        Check if two planes p1 and p2 are coplanar.
+        '''
         angle = AngleBetweenVV(p1[0:3],p2[0:3])
         return (abs(angle) < tolAngle or abs(angle-180) <= tolAngle)
         
     def reduceFaces(F,coordsVertices):
-    
+        '''
+        Function to reduce the number of faces by merging coplanar ones
+        '''
         flatten = lambda l: [item for sublist in l for item in sublist]
     
         # create a graph in which nodes represent triangles
@@ -1254,7 +2303,43 @@ def reduceHullFacets(Crystal: Atoms,
 def defCrystalShapeForJMol(Crystal: Atoms,
                            noOutput: bool=False,
                           ):
+    """
+    Generates a Jmol command to visualize the crystal shape based on the facets of the crystal.
+    Args:
+        Crystal (Atoms): The crystal structure object containing the facets and planes.
+        noOutput (bool, optional): If True, suppresses the output of the command. Defaults to False.
+    Returns:
+        str: The Jmol command string for visualizing the crystal shape.
+    """
+    
     if Crystal.trPlanes is not None:
+        ####################################################### Trying alpha shape algorithm for concave NPs
+        # if Crystal.shape=='epbpyM':
+        #     vertices, redFacets = Crystal.alpha_vertices, Crystal.alpha_faces
+        #     if not noOutput: vID.centertxt("generating the jmol command line to view the crystal shape",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        #     cmd = ""
+        #     for i,nf in enumerate(redFacets):
+        #         cmd += "draw facet" + str(i) + " polygon "
+        #         cmd += '['
+        #         for at in nf:
+        #             cmd+=f"{{{vertices[at][0]:.4f},{vertices[at][1]:.4f},{vertices[at][2]:.4f}}},"
+        #         cmd+="]; "
+        #     cmd += "color $facet* translucent 70 [x828282]" 
+        #     cmde = ""
+        #     index = 0
+        #     for nf in redFacets:
+        #         nfcycle = np.append(nf,nf[0])
+        #         for i, at in enumerate(nfcycle[:-1]):
+        #             cmde += "draw line" + str(index) + " ["
+        #             cmde += f"{{{vertices[at][0]:.4f},{vertices[at][1]:.4f},{vertices[at][2]:.4f}}},"
+        #             cmde += f"{{{vertices[nfcycle[i+1]][0]:.4f},{vertices[nfcycle[i+1]][1]:.4f},{vertices[nfcycle[i+1]][2]:.4f}}},"
+        #             cmde += "] width 0.2; "
+        #             index += 1
+        #     cmde += "color $line* [xd6d6d6]; "
+        #     cmd = cmde + cmd 
+        # else:
+        # ############################################################################################################
+
         vertices, redFacets = reduceHullFacets(Crystal, noOutput=noOutput)
         if not noOutput: vID.centertxt("generating the jmol command line to view the crystal shape",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         cmd = ""
@@ -1277,6 +2362,9 @@ def defCrystalShapeForJMol(Crystal: Atoms,
                 index += 1
         cmde += "color $line* [xd6d6d6]; "
         cmd = cmde + cmd
+
+
+    
     else: #sphere, ellipsoid
         cmd = ""
     if not noOutput: print("Jmol command: ",cmd)
@@ -1287,7 +2375,21 @@ def saveCN4JMol(Crystal: Atoms,
                 Rmax: float=3.0,
                 noOutput: bool=False,
                 ):
+    """
+    Calculates the coordination number (CN) for a given crystal and generates a Jmol command for visualization.
+    
+    Args:
+        Crystal (Atoms): The crystal structure object.
+        save2 (str, optional): The filename to save the coordination numbers. Defaults to 'CN.dat'.
+        Rmax (float, optional): The maximum distance for neighbors when calculating CN. Defaults to 3.0.
+        noOutput (bool, optional): If set to True, suppresses the output. Defaults to False.
+    
+    Returns:
+        None
+    """
     import seaborn as sns
+    
+    # Calculate the coordination number (CN) using a k-D tree method
     nn,CN = kDTreeCN(Crystal,Rmax,noOutput=noOutput)
     CNmin = np.min(CN)
     CNmax = np.max(CN)
@@ -1321,6 +2423,8 @@ def saveCN4JMol(Crystal: Atoms,
         for c in uniqueCN:
             colors.append(colorsFull[c])
         plotPalette(colors,uniqueCN,savePngAs=fileColors)
+        
+        # Generate Jmol command for CN visualization
         print(f"{hl.BOLD}Jmol command:{hl.OFF}")
         # command = f"CN=load('{file}'); select all; "
         command = f"{{*}}.valence = load('{file}'); "
@@ -1357,6 +2461,11 @@ def plotPalette(Pcolors, namePC, angle=0,savePngAs=None):
     return
 
 def rgb2hex(c,frac=True):
+    """
+    Converts an RGB color to its hexadecimal representation. 
+    It has an optional frac argument to handle the case where the RGB values are provided as fractions
+    (ranging from 0 to 1) or as integers (ranging from 0 to 255).
+    """
     if frac:
         r = int(round(c[0]*255))
         g = int(round(c[1]*255))
@@ -1547,6 +2656,16 @@ def EulerRotationMatrix(gamma,beta,alpha,order="zyx"):
     return R
 
 def RotationMol(coords, angle, axis="z"):
+    """
+    Performs a rotation of the molecule's coordinates around a specified axis.
+
+    Args:
+    coords (numpy.ndarray): Coordinates of the molecule as a matrix (n x 3), where n is the number of atoms.
+    angle (float): The angle of rotation in degrees.
+    axis (str, optional): The axis around which to perform the rotation. Can be 'x', 'y', or 'z'. Default is 'z'.
+    Returns:
+        R[0] (numpy.ndarray): The coordinates of the molecule after rotation, as a matrix (n x 3).
+    """
     import math as m
     angler = angle*m.pi/180
     if axis == 'x':
@@ -1558,9 +2677,30 @@ def RotationMol(coords, angle, axis="z"):
     return R[0]
 
 def EulerRotationMol(coords, gamma, beta, alpha, order="zyx"):
+    """
+    Performs an Euler rotation of the molecule's coordinates.
+
+    Args:
+        coords (numpy.ndarray): Coordinates of the molecule as a matrix (n x 3), where n is the number of atoms.
+        gamma (float): Angle gamma in degrees.
+        beta (float):  Angle beta in degrees.
+        alpha (float): Angle alpha in degrees.
+        order (str, optional): The order of the Euler rotations. Default is "zyx".
+
+    Returns:
+        numpy.ndarray: The coordinates of the molecule after the Euler rotation, as a matrix (n x 3).
+    """
     return np.array(EulerRotationMatrix(gamma,beta,alpha,order)@coords.transpose()).transpose()
 
 def RotationMatrixFromAxisAngle(u,angle):
+    """
+    Generates a 3x3 rotation matrix from a unit vector representing the axis of rotation and a rotation angle.
+    Args:
+        u (numpy.ndarray): A unit vector representing the axis of rotation (3 elements).
+        angle (float): The angle of rotation in degrees.
+
+    Returns: (numpy.ndarray) A 3x3 rotation matrix.
+    """
     import math as m
     a = angle*m.pi/180
     ux = u[0]
@@ -1572,7 +2712,7 @@ def RotationMatrixFromAxisAngle(u,angle):
 
 def rotationMolAroundAxis(coords, angle, axis):
     '''
-    returns coordinates after rotation by a given angle around an [u,v,w] axis
+    Returns coordinates after rotation by a given angle around an [u,v,w] axis
     - input:
         - coords = natoms x 3 numpy array
         - angle = angle of rotation
@@ -1585,6 +2725,26 @@ def rotationMolAroundAxis(coords, angle, axis):
 #######################################################################
 ######################################## magic numbers
 def magicNumbers(cluster,i):
+    """
+    • Certain collections of atoms are more preferred due to energy minimization and exhibiting
+    stable structures and providing unique properties to the materials.
+    • These collections of atom providing stable structures to the materials are called MAGIC NUMBER.
+    
+    This function uses specific formulas based on the type of nanocluster 
+    (e.g., 'regfccOh', 'regIco', 'fccCube', etc.) to calculate a magic number based on the index i.
+    
+    Args:
+        cluster (str): The type of nanocluster for which the magic number is calculated. 
+                        It can be one of the following values: 
+                        'regfccOh', 'regIco', 'regfccTd', 'regDD', 'fccCube', 
+                        'bccCube', 'fccCubo', 'fccTrOh', 'fccTrCube', 'bccrDD', 
+                        'fccdrDD', 'pbpy'.
+        i (int): The index of the nanocluster size. It must be a positive integer greater than zero.
+
+    Returns:
+        float: The calculated magic number for the specified nanocluster type and index i.
+
+    """
     match cluster:
         case 'regfccOh':
             mn = np.round((2/3)*i**3 + 2*i**2 + (7/3)*i + 1)
@@ -1725,7 +2885,17 @@ def lattice_cart(Crystal,vectors,Bravais2cart=True,printV=False):
             print(f"({Bstr}){B} > ({Estr}){E}")
     return Vproj 
 
-def G(Crystal):
+def G(Crystal): #https://fr.wikibooks.org/wiki/Cristallographie_g%C3%A9om%C3%A9trique/Outils_math%C3%A9matiques_pour_l%27%C3%A9tude_du_r%C3%A9seau_cristallin
+    """
+    Computes the metric tensor (G) of a crystal's unit cell.
+    The metric tensor is calculated based on the unit cell parameters: 
+    the lengths of the unit cell vectors (a, b, c) and the angles (alpha, beta, gamma) between them.
+
+    Args:
+        Crystal : object
+    Returns:
+        GG (numpy.ndarray): The 3x3 metric tensor (G) of the unit cell.
+    """
     a = Crystal.ucUnitcell[0]
     b = Crystal.ucUnitcell[1]
     c = Crystal.ucUnitcell[2]
@@ -1741,17 +2911,38 @@ def G(Crystal):
     return GG
 
 def Gstar(Crystal):
+    """
+    Computes the inverse of the metric tensor (G*) for a crystal's unit cell.
+
+    Args:
+        Crystal : object
+    Returns:
+        Gmat (numpy.ndarray): The 3x3 inverse metric tensor (G*) of the unit cell, represented as a numpy array.
+    """
     Gmat = G(Crystal)
     return linalg.inv(Gmat)
 
 #######################################################################
 ######################################## Misc for plots
 def imageNameWithPathway(imgName):
+    """
+    Constructs the full file path for an image by joining the base directory with the image name.
+    Args:
+        imgName(str):  The name of the image file.
+    Returns:
+        imgNameWithPathway (str):The full file path to the image file.
+    """
     path2image= os.path.join(pyNMB_location(),'figs')
     imgNameWithPathway = os.path.join(path2image,imgName)
     return imgNameWithPathway
 
 def plotImageInPropFunction(imageFile):
+    """
+    Plots an image using matplotlib with no axes and a specified size.
+    Args:
+        imageFile : The path to the image file to be displayed.
+    
+    """
     import matplotlib.pyplot as plt
     import matplotlib.image as mpimg
     image = mpimg.imread(imageFile)
@@ -1766,6 +2957,26 @@ def coreSurface(Crystal: Atoms,
                 threshold,
                 noOutput=False,
                ):
+
+    """
+    Identifies the core and surface atoms of a crystal using Convex Hull analysis.
+
+    Args:  
+        Crystal : Atoms
+        threshold (float): The threshold used to identify surface atoms.
+        noOutput (bool, optional): If set to True, suppresses output during the analysis. Default is False.
+
+    Returns:
+        list: A list containing:
+            - Hull vertices
+            - Hull simplices
+            - Hull neighbors
+            - Hull equations (planes)
+        surfaceAtoms (numpy.ndarray): The atomic positions of the atoms that lie on the surface of the crystal.
+    """
+
+
+    
     from ase.visualize import view
     from scipy.spatial import ConvexHull
     if not noOutput: vID.centertxt("Core/Surface analyzis",bgc='#007a7a',size='14',weight='bold')
@@ -1848,6 +3059,18 @@ def rdf(NP: Atoms,
 #######################################################################
 ######################################## simple file management utilities
 def createDir(path2,forceDel=False):
+    """
+    Creates a directory at the specified path. If the directory already exists, it will either be left 
+    unchanged or deleted and recreated based on the 'forceDel' argument.
+
+    Args:
+        path2 (str): The path where the directory should be created.
+        forceDel (bool, optional): If set to True, will delete the existing directory and recreate it.
+                                   Default is False.
+    
+    Returns:
+        None
+    """
     import os
     import shutil
     if os.path.isdir(path2) and not forceDel:
@@ -1863,6 +3086,20 @@ def createDir(path2,forceDel=False):
 # New : for cylinder
 
 def isnt_inside_cylinder(position, radius, radius_squared, half_height): 
+    """
+    Checks whether a given position is outside a cylinder defined by a radius and half height.
+    The cylinder is aligned along the z-axis. If the position lies outside the circular base or 
+    beyond the half height of the cylinder, the function returns True. Otherwise, it returns False.
+
+    Args:
+        position (tuple or list): The (x, y, z) coordinates of the point to check.
+        radius (float): The radius of the cylinder's base.
+        radius_squared (float): The square of the radius, for optimization purposes.
+        half_height (float): Half the height of the cylinder (from the center along the z-axis).
+    
+    Returns:
+        bool: Returns True if the position is outside the cylinder, False otherwise.
+    """
     if abs(position[0])>radius or  abs(position[1])>radius or abs(position[2]) > half_height : #coord défini dans writexyz
         return True
     if position[0]**2+ position[1]**2 > radius_squared :
@@ -1875,6 +3112,20 @@ def isnt_inside_cylinder(position, radius, radius_squared, half_height):
 
 
 def MOI_shapes(self, noOutput) :
+    """
+    Function that computes the size of the NPs based on the principal moments of inertia normalized (eigen values).
+    The size are either specific dimensions like the edge lengths or more general descriptors such as the diameter of
+    the circumscribed sphere for symmetric NPs.
+    
+    Args:
+        noOutput (bool, optional): If set to True, suppresses output during the analysis. Default is False.
+    Returns:
+        self.dim (numpy.ndarray): A 3-element array containing the sizes =[d1,d2,d3], with d1>d2>d3.
+    Notes:
+        The formulas for basic shapes are well-known; however, more complex shapes do not have exact formulas. 
+        These are approximated by similar known shapes.
+    """
+    
     import math
 
     if self.MOIshape == 'ellipsoid': # https://scienceworld.wolfram.com/physics/MomentofInertiaEllipsoid.html
@@ -1883,57 +3134,79 @@ def MOI_shapes(self, noOutput) :
         self.dim[2] = 2*np.sqrt((5 * self.moisize[0] + 5 * self.moisize[1] - 5 * self.moisize[2]) / 2)
         if not noOutput:
             print(f"Diameters of the ellipsoid (calculated from MOI) { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
-    if self.MOIshape == 'sphere': #wikipedia
-        self.dim[0] = 2 * np.sqrt(5 / 2 * self.moisize[0])  # même formule pour les 3 directions avec Ix, Iy, Iz égaux
+            
+    if self.MOIshape == 'sphere' or self.MOIshape=='fccTrOh': #wikipedia
+        self.dim[0] = 2 * np.sqrt(5 / 2 * self.moisize[0]) 
         self.dim[1] = 2 * np.sqrt(5 / 2 * self.moisize[0])
         self.dim[2] = 2 * np.sqrt(5 / 2 * self.moisize[0])
         if not noOutput:
-            print(f"Diameter of the sphere (calculated from MOI) = {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
+            print(f"Diameter of the sphere (calculated from MOI) = {self.dim[0] * 0.1:.2f} nm")
+            
     if self.MOIshape == 'cylinder': #wikipedia
         self.dim[0] = np.sqrt(12 * self.moisize[1] - 6 * self.moisize[0]) #longest distance
         self.dim[1] = 2 * np.sqrt(2 * self.moisize[0]) 
         self.dim[2] = 2 * np.sqrt(2 * self.moisize[0])
         if not noOutput:
-            print(f"Size of the cylinder (calculated from MOI)= {self.dim[0] * 0.1:.2f} {self.dim[1] * 0.1:.2f} {self.dim[2] * 0.1:.2f} nm")
+            print(f"Hieght of cylinder= {self.dim[0] * 0.1:.2f}, diameter of the cylinder= {self.dim[2] * 0.1:.2f} nm")
             
     if self.MOIshape == 'parallepiped': #wikipedia
-        self.dim[0] = np.sqrt(6 *(self.moisize[1] + self.moisize[2] - self.moisize[0])) #longest distance
-        self.dim[1] = np.sqrt(6 * (self.moisize[0] + self.moisize[2] - self.moisize[1])) # 2nd longest distance
-        self.dim[2] = np.sqrt(6 * (self.moisize[0] + self.moisize[1] - self.moisize[2])) # 3rd longest distance
+        self.dim[0] = np.sqrt(6 *(self.moisize[1] + self.moisize[2] - self.moisize[0])) 
+        self.dim[1] = np.sqrt(6 * (self.moisize[0] + self.moisize[2] - self.moisize[1])) 
+        self.dim[2] = np.sqrt(6 * (self.moisize[0] + self.moisize[1] - self.moisize[2])) 
         if not noOutput:
             print(f"Size of the parallepiped (calculated from MOI)=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
 
-    if  self.MOIshape == "wire" :  #wikipedia usual wire of hcp wire of predefinened wulff forms
-        if self.nRotWire==4 :
-            self.dim[0]=np.sqrt(12*self.moisize[1]-6*self.moisize[0]) #longest distance
-            self.dim[1]=np.sqrt(6*self.moisize[0])
-            self.dim[2]=np.sqrt(6*self.moisize[0])
-            if not noOutput:
-                print(f"Size of the wire (calculated from MOI)=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
-        if self.nRotWire==6 or "hcpwire" in self.shape:
-            self.dim[0]=np.sqrt(12*self.moisize[1]-6*self.moisize[0]) #longest distance
-            self.dim[1]=2*np.sqrt(2*self.moisize[0])
-            self.dim[2]=2*np.sqrt(2*self.moisize[0])
-            if not noOutput:
-                print(f"Size of the wire (calculated from MOI)=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
+    if  self.MOIshape == "wire" :  # wikipedia usual wire and hcp wire of predefinened wulff forms
+        # if self.nRotWire==4 :
+        #     self.dim[0]=np.sqrt(12*self.moisize[1]-6*self.moisize[0]) #longest distance
+        #     self.dim[1]=np.sqrt(6*self.moisize[0])
+        #     self.dim[2]=np.sqrt(6*self.moisize[0])
+        #     if not noOutput:
+        #         print(f"Size of the wire (calculated from MOI)=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
+        # if self.nRotWire==6 or "hcpwire" in self.shape:
+        #     self.dim[0]=np.sqrt(12*self.moisize[1]-6*self.moisize[0]) #longest distance
+        #     self.dim[1]=2*np.sqrt(2*self.moisize[0])
+        #     self.dim[2]=2*np.sqrt(2*self.moisize[0])
+        #     if not noOutput:
+        #         print(f"Size of the wire (calculated from MOI)=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm")
 
-    # NEW WULFF PREDEFINED
-    if self.MOIshape == 'cube':  #
-        self.dim[0] = np.sqrt(6*self.moisize[0])
-        self.dim[1] = np.sqrt(6*self.moisize[1])  
-        self.dim[2] = np.sqrt(6*self.moisize[2])
+        
+        R_polygon=math.sqrt((6*self.moisize[0])/(1+2*math.cos(math.pi/self.nRotWire)**2)) # https://www.usna.edu/Users/physics/mungan/_files/documents/Scholarship/Polygons.pdf 
+        
+        # Main dimensions : height, circumscribed of the cross section
+        self.dim[0]=np.sqrt(12*self.moisize[1]-6*self.moisize[0]) #height
+        self.dim[1]=R_polygon  #circumscribed of the cross section
+        self.dim[2]=R_polygon  #circumscribed of the cross section
+        
+        edge= 2*R_polygon*math.sin(math.pi/self.nRotWire) # https://www.usna.edu/Users/physics/mungan/_files/documents/Scholarship/Polygons.pdf
         if not noOutput:
-            print(f"Length of the cube (calculated from MOI)=  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
+            print(f"Height of the nanoprism=  {self.dim[0]* 0.1:.2f} nm, radius of the circumscribed cross section= {self.dim[1]* 0.1:.2f} nm and edge of the nanoprism= { edge* 0.1:.2f}  nm")
+ 
+    if self.MOIshape == 'cube' or self.MOIshape == 'fccTrCube' or self.MOIshape == 'fccCubo' : 
+        if self.MOIshape == 'cube':
+            self.dim[0]=np.sqrt(6*self.moisize[0])*math.sqrt(3)
+            self.dim[1]=self.dim[0]
+            self.dim[2]=self.dim[0]
+        if self.MOIshape == 'fccCubo':
+            self.dim[0]=np.sqrt(6*self.moisize[0])*math.sqrt(2)
+            self.dim[1]=self.dim[0]
+            self.dim[2]=self.dim[0]
+        if self.MOIshape == 'fccTrCube':
+            self.dim[0]=np.sqrt(6*self.moisize[0])*math.sqrt(1.5)
+            self.dim[1]=self.dim[0]
+            self.dim[2]=self.dim[0]
+        if not noOutput:
+            print(f"diameter of the circumscribed sphere of the cube (calculated from MOI)=  { self.dim[0]* 0.1:.2f}  nm")
 
 
-    if self.MOIshape == 'Oh':
+    if self.MOIshape == 'Oh' or self.MOIshape=='regfccOh' :
         a=np.sqrt(10*self.moisize[0]) #arete https://www.vcalc.com/collection/?uuid=1a8912a2-f145-11e9-8682-bc764e2038f2
         self.dim[0] =2*a*math.sqrt(2)/2 #diameter of the circumscribed sphere https://en.wikipedia.org/wiki/Octahedron
         self.dim[1] = self.dim[0]
         self.dim[2] = self.dim[0]
         if not noOutput:
-            print(f"Size of the octahedron (diameter of the circumscribed sphere) (calculated from MOI) :  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
-            # print(f"Edge  of the octahedron:  { a* 0.1:.2f}   nm")
+            print(f"Size of the octahedron (diameter of the circumscribed sphere) (calculated from MOI) :  { self.dim[0]* 0.1:.2f} nm")
+            print(f"Edge  of the octahedron:  { a* 0.1:.2f}   nm")
 
 
     if self.MOIshape == "hcpsph" :  #https://mathworld.wolfram.com/Spheroid.html
@@ -1951,12 +3224,95 @@ def MOI_shapes(self, noOutput) :
            print(f"Size of the spheroid (calculated from MOI)=  {self.dim[0] * 0.1:.2f}  {self.dim[1] * 0.1:.2f}  {self.dim[2] * 0.1:.2f} nm") 
         
 
-    if self.MOIshape == "bccrDD": 
-        a=np.sqrt((150*self.moisize[0])/(39*((1+math.sqrt(5))/2)+28)) #arete https://www.vcalc.com/collection/?uuid=1a8912a2-f145-11e9-8682-bc764e2038f2
+    if self.MOIshape == "bccrDD" or self.MOIshape == "regDD"or self.MOIshape == "fccdrDD" : 
+        a=np.sqrt((150*self.moisize[0])/(39*((1+math.sqrt(5))/2)+28))  #arete https://www.vcalc.com/collection/?uuid=1a8912a2-f145-11e9-8682-bc764e2038f2
         self.dim[0] = 2*a*math.cos(36*math.pi/180)*math.sqrt(3) 
         self.dim[1] = self.dim[0]
         self.dim[2] = self.dim[0]
         #https://fr.wikipedia.org/wiki/Dod%C3%A9ca%C3%A8dre_r%C3%A9gulier#:~:text=Les%2020%20%C3%97%206%20%3D%2012,sur%20les%20faces%20du%20poly%C3%A8dre.
         if not noOutput:
-            print(f"Size of the dodecahedron (diameter of the circumscribed sphere) (calculated from MOI) :  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
+            print(f"Size of the dodecahedron (diameter of the circumscribed sphere) (calculated from MOI) :  { self.dim[0]* 0.1:.2f} nm")
             print(f"Edge  of the dodecahedron:  { a* 0.1:.2f}   nm")
+
+    if self.MOIshape == "regIco": 
+        a=np.sqrt((10*self.moisize[0])/(((1+math.sqrt(5))/2)**2)) #https://www.vcalc.com/wiki/EmilyB/Moment+of+Inertia+-+Solid+Icosahedron
+        self.dim[0] =a*math.sqrt(((1+math.sqrt(5))/2)*math.sqrt(5))#https://fr.wikipedia.org/wiki/Icosa%C3%A8dre
+        self.dim[1] = self.dim[0]
+        self.dim[2] = self.dim[0]
+        if not noOutput:
+            print(f"Size of the icosahedron (diameter of the circumscribed sphere) (calculated from MOI) :  { self.dim[0]* 0.1:.2f} nm")
+            print(f"Edge  of the icosahedron:  { a* 0.1:.2f}   nm")
+ 
+    if self.MOIshape == 'fcctbp':
+        a = np.sqrt(20 * self.moisize[0]) - 5  
+        H = 2 * a * np.sqrt(2/3)  # height
+        D = np.sqrt(H**2 + (a * np.sqrt(3) / 3)**2)  # circumscribed sphere diameter
+    
+        self.dim[0] = D #longest dim
+        self.dim[1] = D
+        self.dim[2] = D
+    
+        if not noOutput:
+            print(f"Size of the bipyramide (diameter circumscribed sphere) : {self.dim[0]*0.1:.2f} {self.dim[1]*0.1:.2f} {self.dim[2]*0.1:.2f} nm")
+            print(f"Edge length of the bipyramide: {a*0.1:.2f} nm")
+ 
+    if self.MOIshape== 'Td' or self.MOIshape== 'regfccTd'  :
+        a=np.sqrt(20*self.moisize[0])-5 # side length https://www.vcalc.com/collection/?uuid=1a8912a2-f145-11e9-8682-bc764e2038f2, (-5 being a correction)
+        self.dim[0] = 2*a*math.sqrt(3/8) # diameter of the circumscribed sphere: https://fr.wikipedia.org/wiki/T%C3%A9tra%C3%A8dre_r%C3%A9gulier
+        self.dim[1] = self.dim[0]
+        self.dim[2] = self.dim[0]
+        if not noOutput:
+            print(f"Size of the tetrahedron (diameter of the circumscribed sphere) :  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
+            print(f"Edge  of the tetrahedron:  { a* 0.1:.2f}   nm")
+
+    if  self.MOIshape== 'fccTrTd' :
+        a=(np.sqrt(20*self.moisize[0])-5)*0.33 # side length https://www.vcalc.com/collection/?uuid=1a8912a2-f145-11e9-8682-bc764e2038f2, (-5 being a correction and 0.66 with the truncation)
+        self.dim[0] = 2*a*math.sqrt(3/8) #diameter of the circumscribed sphere: https://fr.wikipedia.org/wiki/T%C3%A9tra%C3%A8dre_r%C3%A9gulier
+        self.dim[1] = self.dim[0]
+        self.dim[2] = self.dim[0]
+        if not noOutput:
+            print(f"Size of the tetrahedron (diameter of the circumscribed sphere) :  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
+            print(f"Edge  of the tetrahedron:  { a* 0.1:.2f}   nm")
+            
+            
+
+def Inscribed_circumscribed_spheres(self,noOutput):
+    """
+    Calculates the diameters of the inscribed and circumscribed spheres for the nanoparticle (NP) based on 
+    its positions and the plane equations.
+
+    The circumscribed sphere is the smallest sphere that completely encloses the NP, while the inscribed sphere 
+    is the largest sphere that fits within the NP.
+
+    Args:
+        noOutput (bool, optional): If set to True, suppresses output during the analysis. Default is False.
+    
+    Returns:
+        None: The function updates the object's attributes with the calculated diameters of the spheres.
+    
+    Notes:
+        The circumscribed sphere radius is calculated as the maximum distance from the center of gravity 
+        (COG) to the NP positions, and the inscribed sphere radius is calculated as the minimum distance 
+        from the NP positions to the planes (based on Hull equations)
+    """
+
+    if self.shape=='ellipsoid':
+        self.radiusInscribedSphere= min(self.ellipsoid_axes) 
+        self.radiusCircumscribedSphere= max(self.ellipsoid_axes) 
+    if self.shape=='sphere':
+        self.radiusInscribedSphere= self.spheres_axes
+        self.radiusCircumscribedSphere= self.spheres_axes
+    else:
+        distances = np.linalg.norm(self.NP.positions- self.cog, axis=1)
+        self.radiusCircumscribedSphere= np.max(distances)
+        distances = [
+        abs(d) / np.sqrt(a**2 + b**2 + c**2)  
+        for a, b, c, d in self.equations
+        ]
+        self.radiusInscribedSphere= np.min(distances)
+        
+    if not noOutput: vID.centertxt("Diameters of the inscribed and circumscribed sphere using the Hull equations",bgc='#007a7a',size='14',weight='bold')
+    if not noOutput : 
+        print(f"diameters of the circumscribed sphere: {self.radiusCircumscribedSphere * 2* 0.1:.2f}  {self.radiusCircumscribedSphere* 2 * 0.1:.2f}  {self.radiusCircumscribedSphere* 2* 0.1:.2f} nm")
+        print(f"diameters of the inscribed sphere: { self.radiusInscribedSphere* 2* 0.1:.2f}  {self.radiusInscribedSphere* 2 * 0.1:.2f}  {self.radiusInscribedSphere * 2* 0.1:.2f} nm")
+

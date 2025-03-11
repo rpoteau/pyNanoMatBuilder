@@ -17,6 +17,14 @@ coord_cif_xyz/
 coord_cif_xyz/*
 csv_files/
 csv_files/*
+database_1_5nm/
+database_1_5nm/*
+Database/
+Database/*
+Febeta_Nicolas/
+Febeta_Nicolas/*
+Wires_BiMan/
+Wires_BiMan/*
 rdfs/
 rdfs/*
 Thumbs.db

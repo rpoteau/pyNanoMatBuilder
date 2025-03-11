@@ -1,4 +1,96 @@
 # Development of a pre-release version -> date-based versioning
+## 20250310
+### changed
+For every NPs classes: changed the position of the function defCrystalShapeForJMol(), it is now in  propPostMake() and is done by default (also added the attributes if it was missing).
+
+## 20250307
+### changed
+Documentation for each NPs classes and their functions
+
+## 20250305
+### added
+- `Create_otherNPs_database.ipynb`: class that creates archimedean nps + cif/xyz files
+- `Create_johnson_database.ipynb`: class that creates archimedean nps + cif/xyz files
+- `Create_catalan_database.ipynb`: class that creates archimedean nps + cif/xyz files
+- `johnsonNPs.py`: `nAtomsPerEdgeOfPC_after_truncation()` and `edgeLength_after_truncation(whichEdge)` to be specified in dictionnary in the files
+### changed
+-`utils.py`: all the files writing functions were changed, now the main dimensions are the radius of the insphere and cicumscribed sphere (the MOI dim used to be the main dim but some of them are not accurate), secondary dims are added (specific lengths and the number of atoms they're containing), and the truncature was also added (True or False)
+## 20250227
+### changed
+-`archimedeanNPs.py`: changed MOI formulas, also added self.shape for each classes.
+
+### added
+-`Create_archimedean_database.ipynb`: class that creates archimedean nps + cif/xyz files, some conditions are made for the bravais lattice (only fcc). NB: not possible to make multi elements nps and trcubes aren't added for now
+-`utils.py`:  `writexyz_generalized_archimedean()`: function that writes archimedean nps cif/xyz files
+
+## 20250225
+### changed
+-`Create_crystals_database.ipynb`: when creating multiple NPs (and their files), their sizes depend on dhkl, it allows to have the minimum size step while never having twice the same size. The sizes are now chosen using multiple of dhkl, example for a sphere: size=[2*dhkl],[3*dhkl], etc. Also "max_size" was added in order to choose a maximum size when creating the NPs, it corresponds to the diameter of the circumscribed sphere. 
+-`Create_platonic_dataset.ipynb` : Same changes adapted for the Platonic Class
+`utils.py`:  `writexyz_generalized_platonic()`: function that writes platonic nps cif/xyz files
+
+## 20250219
+### changed
+
+-`Create_crystals_database.ipynb`: nRot is now written in the name of the wires files (and the size indicator restart at 0 when nRot changes)
+-`platonicNPs` : nShell, nLayer and nOrder restored, they do not mean the same thing !
+-`Create_platonic_dataset.ipynb` : was adapted with dynamic variables for the intanciation of the class : nShell, nLayer, nOrder based on the form. Even if nLayer=nOrder or nShell+1, the files size indicator increases the same way no matter the form (ex : Co_fcc_regIco_0000001 = 1 bond by edge,  Co_fcc_regIco_0000002 = 2 ..etc and same for other forms)
+
+## 20250218
+### added
+
+-`utils.py`:`create_data_csv()` : creates csv files containing only the dictionnary of the xyz files (or Iq csv files)
+
+
+## 20250214
+
+### changed
+-`platonicNPs` : same name for number of shells = 'nOrdet' for all the classes to ease the generalization !MISTAKE!
+### added
+-`Create_platonic_dataset.ipynb` : class that creates Platonics nps + cif/xyz files, some conditions are made for the bravais lattice. NB: not possible to make multi elements nps and hollow cubes aren't added for now
+
+## 20250212
+### changed
+- `Create_crystals_database.ipynb` : sizes can be defined by np.arange(initial,final,step)
+- `crystalNPS.py` : all the shapes are now created from a given diameter (used to be diameter for some shapes and radius for other shapes, same descriptor is better : less confusing for user but also easier for creating multiple files)
+
+
+## 20250211
+### added
+- 3 classes in `Create_crystals_database.ipynb`, a notebook made to create a database of xyz/cif files of Crystal nps :
+    -  `Crystals_ellipsoids_parallepipeds`: finished
+    -  `Crystals_spheres`: finished
+    -  `Crystals_wires`: ongoing work (how to defined the planes of the wire depending on the element used)
+-  `utils.py` : functions `get_crystal_type` (to find the Bravais lattice based on the n° space group), `extract_cif_info`(cif name and crystal type), `load_cif` for the 3 classes in `Create_crystals_database.ipynb`
+### changed
+- `crystalNPS.py` : in `loadExternalCif(self)`: a condition was added (if hasattr(self, 'cif'):return) to not load the structures from the cif files twice if they were already loaded in the classes `Crystals_ellipsoids_parallepipeds`, `Crystals_spheres` or `Crystals_wires` (gain of time)
+
+## 20250207
+### changed
+-  `crystalNPS.py` : issue with MOI fixed for wulff forms that aren't predifined
+### added
+- `utils.py` : `writexyz_generalized_crystals` : noOutput added
+- `utilsDC.py` : `create_iqfiles_from_xyzfiles` :  noOutput added 
+- `Create_crystals_database` : `class PredifinedWulffFiles` :  noOutput added
+Usefull when we will create a lot of files
+
+
+## 20250204
+### changed
+- `utils.py` : new function `Inscribed_circumscribed_spheres(self,noOutput)` that calculates the inscribed/circumscribed spheres radius that can be call for each classes (instead of re writing it everytime)
+- `johnsonNPS` : calling the function `Inscribed_circumscribed_spheres(self,noOutput)` 
+- `UtilsDC.ipynb` : change of the functions of the graphs (mistakes were made)
+
+
+## 20250203
+### added 
+- `utils.py` : new size/MOI formula for the wires that work for any nRot and both wires from crystals and predefined wulff forms, gives the height of the wire and the edge of the pentagon
+- `size_test_MOI_real.ipynb`: verification of the sizes (height and edge) given by the new formula
+
+
+## 20250131
+### added 
+- `cif_to_xyz.ipynb` : possibility to create  files (xyz,cif,iq) of a specific form given by the user from cif files in data.py 
 
 ## 20250127
 ### added 
@@ -16,7 +108,7 @@ The idea is to calculate the size from the MOI for each nps in the crystals clas
 ## 20240106
 ### added 
 -  `crystalNPs.py` : in def prop(self,noOutput): if "Wulff" in self.shape : compute the inscribed sphere and circumscribed sphere (for pre deffined wulff form)
-- `cif_to_xyz.py` : create all the files (xyz,cif,iq) from cif files in data.py
+- `cif_to_xyz.py` : create all the  files (xyz,cif,iq) of all the wulff forms from cif files in data.py
 
 ## 20241220
 ### added 

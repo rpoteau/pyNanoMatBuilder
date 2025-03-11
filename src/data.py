@@ -44,11 +44,11 @@ class WulffShapes:
                 'hcpwire': 'hexagonal',
                  },
         'Bravais lattice': {
-                   'cube': 'bcc, fcc',
-                 'trcube': 'fcc',
-                   'cubo': 'fcc',
-                     'Oh': 'fcc',
-                   'trOh': 'fcc',
+                   'cube': 'bcc, fcc, cubic',
+                 'trcube': 'fcc, cubic',
+                   'cubo': 'fcc, cubic',
+                     'Oh': 'fcc, cubic',
+                   'trOh': 'fcc, cubic',
                  'dicoTd': 'fcc',
                  'bccrDD': 'bcc',
                'trbccrDD': 'bcc',
@@ -152,6 +152,7 @@ class pyNMBcif:
             'Ru hcp': 'cod9008513-Ru_hcp.cif',
             'Pt fcc': 'cod9012957-Pt_fcc.cif',
             'Au fcc': 'cod9008463-Au_fcc.cif',
+            'Fe beta': 'cod1539039-Fe_beta.cif',
             }
             })
     CIFdf = pd.DataFrame(data)

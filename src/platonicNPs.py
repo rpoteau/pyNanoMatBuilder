@@ -12,20 +12,40 @@ import os
 
 ###########################################################################################################
 class regfccOh:
-    nFaces = 8
+    """
+    A class for generating XYZ and CIF files of regular fcc octahedral nanoparticles (NPs) 
+    of various sizes, based on user-defined compounds (either by 
+    name, e.g., "Fe", "Au", etc). 
+
+    Key Features:
+    - Allows to choose the NP size.
+    - Can analyze the structure in detail, including symmetry and properties.
+    - Offers options for core/surface differentiation based on a threshold.
+    - Generates outputs in XYZ and CIF formats for visualization and simulations.
+    - Provides compatibility with jMol for 3D visualization.
+    
+    Additional Notes:
+    - The `nOrder` parameter determines the level of imbrication
+    - The symmetry analysis can be skipped to speed up computations.
+    - Customizable precision thresholds for structural analysis.
+    """
+
+    # Geometric properties of regfccOh
+    nFaces = 8 # Number of triangular faces
     nEdges = 12
     nVertices = 6
     edgeLengthF = 1 # length of an edge
     radiusCSF = edgeLengthF * np.sqrt(2)/2 #Centroid to vertex distance = Radius of circumsphere
     radiusISF = edgeLengthF * np.sqrt(6)/6 #Radius of insphere that is tangent to faces
     radiusMSF = edgeLengthF / 2 #Radius of midsphere that is tangent to edges
-    dihedralAngle = np.rad2deg(np.arccos(-1/3))
+    dihedralAngle = np.rad2deg(np.arccos(-1/3)) # Angle between two adjacent triangular faces
     interShellF = 1/radiusCSF
   
     def __init__(self,
                  element: str='Au',
                  Rnn: float = 2.7,
                  nOrder: int = 1,
+                 shape: str='regfccOh',
                  postAnalyzis: bool=True,
                  aseView: bool=False,
                  thresholdCoreSurface: float=1.,
@@ -34,7 +54,35 @@ class regfccOh:
                  noOutput: bool= False,
                  calcPropOnly: bool=False,
                 ):
+        """
+        Initialize the class with all necessary parameters.
+
+        Args:
+            element: Chemical element of the NP (e.g., "Au", "Fe").
+            Rnn (float): Nearest neighbor interatomic distance in Å.
+            nOrder (int): Determines the level of imbrication = the number of atomic layers along an edge (e.g., `nOrder=1` means 2 atoms per edge).
+            shape (str): Shape 'regfccOh'
+            postAnalyzis (bool): If True, prints additional NP information (e.g., cell parameters, moments of inertia, inscribed/circumscribed sphere diameters, etc.).
+            aseView (bool): If True, enables visualization of the NP using ASE.
+            thresholdCoreSurface (float): Precision threshold for core/surface differentiation (distance threshold for retaining atoms).
+            skipSymmetryAnalyzis (bool): If False, performs an atomic structure analysis using pymatgen.
+            jmolCrystalShape (bool): If True, generates a JMOL script for visualization.
+            noOutput (bool): If False, prints details about the NP structure.
+            calcPropOnly (bool): If False, generates the atomic structure of the NP.   
+            
+        Attributes:
+            self.nAtoms (int): Number of atoms in the NP.
+            self.nAtomsPerLayer (list): Number of atoms in each atomic layer.
+            self.nAtomsPerEdge (int): Number of atoms per edge.
+            self.interLayerDistance (float): Distance between atomic layers.
+            self.jmolCrystalShape (bool): Flag for JMol visualization.
+            self.cog (np.array): Center of gravity of the NP.
+            self.imageFile (str): Path to a reference image.
+            self.trPlanes (array): Truncation plane equations.
+
+        """
         self.element = element
+        self.shape = shape
         self.Rnn = Rnn
         self.nOrder = nOrder
         self.nAtoms = 0
@@ -63,6 +111,18 @@ class regfccOh:
         return round((2/3)*i**3 + 2*i**2 + (7/3)*i + 1)
     
     def nAtomsPerShellAnalytic(self):
+        """
+        Computes the number of atoms per shell in an ordered nanoparticle.
+
+        The function iterates over each shell layer (from 1 to `nOrder`), 
+        computes the number of atoms for the given shell, and subtracts 
+        the cumulative sum of the previous shells to get the number of new 
+        atoms in the current shell.
+
+        Returns:
+            list: A list where each element represents the number of atoms 
+                  in a specific shell.
+        """
         n = []
         Sum = 0
         for i in range(1,self.nOrder+1):
@@ -72,6 +132,16 @@ class regfccOh:
         return n
 
     def nAtomsPerShellCumulativeAnalytic(self):
+        """
+        Computes the cumulative number of atoms up to each shell.
+
+        This function returns the total number of atoms present in the 
+        nanoparticle for each shell layer, building up cumulatively.
+
+        Returns:
+            list: A list where each element represents the total number of 
+                  atoms present up to that shell.
+        """
         n = []
         Sum = 0
         for i in range(1,self.nOrder+1):
@@ -81,46 +151,77 @@ class regfccOh:
         return n    
 
     def nAtomsAnalytic(self):
+        """
+        Computes the total number of atoms in the nanoparticle.
+        """
         n = self.nAtomsF(self.nOrder)
         return n
     
     def edgeLength(self):
+        """
+        Computes the edge length of the nanoparticle in Å .
+
+        The edge length is determined based on the interatomic distance (Rnn) 
+        and the number of atomic layers (`nOrder`).
+        """
         return self.Rnn*self.nOrder #Angs
 
     def radiusCircumscribedSphere(self):
+        """
+        Computes the radius of the circumscribed sphere of the nanoparticle in Å.
+        """
         return self.radiusCSF*self.edgeLength() #angs
 
     def radiusInscribedSphere(self):
+        """
+        Computes the radius of the inscribed sphere of the nanoparticle in Å  .
+        """
         return self.radiusISF*self.edgeLength()
 
     def radiusMidSphere(self):
+        """
+        Computes the radius of the midsphere of the nanoparticle in Å.
+        The midsphere is a sphere that touches the edges of the nanoparticle.
+        """
         return self.radiusMSF*self.edgeLength()
 
     def area(self):
+        """
+        Computes the surface area of the nanoparticle in square Ångströms.
+        """
         el = self.edgeLength()
         return el**2*np.sqrt(3)
     
     def volume(self):
+        """
+        Computes the volume of the nanoparticle in cubic Ångströms.
+        """
         el = self.edgeLength()
         return np.sqrt(2)*el**3/3 
 
     def MakeVertices(self,i):
         """
-        input:
-            - i = index of the shell
-        returns:
-            - CoordVertices = the 6 vertex coordinates of the ith shell of an octahedron
-            - edges = indexes of the 30 edges
-            - faces = indexes of the 20 faces 
+        Generates the coordinates of the vertices, edges, and faces 
+        for the ith shell of an octahedral nanoparticle.
+        Args:
+            - i (int): Index of the shell layer.
+        Returns:
+            - CoordVertices (np.ndarray): the 6 vertex coordinates of the ith shell of an octahedron
+            - edges (np.ndarray): indexes of the 30 edges
+            - faces (np.ndarray): indexes of the 20 faces 
         """
+        # If `i == 0`, the function returns a single central vertex
         if (i == 0):
-            CoordVertices = [0., 0., 0.]
+            CoordVertices = [0., 0., 0.] # Central atom at the origin
             edges = []
             faces = []
+            
         elif (i > self.nOrder):
             sys.exit(f"regfccOh.MakeVertices(i) is called with i = {i} > nOrder = {self.nOrder}")
+            
         else:
             scale = self.interLayerDistance * i
+            # Define vertex positions based on octahedral geometry
             CoordVertices = [ pyNMBu.vertex(-1, 0, 0, scale),\
                               pyNMBu.vertex( 1, 0, 0, scale),\
                               pyNMBu.vertex( 0,-1, 0, scale),\
@@ -135,40 +236,57 @@ class regfccOh:
         return CoordVertices, edges, faces
 
     def coords(self,noOutput):
+        """
+        Generates atomic coordinates for an octahedral nanoparticle.
+
+        Args:
+            noOutput (bool): If False, displays progress and timing information.
+
+        Steps:
+            - Generates vertex atoms.
+            - Calculates and places edge atoms along the edges.
+            - Generates facet atoms to fill in faces.
+            - Adds core atoms layer by layer.
+            - Stores final atomic positions in an ASE Atoms object.
+
+        Returns:
+            None (updates class attributes).
+        """
+        
         if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pyNMBu.timer(); chrono.chrono_start()
-        c = []
+        c = [] # List of atomic coordinates
         # print(self.nAtomsPerLayer)
         indexVertexAtoms = []
         indexEdgeAtoms = []
         indexFaceAtoms = []
         indexCoreAtoms = []
 
-        # vertices
+        #  Generate vertex atoms 
         nAtoms0 = 0
         self.nAtoms += self.nVertices
         cVertices, E, F = self.MakeVertices(self.nOrder)
         c.extend(cVertices.tolist())
         indexVertexAtoms.extend(range(nAtoms0,self.nAtoms))
 
-        # intermediate atoms on edges e
+        # Generate edge atoms
         nAtoms0 = self.nAtoms
-        Rvv = pyNMBu.RAB(cVertices,E[0,0],E[0,1]) #distance between two vertex atoms
+        Rvv = pyNMBu.RAB(cVertices,E[0,0],E[0,1]) # Distance between two vertex atoms
         nAtomsOnEdges = int((Rvv+1e-6) / self.Rnn)-1
         nIntervals = nAtomsOnEdges + 1
         #print("nAtomsOnEdges = ",nAtomsOnEdges)
         coordEdgeAt = []
         for n in range(nAtomsOnEdges):
-            for e in E:
+            for e in E: # Loop over all edges
                 a = e[0]
                 b = e[1]
-                coordEdgeAt.append(cVertices[a]+pyNMBu.vector(cVertices,a,b)*(n+1) / nIntervals)
+                coordEdgeAt.append(cVertices[a]+pyNMBu.vector(cVertices,a,b)*(n+1) / nIntervals) # Compute interpolated positions along the edge
         self.nAtoms += nAtomsOnEdges * len(E)
         c.extend(coordEdgeAt)
         indexEdgeAtoms.extend(range(nAtoms0,self.nAtoms))
         # print(indexEdgeAtoms)
         
-        # now, facet atoms
+        # Generate facet atoms
         coordFaceAt = []
         nAtomsOnFaces = 0
         nAtoms0 = self.nAtoms
@@ -178,8 +296,8 @@ class regfccOh:
         c.extend(coordFaceAt)
         indexFaceAtoms.extend(range(nAtoms0,self.nAtoms))
 
-        # now, core atoms. Layer by layer strategy, starting from bottom to top
-        # when identified, just use MakeFaceCoord and define, for each layer, the four atoms on the edge as a facet
+        # Generate core atoms
+        # Layer by layer strategy, starting from bottom to top when identified, just use MakeFaceCoord and define, for each layer, the four atoms on the edge as a facet
         coordCoreAt = []
         nAtomsInCore = 0
         nAtoms0 = self.nAtoms
@@ -191,10 +309,14 @@ class regfccOh:
         nAtomsInCore,coordCoreAt = pyNMBu.MakeFaceCoord(self.Rnn,f,c,nAtomsInCore,coordCoreAt)
         # don't ask... it is the algorithm to find the indexes of the square
         # corners of each layer along z
+
+        # Helper functions to define atomic layers
         def layerup(ilayer,f):
             return 12*ilayer+f-2
         def layerdown(ilayer,f):
             return 12*ilayer+f+2
+
+        # Loop to generate multiple layers in the core
         for i in range(1,nAtomsOnEdges+1): 
             f = layerup(i,np.array([0,3,1,2]))
             # print(i,"  fup",f)
@@ -202,11 +324,13 @@ class regfccOh:
             f = layerdown(i,np.array([0,3,1,2]))
             # print(i,"fdown",f)
             nAtomsInCore,coordCoreAt = pyNMBu.MakeFaceCoord(self.Rnn,f,c,nAtomsInCore,coordCoreAt)
+            
         self.nAtoms += nAtomsInCore
         c.extend(coordCoreAt)
         indexCoreAtoms.extend(range(nAtoms0,self.nAtoms))
 
         if not noOutput: print(f"Total number of atoms = {self.nAtoms}")
+        # Store results in an ASE Atoms object 
         aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
 
         if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
@@ -214,6 +338,9 @@ class regfccOh:
         self.cog = self.NP.get_center_of_mass()
 
     def prop(self):
+        """
+        Display unit cell and nanoparticle properties.
+        """
         vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
         pyNMBu.plotImageInPropFunction(self.imageFile)
@@ -241,19 +368,34 @@ class regfccOh:
         return
 
     def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface, noOutput):
+        """
+        Compute and store various post-construction properties of the nanoparticle.
+    
+        This function calculates moments of inertia (MOI), determines the nanoparticle shape, 
+        analyzes symmetry (if required), and identifies core and surface atoms.
+    
+        Parameters:
+        - skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
+        - thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
+        - noOutput (bool): If True, suppresses output messages.
+    
+        Attributes Updated:
+        - self.moi (array): Moment of inertia tensor.
+        - self.moisize (array): Normalized moments of inertia.
+        - self.MOIshape (str): Shape identifier used for size calculations.
+        - self.vertices, self.simplices, self.neighbors, self.equations (arrays): 
+          Geometric properties of the nanoparticle.
+        - self.NPcs (Atoms object): Copy of the nanoparticle with surface atoms visually marked.
+        - self.NP (Atoms object): Original nanoparticle.
+        """
+        
         import math
-        self.moi=pyNMBu.moi(self.NP, noOutput)
         self.dim=[0,0,0]
-        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))    # MOI mass normalized (m of each atoms=1)
-        # find the size using the MOI mass normalized 
-        a=np.sqrt(10*self.moisize[0]) #arete https://www.vcalc.com/collection/?uuid=1a8912a2-f145-11e9-8682-bc764e2038f2
-        self.dim[0] =a*math.sqrt(2) #diameter of the circumscribed sphere
-        self.dim[1] = self.dim[0]
-        self.dim[2] = self.dim[0]
-        #https://fr.wikipedia.org/wiki/Dod%C3%A9ca%C3%A8dre_r%C3%A9gulier#:~:text=Les%2020%20%C3%97%206%20%3D%2012,sur%20les%20faces%20du%20poly%C3%A8dre.
-        if not noOutput:
-            print(f"Size of the octahedron (diameter of the circumscribed sphere) :  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
-            print(f"Edge  of the icosahedron:  { a* 0.1:.2f}   nm")
+        self.moi=pyNMBu.moi(self.NP, noOutput)
+        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))# MOI mass normalized (m of each atoms=1)
+        self.MOIshape=self.shape
+        pyNMBu.MOI_shapes(self, noOutput)
+        
         if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
         # [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
         #     pyNMBu.coreSurface(self.NP.get_positions(),thresholdCoreSurface)
@@ -266,20 +408,38 @@ class regfccOh:
 
 ###########################################################################################################
 class regIco:
-    nFaces = 20 #par définition
+    """
+    A class for generating XYZ and CIF files of regular icosahedral nanoparticles (NPs) 
+    of various sizes, based on user-defined compounds (either by 
+    name, e.g., "Fe", "Au", etc). 
+
+    Key Features:
+    - Allows to choose the NP size.
+    - Can analyze the structure in detail, including symmetry and properties.
+    - Offers options for core/surface differentiation based on a threshold.
+    - Generates outputs in XYZ and CIF formats for visualization and simulations.
+    - Provides compatibility with jMol for 3D visualization.
+    
+    Additional Notes:
+    - The symmetry analysis can be skipped to speed up computations.
+    - Customizable precision thresholds for structural analysis.
+    """
+     # Geometric properties of regIco
+    nFaces = 20 
     nEdges = 30
     nVertices = 12
-    phi = (1 + np.sqrt(5))/2 # golden ratio, utile pour retrouver dimension voir wikipedia
-    edgeLengthF = 1
-    radiusCSF = np.sqrt(10 + 2*np.sqrt(5))/4
-    interShellF = 1/radiusCSF #distance entre couches
+    phi = (1 + np.sqrt(5))/2 # Golden ratio 
+    edgeLengthF = 1  # length of an edge
+    radiusCSF = np.sqrt(10 + 2*np.sqrt(5))/4 # Radius of circumsphere
+    interShellF = 1/radiusCSF 
 #    interShellF = np.sqrt(2*(1-1/np.sqrt(5)))
-    radiusISF = np.sqrt(3) * (3 + np.sqrt(5))/12
+    radiusISF = np.sqrt(3) * (3 + np.sqrt(5))/12  #Radius of insphere
   
     def __init__(self,
                  element: str='Au',
                  Rnn: float=2.7,
                  nShell: int=1,
+                 shape: str='regIco',
                  postAnalyzis=True,
                  aseView: bool=False,
                  thresholdCoreSurface = 1.,
@@ -288,7 +448,33 @@ class regIco:
                  noOutput = False,
                  calcPropOnly = False,
                 ):
+        """
+        Initialize the class with all necessary parameters.
+
+        Args:
+            element: Chemical element of the NP (e.g., "Au", "Fe").
+            Rnn (float): Nearest neighbor interatomic distance in Å.
+            nShell (int):Nulber of shells = the number of atomic layers along an edge (e.g., `nOrder=1` means 2 atoms per edge).
+            shape (str): Shape 'regIco'
+            postAnalyzis (bool): If True, prints additional NP information (e.g., cell parameters, moments of inertia, inscribed/circumscribed sphere diameters, etc.).
+            aseView (bool): If True, enables visualization of the NP using ASE.
+            thresholdCoreSurface (float): Precision threshold for core/surface differentiation (distance threshold for retaining atoms).
+            skipSymmetryAnalyzis (bool): If False, performs an atomic structure analysis using pymatgen.
+            jmolCrystalShape (bool): If True, generates a JMOL script for visualization.
+            noOutput (bool): If False, prints details about the NP structure.
+            calcPropOnly (bool): If False, generates the atomic structure of the NP.   
+            
+        Attributes:
+            self.nAtoms (int): Number of atoms in the NP.
+            self.nAtomsPerShell (list): Number of atoms in each shell.
+            self.interShellDistance (float): Distance between atomic shells.
+            self.jmolCrystalShape (bool): Flag for JMol visualization.
+            self.imageFile (str): Path to a reference image.
+            self.trPlanes (array): Truncation plane equations.
+
+        """
         self.element=element
+        self.shape= shape
         self.Rnn = Rnn
         self.nShell = nShell
         self.nAtoms = 0
@@ -307,7 +493,7 @@ class regIco:
                 self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface, noOutput)
                 if aseView: view(self.NPcs)
           
-    def __str__(self): #fonction prédéfinie, si tu print ico, ça retourne ça et pas init
+    def __str__(self): 
         return(f"Regular icosahedron with {self.nShell} shell(s) and Rnn = {self.Rnn}")
     
     def nAtomsF(self,i):
@@ -315,6 +501,18 @@ class regIco:
         return (10*i**3 + 11*i)//3 + 5*i**2 + 1
     
     def nAtomsPerShellAnalytic(self):
+        """
+        Computes the number of atoms per shell in an ordered nanoparticle.
+
+        The function iterates over each shell layer, 
+        computes the number of atoms for the given shell, and subtracts 
+        the cumulative sum of the previous shells to get the number of new 
+        atoms in the current shell.
+
+        Returns:
+            list: A list where each element represents the number of atoms 
+                  in a specific shell.
+        """
         n = []
         Sum = 0
         for i in range(self.nShell+1):
@@ -324,6 +522,16 @@ class regIco:
         return n
     
     def nAtomsPerShellCumulativeAnalytic(self):
+        """
+        Computes the cumulative number of atoms up to each shell.
+
+        This function returns the total number of atoms present in the 
+        nanoparticle for each shell layer, building up cumulatively.
+
+        Returns:
+            list: A list where each element represents the total number of 
+                  atoms present up to that shell.
+        """
         n = []
         Sum = 0
         for i in range(self.nShell+1):
@@ -333,35 +541,59 @@ class regIco:
         return n
     
     def nAtomsAnalytic(self):
+        """
+        Computes the total number of atoms in the nanoparticle.
+        """
         n = self.nAtomsF(self.nShell)
         return n
     
     def edgeLength(self):
+        """
+        Computes the edge length of the nanoparticle in Å .
+
+        The edge length is determined based on the interatomic distance (Rnn) 
+        and the number of shells (`nShell`).
+        """
         return self.Rnn*self.nShell
 
     def radiusCircumscribedSphere(self):
+        """
+        Computes the radius of the circumscribed sphere of the nanoparticle in Å.
+        """
         return self.radiusCSF*self.edgeLength()
 
     def radiusInscribedSphere(self):
+        """
+        Computes the radius of the inscribed sphere of the nanoparticle in Å  .
+        """
         return self.radiusISF*self.edgeLength()
 
     def area(self):
+        """
+        Computes the surface area of the nanoparticle in square Ångströms.
+        """
         el = self.edgeLength()
         return 5 * el**2 * np.sqrt(3)
     
     def volume(self):
+        """
+        Computes the volume of the nanoparticle in cubic Ångströms.
+        """
         el = self.edgeLength()
         return 5 * el**3 * (3 + np.sqrt(5))/12
     
     def MakeVertices(self,i):
         """
-        input:
-            - i = index of the shell
-        returns:
-            - CoordVertices = the 12 vertex coordinates of the ith shell of an icosahedron
-            - edges = indexes of the 30 edges
-            - faces = indexes of the 20 faces 
+        Generates the coordinates of the vertices, edges, and faces 
+        for the ith shell of an octahedral nanoparticle.
+        Args:
+            - i (int): Index of the shell
+        Returns:
+            - CoordVertices(np.ndarray): the 12 vertex coordinates of the ith shell of an icosahedron
+            - edges (np.ndarray): indexes of the 30 edges
+            - faces(np.ndarray): indexes of the 20 faces 
         """
+        # If `i == 0`, the function returns a single central vertex
         if (i == 0):
             CoordVertices = [0., 0., 0.]
             edges = []
@@ -369,6 +601,7 @@ class regIco:
         elif (i > self.nShell):
             sys.exit(f"icoreg.MakeVertices(i) is called with i = {i} > nShell = {self.nShell}")
         else:
+            # Define vertex positions based on icosahedral geometry
             phi = self.phi
             scale = self.interShellDistance * i
             CoordVertices = [ pyNMBu.vertex(-1, phi, 0, scale),\
@@ -395,6 +628,21 @@ class regIco:
         return CoordVertices, edges, faces
 
     def coords(self,noOutput):
+        """
+        Generates atomic coordinates for an icosahedral nanoparticle.
+
+        Args:
+            noOutput (bool): If False, displays progress and timing information.
+
+        Steps:
+            - Generates vertex atoms.
+            - Calculates and places edge atoms along the edges.
+            - Generates facet atoms to fill in faces.
+            - Stores final atomic positions in an ASE Atoms object.
+
+        Returns:
+            None (updates class attributes).
+        """
         if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pyNMBu.timer(); chrono.chrono_start()
         # central atom = "1st shell"
@@ -405,8 +653,9 @@ class regIco:
         indexVertexAtoms = []
         indexEdgeAtoms = []
         indexFaceAtoms = []
+        
         for i in range(1,self.nShell+1):
-            # vertices
+         #  Generate vertex atoms 
             nAtoms0 = self.nAtoms
             cshell, E, F = self.MakeVertices(i)
             self.nAtoms += self.nVertices
@@ -414,7 +663,7 @@ class regIco:
             c.extend(cshell.tolist())
             indexVertexAtoms.extend(range(nAtoms0,self.nAtoms))
 
-            # intermediate atoms on edges e
+            # Generate edge atoms
             nAtoms0 = self.nAtoms
             Rvv = pyNMBu.RAB(cshell,E[0,0],E[0,1]) #distance between two vertex atoms
             nAtomsOnEdges = int((Rvv+1e-6) / self.Rnn)-1
@@ -422,7 +671,7 @@ class regIco:
             # print("nAtomsOnEdges = ",nAtomsOnEdges)
             coordEdgeAt = []
             for n in range(nAtomsOnEdges):
-                for e in E:
+                for e in E: # Loop over all edges
                     a = e[0]
                     b = e[1]
                     coordEdgeAt.append(cshell[a]+pyNMBu.vector(cshell,a,b)*(n+1) / nIntervals)
@@ -431,7 +680,7 @@ class regIco:
             c.extend(coordEdgeAt)
             indexEdgeAtoms.extend(range(nAtoms0,self.nAtoms))
             
-            # now, facet atoms
+            # Generate facet atoms
             coordFaceAt = []
             nAtomsOnFaces = 0
             nAtoms0 = self.nAtoms
@@ -453,7 +702,10 @@ class regIco:
         self.NP=aseObject
         self.cog = self.NP.get_center_of_mass()
     
-    def prop(self): #properties
+    def prop(self): #
+        """
+        Display unit cell and nanoparticle properties.
+        """
         vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
         pyNMBu.plotImageInPropFunction(self.imageFile)
@@ -477,19 +729,32 @@ class regIco:
         print("Dual polyhedron: dodecahedron")
 
     def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface, noOutput):
+        """
+        Compute and store various post-construction properties of the nanoparticle.
+    
+        This function calculates moments of inertia (MOI), determines the nanoparticle shape, 
+        analyzes symmetry (if required), and identifies core and surface atoms.
+    
+        Parameters:
+        - skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
+        - thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
+        - noOutput (bool): If True, suppresses output messages.
+    
+        Attributes Updated:
+        - self.moi (array): Moment of inertia tensor.
+        - self.moisize (array): Normalized moments of inertia.
+        - self.MOIshape (str): Shape identifier used for size calculations.
+        - self.vertices, self.simplices, self.neighbors, self.equations (arrays): 
+          Geometric properties of the nanoparticle.
+        - self.NPcs (Atoms object): Copy of the nanoparticle with surface atoms visually marked.
+        - self.NP (Atoms object): Original nanoparticle.
+        """
         import math
-        self.moi=pyNMBu.moi(self.NP, noOutput)
         self.dim=[0,0,0]
-        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))    # MOI mass normalized (m of each atoms=1)
-        # find the size using the MOI mass normalized 
-        a=np.sqrt((10*self.moisize[0])/((1+math.sqrt(5))/2)**2) #arete https://www.vcalc.com/collection/?uuid=1a8912a2-f145-11e9-8682-bc764e2038f2
-        self.dim[0] =a*math.sqrt(((1+math.sqrt(5))/2)*math.sqrt(5)) #diameter of the circumscribed sphere
-        self.dim[1] = self.dim[0]
-        self.dim[2] = self.dim[0]
-        #https://fr.wikipedia.org/wiki/Dod%C3%A9ca%C3%A8dre_r%C3%A9gulier#:~:text=Les%2020%20%C3%97%206%20%3D%2012,sur%20les%20faces%20du%20poly%C3%A8dre.
-        if not noOutput:
-            print(f"Size of the icosahedron  (diameter of the circumscribed sphere) :  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
-            print(f"Edge  of the icosahedron:  { a* 0.1:.2f}   nm")
+        self.moi=pyNMBu.moi(self.NP, noOutput)
+        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))# MOI mass normalized (m of each atoms=1)
+        self.MOIshape=self.shape
+        pyNMBu.MOI_shapes(self, noOutput)
 
 
         if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
@@ -503,22 +768,40 @@ class regIco:
 
 ###########################################################################################################
 class regfccTd:
+    """
+    A class for generating XYZ and CIF files of regular fcc tetrahedral nanoparticles (NPs) 
+    of various sizes, based on user-defined compounds (either by 
+    name, e.g., "Fe", "Au", etc). 
+
+    Key Features:
+    - Allows to choose the NP size.
+    - Can analyze the structure in detail, including symmetry and properties.
+    - Offers options for core/surface differentiation based on a threshold.
+    - Generates outputs in XYZ and CIF formats for visualization and simulations.
+    - Provides compatibility with jMol for 3D visualization.
+    
+    Additional Notes:
+    - The symmetry analysis can be skipped to speed up computations.
+    - Customizable precision thresholds for structural analysis.
+    """
+    # Geometric properties of regfccTd
     nFaces = 4
     nEdges = 6
     nVertices = 4
     edgeLengthF = 1 # length of an edge
     heightOfPyramidF = edgeLengthF * np.sqrt(2/3)
-    radiusCSF = edgeLengthF * np.sqrt(3/8) #Centroid to vertex distance = Radius of circumsphere
-    radiusISF = edgeLengthF/np.sqrt(24) #Radius of insphere that is tangent to faces
-    radiusMSF = edgeLengthF/np.sqrt(8) #Radius of midsphere that is tangent to edges
-    fveAngle = np.rad2deg(np.arccos(1/np.sqrt(3))) #Face-vertex-edge angle
-    fefAngle = np.rad2deg(np.arccos(1/3)) #Face-edge-face angle
-    vcvAngle = np.rad2deg(np.arccos(-1/3)) #Vertex-Center-Vertex angle
+    radiusCSF = edgeLengthF * np.sqrt(3/8) # Centroid to vertex distance = Radius of circumsphere
+    radiusISF = edgeLengthF/np.sqrt(24) # Radius of insphere that is tangent to faces
+    radiusMSF = edgeLengthF/np.sqrt(8) # Radius of midsphere that is tangent to edges
+    fveAngle = np.rad2deg(np.arccos(1/np.sqrt(3))) # Face-vertex-edge angle
+    fefAngle = np.rad2deg(np.arccos(1/3)) # Face-edge-face angle
+    vcvAngle = np.rad2deg(np.arccos(-1/3)) # Vertex-Center-Vertex angle
   
     def __init__(self,
                  element: str='Au',
                  Rnn: float=2.7,
                  nLayer: int=1,
+                 shape: str='regfccTd',
                  postAnalyzis=True,
                  aseView: bool=False,
                  thresholdCoreSurface = 1.,
@@ -527,7 +810,35 @@ class regfccTd:
                  noOutput = False,
                  calcPropOnly = False,
                 ):
+        """
+        Initialize the class with all necessary parameters.
+
+        Args:
+            element: Chemical element of the NP (e.g., "Au", "Fe").
+            Rnn (float): Nearest neighbor interatomic distance in Å.
+            nLayer (int): Number of layers, also equals to the number of atoms per edge (e.g., `nOrder=2` means 2 atoms per edge).
+            shape (str): Shape 'regfccOh'
+            postAnalyzis (bool): If True, prints additional NP information (e.g., cell parameters, moments of inertia, inscribed/circumscribed sphere diameters, etc.).
+            aseView (bool): If True, enables visualization of the NP using ASE.
+            thresholdCoreSurface (float): Precision threshold for core/surface differentiation (distance threshold for retaining atoms).
+            skipSymmetryAnalyzis (bool): If False, performs an atomic structure analysis using pymatgen.
+            jmolCrystalShape (bool): If True, generates a JMOL script for visualization.
+            noOutput (bool): If False, prints details about the NP structure.
+            calcPropOnly (bool): If False, generates the atomic structure of the NP.   
+            
+        Attributes:
+            self.nAtoms (int): Number of atoms in the NP.
+            self.nAtomsPerLayer (list): Number of atoms in each atomic layer.
+            self.nAtomsPerEdge (int): Number of atoms per edge.
+            self.jmolCrystalShape (bool): Flag for JMol visualization.
+            self.cog (np.array): Center of gravity of the NP.
+            self.imageFile (str): Path to a reference image.
+            self.trPlanes (array): Truncation plane equations.
+
+        """
+        
         self.element = element
+        self.shape=shape
         self.Rnn = Rnn
         self.nLayer = nLayer
         self.nAtoms = 0
@@ -553,9 +864,22 @@ class regfccTd:
         return(f"Regular tetrahedron with {self.nLayer} layer(s) and Rnn = {self.Rnn}")
     
     def nAtomsF(self,i):
+        """ returns the number of atoms of a tetrahedron of size i """
         return round(i**3/6 + i**2 + 11*i/6 + 1)
     
     def nAtomsPerLayerAnalytic(self):
+        """
+        Computes the number of atoms per shell in an ordered nanoparticle.
+
+        The function iterates over each layer, 
+        computes the number of atoms for the given layer, and subtracts 
+        the cumulative sum of the previous shells to get the number of new 
+        atoms in the current layer.
+
+        Returns:
+            list: A list where each element represents the number of atoms 
+                  in a specific layer.
+        """
         n = []
         Sum = 0
         for i in range(self.nLayer):
@@ -566,49 +890,83 @@ class regfccTd:
         return n
     
     def nAtomsAnalytic(self):
+        """
+        Computes the total number of atoms in the nanoparticle.
+        """
         n = self.nAtomsF(self.nLayer-1)
         return n
     
     def edgeLength(self):
+        """
+        Computes the edge length of the nanoparticle in Å .
+
+        The edge length is determined based on the interatomic distance (Rnn) 
+        and the number of atomic layers (`nLayer`).
+        """
         return self.Rnn*(self.nLayer-1)
 
     def heightOfPyramid(self):
+        """
+        Computes the length of the height of the pyramid in Å .
+        """
         return self.heightOfPyramidF*self.edgeLength()
     
     def interLayerDistance(self):
+        """
+        Computes the distance between the layers in Å .
+        """
         return self.heightOfPyramid()/(self.nLayer-1)
     
     def radiusCircumscribedSphere(self):
+        """
+        Computes the radius of the circumscribed sphere of the nanoparticle in Å.
+        """
         return self.radiusCSF*self.edgeLength()
 
     def radiusInscribedSphere(self):
+        """
+        Computes the radius of the inscribed sphere of the nanoparticle in Å  .
+        """
         return self.radiusISF*self.edgeLength()
 
     def radiusMidSphere(self):
+        """
+        Computes the radius of the midsphere of the nanoparticle in Å.
+        The midsphere is a sphere that touches the edges of the nanoparticle.
+        """
         return self.radiusMSF*self.edgeLength()
 
     def area(self):
+        """
+        Computes the surface area of the nanoparticle in square Ångströms.
+        """
         el = self.edgeLength()
         return el**2*np.sqrt(3)
     
     def volume(self):
+        """
+        Computes the volume of the nanoparticle in cubic Ångströms.
+        """
         el = self.edgeLength()
         return el**3/(6*np.sqrt(2)) 
 
     def MakeVertices(self,nL):
         """
-        input:
+        Generates the coordinates of the vertices, edges, and faces 
+        for the ith shell of an tetrahedral nanoparticle.
+        Args:
             - nL = number of layers = number of atoms per edge
         returns:
-            - CoordVertices = the 4 vertex coordinates of a tetrahedron
-            - edges = indexes of the 6 edges
-            - faces = indexes of the 4 faces 
+            - CoordVertices (np.ndarray): the 4 vertex coordinates of a tetrahedron
+            - edges (np.ndarray): indexes of the 6 edges
+            - faces (np.ndarray): indexes of the 4 faces 
         """
         if (nL > self.nLayer):
             sys.exit(f"regTd.MakeVertices(nL) is called with nL = {nL} > nLayer = {self.nLayer}")
         else:
             scale = self.radiusCircumscribedSphere()
             c = 1/(2*np.sqrt(2)) # edge length 1
+            # Define vertex positions based on tetrahedral geometry
             CoordVertices = [pyNMBu.vertex(c, c, c, scale),\
                              pyNMBu.vertex(c, -c, -c, scale),\
                              pyNMBu.vertex(-c, c, -c, scale),\
@@ -621,23 +979,39 @@ class regfccTd:
         return CoordVertices, edges, faces
 
     def coords(self,noOutput):
+        """
+        Generates atomic coordinates for a tetrahedral nanoparticle.
+
+        Args:
+            noOutput (bool): If False, displays progress and timing information.
+
+        Steps:
+            - Generates vertex atoms.
+            - Calculates and places edge atoms along the edges.
+            - Generates facet atoms to fill in faces.
+            - Adds core atoms layer by layer.
+            - Stores final atomic positions in an ASE Atoms object.
+
+        Returns:
+            None (updates class attributes).
+        """
         if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pyNMBu.timer(); chrono.chrono_start()
-        c = []
+        c = [] # List of atomic coordinates
         # print(self.nAtomsPerLayer)
         indexVertexAtoms = []
         indexEdgeAtoms = []
         indexFaceAtoms = []
         indexCoreAtoms = []
 
-        # vertices
+        # Generate vertex atoms
         nAtoms0 = 0
         self.nAtoms += self.nVertices
         cVertices, E, F = self.MakeVertices(self.nLayer-1)
         c.extend(cVertices.tolist())
         indexVertexAtoms.extend(range(nAtoms0,self.nAtoms))
 
-        # intermediate atoms on edges e
+        # Generate edge atoms
         nAtoms0 = self.nAtoms
         Rvv = pyNMBu.RAB(cVertices,E[0,0],E[0,1]) #distance between two vertex atoms
         nAtomsOnEdges = int((Rvv+1e-6) / self.Rnn)-1
@@ -645,7 +1019,7 @@ class regfccTd:
         #print("nAtomsOnEdges = ",nAtomsOnEdges)
         coordEdgeAt = []
         for n in range(nAtomsOnEdges):
-            for e in E:
+            for e in E: # Loop over all edges
                 a = e[0]
                 b = e[1]
                 coordEdgeAt.append(cVertices[a]+pyNMBu.vector(cVertices,a,b)*(n+1) / nIntervals)
@@ -655,7 +1029,7 @@ class regfccTd:
         self.nAtomsPerEdge = nAtomsOnEdges  + 2 #2 vertices
         # print(indexEdgeAtoms)
         
-        # now, facet atoms
+        # Generate facet atoms
         coordFaceAt = []
         nAtomsOnFaces = 0
         nAtoms0 = self.nAtoms
@@ -665,8 +1039,8 @@ class regfccTd:
         c.extend(coordFaceAt)
         indexFaceAtoms.extend(range(nAtoms0,self.nAtoms))
 
-        # now, core atoms. Layer by layer strategy, using atoms on edges [0-1],[0-2],[0-3]
-        # when identified, just use MakeFaceCoord and define, for each layer, the three atoms on the edge as a facet
+        # Generate core atoms
+        # Layer by layer strategy, using atoms on edges [0-1],[0-2],[0-3] when identified, just use MakeFaceCoord and define, for each layer, the three atoms on the edge as a facet
         # just start from 4th layer
         coordCoreAt = []
         nAtomsInCore = 0
@@ -691,6 +1065,9 @@ class regfccTd:
         self.cog = self.NP.get_center_of_mass()
     
     def prop(self):
+        """
+        Display unit cell and nanoparticle properties.
+        """
         vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
         pyNMBu.plotImageInPropFunction(self.imageFile)
@@ -719,19 +1096,33 @@ class regfccTd:
         print(f"coordinates of the center of gravity = {self.cog}")
 
     def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface,noOutput):
-        import math
-        self.moi=pyNMBu.moi(self.NP, noOutput)
-        self.dim=[0,0,0]
-        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))    # MOI mass normalized (m of each atoms=1)
+        """
+        Compute and store various post-construction properties of the nanoparticle.
+    
+        This function calculates moments of inertia (MOI), determines the nanoparticle shape, 
+        analyzes symmetry (if required), and identifies core and surface atoms.
+    
+        Parameters:
+        - skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
+        - thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
+        - noOutput (bool): If True, suppresses output messages.
+    
+        Attributes Updated:
+        - self.moi (array): Moment of inertia tensor.
+        - self.moisize (array): Normalized moments of inertia.
+        - self.MOIshape (str): Shape identifier used for size calculations.
+        - self.vertices, self.simplices, self.neighbors, self.equations (arrays): 
+          Geometric properties of the nanoparticle.
+        - self.NPcs (Atoms object): Copy of the nanoparticle with surface atoms visually marked.
+        - self.NP (Atoms object): Original nanoparticle.
+        """
         # find the size using the MOI mass normalized 
-        a=np.sqrt(20*self.moisize[0]) # side length https://www.vcalc.com/collection/?uuid=1a8912a2-f145-11e9-8682-bc764e2038f2
-        self.dim[0] = 2*a*math.sqrt(3/8) #diameter of the circumscribed sphere
-        self.dim[1] = self.dim[0]
-        self.dim[2] = self.dim[0]
-        #https://fr.wikipedia.org/wiki/Dod%C3%A9ca%C3%A8dre_r%C3%A9gulier#:~:text=Les%2020%20%C3%97%206%20%3D%2012,sur%20les%20faces%20du%20poly%C3%A8dre.
-        if not noOutput:
-            print(f"Size of the tetrahedron (diameter of the circumscribed sphere) :  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
-            print(f"Edge  of the tetrahedron:  { a* 0.1:.2f}   nm")
+        import math
+        self.dim=[0,0,0]
+        self.moi=pyNMBu.moi(self.NP, noOutput)
+        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))# MOI mass normalized (m of each atoms=1)
+        self.MOIshape=self.shape
+        pyNMBu.MOI_shapes(self, noOutput)
         
         if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
         [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
@@ -743,19 +1134,38 @@ class regfccTd:
 
 ###########################################################################################################
 class regDD:
+    """
+    A class for generating XYZ and CIF files of regular dodecahedral nanoparticles (NPs) 
+    of various sizes, based on user-defined compounds (either by 
+    name, e.g., "Fe", "Au", etc). 
+
+    Key Features:
+    - Allows to choose the NP size.
+    - Can analyze the structure in detail, including symmetry and properties.
+    - Offers options for core/surface differentiation based on a threshold.
+    - Generates outputs in XYZ and CIF formats for visualization and simulations.
+    - Provides compatibility with jMol for 3D visualization.
+    
+    Additional Notes:
+    - The symmetry analysis can be skipped to speed up computations.
+    - Customizable precision thresholds for structural analysis.
+    """
+
+    # Geometric properties of regDD
     nFaces = 12
     nEdges = 30
     nVertices = 20
     phi = (1 + np.sqrt(5))/2 # golden ratio
     edgeLengthF = 1
-    radiusCSF = np.sqrt(3) * (1 + np.sqrt(5))/4
+    radiusCSF = np.sqrt(3) * (1 + np.sqrt(5))/4 # Radius of circumsphere
     interShellF = 1/radiusCSF
-    radiusISF = np.sqrt((5/2) + (11/10)*np.sqrt(5))/2
+    radiusISF = np.sqrt((5/2) + (11/10)*np.sqrt(5))/2 # Radius of insphere that is tangent to faces
   
     def __init__(self,
                  element: str='Au',
                  Rnn: float=2.7,
                  nShell: int=1,
+                 shape: str='regDD',
                  postAnalyzis=True,
                  aseView: bool=False,
                  thresholdCoreSurface = 1.,
@@ -764,7 +1174,33 @@ class regDD:
                  noOutput = False,
                  calcPropOnly = False,
                 ):
+        """
+        Initialize the class with all necessary parameters.
+
+        Args:
+            element: Chemical element of the NP (e.g., "Au", "Fe").
+            Rnn (float): Nearest neighbor interatomic distance in Å.
+            nShell (int): Number of shells (e.g., `nShell=1` means 2 atoms per edge).
+            shape (str): Shape 'regDD'
+            postAnalyzis (bool): If True, prints additional NP information (e.g., cell parameters, moments of inertia, inscribed/circumscribed sphere diameters, etc.).
+            aseView (bool): If True, enables visualization of the NP using ASE.
+            thresholdCoreSurface (float): Precision threshold for core/surface differentiation (distance threshold for retaining atoms).
+            skipSymmetryAnalyzis (bool): If False, performs an atomic structure analysis using pymatgen.
+            jmolCrystalShape (bool): If True, generates a JMOL script for visualization.
+            noOutput (bool): If False, prints details about the NP structure.
+            calcPropOnly (bool): If False, generates the atomic structure of the NP.   
+            
+        Attributes:
+            self.nAtoms (int): Number of atoms in the NP.
+            self.nAtomsPerShell (list): Number of atoms in each shell.
+            self.interShellDistance (float): Distance between shells.
+            self.jmolCrystalShape (bool): Flag for JMol visualization.
+            self.imageFile (str): Path to a reference image.
+            self.trPlanes (array): Truncation plane equations.
+
+        """
         self.element = element
+        self.shape= shape
         self.Rnn = Rnn
         self.nShell = nShell
         self.nAtoms = 0
@@ -791,6 +1227,18 @@ class regDD:
         return 10*i**3 + 15*i**2 + 7*i + 1
     
     def nAtomsPerShellAnalytic(self):
+        """
+        Computes the number of atoms per shell in an ordered nanoparticle.
+
+        The function iterates over each shell layer, 
+        computes the number of atoms for the given shell, and subtracts 
+        the cumulative sum of the previous shells to get the number of new 
+        atoms in the current shell.
+
+        Returns:
+            list: A list where each element represents the number of atoms 
+                  in a specific shell.
+        """
         n = []
         Sum = 0
         for i in range(self.nShell+1):
@@ -800,42 +1248,67 @@ class regDD:
         return n
     
     def nAtomsAnalytic(self):
+        """
+        Computes the total number of atoms in the nanoparticle.
+        """
         n = self.nAtomsF(self.nShell)
         return n
     
     def edgeLength(self):
+        """
+        Computes the edge length of the nanoparticle in Å .
+
+        The edge length is determined based on the interatomic distance (Rnn) 
+        and the number of shells (`nShell`).
+        """
         return self.Rnn*self.nShell
 
     def radiusCircumscribedSphere(self):
+        """
+        Computes the radius of the circumscribed sphere of the nanoparticle in Å.
+        """
         return self.radiusCSF*self.edgeLength()
 
     def radiusInscribedSphere(self):
+        """
+        Computes the radius of the inscribed sphere of the nanoparticle in Å  .
+        """
         return self.radiusISF*self.edgeLength()
 
     def area(self):
+        """
+        Computes the surface area of the nanoparticle in square Ångströms.
+        """
         el = self.edgeLength()
         return 3 * el**2 * np.sqrt(25 + 10*np.sqrt(5))
     
     def volume(self):
+        """
+        Computes the volume of the nanoparticle in cubic Ångströms.
+        """
         el = self.edgeLength()
         return (15 + 7*np.sqrt(5)) * el**2/4 
 
     def MakeVertices(self,i):
         """
-        input:
-            - i = index of the shell
-        returns:
-            - CoordVertices = the 20 vertex coordinates of the ith shell of a dodecahedron
-            - edges = indexes of the 30 edges
-            - faces = indexes of the 12 faces 
+        Generates the coordinates of the vertices, edges, and faces 
+        for the ith shell of a dodecahedral nanoparticle.
+        Args:
+            - i (int): Index of the shell
+        Returns:
+            - CoordVertices (np.ndarray): the 20 vertex coordinates of the ith shell of a dodecahedron
+            - edges (np.ndarray): indexes of the 30 edges
+            - faces (np.ndarray): indexes of the 12 faces 
         """
+        # If `i == 0`, the function returns a single central vertex
         if (i == 0):
             CoordVertices = [0., 0., 0.]
             edges = []
             faces = []
         elif (i > self.nShell):
-            sys.exit(f"icoreg.MakeVertices(i) is called with i = {i} > nShell = {self.nShell}")
+            sys.exit(f"icoreg.MakeVertices(i) is called with i = {i} > nShell= {self.nShell}")
         else:
+            # Define vertex positions based on dodecahedral geometry
             phi = self.phi
             scale = self.interShellDistance * i
             CoordVertices = [pyNMBu.vertex(1, 1, 1, scale),\
@@ -870,6 +1343,21 @@ class regDD:
         return CoordVertices, edges, faces
 
     def coords(self,noOutput):
+        """
+        Generates atomic coordinates for a dodecahedral nanoparticle.
+
+        Args:
+            noOutput (bool): If False, displays progress and timing information.
+
+        Steps:
+            - Generates vertex atoms.
+            - Calculates and places edge atoms along the edges.
+            - Generates facet atoms to fill in faces.
+            - Stores final atomic positions in an ASE Atoms object.
+
+        Returns:
+            None (updates class attributes).
+        """
         if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pyNMBu.timer(); chrono.chrono_start()
         # central atom = "1st shell"
@@ -881,7 +1369,8 @@ class regDD:
         indexEdgeAtoms = []
         indexFaceAtoms = []
         for i in range(1,self.nShell+1):
-            # vertices
+            
+            # Generate vertex atoms 
             nAtoms0 = self.nAtoms
             cshell, E, F = self.MakeVertices(i)
             self.nAtoms += self.nVertices
@@ -889,7 +1378,7 @@ class regDD:
             c.extend(cshell.tolist())
             indexVertexAtoms.extend(range(nAtoms0,self.nAtoms))
 
-            # intermediate atoms on edges e
+            # Generate edge atoms
             nAtoms0 = self.nAtoms
             Rvv = pyNMBu.RAB(cshell,E[0,0],E[0,1]) #distance between two vertex atoms
             nAtomsOnEdges = int((Rvv+1e-6) / self.Rnn)-1
@@ -907,7 +1396,8 @@ class regDD:
             indexEdgeAtoms.extend(range(nAtoms0,self.nAtoms))
             #print(c)
             
-            # center of each pentagonal facet
+            # Generate facet atoms
+            # Center of each pentagonal facet
             nAtomsOnFaces = 0
             nAtoms0 = self.nAtoms
             coordFaceAt = []
@@ -944,6 +1434,7 @@ class regDD:
 
         if not noOutput: print(f"Total number of atoms = {self.nAtoms}")
         if not noOutput: print(self.nAtomsPerShell)
+        # Store results in an ASE Atoms object 
         aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
                 
         if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
@@ -951,6 +1442,9 @@ class regDD:
         self.cog = self.NP.get_center_of_mass()
     
     def prop(self):
+        """
+        Display unit cell and nanoparticle properties.
+        """
         vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
         pyNMBu.plotImageInPropFunction(self.imageFile)
@@ -973,19 +1467,32 @@ class regDD:
         print("Dual polyhedron: icosahedron")
 
     def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface,noOutput):
+        """
+        Compute and store various post-construction properties of the nanoparticle.
+    
+        This function calculates moments of inertia (MOI), determines the nanoparticle shape, 
+        analyzes symmetry (if required), and identifies core and surface atoms.
+    
+        Parameters:
+        - skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
+        - thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
+        - noOutput (bool): If True, suppresses output messages.
+    
+        Attributes Updated:
+        - self.moi (array): Moment of inertia tensor.
+        - self.moisize (array): Normalized moments of inertia.
+        - self.MOIshape (str): Shape identifier used for size calculations.
+        - self.vertices, self.simplices, self.neighbors, self.equations (arrays): 
+          Geometric properties of the nanoparticle.
+        - self.NPcs (Atoms object): Copy of the nanoparticle with surface atoms visually marked.
+        - self.NP (Atoms object): Original nanoparticle.
+        """
         import math
-        self.moi=pyNMBu.moi(self.NP, noOutput)
         self.dim=[0,0,0]
-        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))    # MOI mass normalized (m of each atoms=1)
-        # find the size using the MOI mass normalized 
-        a=np.sqrt((150*self.moisize[0])/(39*((1+math.sqrt(5))/2)+28)) #arete https://www.vcalc.com/collection/?uuid=1a8912a2-f145-11e9-8682-bc764e2038f2
-        self.dim[0] = 2*a*math.cos(36*math.pi/180)*math.sqrt(3) 
-        self.dim[1] = self.dim[0]
-        self.dim[2] = self.dim[0]
-        #https://fr.wikipedia.org/wiki/Dod%C3%A9ca%C3%A8dre_r%C3%A9gulier#:~:text=Les%2020%20%C3%97%206%20%3D%2012,sur%20les%20faces%20du%20poly%C3%A8dre.
-        if not noOutput:
-            print(f"Size of the dodecahedron (diameter of the circumscribed sphere) :  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
-            print(f"Edge  of the dodecahedron:  { a* 0.1:.2f}   nm")
+        self.moi=pyNMBu.moi(self.NP, noOutput)
+        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))# MOI mass normalized (m of each atoms=1)
+        self.MOIshape=self.shape
+        pyNMBu.MOI_shapes(self, noOutput)
         if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
         [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
             pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
@@ -997,6 +1504,23 @@ class regDD:
 
 ###########################################################################################################
 class cube:
+    """
+    A class for generating XYZ and CIF files of cubic nanoparticles (NPs) 
+    of various sizes, based on user-defined compounds (either by 
+    name, e.g., "Fe", "Au", etc). 
+
+    Key Features:
+    - Allows to choose the NP size.
+    - Can analyze the structure in detail, including symmetry and properties.
+    - Offers options for core/surface differentiation based on a threshold.
+    - Generates outputs in XYZ and CIF formats for visualization and simulations.
+    - Provides compatibility with jMol for 3D visualization.
+    
+    Additional Notes:
+    - The `nOrder` parameter determines the level of imbrication
+    - The symmetry analysis can be skipped to speed up computations.
+    - Customizable precision thresholds for structural analysis.
+    """
     nFaces = 6
     nEdges = 12
     nVertices = 8
@@ -1008,9 +1532,10 @@ class cube:
     def __init__(self,
                  crystalStructure='fcc',
                  element='Au',
-                 Rnn: float=2.7, #distance with closest neighboor
-                 nOrder: int=1, #number of unit cells
-                 size: int= 0, #size in Angs
+                 Rnn: float=2.7, 
+                 nOrder: int=1, 
+                 size: int= 0, 
+                 shape: str='cube',
                  postAnalyzis=True,
                  aseView: bool=False,
                  thresholdCoreSurface = 1.,
@@ -1019,11 +1544,41 @@ class cube:
                  noOutput = False,
                  calcPropOnly = False,
                 ):
+        """
+        Initialize the class with all necessary parameters.
+
+        Args:
+            element: Chemical element of the NP (e.g., "Au", "Fe").
+            Rnn (float): Nearest neighbor interatomic distance in Å.
+            nOrder (int): Determines the level of imbrication = the number of atomic layers along an edge (e.g., `nOrder=1` means 2 atoms per edge).
+            size (float): Size of the cube in nm.
+            shape (str): Shape 'cube'.
+            postAnalyzis (bool): If True, prints additional NP information (e.g., cell parameters, moments of inertia, inscribed/circumscribed sphere diameters, etc.).
+            aseView (bool): If True, enables visualization of the NP using ASE.
+            thresholdCoreSurface (float): Precision threshold for core/surface differentiation (distance threshold for retaining atoms).
+            skipSymmetryAnalyzis (bool): If False, performs an atomic structure analysis using pymatgen.
+            jmolCrystalShape (bool): If True, generates a JMOL script for visualization.
+            noOutput (bool): If False, prints details about the NP structure.
+            calcPropOnly (bool): If False, generates the atomic structure of the NP.   
+            
+        Attributes:
+            
+            self.nAtoms (int): Number of atoms in the NP.
+            self.nAtomsPerShell (list): Number of atoms in each shell.
+            self.nAtomsPerEdge (int): Number of atoms per edge.
+            self.interLayerDistance (float): Distance between atomic layers.
+            self.jmolCrystalShape (bool): Flag for JMol visualization.
+            self.cog (np.array): Center of gravity of the NP.
+            self.imageFile (str): Path to a reference image.
+            self.trPlanes (array): Truncation plane equations.
+
+        """
         self.crystalStructure = crystalStructure
         self.element = element
+        self.shape= shape
         self.Rnn = Rnn
         self.nOrder = nOrder
-        self.size= size*10 #in angs
+        self.size= size*10 # in angs
         self.nAtomsPerEdge = nOrder+1
         self.nAtoms = 0
         self.nAtomsPerShell = [0]
@@ -1056,6 +1611,18 @@ class cube:
         return 2*i**3 + 3*i*2 + 3*i
     
     def nAtomsPerShellAnalytic(self):
+        """
+        Computes the number of atoms per shell in an ordered nanoparticle.
+
+        The function iterates over each shell layer (from 1 to `nOrder`), 
+        computes the number of atoms for the given shell, and subtracts 
+        the cumulative sum of the previous shells to get the number of new 
+        atoms in the current shell.
+
+        Returns:
+            list: A list where each element represents the number of atoms 
+                  in a specific shell.
+        """
         n = []
         Sum = 0
         for i in range(self.nOrder+1):
@@ -1065,6 +1632,16 @@ class cube:
         return n
     
     def nAtomsPerShellCumulativeAnalytic(self):
+        """
+        Computes the cumulative number of atoms up to each shell.
+
+        This function returns the total number of atoms present in the 
+        nanoparticle for each shell layer, building up cumulatively.
+
+        Returns:
+            list: A list where each element represents the total number of 
+                  atoms present up to that shell.
+        """
         n = []
         Sum = 0
         for i in range(self.nOrder+1):
@@ -1074,36 +1651,62 @@ class cube:
         return n
     
     def nAtomsfccAnalytic(self):
+        """
+        Computes the total number of atoms in the fcc nanoparticle.
+        """
         n = self.nAtomsfccF(self.nOrder)
         return n
         
     def nAtomsbccAnalytic(self):
+        """
+        Computes the total number of atoms in the bcc nanoparticle.
+        """
         n = self.nAtomsbccF(self.nOrder)
         return n
         
     def edgeLength(self):
+        """
+        Computes the edge length of the nanoparticle in Å .
+
+        The edge length is determined based on the interatomic distance (Rnn), the number of atomic layers (`nOrder`) and the crystalStructure (fcc or bcc).
+        """
         if self.crystalStructure == 'fcc':
             return self.Rnn*self.edgeLengthFfcc*self.nOrder
         elif self.crystalStructure == 'bcc':
             return self.Rnn*self.edgeLengthFbcc*self.nOrder
         
     def latticeConstant(self):
+        """
+        Computes the lattice constant length of the nanoparticle in Å, based on the interatomic distance (Rnn) and the crystalStructure (fcc or bcc).
+        """
         if self.crystalStructure == 'fcc':
             return self.Rnn*self.edgeLengthFfcc
         elif self.crystalStructure == 'bcc':
             return self.Rnn*self.edgeLengthFbcc
         
     def radiusCircumscribedSphere(self):
+        """
+        Computes the radius of the circumscribed sphere of the nanoparticle in Å.
+        """
         return self.radiusCSF*self.edgeLength()
 
     def radiusInscribedSphere(self):
+        """
+        Computes the radius of the inscribed sphere of the nanoparticle in Å.
+        """
         return self.radiusISF*self.edgeLength()
 
     def area(self):
+        """
+        Computes the surface area of the nanoparticle in square Ångströms.
+        """
         el = self.edgeLength()
         return 6 * el**2
 
     def volume(self):
+        """
+        Computes the volume of the nanoparticle in cubic Ångströms.
+        """
         el = self.edgeLength()
         return el**3
 
@@ -1117,6 +1720,25 @@ class cube:
     #     return fcc
 
     def coords(self,noOutput):
+        """
+        Generates atomic coordinates for a cubic nanoparticle.
+
+        Args:
+            noOutput (bool): If False, displays progress and timing information.
+
+        Steps:
+            - Generates vertex atoms.
+            - Calculates and places edge atoms along the edges.
+            - Generates facet atoms to fill in faces.
+            - Adds core atoms layer by layer.
+            - Stores final atomic positions in an ASE Atoms object.
+
+        Returns:
+            None (updates class attributes).
+        """
+        
+
+        
         #crystalline structure
         if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pyNMBu.timer(); chrono.chrono_start()
@@ -1124,7 +1746,8 @@ class cube:
             cube = bulk(self.element, 'fcc', a=self.latticeConstant(), cubic=True)
         elif self.crystalStructure == 'bcc':
             cube = bulk(self.element, 'bcc', a=self.latticeConstant(), cubic=True)
-        #creating supercell depending the entries of user : size of the cube in Angs or nOrder (number of cells)
+            
+        # Creating supercell depending the entries of user : size of the cube in Angs or nOrder (number of cells)
         if self.size==0 : #if not size given
             if not noOutput: print(f"Now making a {self.nOrder}x{self.nOrder}x{self.nOrder} fcc supercell...")
             M = [[self.nOrder, 0, 0], [0, self.nOrder, 0], [0, 0, self.nOrder]]
@@ -1134,7 +1757,7 @@ class cube:
             M = [[self.n_cells, 0, 0], [0, self.n_cells, 0], [0, 0, self.n_cells]]
             sc=make_supercell(cube, M)
        
-        # now add last layers
+        # Adding the last layers
         if not noOutput: print(f"... and adding the upper layers")
         sc = cut(sc,extend=1.05)
         natoms = len(sc.positions)
@@ -1149,6 +1772,9 @@ class cube:
         self.cog = self.NP.get_center_of_mass()
         
     def prop(self):
+        """
+        Display unit cell and nanoparticle properties.
+        """
         vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
         pyNMBu.plotImageInPropFunction(self.imageFile)
@@ -1173,17 +1799,32 @@ class cube:
         print("Dual polyhedron: octahedron")
 
     def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface, noOutput):
-        self.moi=pyNMBu.moi(self.NP, noOutput)
+        """
+        Compute and store various post-construction properties of the nanoparticle.
+    
+        This function calculates moments of inertia (MOI), determines the nanoparticle shape, 
+        analyzes symmetry (if required), and identifies core and surface atoms.
+    
+        Parameters:
+        - skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
+        - thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
+        - noOutput (bool): If True, suppresses output messages.
+    
+        Attributes Updated:
+        - self.moi (array): Moment of inertia tensor.
+        - self.moisize (array): Normalized moments of inertia.
+        - self.MOIshape (str): Shape identifier used for size calculations.
+        - self.vertices, self.simplices, self.neighbors, self.equations (arrays): 
+          Geometric properties of the nanoparticle.
+        - self.NPcs (Atoms object): Copy of the nanoparticle with surface atoms visually marked.
+        - self.NP (Atoms object): Original nanoparticle.
+        """
+        import math
         self.dim=[0,0,0]
-        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))   # MOI mass normalized (m of each atoms=1)
-        # find the size using the MOI mass normalized
-        self.dim[0] = np.sqrt(6*self.moisize[0])
-        self.dim[1] = np.sqrt(6*self.moisize[1])
-        self.dim[2] = np.sqrt(6*self.moisize[2])
-        if not noOutput:
-            print(f"Length of the cube  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")
-   
-                
+        self.moi=pyNMBu.moi(self.NP, noOutput)
+        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))# MOI mass normalized (m of each atoms=1)
+        self.MOIshape=self.shape
+        pyNMBu.MOI_shapes(self, noOutput)        
         if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
         [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
             pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
@@ -1196,13 +1837,24 @@ class cube:
 
 class hollow_shapes:
     #cube
-    '''
-        input:
-            - full_cube = instance of the class Cube
-            - hollow_size = size of the hollow wanted in Angstrom
-        returns:
-            - None
-    '''
+    """
+    A class for generating XYZ and CIF files of hollow cubic nanoparticles (NPs)
+    with customizable sizes and compositions. Users can define the composition
+    by specifying element names (e.g., "Fe", "Au") and provide a "cube" class
+    instance from this module to construct the nanoparticle structure.
+
+    Key Features:
+    - Allows to choose the cube size and the size of its hollow
+    - Can analyze the structure in detail, including symmetry and properties.
+    - Offers options for core/surface differentiation based on a threshold.
+    - Generates outputs in XYZ and CIF formats for visualization and simulations.
+    - Provides compatibility with jMol for 3D visualization.
+    
+    Additional Notes:
+    - The symmetry analysis can be skipped to speed up computations.
+    - Customizable precision thresholds for structural analysis.
+
+    """
     def __init__(self,
                  full_cube,
                  hollow_size: int=0,#Angs?
@@ -1214,14 +1866,37 @@ class hollow_shapes:
                  noOutput = False,
                  calcPropOnly= False
                 ):
+        """
+        Initialize the class with all necessary parameters.
+        
+        Args:
+            full_cube (class instance): Instance of the class "cube" of the module "pNP".
+            hollow_size (float): Size of the hollow in Å.
+            postAnalyzis (bool): If True, prints additional NP information (e.g., cell parameters, moments of inertia, inscribed/circumscribed sphere diameters, etc.).
+            aseView (bool): If True, enables visualization of the NP using ASE.
+            thresholdCoreSurface (float): Precision threshold for core/surface differentiation (distance threshold for retaining atoms).
+            skipSymmetryAnalyzis (bool): If False, performs an atomic structure analysis using pymatgen.
+            jmolCrystalShape (bool): If True, generates a JMOL script for visualization.
+            noOutput (bool): If False, prints details about the NP structure.
+            calcPropOnly (bool): If False, generates the atomic structure of the NP.   
+            
+        Attributes:
+            
+            self.nAtoms (int): Number of atoms in the NP.
+            self.cog (np.array): Center of gravity of the NP.
+
+        """
         if not isinstance(full_cube, cube):
             raise TypeError("full_cube must be an instance of the Class Cube")
         self.full_cube= full_cube
         self.hollow_size = hollow_size 
+        self.nAtoms = 0
+        self.edgeLength= self.full_cube.edgeLength()
+        self.nAtomsPerEdge= self.full_cube.nAtomsPerEdge
         self.cog = np.array([0., 0., 0.])
-        
         if not calcPropOnly:
             self.create_hollow(noOutput)
+            
             # if aseView: view(self.NP)
             if postAnalyzis:
                 self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface, noOutput=noOutput)
@@ -1235,17 +1910,26 @@ class hollow_shapes:
     
     def create_hollow(self,noOutput) :
         '''
-        Create a hollow using planes that defines a cube [h k l d] with d= +/- size of the hollow/2
+        Function that creates the cube hollow. 
+        The hollow is created using planes that defines the hollow [h k l d] with d= +/- size of the hollow/2.
+        
+        Args:
+            noOutput (bool): If False, prints details about the NP structure.
+        
         '''
+        
+        if not noOutput:   
+            print(f"Number of atoms on an edge = {self.nAtomsPerEdge}")
+            print(f"Edge length = {round(self.edgeLength*0.1,3)} nm")
+            print(f"Creating a hollow of {self.hollow_size} nm ")
 
-        if not noOutput: print(f"Creating a hollow of {self.hollow_size} nm ")
         half_inner_cube_size=10*self.hollow_size/2
         self.NP=self.full_cube.NP.copy()
-        print("Number of atoms in the cube before creating the hollow", len(self.NP))
+        print("Number of atoms in the cube before creating the hollow =", len(self.NP))
         full_positions = self.full_cube.NP.get_positions()
 
     
-           # the 6 planes that define the hollow (cube)
+        # Generate the 6 planes that define the hollow (cube)
         planes_with_dist = np.array([
             [0, 0, 1, -half_inner_cube_size],
             [0, 0, -1, -half_inner_cube_size],  
@@ -1255,12 +1939,13 @@ class hollow_shapes:
             [-1, 0, 0, -half_inner_cube_size]
         ])   
         
-        delAbove= False
+        delAbove= False # delete atoms above/under the 6 planes
         # delete atoms above/under the 6 planes
         # for plane in planes_with_directions:
         current_positions = self.NP.get_positions()
         #     print(f"Plan used: {plane}, delAbove={delAbove}")
-            
+
+        # Generate the truncation 
         AtomsUnderPlanes = pyNMBu.truncateAbovePlanes(
             planes=planes_with_dist,
             coords=current_positions,
@@ -1268,40 +1953,45 @@ class hollow_shapes:
             delAbove=delAbove,
             debug=False,        
             noOutput=False,
-            eps= 0.001, #tolérance de distance
+            eps= 0.001, # threshold distance
             )
-        del self.NP[AtomsUnderPlanes]
-       
-           
-        print(f"Number of atoms in the final hollow cube : {len(self.NP)}")
-       #if not noOutput:
-           # print(f"Number of atoms to remove: {self.NP[AtomsUnderPlanes]}")
-        
-        
+        del self.NP[AtomsUnderPlanes] 
+        self.nAtoms=len(self.NP)
+        if not noOutput:
+            print(f"Number of atoms in the final hollow cube : {self.nAtoms}")
+            
         
     def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface, noOutput):
+        """
+        Compute and store various post-construction properties of the nanoparticle.
+    
+        This function calculates moments of inertia (MOI), determines the nanoparticle shape, 
+        analyzes symmetry (if required), and identifies core and surface atoms.
+    
+        Parameters:
+        - skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
+        - thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
+        - noOutput (bool): If True, suppresses output messages.
+    
+        Attributes Updated:
+        - self.moi (array): Moment of inertia tensor.
+        - self.moisize (array): Normalized moments of inertia.
+        - self.vertices, self.simplices, self.neighbors, self.equations (arrays): 
+          Geometric properties of the nanoparticle.
+        - self.NPcs (Atoms object): Copy of the nanoparticle with surface atoms visually marked.
+        - self.NP (Atoms object): Original nanoparticle.
+        """
         self.moi=pyNMBu.moi(self.NP, noOutput)
         self.dim=[0,0,0]
         print(self.moi)
         self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))   # MOI mass normalized (m of each atoms=1)
-        # find the size using the MOI mass normalized
-        self.dim[0] = np.sqrt(6*self.moisize[0])
-        self.dim[1] = np.sqrt(6*self.moisize[1])
-        self.dim[2] = np.sqrt(6*self.moisize[2])
-        if not noOutput:
-            print(f"Length of the cube  { self.dim[0]* 0.1:.2f}  { self.dim[1] * 0.1:.2f}  { self.dim[2] * 0.1:.2f} nm")  
         if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
         [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
             pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
         self.NPcs = self.NP.copy()
         self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol     
-        # #nAtoms = self.NP.get_global_number_of_atoms()
-        # natoms = len(sc.positions)
-        # self.nAtoms=natoms
-        # self.cog = pyNMBu.centerOfGravity(sc.get_positions())
+        
         # if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         self.cog = self.NP.get_center_of_mass()
         if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
         if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)
-        
-            

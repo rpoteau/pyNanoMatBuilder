@@ -14,6 +14,12 @@ from pyNanoMatBuilder import johnsonNPs as jNP
 
 ###########################################################################################################
 class fcctpt:
+    """
+    This class generates and manages the properties of an fcc triangular platelet, which is based on 
+    a trigonal bipyramid structure. It provides methods to calculate and manipulate atomic coordinates, 
+    compute the properties of the nanoparticle, and generate visualizations.
+
+    """
     nFaces = 8
     nEdges = 9
     nVertices = 9
@@ -32,16 +38,54 @@ class fcctpt:
                  noOutput: bool=False,
                  calcPropOnly: bool=False,
                 ):
+             
+        """
+        
+        Initializes the fcc triangular platelet nanoparticle.
+
+        Args:
+            element (str): The element of the nanoparticle (default 'Au').
+            Rnn (float): The nearest neighbor distance (default 2.7 Å).
+            nLayerTd (int): The length of the edge.
+            nLayer (int): The number of of layers per trigonal bipyramid, the total number of layers is then 2*nLayer +1 (1 being the base)
+            postAnalyzis (bool): If True, prints additional NP information (e.g., cell parameters, moments of inertia, inscribed/circumscribed sphere diameters, etc.).
+            aseView (bool): If True, enables visualization of the NP using ASE.
+            thresholdCoreSurface (float): Precision threshold for core/surface differentiation (distance threshold for retaining atoms).
+            skipSymmetryAnalyzis (bool): If False, performs an atomic structure analysis using pymatgen.
+            jmolCrystalShape (bool): If True, generates a JMOL script for visualization.
+            noOutput (bool): If False, prints details about the NP structure.
+            calcPropOnly (bool): If True, enables visualization of the NP using ASE.    
+            
+        Attributes:
+            nFaces (int): The number of faces of the triangular platelet (constant).
+            nEdges (int): The number of edges of the triangular platelet (constant).
+            nVertices (int): The number of vertices of the triangular platelet (constant).
+            edgeLengthF (float): A factor for edge length (constant).
+            element (str): The chemical element for the nanoparticle (default is 'Au').
+            shape (str): The shape of the nanoparticle ('fcctpt' for this class).
+            Rnn (float): The nearest neighbor distance in Angstroms.
+            nLayerTd (int): Number of layers for the trigonal bipyramid.
+            nLayer (int): Total number of layers in the platelet.
+            nAtoms (int): Number of atoms in the nanoparticle.
+            interLayerDistance (float): Distance between layers.
+            nAtomsPerEdge (int): Number of atoms per edge at the twin boundary.
+            cog (np.array): Center of gravity of the nanoparticle.
+            dim (list): Dimensions of the nanoparticle.
+            jmolCrystalShape (bool): Flag to indicate whether to display the crystal shape in Jmol.
+            imageFile (str): Path to the image file of the nanoparticle shape.
+            """ 
         self.element = element
+        self.shape='fcctpt'
         self.Rnn = Rnn
         self.nLayerTd = int(nLayerTd)
         self.tbpprop = jNP.fcctbp(self.element,self.Rnn,self.nLayerTd,noOutput=True,calcPropOnly=True)
         self.nLayertbp = 2*self.nLayerTd - 1
-        self.nLayer = nLayer*2+1 
+        self.nLayer = nLayer*2+1 # total number of layers
         self.nAtoms = 0
         self.interLayerDistance = self.tbpprop.interLayerDistance
         self.nAtomsPerEdge = self.nLayerTd+1
         self.cog = np.array([0., 0., 0.])
+        self.dim=[0,0,0]
         self.jmolCrystalShape = jmolCrystalShape
         if self.nLayer > self.nLayertbp:
             sys.exit(f"Number of layers of the triangular platelet ({self.nLayer}) cannot be > to the total number of layers of the trigonal bipyramid {self.nLayertbp}")
@@ -60,11 +104,26 @@ class fcctpt:
         return(f"Truncated fcc double tetrahedron with {self.nLayer} layer(s) and Rnn = {self.Rnn}") 
 
     def edgeLength(self):
+        """
+        Computes the edge length of the triangular platelet in Å..
+        """
         return self.tbpprop.edgeLength()
 
     def coords(self,noOutput):
+        """
+        Generates the coordinates of the triangular platelet nanoparticle.
+
+        This method creates the atomic positions by truncating a trigonal bipyramid 
+        and adjusting the coordinates based on the twin and truncation planes.
+
+        Args:
+            noOutput (bool): Whether to suppress output messages.
+        """
         if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pyNMBu.timer(); chrono.chrono_start()
+
+        
+        # Create the trigonal bipyramid nanoparticle
         if not noOutput: vID.centertxt("Generation of the coordinates of the trigonal bipyramid, based on the fcc tetrahedron",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         tbp = jNP.fcctbp(self.element,self.Rnn,self.nLayerTd+1,postAnalyzis=False,noOutput=True)
         self.NP0 = tbp.NP.copy()
@@ -72,11 +131,14 @@ class fcctpt:
         nAtoms = asetpt.get_global_number_of_atoms()
         # cog = pyNMBu.centerOfGravity(asetbp.get_positions())
         # print("cog = ",cog)
+
+        # Truncate the trigonal bipyramid based on twin plane and truncation planes
         if not noOutput: vID.centertxt("Truncation of the trigonal bipyramid",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         if not noOutput: print("Now calculating the coordinates of the twin plane (defined by atoms 0,1,2)")
         coordTwPVertices = asetpt.get_positions()[[0,1,2]]
         twinningPlane = pyNMBu.hklPlaneFitting(coordTwPVertices,printEq=not noOutput)
         twinningPlane = pyNMBu.normalizePlane(twinningPlane)
+        
         if not noOutput: print("Now calculating the coordinates of the truncation planes")
         truncationPlane1 = twinningPlane.copy()
         truncationPlane1[3] = -(self.nLayer-1)*self.interLayerDistance/2
@@ -84,16 +146,21 @@ class fcctpt:
         truncationPlane2 = -twinningPlane.copy()
         truncationPlane2[3] = -(self.nLayer-1)*self.interLayerDistance/2
         if not noOutput: print(f"signed distance between truncation plane 2 and origin = {pyNMBu.Pt2planeSignedDistance(truncationPlane1,[0,0,0]):.2f}")
+        
         trPlanes = [truncationPlane1, truncationPlane2]
         AtomsAbovePlanes = pyNMBu.truncateAboveEachPlane(trPlanes,asetpt.get_positions(),noOutput=noOutput)
         del asetpt[AtomsAbovePlanes]
         if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
         nAtoms = asetpt.get_global_number_of_atoms()
+        self.nAtoms=nAtoms
         if not noOutput: print(f"Total number of atoms = {nAtoms}")
         self.NP = asetpt
         self.cog = self.NP.get_center_of_mass()
 
     def prop(self):
+        """
+        Display unit cell and nanoparticle properties.
+        """
         print(self)
         pyNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)
@@ -113,11 +180,34 @@ class fcctpt:
         print(f"coordinates of the center of gravity = {self.cog}")
 
     def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface, noOutput):
-        pyNMBu.moi(self.NP, noOutput=noOutput)
+        """
+        Compute and store various post-construction properties of the nanoparticle.
+    
+        This function calculates moments of inertia (MOI), the inscribed and cicumscribed spheres, 
+        determines the nanoparticle shape, analyzes symmetry (if required), and identifies core and surface atoms.
+    
+        Parameters:
+        - skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
+        - thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
+        - noOutput (bool): If True, suppresses output messages.
+    
+        Attributes Updated:
+        - self.moi (array): Moment of inertia tensor.
+        - self.moisize (array): Normalized moments of inertia.
+        - self.MOIshape (str): Shape identifier used for size calculations.
+        - self.vertices, self.simplices, self.neighbors, self.equations (arrays): 
+          Geometric properties of the nanoparticle.
+        - self.NPcs (Atoms object): Copy of the nanoparticle with surface atoms visually marked.
+        - self.NP (Atoms object): Original nanoparticle.
+        """
+        self.moi=pyNMBu.moi(self.NP, noOutput=noOutput)
         self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))# MOI mass normalized (m of each atoms=1)
-
+        self.MOIshape=self.shape 
+        pyNMBu.MOI_shapes(self, noOutput)
         if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
         [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
             pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
         self.NPcs = self.NP.copy()
         self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
+        pyNMBu.Inscribed_circumscribed_spheres(self,noOutput)
+        if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)

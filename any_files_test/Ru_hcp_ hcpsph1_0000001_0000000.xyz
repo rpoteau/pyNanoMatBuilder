@@ -1,0 +1,8 @@
+6 
+{'composition': {'Ru': 6}, 'crystal structure': 'hcp', 'shape': ' hcpsph1', 'MOI': array([2.364, 2.364, 2.437]), 'MOInormalized': array([2.364, 2.364, 2.437]), 'MOI_dim': array([4.937, 4.937, 2.141]), 'main_dim': array([1.893, 1.07 ]), 'secondary_dim': {'edges': {'edge_1': {'length': None, 'atoms_per_edge': None}, 'edge_2': {'length': None, 'atoms_per_edge': None}}}, 'truncation': False, 'number_of_atoms': 6, 'wulff': True, 'crystallization': {'state': 'crystalline', 'type': 'monocrystalline', 'subtype': 'random'}, 'wire_description': {'nRot': None, 'plane_rotated': None}} 
+Ru	 0.00000000	 -1.56107601	 -1.07042000
+Ru	 -1.35195852	 -0.78053800	 1.07042000
+Ru	 -1.35194500	 0.78056142	 -1.07042000
+Ru	 1.35193148	 -0.78053800	 1.07042000
+Ru	 1.35194500	 0.78056142	 -1.07042000
+Ru	 -0.00001352	 1.56109942	 1.07042000
