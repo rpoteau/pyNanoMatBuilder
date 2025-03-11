@@ -3,29 +3,19 @@
 /**/.*/ # ignore all dotted folders
 !/.gitignore  # except `gitignore` :)
 !/.gitignore_base  # except `gitignore_base`
-__pycache__/
 __pycache__/**
-.ipynb_checkpoints/
+.ipynb_checkpoints/**
 .directory
 */.directory
 *.swp
-coords/
 coords/**
-coords_test_debye/
 coords_test_debye/**
-coord_cif_xyz/
 coord_cif_xyz/**
-csv_files/
 csv_files/**
-database_1_5nm/
 database_1_5nm/**
-Febeta_Nicolas/
 Febeta_Nicolas/**
-Wires_BiMan/
 Wires_BiMan/**
-rdfs/
 rdfs/**
-toto/**
 Thumbs.db
 */Thumbs.db
 *.orig*
