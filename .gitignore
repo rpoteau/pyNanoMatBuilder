@@ -3,8 +3,8 @@
 /**/.*/ # ignore all dotted folders
 !/.gitignore  # except `gitignore` :)
 !/.gitignore_base  # except `gitignore_base`
-__pycache__/**
-.ipynb_checkpoints/**
+__pycache__/*
+.ipynb_checkpoints/*
 .directory
 */.directory
 *.swp
