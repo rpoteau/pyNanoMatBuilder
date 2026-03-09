@@ -86,8 +86,14 @@ class CreateHRTEMStructure:
         self.tolerance= tolerance 
         self._xyz_counter = 0
         self._xyz_metadata = []
+
+        substrate_name = str(xyz_gz_file)
+        if substrate_name.endswith('aC_relax_10x10.xyz.gz'):
+            self.substrate_size = [10, 10, 10]
+        elif substrate_name.endswith('aC_relax_5x5.xyz.gz'):
+            self.substrate_size = [5, 5, 5]
         
-        self.create_NP_TEMimages(tolerance, noOutput,min_size, max_size, nRot,path,xyz_gz_file)
+        self.create_NP_TEMimages(tolerance, noOutput,min_size, max_size, nRot,path, xyz_gz_file)
 
 
     def find_surface_atoms(self,xyz_gz_file, grid_size=2, z_tolerance=6):
@@ -322,8 +328,8 @@ class CreateHRTEMStructure:
         # 1. The NP surface
         # Place the NP on its surface
         plane = instanceWulff.trPlanes[0]
-        if noOutput == False :
-            print(f'Surface plane of the NP used = {plane}.')
+        # if noOutput == False :
+        #     print(f'Surface plane of the NP used = {plane}.')
         normal_plane= np.array(plane[:3]) # Normal of the NP surface plane
         
         # 2. The carbon surface
@@ -332,9 +338,9 @@ class CreateHRTEMStructure:
 
         # Select the flat-area cluster depending on the substrate file
         substrate_name = str(xyz_gz_file)
-        if substrate_name.endswith('aC_relax_clean_10x10.xyz.gz'):
+        if substrate_name.endswith('aC_relax_10x10.xyz.gz'):
             cluster = accepted_cluster_coords[10]
-        elif substrate_name.endswith('aC_relax_clean5x5.xyz.gz'):
+        elif substrate_name.endswith('aC_relax_5x5.xyz.gz'):
             cluster = accepted_cluster_coords[2]
         else:
             cluster = accepted_cluster_coords[0]  # default: first flat area
@@ -389,6 +395,7 @@ class CreateHRTEMStructure:
                 "angle_xy": int(angle),
                 "angle_tilt": 0,
                 "circumsphere_diameter_nm": round(circumsphere_diameter, 4),
+                "substrate_size_nm": self.substrate_size[0]
             })
             # Read the carbone files
             carbon_lines = []
@@ -478,8 +485,8 @@ class CreateHRTEMStructure:
         
         # print('adjacent_planes',adjacent_planes)
         if len(adjacent_planes) >= 2 :
-            if noOutput == False :
-                print('Two adjacent planes found.')
+            # if noOutput == False :
+            #     print('Two adjacent planes found.')
 
             # Normals of the two planes in order to compute the bisector
             normal_p1 = np.array(p1[:3])
@@ -501,8 +508,9 @@ class CreateHRTEMStructure:
             substrate_name = str(xyz_gz_file)
             if substrate_name.endswith('aC_relax_10x10.xyz.gz'):
                 cluster = accepted_cluster_coords[10]
-            elif substrate_name.endswith('aC_relax_clean5x5.xyz.gz'):
+            elif substrate_name.endswith('aC_relax_5x5.xyz.gz'):
                 cluster = accepted_cluster_coords[2]
+
             else:
                 cluster = accepted_cluster_coords[0]  # default: first flat area
 
@@ -560,12 +568,12 @@ class CreateHRTEMStructure:
             dot_product = np.dot(normal_p1_unit, normal_p2_unit)
             angle_n1_n2 = np.arccos(dot_product)
             angle_n1_n2 = np.degrees(angle_n1_n2)
-            if not noOutput :
-                print(f"Angle entre les 2 plans = {angle_n1_n2:.2f}°")   
+            # if not noOutput :
+            #     print(f"Angle entre les 2 plans = {angle_n1_n2:.2f}°")   
             # Max angle between the planes and the (xy) plane
             angle_max = (180 - angle_n1_n2 ) / 2
-            if not noOutput :
-                print(f"Angle max entre les plans et le plan (xy) = {angle_max:.2f}°")  
+            # if not noOutput :
+            #     print(f"Angle max entre les plans et le plan (xy) = {angle_max:.2f}°")  
             from scipy.spatial.transform import Rotation as R
             rotation_axis = edge_unit
 
@@ -591,6 +599,7 @@ class CreateHRTEMStructure:
                         "angle_xy": int(angle2),
                         "angle_tilt": int(angle),
                         "circumsphere_diameter_nm": round(circumsphere_diameter, 4),
+                        "substrate_size_nm": self.substrate_size[0]
                     })
                     carbon_lines = []
                     with gzip.open(xyz_gz_file, 'rt', encoding='utf-8' ) as f0:
@@ -625,7 +634,7 @@ class CreateHRTEMStructure:
         min_size (float, optional) : Mainimal size for the NPs, equals to the diameter of the circumscribed sphere, equals 0 nm by default.
         max_size (float, optional) : Maximal size for the NPs, equals to the diameter of the circumscribed sphere, equals 50 nm by default.
         path (str) : path that will contain the created xyz/CIF files
-        
+        substrate_size (list) : size of the substrate in each dimension
         """   
         surface_indices = self.find_surface_atoms(xyz_gz_file, grid_size=2, z_tolerance=6)
         for cif_name, cif_file in self.cif_data['cif file'].items():
@@ -673,10 +682,11 @@ class CreateHRTEMStructure:
                             
                             circumsphere_diameter=TestNP.radiusCircumscribedSphere*2*0.1 # Setting a maximal size of NPs : circumscribed sphere diameter
                             if min_size<=circumsphere_diameter<max_size :
+
                                 number+=1
                                 if not noOutput :
                                     print(f'\033[1m Generating size is {size[0]:.4f} nm and is equal to dhkl multiplied by {i}.\033[0m ')
-                                    print(f'\033[1m  Circumscribed sphere diameter ={circumsphere_diameter} nm and is in the interval [{min_size},{max_size}].\033[0m')
+                                    print(f'\033[1m  Circumscribed sphere diameter ={circumsphere_diameter:.3f} nm and is in the interval [{min_size},{max_size}].\033[0m')
                                 # Names of the files 
                                 element = self.cif_name.split()[0]
                                 structure=self.crystal_type
@@ -687,14 +697,16 @@ class CreateHRTEMStructure:
                                 if not noOutput :
                                     print(f' Generate NPs laying on one of their edges.')
                                 self.place_NPedge_on_grid(path, xyz_gz_file, surface_indices,tolerance, TestNP, surface_indices, element, structure, form, nRot, number, noOutput, circumsphere_diameter)
-                                
+
                             else :
-                                if  min_size>=circumsphere_diameter :
-                                    if not noOutput :
-                                        print(f'\033[1m The circumscribed sphere diameter of the NP ={circumsphere_diameter} nm is smaller than the minimal size : {min_size}nm chosen. \033[0m') 
-                                if circumsphere_diameter>max_size :   
-                                    if not noOutput :
-                                        print(f'\033[1m The circumscribed sphere diameter of the NP ={circumsphere_diameter} nm is greater than the maximal size : {max_size}nm chosen. \033[0m') 
+                                # if  min_size>=circumsphere_diameter :
+                                    # if not noOutput :
+                                    #     print(f'\033[1m The circumscribed sphere diameter of the NP ={circumsphere_diameter} nm is smaller than the minimal size : {min_size}nm chosen. \033[0m') 
+
+                                if circumsphere_diameter>max_size :  
+                                    print(f'\033[1m Stopping now: the circumscribed sphere diameter of the NP ={circumsphere_diameter:.3f} nm is not in the interval [{min_size},{max_size}] nm chosen anymore.\033[0m') 
+                                    # if not noOutput :
+                                    #     print(f'\033[1m The circumscribed sphere diameter of the NP ={circumsphere_diameter} nm is greater than the maximal size : {max_size}nm chosen. \033[0m') 
                                     break
 
 
@@ -730,7 +742,7 @@ class CreateHRTEMStructure:
                             number+=1
                             if not noOutput :
                                 print(f'\033[1m Generating size is {size[0]:.4f} nm.\033[0m ')
-                                print(f'\033[1m  Circumscribed sphere diameter ={circumsphere_diameter} nm and is in the interval [{min_size},{max_size}].\033[0m')
+                                print(f'\033[1m  Circumscribed sphere diameter ={circumsphere_diameter:.3f} nm and is in the interval [{min_size},{max_size}].\033[0m')
                             # Names of the files 
                             element = self.cif_name.split()[0]
                             structure=self.crystal_type
@@ -743,12 +755,13 @@ class CreateHRTEMStructure:
                             self.place_NPedge_on_grid(path, xyz_gz_file, surface_indices,tolerance, TestNP2, surface_indices, element, structure, form, nRot, number, noOutput, circumsphere_diameter)
                             
                         else :
-                            if  min_size>=circumsphere_diameter :
-                                if not noOutput :
-                                    print(f'\033[1m The circumscribed sphere diameter of the NP ={circumsphere_diameter} nm is smaller than the minimal size : {min_size}nm chosen. \033[0m') 
-                            if circumsphere_diameter>max_size :   
-                                if not noOutput :
-                                    print(f'\033[1m The circumscribed sphere diameter of the NP ={circumsphere_diameter} nm is greater than the maximal size : {max_size}nm chosen. \033[0m') 
+                            # if  min_size>=circumsphere_diameter :
+                            #     if not noOutput :
+                            #         print(f'\033[1m The circumscribed sphere diameter of the NP ={circumsphere_diameter} nm is smaller than the minimal size : {min_size}nm chosen. \033[0m') 
+                            if circumsphere_diameter>max_size : 
+                                print(f'\033[1m Stopping now: the circumscribed sphere diameter of the NP ={circumsphere_diameter:.3f} nm is not in the interval [{min_size:.4f},{max_size:.4f}] nm chosen anymore.\033[0m')  
+                                # if not noOutput :
+                                #     print(f'\033[1m The circumscribed sphere diameter of the NP ={circumsphere_diameter} nm is greater than the maximal size : {max_size}nm chosen. \033[0m') 
                                 break
 
                 elif self.crystal_type=='bcc': # do not make an icosahedron 
@@ -871,6 +884,10 @@ class CreateHRTEMImage:
         Simulation super-cell size [x, y, z] in nanometers.
     device : str, default 'gpu'
         Computation device: ``'gpu'`` (cupy/CUDA) or ``'cpu'``.
+    microscope_step : int, default 1
+        Index of the current microscope parameter combination.
+        Passed from the outer parameter sweep loop and used in
+        output filenames: ``{xyz_name}_{microscope_step:07d}.png``.
 
     Attributes
     ----------
@@ -898,8 +915,8 @@ class CreateHRTEMImage:
              c1 : float = -0.6, c2 : float = 0.1,  c3 : float= 1.0,
              dose_poisson_noise: float = 1e4,
              sigmas: float = 0.1, slice_thickness: float = 1,
-             noOutput: bool = True, energy: float = 200e3, substrate_size: list = [10, 10, 10],
-             device: str = 'gpu'):
+             noOutput: bool = True, energy: float = 200e3,
+             device: str = 'gpu', microscope_step: int = 1):
 
         self.path_input = path_input
         self.path_output = path_output
@@ -923,10 +940,9 @@ class CreateHRTEMImage:
         self.dose_poisson_noise = dose_poisson_noise  # e⁻/Å²
         self.sigmas = sigmas              # Debye-Waller rms displacement (Å)
         self.slice_thickness = slice_thickness  # multislice slice thickness (Å)
-        self.substrate_size = substrate_size
         self.device = device
+        self.microscope_step = microscope_step
         self.cluster = None
-        self.substrate = None
         self.atoms = None
         self.frozen_phonons = None
         self.potential = None
@@ -950,11 +966,11 @@ class CreateHRTEMImage:
         if xyz_meta_path.exists():
             df_xyz_meta = pd.read_csv(xyz_meta_path)
             xyz_meta_lookup = {row["xyz_file"]: row.to_dict() for _, row in df_xyz_meta.iterrows()}
+    
 
-        index = 0
         for f in sorted(input_files.glob("*.xyz")): # loop on all the output XYZ files
-            index += 1
             xyz_meta = xyz_meta_lookup.get(f.name, {})
+            self.substrate_size = xyz_meta.get("substrate_size_nm")
             self.atoms = read(f) # from XYZ files to ASE objects for AbTEM
             self.place_atoms_grid()
             self.calculate_potentials()
@@ -964,7 +980,7 @@ class CreateHRTEMImage:
             self.apply_astigmatism()
             self.apply_partial_coherence()
             self.apply_poisson_noise()
-            self.calculate_mtf(f, index, xyz_meta) 
+            self.calculate_mtf(f, xyz_meta) 
             if self.masking_images:
                 self.generate_mask_image(f)
 
@@ -976,9 +992,9 @@ class CreateHRTEMImage:
         # Define the z-limits for the substrate slice (z is perpendicular to the substrate plane)
         z_min = 30
         z_max = 100
-        substrat_size = np.array(self.substrate_size) * 10  # Convert nm to Å
+        substrate_size = self.substrate_size * 10  # Convert nm to Å
         atoms = self.atoms[[z_min <= atom.position[2] <= z_max for atom in self.atoms]]
-        atoms.set_cell(substrat_size)  # Convert nm to Å
+        atoms.set_cell([substrate_size, substrate_size, substrate_size])  # Convert nm to Å
         atoms.center(axis=2, vacuum=2)
         self.atoms = atoms
 
@@ -1054,7 +1070,7 @@ class CreateHRTEMImage:
         self.noisy_measurement = measurement.poisson_noise(dose_per_area=self.dose_poisson_noise)
 
 
-    def calculate_mtf(self, f, index, xyz_meta=None):
+    def calculate_mtf(self, f, xyz_meta=None):
         """
         The Modulation Transfer Function (MTF) is a measure of how well the contrast in an object is transferred to an image by a detector.*
         It characterizes the fidelity of the spatial frequency content of the object in the resulting image.
@@ -1093,7 +1109,7 @@ class CreateHRTEMImage:
             image_fft = fft2(mean_data) # fourier transform of the image: image in the frequency space (where low and high frequencies are separated)
             image_fft_filtered = image_fft * fftshift(mtf) # each spatial frequency is multiplied by its MFT value
             self.measurement_ensemble = np.real(ifft2(image_fft_filtered)) # back to the real space of the iamge 
-            self.generate_and_save_image(f, index, xyz_meta)
+            self.generate_and_save_image(f, xyz_meta)
         if self.device == 'gpu' : 
             import cupy as cp
             from cupy.fft import fftshift 
@@ -1102,16 +1118,16 @@ class CreateHRTEMImage:
             image_fft = fft2(mean_data) # fourier transform of the image: image in the frequency space (where low and high frequencies are separated)
             image_fft_filtered = image_fft * fftshift(mtf) # each spatial frequency is multiplied by its MFT value
             self.measurement_ensemble = np.real(ifft2(image_fft_filtered)) # back to the real space of the iamge 
-            self.generate_and_save_image(f, index, xyz_meta)
+            self.generate_and_save_image(f, xyz_meta)
 
-    def generate_and_save_image(self, f, index, xyz_meta=None):
+    def generate_and_save_image(self, f, xyz_meta=None):
         """Generate and save the final image."""
         if xyz_meta is None:
             xyz_meta = {}
   
         # 1. The PNG HRTEM image
         
-        self.final_filename = f'{self.path_output}/{f.stem}_{index:07d}'
+        self.final_filename = f'{self.path_output}/{f.stem}_{self.microscope_step:07d}'
         print(f"File is {self.final_filename}.png")
         plt.figure(figsize=(5.12, 5.12))  # Taille en pouces (ex: 6x6)
         plt.imshow(self.measurement_ensemble, cmap='gray', origin='lower')
@@ -1128,7 +1144,7 @@ class CreateHRTEMImage:
         parts = f.stem.split('_')
         # Flatten metadata for CSV
         metadata_flat = {
-            "id": f'{f.stem}_{index:07d}',
+            "id": f'{f.stem}_{self.microscope_step:07d}',
             "element": parts[0] if len(parts) > 0 else "",
             "crystal_structure": parts[1] if len(parts) > 1 else "",
             "shape": parts[2] if len(parts) > 2 else "",
@@ -1153,8 +1169,7 @@ class CreateHRTEMImage:
             "dose_poisson_noise_e-A-2": self.dose_poisson_noise,
             "sigmas_A": self.sigmas,
             "slice_thickness_A": self.slice_thickness,
-            "substrate_size_x_nm":self.substrate_size[0],
-            "substrate_size_y_nm":self.substrate_size[1]
+            "substrate_size_nm": self.substrate_size
         }
     
         df = pd.DataFrame([metadata_flat])

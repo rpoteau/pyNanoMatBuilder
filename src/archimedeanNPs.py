@@ -1,5 +1,5 @@
 import visualID as vID
-from visualID import  fg, hl, bg
+from visualID import fg, hl, bg
 
 import sys
 import numpy as np
@@ -10,24 +10,108 @@ from ase.visualize import view
 
 from pyNanoMatBuilder import platonicNPs as pNP
 
-###########################################################################################################
-class fccCubo:
-    """
-    A class for generating XYZ and CIF files of fcc cuboctahedral nanoparticles (NPs) 
-    of various sizes, based on user-defined compounds (either by 
-    name, e.g., "Fe", "Au", etc). 
+class ArchimedeanNP(pNP.PlatonicNP):
+    """Base class for all Archimedean nanoparticles providing common functionality."""
 
-    Key Features:
-    - Allows to choose the NP size.
-    - Can analyze the structure in detail, including symmetry and properties.
-    - Offers options for core/surface differentiation based on a threshold.
-    - Generates outputs in XYZ and CIF formats for visualization and simulations.
-    - Provides compatibility with jMol for 3D visualization.
+    def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput):
+        """Compute and store various post-construction properties of the nanoparticle.
+
+            This function calculates moments of inertia (MOI), the inscribed and 
+            circumscribed sphere diameters, sasview dimensions, analyzes symmetry,
+            generates a JMOL script, and identifies core and surface atoms.
+
+        Args:
+            skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
+            thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
+            noOutput (bool): If True, suppresses output messages.
     
-    Additional Notes:
-    - The `nShell` parameter determines the level of imbrication
-    - The symmetry analysis can be skipped to speed up computations.
-    - Customizable precision thresholds for structural analysis.
+        Attributes Updated:
+             moi (array): Moment of inertia tensor.
+             moisize (array): Normalized moments of inertia.
+             vertices, simplices, neighbors, equations (arrays):
+                  Geometric properties of the nanoparticle.
+             NPcs (Atoms object): Copy of the nanoparticle with surface atoms visually marked.
+             NP (Atoms object): Original nanoparticle.
+             sasview_dims (tuple, optional): Dimensions for SasView (only if sasview_dims() method exists).
+             Inscribed_circumscribed_sphere (tuple, optional): Diameters of inscribed and circumscribed spheres (only if Inscribed_circumscribed_sphere() method exists).
+        """
+        
+        self.moi = pyNMBu.moi(self.NP, noOutput)
+        self.moisize = np.array(pyNMBu.moi_size(self.NP, noOutput))  # MOI mass normalized (m of each atoms=1)
+        
+        if not skipSymmetryAnalyzis:
+            pyNMBu.MolSym(self.NP, noOutput=noOutput)
+
+        [self.vertices, self.simplices, self.neighbors, self.equations], surfaceAtoms = \
+            pyNMBu.coreSurface(self, thresholdCoreSurface, noOutput=noOutput)
+
+        self.NPcs = self.NP.copy()
+        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102  # Nobelium, because it has a nice pinkish color in jmol
+        self.surfaceatoms = self.NPcs[surfaceAtoms]
+
+        if hasattr(self, 'trPlanes') and self.trPlanes is not None:
+            self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
+
+        if hasattr(self, 'jmolCrystalShape') and self.jmolCrystalShape:
+            self.jMolCS = pyNMBu.defCrystalShapeForJMol(self, noOutput=True)  # do not print the jmol script
+        
+        if hasattr(self, 'sasview_dims') and callable(getattr(self, 'sasview_dims')):
+            try:
+                self.sasview_dims = self.sasview_dims()
+                self.volume_diff_trunc = self.octahedron_truncated_volume(self.sasview_dims[0], self.sasview_dims[1])
+                if not noOutput:
+                    print(f"{'=' * 60}\n")
+                    print(
+                        "SasView dimensions (for comparaison purposes when comparing to "
+                        "SasView models):"
+                    )
+                    print(
+                        f"  t = {self.sasview_dims[1]:.3f}, t being the truncature "
+                        "that is defined by the ratio d(truncated_demi_axis)/d(demi_axis)"
+                    )
+                    print(
+                        f"  a = {self.sasview_dims[0]:.2f} Angs, a being the demi_axis "
+                        "being the distance from the center of the octahedron to a "
+                        f"vertice (in Å)): {self.sasview_dims}"
+                    )
+                    print(f"{'=' * 60}\n")
+            except TypeError:
+                # If it's not callable, it might have already been overwritten or is a property
+                pass
+
+        if self.shape == "fccTrTd": # only for the TrTd compute the inscribed and circumscribed sphere diameters
+        # because they are not trivial to compute for a truncated tetrahedron.
+            try:
+                self.radiusInscribedSphere, self.radiusCircumscribedSphere = pyNMBu.Inscribed_circumscribed_spheres(self,noOutput)
+                if not noOutput:
+                    print(f"(the inscribed sphere was not given before because it was not trivial to compute it based on the truncated tetrahedron geometry. The general method is now used)")
+            except TypeError:
+                # If it's not callable, it might have already been overwritten or is a property
+                pass
+
+
+###########################################################################################################
+class fccCubo(ArchimedeanNP):
+    """A class for generating XYZ and CIF files of fcc cuboctahedral
+    nanoparticles (NPs) of various sizes, based on user-defined compounds
+    (either by name, e.g., "Fe", "Au", etc).
+
+    Args:
+        element (str): Chemical element symbol (e.g. "Au").
+        Rnn (float): Nearest-neighbour distance in Å.
+        nShell (int): Number of shells (controls imbrication).
+        postAnalyzis (bool): If True, run post-construction analysis.
+        aseView (bool): If True, show the structure via ASE viewer.
+        thresholdCoreSurface (float): Threshold for core/surface separation.
+        skipSymmetryAnalyzis (bool): If True, skip symmetry analysis.
+        jmolCrystalShape (bool): If True, enable jMol script generation.
+        noOutput (bool): If True, suppress printing.
+        calcPropOnly (bool): If True, only compute properties, skip coords.
+
+    Attributes:
+        nAtoms (int): Number of atoms in the NP.
+        nAtomsPerShell (list): Number of atoms in each shell.
+        interShellDistance (float): Distance between shells.
     """
     nFaces = 14
     nEdges = 24
@@ -73,7 +157,6 @@ class fccCubo:
             self.jmolCrystalShape (bool): Flag for JMol visualization.
             self.imageFile (str): Path to a reference image.
             self.trPlanes (array): Truncation plane equations.
-            self.dim (array): Dimensions calculated from MOI.
         """
 
         self.element = element
@@ -86,7 +169,6 @@ class fccCubo:
         self.jmolCrystalShape = jmolCrystalShape
         self.imageFile = pyNMBu.imageNameWithPathway("cubo-C.png")
         self.trPlanes = None
-        self.dim=[0,0,0]
         if not noOutput: vID.centerTitle(f"{nShell} shells cuboctahedron")
 
         if not noOutput: self.prop()
@@ -98,11 +180,20 @@ class fccCubo:
                 if aseView: view(self.NPcs)
           
     def __str__(self):
-        return(f"Cuboctahedron with {self.nShell} shell(s) and Rnn = {self.Rnn}")
+        return (
+            f"Cuboctahedron with {self.nShell} shell(s) and Rnn = {self.Rnn}"
+        )
     
-    def nAtomsF(self,i):
-        """ returns the number of atoms of a cuboctahedron of size i"""
-        return round((10*i**3 + 11*i)/3 + 5*i**2 + 1)
+    def nAtomsF(self, i):
+        """Return analytic number-of-atoms factor for size ``i``.
+
+        Args:
+            i (int): Size/order parameter.
+
+        Returns:
+            int: Analytic count factor.
+        """
+        return round((10 * i**3 + 11 * i) / 3 + 5 * i**2 + 1)
     
     def nAtomsPerShellAnalytic(self):
         """
@@ -119,11 +210,12 @@ class fccCubo:
         """
         
         n = []
-        Sum = 0
+        current_sum = 0
         for i in range(self.nShell+1):
-            Sum = sum(n)
-            ni = self.nAtomsF(i)
-            n.append(ni-Sum)
+            ni = self.nAtomsF(i)  # natoms in the whole octahedron of order i
+            n_shell = ni - current_sum
+            n.append(n_shell)
+            current_sum += n_shell  # Update running sum
         return n
     
     def nAtomsPerShellCumulativeAnalytic(self):
@@ -162,16 +254,20 @@ class fccCubo:
         return self.Rnn*self.nShell
 
     def radiusCircumscribedSphere(self):
+        """Radius of the circumscribed sphere in Å.
+
+        Returns:
+            float: Radius in Å.
         """
-        Computes the radius of the circumscribed sphere of the nanoparticle in Å.
-        """
-        return self.radiusCSF*self.edgeLength()
+        return self.radiusCSF * self.edgeLength()
 
     def radiusInscribedSphere(self):
+        """Radius of the inscribed sphere (Å).
+
+        Returns:
+            float: Radius in Å.
         """
-        Computes the radius of the inscribed sphere of the nanoparticle in Å  .
-        """
-        return self.radiusISF*self.edgeLength()
+        return self.radiusISF * self.edgeLength()
 
     def area(self):
         """
@@ -204,7 +300,9 @@ class fccCubo:
             edges = []
             faces = []
         elif (i > self.nShell):
-            sys.exit(f"icoreg.MakeVertices(i) is called with i = {i} > nShell = {self.nShell}")
+            sys.exit(
+                f"icoreg.MakeVertices(i) is called with i = {i} > nShell = {self.nShell}"
+            )
         else:            
             scale = self.interShellDistance * i
             # Define vertex positions based on cuboctahedral geometry
@@ -234,7 +332,7 @@ class fccCubo:
             #     print("i, CoordV ",i,CoordVertices[i])
         return CoordVertices, edges, faces3, faces4
 
-    def coords(self,noOutput):
+    def coords(self, noOutput):
         """
         Generate the coordinates of a cuboctahedral nanoparticle.
         
@@ -243,7 +341,8 @@ class fccCubo:
         """
         
         if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
-        chrono = pyNMBu.timer(); chrono.chrono_start()
+        chrono = pyNMBu.timer()
+        chrono.chrono_start()
         # central atom = "1st shell"
         c = [[0., 0., 0.]]
         self.nAtoms = 1
@@ -312,7 +411,9 @@ class fccCubo:
         # print(indexVertexAtoms)
         # print(indexEdgeAtoms)
         # print(indexFaceAtoms)
-        if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+        if not noOutput:
+            chrono.chrono_stop(hdelay=False)
+            chrono.chrono_show()
         self.NP = aseObject
         self.cog = self.NP.get_center_of_mass()
         if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
@@ -343,39 +444,9 @@ class fccCubo:
         print("total number of atoms = ",self.nAtomsAnalytic())
         print("Dual polyhedron: rhombic dodecahedron")
 
-    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface, noOutput):
-        """
-        Compute and store various post-construction properties of the nanoparticle.
-    
-        This function calculates moments of inertia (MOI), determines the nanoparticle shape, 
-        analyzes symmetry (if required), and identifies core and surface atoms.
-    
-        Parameters:
-        - skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
-        - thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
-        - noOutput (bool): If True, suppresses output messages.
-    
-        Attributes Updated:
-        - self.moi (array): Moment of inertia tensor.
-        - self.moisize (array): Normalized moments of inertia.
-        - self.MOIshape (str): Shape identifier used for size calculations.
-        - self.vertices, self.simplices, self.neighbors, self.equations (arrays): 
-          Geometric properties of the nanoparticle.
-        - self.NPcs (Atoms object): Copy of the nanoparticle with surface atoms visually marked.
-        - self.NP (Atoms object): Original nanoparticle.
-        """
-        self.moi=pyNMBu.moi(self.NP, noOutput=noOutput)
-        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))# MOI mass normalized (m of each atoms=1)
-        self.MOIshape=self.shape 
-        pyNMBu.MOI_shapes(self, noOutput)
-        if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
-        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
-            pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
-        self.NPcs = self.NP.copy()
-        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
-        if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)
+
 ###########################################################################################################
-class fccTrTd:
+class fccTrTd(ArchimedeanNP):
     """
     A class for generating XYZ and CIF files of fcc truncated tetrahedral nanoparticles (NPs) 
     of various sizes, based on user-defined compounds (either by 
@@ -431,7 +502,6 @@ class fccTrTd:
         Attributes:
             self.shape (str): Shape 'fccTrTd'
             self.nAtoms (int): Number of atoms in the NP.
-            self.dim (array): Dimensions calculated from MOI.
             self.cog (np.array): Center of gravity of the NP.
             self.Tdprop (class instance): Class "regfccTd" of the module "pNP" (creates regular fcc tetrahedron)
             self.interLayerDistance (float): Distance between two layers in Å.
@@ -445,7 +515,6 @@ class fccTrTd:
         self.shape='fccTrTd'
         self.Rnn = Rnn
         self.nAtoms = 0
-        self.dim=[0,0,0]
         self.cog = np.array([0., 0., 0.])
         self.nLayer = int(nLayer-1)
         self.Tdprop = pNP.regfccTd(self.element,self.Rnn,self.nLayer+1,noOutput=True,calcPropOnly=True) 
@@ -454,11 +523,14 @@ class fccTrTd:
         if not isTrTd:
             listOfPossiblenLayers = self.magicEdgeNumberOfTd2MakeATrTd(int(1.2*nLayer))
             nearest_nL = min(listOfPossiblenLayers, key = lambda x: abs(x-(self.nLayer+1)))
-            sys.exit(f"This number of layers cannot yield a perfect truncated tetrahedron.\n"\
-                     f"The closest possible nLayer value is {nearest_nL}.\n"\
-                     f"Try again."\
-                     f"Any doubt about the valid nLayers values? Call the archimedeanNP.magicEdgeNumberOfTd2MakeATrTd(N) "\
-                     f"to see all possible values between 1 and N")
+            sys.exit(
+                f"This number of layers cannot yield a perfect truncated tetrahedron.\n"
+                f"The closest possible nLayer value is {nearest_nL}.\n"
+                "Try again. "
+                "Any doubt about the valid nLayers values? Call the "
+                "archimedeanNP.magicEdgeNumberOfTd2MakeATrTd(N) to see all "
+                "possible values between 1 and N"
+            )
         else:
             self.nAtomsPerEdge = int(self.nAtomsPerEdge)
         self.jmolCrystalShape = jmolCrystalShape
@@ -475,7 +547,10 @@ class fccTrTd:
                 if aseView: view(self.NPcs)
 
     def __str__(self):
-        return(f"Truncated tetrahedron based on a {self.nLayer+1} layer(s) Td and Rnn = {self.Rnn}")
+        return (
+            f"Truncated tetrahedron based on a {self.nLayer+1} layer(s) Td "
+            f"and Rnn = {self.Rnn}"
+        )
    
     def nAtomsF(self,i):
         """
@@ -484,11 +559,12 @@ class fccTrTd:
         return round((i+1)*(23*i**2 + 19*i + 6)/6)
 
     def nAtomsAnalytic(self):
+        """Compute the total number of atoms analytically.
+
+        Returns:
+            int: Total number of atoms for the current ``nAtomsPerEdge``.
         """
-        Computes the total number of atoms in the nanoparticle.
-        """
-        n = self.nAtomsF(self.nAtomsPerEdge-1)
-        return n
+        return self.nAtomsF(self.nAtomsPerEdge - 1)
 
     def edgeLength(self):
         """
@@ -500,8 +576,6 @@ class fccTrTd:
         # at one third of the original edge length, hence the remaining edge length is Td.edgeLength/3
         return self.Tdprop.edgeLength()/3
         #return self.edgeLength-int(self.nAtomsPerEdge/2)
-
-
     
     def radiusCircumscribedSphere(self):
         """
@@ -510,11 +584,12 @@ class fccTrTd:
         return self.radiusCSF*self.edgeLength()
 
     def radiusMidSphere(self):
+        """Radius of the midsphere (Å), tangent to edges.
+
+        Returns:
+            float: Radius in Å.
         """
-        Computes the radius of the midsphere of the nanoparticle in Å.
-        The midsphere is a sphere that touches the edges of the nanoparticle.
-        """
-        return self.radiusMSF*self.edgeLength()
+        return self.radiusMSF * self.edgeLength()
 
     def area(self):
         """
@@ -555,36 +630,15 @@ class fccTrTd:
         nTrTd = N - 2*(N-1)*self.cutFromVertexAt
         return nTrTd.is_integer(), nTrTd
 
-    # def calculateTruncationPlanes(self, planes, nAtomsPerEdge, debug=False):
-    #     cutFromVertexAt = (12*n-16)/(12*n)
-    #     print(f"factor = {cutFromVertexAt:.3f} ▶ {round(nAtomsPerEdge/n)} layer(s) will be removed, starting from each vertex")
+    def coords(self, noOutput):
+        """Generate coordinates for the truncated octahedron.
 
-    #     trPlanes = []
-    #     for p in planes:
-    #         pNormalized = p.copy()
-    #         p[3] = p[3]*cutFromVertexAt
-    #         trPlanes.append(p)
-    #         hkld = pyNMBu.convertuvwh2hkld(p,False)
-    #         if (debug):
-    #             print("original plane = ",pNormalized,"... norm = ",pyNMBu.normV(pNormalized[0:3]))
-    #             print("cut plane = ",p,"... norm = ",pyNMBu.normV(p[0:3]))
-    #             hkldRef = pyNMBu.convertuvwh2hkld(pNormalized,False)
-    #             print("hkld[3]*factor = ",p[3])
-    #             print("signed distance between original hkld and origin = ",pyNMBu.Pt2planeSignedDistance(hkldRef,[0,0,0]))
-    #             print("signed distance between cut plane and origin = ",pyNMBu.Pt2planeSignedDistance(hkld,[0,0,0]))
-    #             print("pcut/pRef = ",pyNMBu.Pt2planeSignedDistance(hkld,[0,0,0])/pyNMBu.Pt2planeSignedDistance(hkldRef,[0,0,0]))
-    #         print(f"Will remove atoms just above plane {hkld[0]:.2f} {hkld[1]:.2f} {hkld[2]:.2f} d:{hkld[3]:.3f}")
-    #     return np.array(trPlanes)
-
-    def coords(self,noOutput):
-        """
-        Generate the coordinates of a truncated tetrahedral nanoparticle.
-        
         Args:
-        - noOutput (bool): If True, suppresses output messages.
+            noOutput (bool): If True, suppress printing and progress output.
         """
         if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
-        chrono = pyNMBu.timer(); chrono.chrono_start()
+        chrono = pyNMBu.timer()
+        chrono.chrono_start()
         if not noOutput: vID.centertxt("Generation of the coordinates of the tetrahedron",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         
         # Generate a regular fcc tetrahedron using the class "regfccTd" of the "pNP" module
@@ -596,18 +650,27 @@ class fccTrTd:
         coordVertices = aseTd.get_positions()[0:4]
         if not noOutput: print("Now calculating the coordinates of the planes orthogonal the the cog-vertex directions")
         planesAtVertices = pyNMBu.planeAtVertices(coordVertices, Td.cog)
-        
+
         # Generate the truncature: trTd = truncation all 4 vertices of a regular tetrahedron at one third of the original edge length
-        trPlanes = pyNMBu.calculateTruncationPlanesFromVertices(planesAtVertices,self.cutFromVertexAt,\
-                                                                Td.nAtomsPerEdge-1,noOutput=noOutput)
+        trPlanes = pyNMBu.calculateTruncationPlanesFromVertices(
+            planesAtVertices,
+            self.cutFromVertexAt,
+            Td.nAtomsPerEdge,
+            noOutput=noOutput,
+            trTd = True
+        )
+
         #AtomsAbovePlanes = pyNMBu.truncateAboveEachPlane(trPlanes,aseTd.get_positions())
         AtomsAbovePlanes = pyNMBu.truncateAbovePlanes(trPlanes,aseTd.get_positions(),noOutput=noOutput)
-        
-        aseTrTd = aseTd.copy() 
+
+        aseTrTd = aseTd.copy()
         del aseTrTd[AtomsAbovePlanes]
+
         nAtoms = aseTrTd.get_global_number_of_atoms()
         if not noOutput: print(f"Total number of atoms = {nAtoms}")
-        if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+        if not noOutput:
+            chrono.chrono_stop(hdelay=False)
+            chrono.chrono_show()
         self.NP = aseTrTd
         self.cog = self.NP.get_center_of_mass()
         if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
@@ -637,44 +700,9 @@ class fccTrTd:
         print("dual polyhedron: triakis tetrahedron")
         print(f"coordinates of the center of gravity = {self.cog}")
 
-    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface, noOutput):
-        """
-        Compute and store various post-construction properties of the nanoparticle.
-    
-        This function calculates moments of inertia (MOI), the inscribed and circumscribed spheres, 
-        analyzes symmetry (if required), and identifies core and surface atoms.
-    
-        Parameters:
-        - skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
-        - thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
-        - noOutput (bool): If True, suppresses output messages.
-    
-        Attributes Updated:
-        - self.moi (array): Moment of inertia tensor.
-        - self.moisize (array): Normalized moments of inertia.
-        - self.MOIshape (str): Shape identifier used for size calculations.
-        - self.vertices, self.simplices, self.neighbors, self.equations (arrays): 
-          Geometric properties of the nanoparticle.
-        - self.NPcs (Atoms object): Copy of the nanoparticle with surface atoms visually marked.
-        - self.NP (Atoms object): Original nanoparticle.
-        """
-        self.moi=pyNMBu.moi(self.NP, noOutput=noOutput)
-        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))# MOI mass normalized (m of each atoms=1)
-        self.MOIshape=self.shape 
-        pyNMBu.MOI_shapes(self, noOutput)
-        if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
-        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
-            pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
-        self.NPcs = self.NP.copy()
-        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
-        pyNMBu.Inscribed_circumscribed_spheres(self,noOutput)
-        if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)
-
-
-
 
 ###########################################################################################################
-class fccTrOh:
+class fccTrOh(ArchimedeanNP):
     """
     A class for generating XYZ and CIF files of fcc truncated octahedral nanoparticles (NPs) 
     of various sizes, based on user-defined compounds (either by 
@@ -733,7 +761,6 @@ class fccTrOh:
             self.Ohprop (class instance): class "regfccOh" of the module "pNP"
             self.self.cog (np.array): Center of gravity of the NP.
             self.nAtoms (int): Number of atoms in the NP.
-            self.dim (array): Dimensions calculated from MOI.
             self.nAtomsPerEdge (int): Number of atoms per edge.
             self.interLayerDistance (float): Distance between atomic layers.
             self.jmolCrystalShape (bool): Flag for JMol visualization.
@@ -747,7 +774,6 @@ class fccTrOh:
         self.shape='fccTrOh'
         self.Rnn = Rnn
         self.nAtoms = 0
-        self.dim=[0,0,0]
         self.interLayerDistance = self.Ohprop.interLayerDistance
         self.cog = np.array([0., 0., 0.])
         self.nOrder = nOrder
@@ -755,11 +781,14 @@ class fccTrOh:
         if not isTrOh:
             listOfPossiblenLayers = self.magicEdgeNumberOfOh2MakeATrOh(int(1.2*nOrder))
             nearest_nL = min(listOfPossiblenLayers, key = lambda x: abs(x-(self.nOrder)))
-            sys.exit(f"This order cannot yield a perfect truncated octahedron.\n"\
-                     f"The closest possible nOrder value is {nearest_nL}.\n"\
-                     f"Try again."\
-                     f"Any doubt about the valid nOrder values? Call the archimedeanNP.magicEdgeNumberOfOh2MakeATrOh(N) "\
-                     f"to see all possible values between 1 and N")
+            sys.exit(
+                f"This order cannot yield a perfect truncated octahedron.\n"
+                f"The closest possible nOrder value is {nearest_nL}.\n"
+                "Try again. "
+                "Any doubt about the valid nOrder values? Call the "
+                "archimedeanNP.magicEdgeNumberOfOh2MakeATrOh(N) to see all "
+                "possible values between 1 and N"
+            )
         else:
             self.nAtomsPerEdge = int(self.nAtomsPerEdge)
         self.jmolCrystalShape = jmolCrystalShape
@@ -776,11 +805,21 @@ class fccTrOh:
                 if aseView: view(self.NPcs)
           
     def __str__(self):
-        return(f"Truncated octahedron based on a {self.nOrder} order Oh (i.e. {self.nOrder+1} atoms lie on an edge) and Rnn = {self.Rnn}")
+        return (
+            f"Truncated octahedron based on a {self.nOrder} order Oh "
+            f"(i.e. {self.nOrder+1} atoms lie on an edge) and Rnn = {self.Rnn}"
+        )
    
-    def nAtomsF(self,i):
-        """ Returns a factor to compute the number of atoms of a nanoparticle of size i """
-        return round(16*i**3 + 15*i**2 + 6*i + 1)
+    def nAtomsF(self, i):
+        """Factor used to compute number of atoms for size ``i``.
+
+        Args:
+            i (int): Size/order parameter.
+
+        Returns:
+            int: Analytic factor for atom count.
+        """
+        return round(16 * i**3 + 15 * i**2 + 6 * i + 1)
 
     def nAtomsAnalytic(self):
         """
@@ -790,13 +829,52 @@ class fccTrOh:
         return n
 
     def edgeLength(self):
+        """Edge length (Å) of the truncated octahedron.
+
+        Returns:
+            float: Edge length in Å.
         """
-        Computes the edge length of the nanoparticle in Å .
-        The edge length of the truncated octahedron equals the regular octahedron's edge length divided by 3.
+        # A truncated Oh is constructed by truncating the 6 vertices of a regular
+        # octahedron at one third of the original edge length.
+        return self.Ohprop.edgeLength() / 3
+
+    def sasview_dims(self):
+        """Return dimensions compatible with SasView.
+
+        In pyNanoMatBuilder truncation is defined by the ratio
+        ``d(truncated_edge)/d(edge)`` while SasView expects the ratio
+        ``d(truncated_demi_axis)/d(demi_axis)``. This routine computes the
+        full demi-axis and the truncated demi-axis and returns both the
+        demi-axis and the truncature ratio.
+
+        Returns:
+            tuple: (demi_axis, truncature_ratio)
         """
-        # a truncated Oh is constructed by truncating all 6 vertices of a regular octahedron
-        # at one third of the original edge length, hence the remaining edge length is Oh.edgeLength/3
-        return self.Ohprop.edgeLength()/3
+        # Full demi axis 
+        positions = self.NP0.get_positions()
+        # Find the distance between two points (x,y,zmax) and (x,y,zmin)
+        zmax = max(positions[:,2])
+        zmin = min(positions[:,2])
+        demi_axis = (zmax - zmin)/2
+
+        # Truncated demi axis
+        positions = self.NP.get_positions()
+        # find the distance between two points (x,y,zmax) and (x,y,zmin)
+        zmax = max(positions[:,2])
+        zmin = min(positions[:,2])
+        demi_axis_truncated = (zmax - zmin)/2
+
+        # Truncature ratio
+        truncature_ratio = demi_axis_truncated/demi_axis
+
+        return demi_axis, truncature_ratio
+
+    def octahedron_truncated_volume(self, length_a, t): # angstroms
+        """
+        Volume of a truncated octahedron with edge length length_a and truncation parameter t.
+        t is defined as the ratio of the truncated edge length to the original edge length.
+        """
+        return (4./3.) * length_a * (length_a) * (length_a) * (1 - 3*(1-t)**3)
 
     def radiusCircumscribedSphere(self):
         """
@@ -818,28 +896,36 @@ class fccTrOh:
         return self.radiusISF*self.edgeLength()
 
     def area(self):
-        """
-        Computes the surface area of the nanoparticle in square Ångströms.
+        """Surface area in Å^2.
+
+        Returns:
+            float: Surface area in square Ångström.
         """
         el = self.edgeLength()
-        return el**2*(6 + 12*np.sqrt(3))
+        return el**2 * (6 + 12 * np.sqrt(3))
     
     def volume(self):
-        """
-        Computes the volume of the nanoparticle in cubic Ångströms.
+        """Volume in Å^3.
+
+        Returns:
+            float: Volume in cubic Ångström.
         """
         el = self.edgeLength()
-        return self.Ohprop.volume() - 6*(el**3*np.sqrt(2)/6)
+        return self.Ohprop.volume() - 6 * (el**3 * np.sqrt(2) / 6)
 
     def magicEdgeNumberOfOh2MakeATrOh(self, index: int):
-        '''
-        Returns the number of edge atoms of the octahedron that will lead to perfect
-        trucated tetrahedra with all edges of equal atomic length
-        '''
+        """
+        Compute the number of edge atoms of the octahedron that will lead to perfect
+        trucated tetrahedra with all edges of equal atomic length.
+        Args:
+            index (int): The maximum number of edge atoms to consider.
+        Returns:
+            np.array: An array of valid numbers of edge atoms for truncated octahedra.
+        """
         import numpy as np
         N = []
-        for i in range(1,index+1):
-            N.append(3*i)
+        for i in range(1, index + 1):
+            N.append(3 * i)
         return np.array(N)
     
     def NumberOfOhEdgeAtomsValid4ATrOh(self):
@@ -848,15 +934,15 @@ class fccTrOh:
         and check if it is a valid integer.
         
         Returns:
-        - (bool, float): A tuple where the first element is True if the number is an integer,
-          and the second element is the computed number of edge atoms.
+            tuple: (is_integer (bool), nTrOh (float)) where ``is_integer`` flags
+                whether the computed number of atoms per edge is integer.
         """
         import numpy as np
-        N = self.nOrder+1
-        nTrOh = N - 2*(N-1)/3
+        N = self.nOrder + 1
+        nTrOh = N - 2 * (N - 1) / 3
         return nTrOh.is_integer(), nTrOh
 
-    def coords(self,noOutput):
+    def coords(self, noOutput):
         """
         Generate the coordinates of a truncated tetrahedral nanoparticle.
         
@@ -864,7 +950,8 @@ class fccTrOh:
         - noOutput (bool): If True, suppresses output messages.
         """
         if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
-        chrono = pyNMBu.timer(); chrono.chrono_start()
+        chrono = pyNMBu.timer()
+        chrono.chrono_start()
         if not noOutput: vID.centertxt("Generation of the coordinates of the octahedron",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
 
         # Generate a regular fcc octahedron using the class "regfccOh" of the module "pNP"
@@ -879,14 +966,22 @@ class fccTrOh:
         
         # Generate truncation
         #trOh = truncation all 6 vertices of a regular octahedron at one third of the original edge length
-        trPlanes = pyNMBu.calculateTruncationPlanesFromVertices(planesAtVertices,self.cutFromVertexAt,\
-                                                                Oh.nAtomsPerEdge,noOutput=noOutput)
+        trPlanes = pyNMBu.calculateTruncationPlanesFromVertices(
+            planesAtVertices,
+            self.cutFromVertexAt,
+            Oh.nAtomsPerEdge,
+            noOutput=noOutput
+        )
         AtomsAbovePlanes = pyNMBu.truncateAboveEachPlane(trPlanes,aseOh.get_positions())
         
         del aseOh[AtomsAbovePlanes]
+
+
         nAtoms = aseOh.get_global_number_of_atoms()
-        if not noOutput: print(f"Total number of atoms = {nAtoms}")
-        if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+        if not noOutput: 
+            print(f"Total number of atoms = {nAtoms}")
+            chrono.chrono_stop(hdelay=False)
+            chrono.chrono_show()
         self.NP = aseOh
         self.cog = self.NP.get_center_of_mass()
         if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
@@ -918,55 +1013,29 @@ class fccTrOh:
         print("dual polyhedron: triakis hexahedron")
         print(f"coordinates of the center of gravity = {self.cog}")
 
-    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface, noOutput):
-        """
-        Compute and store various post-construction properties of the nanoparticle.
-    
-        This function calculates moments of inertia (MOI), determines the nanoparticle shape, 
-        analyzes symmetry (if required), and identifies core and surface atoms.
-    
-        Parameters:
-        - skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
-        - thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
-        - noOutput (bool): If True, suppresses output messages.
-    
-        Attributes Updated:
-        - self.moi (array): Moment of inertia tensor.
-        - self.moisize (array): Normalized moments of inertia.
-        - self.MOIshape (str): Shape identifier used for size calculations.
-        - self.vertices, self.simplices, self.neighbors, self.equations (arrays): 
-          Geometric properties of the nanoparticle.
-        - self.NPcs (Atoms object): Copy of the nanoparticle with surface atoms visually marked.
-        - self.NP (Atoms object): Original nanoparticle.
-        """
-        self.moi=pyNMBu.moi(self.NP, noOutput=noOutput)
-        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))# MOI mass normalized (m of each atoms=1)
-        self.MOIshape=self.shape 
-        pyNMBu.MOI_shapes(self, noOutput)
-        if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
-        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
-            pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
-        self.NPcs = self.NP.copy()
-        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
-        if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)
 ###########################################################################################################
-class fccTrCube:
-    """
-    A class for generating XYZ and CIF files of fcc truncated cubic nanoparticles (NPs) 
-    of various sizes, based on user-defined compounds (either by 
-    name, e.g., "Fe", "Au", etc). 
+class fccTrCube(ArchimedeanNP):
+    """Truncated cubic nanoparticle (FCC) builder.
 
-    Key Features:
-    - Allows to choose the NP size.
-    - Can analyze the structure in detail, including symmetry and properties.
-    - Offers options for core/surface differentiation based on a threshold.
-    - Generates outputs in XYZ and CIF formats for visualization and simulations.
-    - Provides compatibility with jMol for 3D visualization.
-    
-    Additional Notes:
-    - The `nOrder` parameter determines the level of imbrication
-    - The symmetry analysis can be skipped to speed up computations.
-    - Customizable precision thresholds for structural analysis.
+    Generates XYZ/CIF outputs for fcc truncated cubes of various sizes.
+
+    Args:
+        element (str): Chemical element symbol, e.g. "Au".
+        Rnn (float): Nearest-neighbour distance in Å.
+        nOrder (int): Order/size parameter (number of layers along an edge).
+        postAnalyzis (bool): If True, run post-construction analysis.
+        aseView (bool): If True, show the structure using ASE viewer.
+        thresholdCoreSurface (float): Threshold for core/surface separation.
+        skipSymmetryAnalyzis (bool): If True, skip symmetry analysis.
+        jmolCrystalShape (bool): If True, enable jMol script generation.
+        noOutput (bool): If True, suppress printing.
+        calcPropOnly (bool): If True, only compute properties, skip coords.
+
+    Attributes:
+        cubeProp: Instance of `pNP.cube` used as base geometry.
+        trPlanes: Truncation plane equations (if any).
+        nAtomsPerEdge (int): Number of atoms on an edge after truncation.
+        cog (np.ndarray): Center of gravity of the final nanoparticle.
     """
     nFaces3 = 8
     nFaces8 = 6
@@ -976,7 +1045,7 @@ class fccTrCube:
     radiusCSF = edgeLengthF * (1/2) * np.sqrt(7+4*np.sqrt(2)) # Centroid to vertex distance = Radius of circumsphere
     radiusMSF = edgeLengthF * (1/2) * (2+np.sqrt(2))             # Radius of midsphere that is tangent to edges
     radiusISF = edgeLengthF * (1/17) * (5+2*np.sqrt(2)) * np.sqrt(7+4*np.sqrt(2))# inradius
-    cutFromVertexAt = 0.15
+    cutFromVertexAt = 1/3
   
     def __init__(self,
                  element: str='Au',
@@ -1010,7 +1079,6 @@ class fccTrCube:
             self.shape (str): Shape 'fccTrCube'.
             self.cubeProp (class instance): Class "cube" of the module "pNP".
             self.nAtoms (int): Number of atoms in the NP.
-            self.dim (array): Dimensions calculated from MOI.
             self.nAtomsPerEdge (int): Number of atoms per edge.
             self.interLayerDistance (float): Distance between atomic layers.
             self.jmolCrystalShape (bool): Flag for JMol visualization.
@@ -1024,7 +1092,6 @@ class fccTrCube:
         self.shape='fccTrCube'
         self.Rnn = Rnn
         self.nAtoms = 0
-        self.dim=[0,0,0]
         self.cog = np.array([0., 0., 0.])
         self.nOrder = nOrder
         if not noOutput: vID.centerTitle(f"fcc truncated cube")
@@ -1035,11 +1102,14 @@ class fccTrCube:
         if not isTrCube:
             listOfPossiblenLayers = self.magicEdgeNumberOfCube2MakeATrCube(int(1.2*nOrder))
             nearest_nL = min(listOfPossiblenLayers, key = lambda x: abs(x-(self.nOrder)))
-            sys.exit(f"This order cannot yield a perfect truncated octahedron.\n"\
-                     f"The closest possible nOrder value is {nearest_nL}.\n"\
-                     f"Try again."\
-                     f"Any doubt about the valid nOrder values? Call the archimedeanNP.magicEdgeNumberOfCube2MakeATrCube(N) "\
-                     f"to see all possible values between 1 and N")
+            sys.exit(
+                f"This order cannot yield a perfect truncated octahedron.\n"
+                f"The closest possible nOrder value is {nearest_nL}.\n"
+                "Try again. "
+                "Any doubt about the valid nOrder values? Call the "
+                "archimedeanNP.magicEdgeNumberOfCube2MakeATrCube(N) to see all "
+                "possible values between 1 and N"
+            )
         else:
             self.nAtomsPerEdge = int(self.nAtomsPerEdge)
           
@@ -1052,130 +1122,178 @@ class fccTrCube:
                 if aseView: view(self.NPcs)
           
     def __str__(self):
-        return(f"Truncated cube based on a {self.nOrder}x{self.nOrder}x{self.nOrder} cube (i.e. {self.nOrder+1} atoms lie on an edge) and Rnn = {self.Rnn}")
+        return (
+            f"Truncated cube based on a {self.nOrder}x{self.nOrder}x{self.nOrder} "
+            f"cube (i.e. {self.nOrder+1} atoms lie on an edge) and Rnn = {self.Rnn}"
+        )
    
-    def nAtomsF(self,i):
-        """ Returns a factor to compute the number of atoms of a nanoparticle of size i """
+    def nAtomsF(self, i):
+        """Factor for analytic number of atoms.
+
+        Args:
+            i (int): Size/order parameter.
+
+        Returns:
+            int: Analytic factor used to compute total atom count.
+        """
         return round(4*i**3 + 6*i**2 + 3*i - 7)
 
     def nAtomsAnalytic(self):
+        """Compute the total number of atoms analytically.
+
+        Returns:
+            int: Total number of atoms for current `nAtomsPerEdge`.
         """
-        Computes the total number of atoms of the nanoparticle.
-        """
-        n = self.nAtomsF(self.nAtomsPerEdge-1)
-        return n
+        return self.nAtomsF(self.nAtomsPerEdge-1)
 
     def edgeLength(self):
-        """
-        Computes the edge length of the nanoparticle in Å .
-        The edge length of the truncated cube equals the regular cube's edge length divided by 3.
+        """Edge length in Ångström for the truncated cube.
+
+        The truncated cube's edge length is defined as the base cube's
+        edge length divided by 3.
+
+        Returns:
+            float: Edge length in Å.
         """
         # a truncated Oh is constructed by truncating all 6 vertices of a regular octahedron
         # at one third of the original edge length, hence the remaining edge length is Oh.edgeLength/3
         return self.cubeProp.edgeLength()/3
 
     def radiusCircumscribedSphere(self):
+        """Radius of the circumscribed sphere (Å).
+
+        Returns:
+            float: Radius in Å.
         """
-        Computes the radius of the circumscribed sphere of the nanoparticle in Å.
-        """
-        return self.radiusCSF*self.edgeLength()
+        return self.radiusCSF * self.edgeLength()
 
     def radiusMidSphere(self):
+        """Radius of the midsphere (Å), tangent to edges.
+
+        Returns:
+            float: Radius in Å.
         """
-        Computes the radius of the midsphere of the nanoparticle in Å.
-        The midsphere is a sphere that touches the edges of the nanoparticle.
-        """
-        return self.radiusMSF*self.edgeLength()
+        return self.radiusMSF * self.edgeLength()
 
     def radiusInscribedSphere(self):
+        """Radius of the inscribed sphere (Å).
+
+        Returns:
+            float: Radius in Å.
         """
-        Computes the radius of the inscribed sphere of the nanoparticle in Å  .
-        """
-        return self.radiusISF*self.edgeLength()
+        return self.radiusISF * self.edgeLength()
 
     def area(self):
-        """
-        Computes the surface area of the nanoparticle in square Ångströms.
+        """Surface area in Å^2.
+
+        Returns:
+            float: Surface area in square Ångström.
         """
         el = self.edgeLength()
-        return el**2 * 2 * (6 + 6*np.sqrt(2) + np.sqrt(3))
+        return el**2 * 2 * (6 + 6 * np.sqrt(2) + np.sqrt(3))
     
     def volume(self):
-        """
-        Computes the volume of the nanoparticle in cubic Ångströms.
+        """Volume in Å^3.
+
+        Returns:
+            float: Volume in cubic Ångström.
         """
         el = self.edgeLength()
-        return el**3 * (1/3) * (21 + 14*np.sqrt(2))
+        return el**3 * (1/3) * (21 + 14 * np.sqrt(2))
 
     def magicEdgeNumberOfCube2MakeATrCube(self, index: int):
-        '''
-        Returns the number of edge atoms of the octahedron that will lead to perfect
-        trucated tetrahedra with all edges of equal atomic length.
-        '''
+        """Generate candidate edge-atom counts for truncated cubes.
+
+        Args:
+            index (int): Upper limit for generation (inclusive).
+
+        Returns:
+            np.ndarray: Array of integers corresponding to valid edge-atom counts.
+        """
         import numpy as np
         N = []
-        for i in range(3,index+1):
-            N.append(3*i)
+        for i in range(3, index + 1):
+            N.append(3 * i)
         return np.array(N)
     
     def NumberOfCubeEdgeAtomsValid4ATrCube(self):
-        """
-        Calculate the number of edge atoms in a truncated fcccubic nanoparticle
-        and check if it is a valid integer.
-        
+        """Check if edge-atom count yields a perfect truncated cube.
+
         Returns:
-        - (bool, float): A tuple where the first element is True if the number is an integer,
-          and the second element is the computed number of edge atoms.
+            tuple: (is_integer (bool), nTrCube (float)) where ``is_integer`` flags
+                whether the computed number of atoms per edge is integer.
         """
         import numpy as np
-        N = self.nOrder+1
-        nTrCube = N - 2*(N-1)/3
+        N = self.nOrder + 1
+        nTrCube = N - 2 * (N - 1) / 3
         return nTrCube.is_integer(), nTrCube
 
-    def coords(self,noOutput):
-        """
-        Generate the coordinates of a truncated fcc cubic nanoparticle.
-        
+    def coords(self, noOutput):
+        """Generate coordinates for the truncated fcc cube.
+
         Args:
-        - noOutput (bool): If True, suppresses output messages.
+            noOutput (bool): If True, suppress printing and progress output.
         """
         if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         def findVertices(c):
-            eps = 1.e-4
-            max = np.max(c)
-            indexV = (np.where((np.abs(np.abs(c[:,0]) - max) < eps) &\
-                     (np.abs(np.abs(c[:,1]) - max) < eps) & \
-                     (np.abs(np.abs(c[:,2]) - max) < eps)))
+            """Locate corner vertices of the cube from positions array.
+
+            Args:
+                c (np.ndarray): Nx3 array of positions.
+
+            Returns:
+                tuple: (indices, coordinates) of detected corner vertices.
+            """
+            eps = 1e-4
+            cmax = np.max(c)
+            indexV = np.where(
+                (np.abs(np.abs(c[:, 0]) - cmax) < eps)
+                & (np.abs(np.abs(c[:, 1]) - cmax) < eps)
+                & (np.abs(np.abs(c[:, 2]) - cmax) < eps)
+            )
             coordV = c[indexV]
             return indexV, coordV
-        chrono = pyNMBu.timer(); chrono.chrono_start()
+        chrono = pyNMBu.timer()
+        chrono.chrono_start()
         if not noOutput: vID.centertxt("Generation of the coordinates of the cube",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
 
-        # Generate a regular fcc cube using the class "cube" of the module "pNP".
-        aseCube = pNP.cube('fcc',self.element,self.Rnn,self.nOrder,noOutput=True,postAnalyzis=False).NP
+        # Generate a regular fcc cube using the class `cube` of the module `pNP`.
+        aseCube = pNP.cube(
+            'fcc', self.element, self.Rnn, self.nOrder, noOutput=True, postAnalyzis=False
+        ).NP
         if not noOutput: vID.centertxt("Cube moved to origin",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         c2cog = pyNMBu.center2cog(aseCube.get_positions())
         aseCube.set_positions(c2cog)
         self.NP0 = aseCube.copy()
+        #  print('aseCube after moving to cog', aseCube.get_positions())
         if not noOutput: vID.centertxt("Removing atoms ",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         if not noOutput: print('First searching for the coordinates of the vertices and of the cog')
         indexV, coordVertices = findVertices(aseCube.get_positions())
-        if not noOutput: print("Vertices = atoms ",indexV)
+        if not noOutput: print("Vertices = coords ", coordVertices)
         if not noOutput: print("Now calculating the coordinates of the planes orthogonal the the cog-vertex directions")
         planesAtVertices = pyNMBu.planeAtVertices(coordVertices, self.cog)
 
         # Generate the truncation
         #trCube = truncation all 6 vertices of a regular octahedron at one third of the original edge length
-        trPlanes = pyNMBu.calculateTruncationPlanesFromVertices(planesAtVertices,self.cutFromVertexAt,\
-                                                                self.cubeProp.nAtomsPerEdge,noOutput=noOutput)
-        AtomsAbovePlanes = pyNMBu.truncateAboveEachPlane(trPlanes,aseCube.get_positions())
-        
+        trPlanes = pyNMBu.calculateTruncationPlanesFromVertices(
+            planesAtVertices,
+            self.cutFromVertexAt,
+            self.cubeProp.nAtomsPerEdge,
+            noOutput=noOutput
+        )
+        AtomsAbovePlanes = pyNMBu.truncateAboveEachPlane(
+            trPlanes, aseCube.get_positions()
+        )
+
         aseTrCube = aseCube.copy()
         del aseTrCube[AtomsAbovePlanes]
+            
         nAtoms = aseTrCube.get_global_number_of_atoms()
-        self.nAtoms=nAtoms
-        if not noOutput: print(f"Total number of atoms = {nAtoms}")
-        if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+        self.nAtoms = nAtoms
+        if not noOutput:
+            print(f"Total number of atoms = {nAtoms}")
+            chrono.chrono_stop(hdelay=False)
+            chrono.chrono_show()
         self.NP = aseTrCube
         self.cog = self.NP.get_center_of_mass()
         if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
@@ -1206,34 +1324,3 @@ class fccTrCube:
         print("dual polyhedron: Triakis octahedron")
         print(f"coordinates of the center of gravity = {self.cog}")
 
-    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface, noOutput):
-        """
-        Compute and store various post-construction properties of the nanoparticle.
-    
-        This function calculates moments of inertia (MOI), determines the nanoparticle shape, 
-        analyzes symmetry (if required), and identifies core and surface atoms.
-    
-        Parameters:
-        - skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
-        - thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
-        - noOutput (bool): If True, suppresses output messages.
-    
-        Attributes Updated:
-        - self.moi (array): Moment of inertia tensor.
-        - self.moisize (array): Normalized moments of inertia.
-        - self.MOIshape (str): Shape identifier used for size calculations.
-        - self.vertices, self.simplices, self.neighbors, self.equations (arrays): 
-          Geometric properties of the nanoparticle.
-        - self.NPcs (Atoms object): Copy of the nanoparticle with surface atoms visually marked.
-        - self.NP (Atoms object): Original nanoparticle.
-        """
-        self.moi=pyNMBu.moi(self.NP, noOutput=noOutput)
-        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))# MOI mass normalized (m of each atoms=1)
-        self.MOIshape=self.shape 
-        pyNMBu.MOI_shapes(self, noOutput)
-        if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
-        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
-            pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
-        self.NPcs = self.NP.copy()
-        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
-        if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)

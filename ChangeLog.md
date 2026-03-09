@@ -1,4 +1,132 @@
 # Development of a pre-release version -> date-based versioning
+## 20260309
+## changed
+Today is commit day ! I just renamed `make_xyz_files_remastered.py` as 
+and  `MakeNPsDatabase.py` and `pyNMB-exmaples-sanspbcolonnes.ipynb` as `pyNMB-exmaples.ipynb`. I deleted a bunch of local folders and files. Also I removed UtilsDC.py and the corresponding notebook because it was not that useful ? To discuss ... (I think redemonstrating the use of an other library can be redundant and make it more heavy for nothing). Instead make a small doc?? 
+
+-`TEM_creator.py`: substrate size is automatically found now, also the second index in the name file only changes if the imaging parameters change.
+
+**TO DO AFTER THIS VERSION**:
+- fix this error
+"/home/sara/Python3/Debye_calc/lib/python3.11/site-packages/ase/io/cif.py:408: UserWarning: crystal system 'tetragonal' is not interpreted for space group Spacegroup(141, setting=1). This may result in wrong setting!
+  warnings.warn(
+/home/sara/Python3/Debye_calc/lib/python3.11/site-packages/ase/io/cif.py:408: UserWarning: crystal system 'cubic' is not interpreted for space group Spacegroup(229, setting=1). This may result in wrong setting!
+  warnings.warn("
+- I skipped the making of the files NaCl and TiO2, should add it.
+- Fix the last shapes (bccrDD, double ico and pyramid of tetrahedons size measurements, fcctpbp total number of atoms, size measurement when "abc")
+- for `TEM_creator.py` allow to pick specific shapes instead of forcing the user to do all of them.
+
+## 20260308
+## changed
+-`TEM_creator.py`: New doc + big changes in the parameters (some werent even existing) + delete hcp making icosahedron (ive seen weird images). Also changed the final dataframes. Now the metadata should be more intersting and also accurate.
+
+**TO DO**: PEP8 maybe, the doc seems good.
+
+**TO DO**: verify the parameters and effect on the images (quality), verify the position of the NP on the carbon substrate (seems not good for 10x10nm and for 5x5nm always in the same spot, add function to rotate the images maybe?). + HRTEM_params notebook should be reworked probably.
+## 20260304
+## changed
+-`TEM_creator.py` et `HRTEM_class.py`: changing the name of the files (too long) and making a final clean dataframe 
+
+**TO DO**: reg ico can be hcp right now, put the condition of lattice == "fcc" for reg ico. Verify the content of the metadata: espcially the size !!!! (what is size index ? ) Final dataframe works but verify its content ! Make a nice doc for the notebook ! either add the other shapes, or precise that it is Wulff + ico only right now + rename all the notebook and class and path and position in the folder (HRTEM not TEM), and work on HRTEM_params notebook
+
+-`make_xyz_files_remastered.py`: lot of changes, mostly for code redability (avoiding redundency) , optimization + no more writing the npz iq and gr files in the metadata since their ID is already given in "id" = was useless
+
+-`Make_xyz_files-remastered.ipynb`: cleaned the notebook + more documentation + now show how to create the dataframe and import it as csv
+
+**TO DO**: fcctpbp : number of atoms still wrong !
+
+
+## 20260302
+## changed
+-`make_xyz_files_remastered.py`: cleaning the module (adding parent class for crystal for example to avoid redundancy). I only did crystals class today. 
+
+-`Make_xyz_files-remastered.ipynb`,`pyNMB-exmaples-sanspbcolonnes.ipynb` : put a new markdown to explain better, 
+
+**TO DO**: verify I didn't give a wrong explanation of nLayer, nShell, and nOrder and verify the content of the sasview files !
+
+-`platonics.py`, `utils.py`: using the old method to construct the fcc and bcc cube, the issue was in the magic numbers formulas !! for both bcc and fcc i ** 2 instead of i * 2 and adding + 1 for the bcc. Correcting the formula in magicNumbers()
+
+-`johnsonNPs.py`: fixed doc + PEP8 + fixed some dimensions and added some new for epbpyM : 
+- height is now correct for each cases (i changed the formula from : self.heightOfPyramidF*self.Rnn*(2+self.nAtomsPerEdgeOfPC) to n (self.heightOfPyramidF * self.Rnn * self.nAtomsPerEdgeOfPC * 2 - 2.84, 2.84 being dAu-Au along the height.
+- new pentagonal edge length and elongation edge length after Marks truncation
+- in the notebook i print all of them (edge before and after truncating)
+
+## 20260227
+
+-`utils.py`: reflection() was changed and RotationMol() also (back to old cause ive made mistakes)
+
+**To do**: fix the johnson class totally (partially fixed ! just observing smaller interatomic distances along the height for big NPs = the hieght is not well measured in all the cases, however the edges are well measured) + make the doc/pep8, the catalans class (bccrDD, romuald is looking for it also), the platonic class and archimedeans based on it (cube). The rest should be working fine, still some optimizations that could be done and minor fixes (jmol script still printing, dims of new shapes = helix and double ico not accurate). 
+
+## 20260226
+## changed
+-`otherNPs.py`: fixed the printing of the dimensions and updated the documentation (I think it was a bit confusing, made it clearer). Also applied syntax + doc fixes (pep8). Code should be good.
+
+-`johnsonNPs.py`: for fcctbp class: some dimensions were false, I fixed self.heightOfBiPyramid and edgeLength().
+
+**TO DO URGENT**: epbpyM issues, the atoms are on each other ...
+
+-`catalans.py`: syntax + doc + restructuration (main class called CatalanNP() that is the base class for the shapes. 
+
+**TO DO URGENT**: issue with bccrDD ! (weird structure and the number of shells is not respect, one more).
+I forced a good number of shells but the structure is still odd.
+
+
+## 20260225
+## changed
+-`archimedeans.py`, `utils.py`, : for the function calculateTruncationPlanesFromVertices(), the issue was that the last layer wasn't being removed when truncating the tetrahedron leading to a not stable tetrahedron. This was only happening to the truncated tetrahedron, the others shapes did not have this problem, even though they're all using this function in the same way. To fix it I tried robust methods that did not work, instead I just put an eps of 0.1 for cutAtVertex (quite a big eps) that makes the right truncature for every sizes (at least until 50 nm). So it's not robust, but it seems to be working fine. May need to find a most robust way. 
+The documentation and syntax were fixed. Also trCube doesn't work since it's calling the cube class from the platonic module. More optimizations should be done, example using boolean masks ? 
+
+-`platonics.py`: I tried to fix the truncated cube using the same method that the other shapes in the class: total failure.
+
+**TO DO URGENT** : **fix the cubes and actually use the magic numbers structures** (Creating a cube without it is super easy via ASE).
+
+## 20260224
+## changed
+-`archimedeans.py`: restructuration : I put a main class called ArchimedeanNP() that is a base class for the other classes to put in them commun utilities = makes the code lighter. Also changed nAtomsPerShellAnalytic(): cumulative sum now (optimization), for the truncated tetrahedron I added the inscribed sphere diameter using the general function from utilities.py. Issue: truncated tetrahedron is not truncated well (not 1/3, smaller truncature).
+
+
+## 20260223
+## changed
+-`platonics.py`: restructuration : I put a main class called PlatonicNP() that is a base class for the other classes (regfccOh, regIco etc) to put in them commun utilities = makes the code lighter and would be good to do it for all the modules. Functions:  nAtomsPerShellAnalytic(): cumulative sum now (optimization), regIco class: added the possibility to do the double icosahedron. fccregTd(): added the possibility to make an helix of tetrahedrons (and changed the input). Also changed the documentation and syntax (google format + PEP8) **TO DO**: **change the dimensions computations in these cases (radiuses, volume are wrong now). Also see if we keep sasview_dims, maybe new optimizations ? (for coords vectorization)**
+-`utils.py`: planeFittingLSF(): added the possibility to use many points (3D array) in entry, instead of one point to allow vectorization.
+ISSUE: sometimes the JMOL script is printed even though there is not printing ... still couldn't figure that out
+
+
+## 20260220
+## changed
+- `pyNMB-examples-sanspbcolonnes.ipynb`: notebook of examples: clearer explanations. TO DO: verify the english syntax, rename it wihtout sanspbcolonnes, verify if its always calling writexyz and not the old function that is not working
+- `crystals.py and utils.py`:documentation changed in general, for example, i put "Target sizes"(the entries of the user) and "Measured sizes" (the final sizes) for less confusions. I also added the google format for the docstring and applied PEP8.
+-`crystals.py`: MakeCylinder(): used to not work well, now should be working for any size and growth direction, MakeSpehre(): added the hollow sphere : new parameter = hollow_sphere_diameter (in nm), MakeParallelepiped(): measured sizes are only right when buildPPD = "xyz", need to the same for "abc" !! MakeEllipsoid(): vectorization for delAtom, and in propPostMake() calling defCrystalShapeForJMol() with noOutput = True because too noisy, let's just keep the script (half done since it's still printed sometimes for a reason I ignore)
+So for this class, **TO DO URGENT**: dealing with "abc", see if we keep "sasview_dims" 
+- `data.py`: added the tetrahedron (surface planes, energies etc) + some cif files 'Ag fcc': 'cod9008459-Ag_fcc.cif', 'CsPbBr3 ortho' : 'CsPbBr3_ortho_14608.cif', 'CsPbBr3 cubic' : 'CsPbBr3_cubic_231023.cif' (maybe gonna delete the last ones)
+
+
+
+## 20260219
+## changed
+-`utils.py`: findNeighbours(), truncateAboveEachPlane(), truncateAbovePlanes(), returnPointsThatLieInPlanes(), Pt2planeSignedDistance(), 
+centerofgravity(), calculateCN(), delAtomsWithCN(), sortVCW = all optimization using numpy (vectorization) or scipy, rdf() = using query ball tree instead of query ball point from scipy (in comments right now, not sure about it), planeAtVertices() = using einsum from numpy but nore sure about it too (keep it as comments), findNeighbours() = using pdist and squareform from sicpy(needs to be verified), reflection_tetra(), Rx(), Ry(), Rz() = np instead of math. 
+Also the imports of numpy inside the functions were removed, now it's only in the beginning of the module.
+writexyz() = using counter for the dict
+The documentation and writing were also fixed (PEP8 + google style docstring)
+
+## 20260218
+*Notes: A lot of changes have been made and not committed since. Therefore, the following changes will be dense. They will mainly be on the src files and the example notebook + the HRTEM notebook.*
+### changed
+-`utils.py`: inscribed_circumscribed_spheres (maybe to change again, sasview dims seems weird). Chnages to many functions : 
+RAB(), RBetween2points(), vector(), vectorBetween2points(), normofV(), normV(), centerOgGravity(), center2cog(), centerToVertices(), planeFittingLSF() and get_moments_of_inertia_for_size() were changed for **optimization** (basically loops transformed into vectorizations), should still work because of the new checks (if they are np arrays) and be way faster. 
+reflection() was modified : new condition with eps
+### added
+-`utils.py`:
+full_diagnostics() a diagnostic function for ASE EMT computations (which can fail in certain cases, try to find out why exactly).
+rotation_around_axis_through_point() to be used in the module TEM_creator.py (when creating the structure = NP on the carbon substrate in the HRTEM images).
+reflection_tetra() function for the helix of tetrahedrons
+### deleted
+MOI_shapes(): removed cause not working that well (working for certain shapes but not others, I will work on it locally), writexyz_generalized(name of the class)(): the functions to automatize the creation of files: are now in a new module (make_files.py)
+
+## 20260115
+in the pyNMB-examples :To do : make sure to always use pyNmbu.writexyz and not just write (because there is an extra column) 
+
 ## 20250310
 ### changed
 For every NPs classes: changed the position of the function defCrystalShapeForJMol(), it is now in  propPostMake() and is done by default (also added the attributes if it was missing).
@@ -9,9 +137,9 @@ Documentation for each NPs classes and their functions
 
 ## 20250305
 ### added
-- `Create_otherNPs_database.ipynb`: class that creates archimedean nps + cif/xyz files
-- `Create_johnson_database.ipynb`: class that creates archimedean nps + cif/xyz files
-- `Create_catalan_database.ipynb`: class that creates archimedean nps + cif/xyz files
+- `Create_otherNPs_database.ipynb`: class that creates nps + cif/xyz files
+- `Create_johnson_database.ipynb`: class that creates nps + cif/xyz files
+- `Create_catalan_database.ipynb`: class that creates nps + cif/xyz files
 - `johnsonNPs.py`: `nAtomsPerEdgeOfPC_after_truncation()` and `edgeLength_after_truncation(whichEdge)` to be specified in dictionnary in the files
 ### changed
 -`utils.py`: all the files writing functions were changed, now the main dimensions are the radius of the insphere and cicumscribed sphere (the MOI dim used to be the main dim but some of them are not accurate), secondary dims are added (specific lengths and the number of atoms they're containing), and the truncature was also added (True or False)

@@ -1,0 +1,93 @@
+
+#(C) 2025 by FIZ Karlsruhe - Leibniz Institute for Information Infrastructure.  All rights reserved.
+data_14608-ICSD
+_database_code_ICSD 14608
+_audit_creation_date 2021-02-01
+_chemical_name_common 'Cesium lead tribromide'
+_chemical_formula_structural 'Cs Pb Br3'
+_chemical_formula_sum 'Br3 Cs1 Pb1'
+_chemical_name_structure_type GdFeO3
+_exptl_crystal_density_diffrn 4.86
+_citation_title
+
+;
+Crystal structure features of CsPbBr$_3$ perovskite prepared by
+mechanochemical synthesis
+;
+loop_
+_citation_id
+_citation_journal_full
+_citation_year
+_citation_journal_volume
+_citation_page_first
+_citation_page_last
+_citation_journal_id_ASTM
+primary 'ACS Omega' 2020 5 5931 5938 ACSODF
+loop_
+_citation_author_citation_id
+_citation_author_name
+primary 'LÃ³pez, Carlos A.'
+primary 'Abia, Carmen'
+primary 'Alvarez-GalvÃ¡n, MarÃ­a Consuelo'
+primary 'Hong, Bo-Kyung'
+primary 'MartÃ­nez-Huerta, M. Victoria'
+primary 'Serrano-SÃ¡nchez, Federico'
+primary 'Carrascoso, Felix'
+primary 'Castellanos-GÃ³mez, Andres'
+primary 'FernÃ¡ndez-DÄ±Ì�az, M. Teresa'
+primary 'Alonso, JosÃ© A.'
+_cell_length_a 8.19154(2)
+_cell_length_b 8.24459(2)
+_cell_length_c 11.73993(2)
+_cell_angle_alpha 90.
+_cell_angle_beta 90.
+_cell_angle_gamma 90.
+_cell_volume 792.86
+_cell_formula_units_Z 4
+_space_group_name_H-M_alt 'P b n m'
+_space_group_IT_number 62
+loop_
+_space_group_symop_id
+_space_group_symop_operation_xyz
+1 '-x+1/2, y+1/2, z'
+2 'x, y, -z+1/2'
+3 'x+1/2, -y+1/2, z+1/2'
+4 '-x, -y, -z'
+5 'x+1/2, -y+1/2, -z'
+6 '-x, -y, z+1/2'
+7 '-x+1/2, y+1/2, -z+1/2'
+8 'x, y, z'
+loop_
+_atom_type_symbol
+_atom_type_oxidation_number
+Cs1+ 1
+Pb2+ 2
+Br1- -1
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_symmetry_multiplicity
+_atom_site_Wyckoff_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+_atom_site_U_iso_or_equiv
+_atom_site_occupancy
+Cs1 Cs1+ 4 c 0.9927(7) 0.9710(7) 0.25 0.084(4) 1.
+Pb1 Pb2+ 4 b 0.5 0 0 0.026(1) 1.
+Br1 Br1- 4 c 0.0464(8) 0.505(1) 0.25 0.086(6) 1.
+Br2 Br1- 8 d 0.7929(5) 0.2070(5) 0.0251(4) 0.071(4) 1.
+loop_
+_atom_site_aniso_label
+_atom_site_aniso_type_symbol
+_atom_site_aniso_U_11
+_atom_site_aniso_U_22
+_atom_site_aniso_U_33
+_atom_site_aniso_U_12
+_atom_site_aniso_U_13
+_atom_site_aniso_U_23
+Cs1 Cs1+ 0.089(3) 0.102(4) 0.069(3) 0.022(4) 0 0
+Pb1 Pb2+ 0.029(3) 0.026(1) 0.021(1) 0.000(2) -0.002(2) 0.002(2)
+Br1 Br1- 0.122(8) 0.114(6) 0.021(3) 0.016(8) 0 0
+Br2 Br1- 0.059(3) 0.053(3) 0.101(5) -0.034(2) -0.011(4) 0.007(4)
+#End of TTdata_14608-ICSD

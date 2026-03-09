@@ -1,4 +1,4 @@
-from visualID import  fg, hl, bg
+from visualID import fg, hl, bg
 import visualID as vID
 
 import sys
@@ -11,7 +11,50 @@ from ase import io
 from ase.visualize import view
 
 ###########################################################################################################
-class bccrDD:
+class CatalanNP:
+    """Base class for all Catalan nanoparticles providing common functionality."""
+
+    def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput):
+        """Compute and store various post-construction properties of the nanoparticle.
+
+        This function calculates moments of inertia (MOI), the inscribed and 
+        circumscribed sphere diameters,analyzes symmetry,
+        generates a JMOL script, and identifies core and surface atoms.
+
+        Args:
+            skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
+            thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
+            noOutput (bool): If True, suppresses output messages.
+    
+        Attributes Updated:
+             moi (array): Moment of inertia tensor.
+             moisize (array): Normalized moments of inertia.
+             vertices, simplices, neighbors, equations (arrays):
+                  Geometric properties of the nanoparticle.
+             NPcs (Atoms object): Copy of the nanoparticle with surface atoms visually marked.
+             NP (Atoms object): Original nanoparticle.
+        """
+        
+        self.moi = pyNMBu.moi(self.NP, noOutput)
+        self.moisize = np.array(pyNMBu.moi_size(self.NP, noOutput))  # MOI mass normalized (m of each atoms=1)
+
+        if not skipSymmetryAnalyzis:
+            pyNMBu.MolSym(self.NP, noOutput=noOutput)
+
+        [self.vertices, self.simplices, self.neighbors, self.equations], surfaceAtoms = \
+            pyNMBu.coreSurface(self, thresholdCoreSurface, noOutput=noOutput)
+        self.NPcs = self.NP.copy()
+        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102  # Nobelium, because it has a nice pinkish color in jmol
+        self.surfaceatoms = self.NPcs[surfaceAtoms]
+
+        pyNMBu.Inscribed_circumscribed_spheres(self,noOutput)
+
+        if hasattr(self, 'jmolCrystalShape') and self.jmolCrystalShape:
+            self.jMolCS = pyNMBu.defCrystalShapeForJMol(self, noOutput=True)  # do not print the jmol script
+
+
+
+class bccrDD(CatalanNP):
     """
     A class for generating XYZ and CIF files of rhombic dodecahedral nanoparticles (NPs) 
     of various sizes, based on user-defined compounds (either by 
@@ -60,9 +103,12 @@ class bccrDD:
             element: Chemical element of the NP (e.g., "Au", "Fe").
             Rnn (float): Nearest neighbor interatomic distance in Å.
             nShell (int): Number of shells (e.g., `nShell=1` means 2 atoms per edge).
-            postAnalyzis (bool): If True, prints additional NP information (e.g., cell parameters, moments of inertia, inscribed/circumscribed sphere diameters, etc.).
+            postAnalyzis (bool): If True, prints additional NP information.
+                Examples: cell parameters, moments of inertia,
+                inscribed/circumscribed sphere diameters, etc.
             aseView (bool): If True, enables visualization of the NP using ASE.
-            thresholdCoreSurface (float): Precision threshold for core/surface differentiation (distance threshold for retaining atoms).
+            thresholdCoreSurface (float): Precision threshold for core/surface differentiation.
+                This is the distance threshold used to decide which atoms are retained.
             skipSymmetryAnalyzis (bool): If False, performs an atomic structure analysis using pymatgen.
             jmolCrystalShape (bool): If True, generates a JMOL script for visualization.
             noOutput (bool): If False, prints details about the NP structure.
@@ -75,7 +121,6 @@ class bccrDD:
             self.interShellDistance3 (float): Distance between shells at order 3.
             self.interShellDistance4 (float): Distance between shells at order 4.
             self.cog (np.array): Center of gravity of the NP.
-            self.dim (array): Dimensions calculated from MOI.
             self.jmolCrystalShape (bool): Flag for JMol visualization.
             self.imageFile (str): Path to a reference image.
             
@@ -91,7 +136,6 @@ class bccrDD:
         self.interShellDistance3 = self.Rnn / self.interShellF3
         self.interShellDistance4 = self.Rnn / self.interShellF4
         self.cog = np.array([0., 0., 0.])
-        self.dim=[0,0,0]
         self.jmolCrystalShape = jmolCrystalShape
         self.imageFile = pyNMBu.imageNameWithPathway("bccrdd-C.png")
         
@@ -241,12 +285,19 @@ class bccrDD:
                               pyNMBu.vertex( 0,-2, 0, scale4),\
                               pyNMBu.vertex( 0, 0, 2, scale4),\
                               pyNMBu.vertex( 0, 0,-2, scale4)]
-            edges = [( 1, 0), ( 2, 0), ( 3, 1), ( 3, 2), ( 4, 0), ( 5, 1), ( 5, 4), ( 6, 2), ( 6, 4), ( 7, 3), ( 7, 5), ( 7, 6),\
-                     ( 8, 0), ( 8, 1), ( 8, 4), ( 8, 5), ( 9, 2), ( 9, 3), ( 9, 6), ( 9, 7), ( 10, 0), ( 10, 2), ( 10, 4), ( 10, 6),\
-                     ( 11, 1), ( 11, 3), ( 11, 5), ( 11, 7), ( 12, 0), ( 12, 1), ( 12, 2), ( 12, 3), ( 13, 4), ( 13, 5), ( 13, 6), ( 13, 7)]
-            faces = [( 1, 0, 8), ( 1, 0, 12), ( 2, 0, 10), ( 2, 0, 12), ( 3, 1, 11), ( 3, 1, 12), ( 3, 2, 9), ( 3, 2, 12),\
-                     ( 4, 0, 8), ( 4, 0, 10), ( 5, 1, 8), ( 5, 1, 11), ( 5, 4, 8), ( 5, 4, 13), ( 6, 2, 9), ( 6, 2, 10), ( 6, 4, 10),\
-                     ( 6, 4, 13), ( 7, 3, 9), ( 7, 3, 11), ( 7, 5, 11), ( 7, 5, 13), ( 7, 6, 9), ( 7, 6, 13)]
+            edges = [
+                (1, 0), (2, 0), (3, 1), (3, 2), (4, 0), (5, 1), (5, 4), (6, 2),
+                (6, 4), (7, 3), (7, 5), (7, 6), (8, 0), (8, 1), (8, 4), (8, 5),
+                (9, 2), (9, 3), (9, 6), (9, 7), (10, 0), (10, 2), (10, 4), (10, 6),
+                (11, 1), (11, 3), (11, 5), (11, 7), (12, 0), (12, 1), (12, 2),
+                (12, 3), (13, 4), (13, 5), (13, 6), (13, 7),
+            ]
+            faces = [
+                (1, 0, 8), (1, 0, 12), (2, 0, 10), (2, 0, 12), (3, 1, 11), (3, 1, 12),
+                (3, 2, 9), (3, 2, 12), (4, 0, 8), (4, 0, 10), (5, 1, 8), (5, 1, 11),
+                (5, 4, 8), (5, 4, 13), (6, 2, 9), (6, 2, 10), (6, 4, 10), (6, 4, 13),
+                (7, 3, 9), (7, 3, 11), (7, 5, 11), (7, 5, 13), (7, 6, 9), (7, 6, 13),
+            ]
             
             CoordVertices = np.array(CoordVertices)
             edges = np.array(edges)
@@ -262,7 +313,8 @@ class bccrDD:
         """
         
         if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
-        chrono = pyNMBu.timer(); chrono.chrono_start()
+        chrono = pyNMBu.timer()
+        chrono.chrono_start()
         # central atom = "1st shell"
         c = [[0., 0., 0.]]
         self.nAtoms = 1
@@ -285,7 +337,15 @@ class bccrDD:
             # Generate edge atoms
             nAtoms0 = self.nAtoms
             Rvv = pyNMBu.RAB(cshell,E[0,0],E[0,1]) #distance between two vertex atoms
+
+            # Old : issue with nshell > 6
             nAtomsOnEdges = int((Rvv+1e-6) / self.Rnn)-1
+            #print("nAtomsOnEdges at beg= ", nAtomsOnEdges)
+
+            ## New: forcing the right number of atoms
+            # nAtomsOnEdges = i - 1
+            # print("nAtomsOnEdges after= ", nAtomsOnEdges)
+
             nIntervals = nAtomsOnEdges + 1
             # print("nAtomsOnEdges = ",nAtomsOnEdges)
             coordEdgeAt = []
@@ -316,9 +376,16 @@ class bccrDD:
 
         self.cog = pyNMBu.centerOfGravity(c)
 
-        if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+        if not noOutput:
+            chrono.chrono_stop(hdelay=False)
+            chrono.chrono_show()
         self.NP = aseObject
         self.cog = self.NP.get_center_of_mass()
+
+        # print("Debugg prints")
+        # print("nAtomsOnEdges = ",nAtomsOnEdges)
+        # print("nAtomsOnFaces = ",nAtomsOnFaces)
+        # print("nAtomsPerShell = ", self.nAtomsPerShell )
     
     def prop(self):
         """
@@ -338,8 +405,14 @@ class bccrDD:
         print(f"intershell distance for 4th order vertices = {self.interShellDistance4:.2f} Å")
         print(f"edge length = {self.edgeLength()*0.1:.2f} nm")
         print(f"radius after volume = {pyNMBu.RadiusSphereAfterV(self.volume()*1e-3):.2f} nm")
-        print(f"radius of the circumscribed sphere passing through the six 4th order vertices = {self.radiusCircumscribedSphere4()*0.1:.2f} nm")
-        print(f"radius of the circumscribed sphere passing through the eight 3rd order vertices = {self.radiusCircumscribedSphere3()*0.1:.2f} nm")
+        print(
+            f"radius of the circumscribed sphere passing through the six 4th order "
+            f"vertices = {self.radiusCircumscribedSphere4()*0.1:.2f} nm"
+        )
+        print(
+            f"radius of the circumscribed sphere passing through the eight 3rd "
+            f"order vertices = {self.radiusCircumscribedSphere3()*0.1:.2f} nm"
+        )
         print(f"radius of the midsphere = {self.radiusMidSphere()*0.1:.2f} nm")
         print(f"radius of the inscribed sphere = {self.radiusInscribedSphere()*0.1:.2f} nm")
         print(f"area = {self.area()*1e-2:.1f} nm2")
@@ -350,41 +423,9 @@ class bccrDD:
         print("Dual polyhedron: ")
         print(f"coordinates of the center of gravity = {self.cog}")
 
-    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface, noOutput):
-        """
-        Compute and store various post-construction properties of the nanoparticle.
-    
-        This function calculates moments of inertia (MOI), the insphere and circumscribed sphere, 
-        analyzes symmetry (if required), and identifies core and surface atoms.
-    
-        Parameters:
-        - skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
-        - thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
-        - noOutput (bool): If True, suppresses output messages.
-    
-        Attributes Updated:
-        - self.moi (array): Moment of inertia tensor.
-        - self.moisize (array): Normalized moments of inertia.
-        - self.MOIshape (str): Shape identifier used for size calculations.
-        - self.vertices, self.simplices, self.neighbors, self.equations (arrays): 
-          Geometric properties of the nanoparticle.
-        - self.NPcs (Atoms object): Copy of the nanoparticle with surface atoms visually marked.
-        - self.NP (Atoms object): Original nanoparticle.
-        """
-        
-        self.MOIshape=self.shape
-        self.moi=pyNMBu.moi(self.NP, noOutput=noOutput)
-        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))# MOI mass normalized (m of each atoms=1)
-        pyNMBu.MOI_shapes(self, noOutput)
-        if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
-        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
-            pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
-        self.NPcs = self.NP.copy()
-        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
-        pyNMBu.Inscribed_circumscribed_spheres(self,noOutput)
-        if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)
+
 ###########################################################################################################
-class fccdrDD:
+class fccdrDD(CatalanNP):
     """
     A class for generating XYZ and CIF files of dihedral rhombic dodecahedral nanoparticles (NPs) 
     of various sizes, based on user-defined compounds (either by 
@@ -433,9 +474,12 @@ class fccdrDD:
             element: Chemical element of the NP (e.g., "Au", "Fe").
             Rnn (float): Nearest neighbor interatomic distance in Å.
             nShell (int): Number of shells (e.g., `nShell=1` means 2 atoms per edge).
-            postAnalyzis (bool): If True, prints additional NP information (e.g., cell parameters, moments of inertia, inscribed/circumscribed sphere diameters, etc.).
+            postAnalyzis (bool): If True, prints additional NP information.
+                Examples: cell parameters, moments of inertia,
+                inscribed/circumscribed sphere diameters, etc.
             aseView (bool): If True, enables visualization of the NP using ASE.
-            thresholdCoreSurface (float): Precision threshold for core/surface differentiation (distance threshold for retaining atoms).
+            thresholdCoreSurface (float): Precision threshold for core/surface differentiation.
+                This is the distance threshold used to decide which atoms are retained.
             skipSymmetryAnalyzis (bool): If False, performs an atomic structure analysis using pymatgen.
             jmolCrystalShape (bool): If True, generates a JMOL script for visualization.
             noOutput (bool): If False, prints details about the NP structure.
@@ -448,7 +492,6 @@ class fccdrDD:
             self.interShellDistance (float): Distance between shells.
             self.jmolCrystalShape (bool): Flag for JMol visualization.
             self.cog (np.array): Center of gravity of the NP.
-            self.dim (array): Dimensions calculated from MOI.
             self.imageFile (str): Path to a reference image.
 
         """
@@ -461,7 +504,6 @@ class fccdrDD:
         self.interShellDistance = self.Rnn / self.interShellF
         self.interShellDistanceTB = self.Rnn / self.interShellFTB
         self.cog = np.array([0., 0., 0.])
-        self.dim=[0,0,0]
         self.jmolCrystalShape = jmolCrystalShape
         self.imageFile = pyNMBu.imageNameWithPathway("fccrdd-C.png")
         if not noOutput: vID.centerTitle(f"{nShell} shells fcc rhombic dodecahedron")
@@ -600,11 +642,19 @@ class fccdrDD:
                               pyNMBu.vertex( 0, 1,-1, scale),\
                               pyNMBu.vertex( 0,-1, 1, scale),\
                               pyNMBu.vertex( 0,-1,-1, scale)]
-            edges = [( 6, 0), ( 6, 2), ( 6, 3), ( 7, 1), ( 7, 2), ( 7, 3), ( 8, 0), ( 8, 4), ( 8, 5), ( 9, 1), ( 9, 4), ( 9, 5),\
-                     ( 10, 0), ( 10, 2), ( 10, 4), ( 10, 6), ( 10, 8),
-                     ( 11, 1), ( 11, 2), ( 11, 4), ( 11, 7), ( 11, 9), ( 12, 0), ( 12, 3), ( 12, 5), ( 12, 6), ( 12, 8),\
-                     ( 13, 1), ( 13, 3), ( 13, 5), ( 13, 7), ( 13, 9)]
-            faces3 = [( 6, 0, 10), ( 6, 0, 12), ( 6, 2, 10), ( 6, 3, 12), ( 7, 1, 11), ( 7, 1, 13), ( 7, 2, 11), ( 7, 3, 13), ( 8, 0, 10), ( 8, 0, 12), ( 8, 4, 10), ( 8, 5, 12), ( 9, 1, 11), ( 9, 1, 13), ( 9, 4, 11), ( 9, 5, 13)]
+            edges = [
+                (6, 0), (6, 2), (6, 3), (7, 1), (7, 2), (7, 3), (8, 0), (8, 4),
+                (8, 5), (9, 1), (9, 4), (9, 5), (10, 0), (10, 2), (10, 4), (10, 6),
+                (10, 8), (11, 1), (11, 2), (11, 4), (11, 7), (11, 9), (12, 0),
+                (12, 3), (12, 5), (12, 6), (12, 8), (13, 1), (13, 3), (13, 5),
+                (13, 7), (13, 9),
+            ]
+            faces3 = [
+                (6, 0, 10), (6, 0, 12), (6, 2, 10), (6, 3, 12), (7, 1, 11),
+                (7, 1, 13), (7, 2, 11), (7, 3, 13), (8, 0, 10), (8, 0, 12),
+                (8, 4, 10), (8, 5, 12), (9, 1, 11), (9, 1, 13), (9, 4, 11),
+                (9, 5, 13),
+            ]
             faces4 = [( 2, 6, 3, 7), ( 4, 8, 5, 9), ( 2, 10, 4, 11), ( 3, 12, 5, 13)]
             CoordVertices = np.array(CoordVertices)
             edges = np.array(edges)
@@ -630,7 +680,8 @@ class fccdrDD:
         """
         
         if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
-        chrono = pyNMBu.timer(); chrono.chrono_start()
+        chrono = pyNMBu.timer()
+        chrono.chrono_start()
         # central atom = "1st shell"
         c = [[0., 0., 0.]]
         self.nAtoms = 1
@@ -692,7 +743,9 @@ class fccdrDD:
         if not noOutput: print(self.nAtomsPerShell)
         aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
             
-        if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+        if not noOutput:
+            chrono.chrono_stop(hdelay=False)
+            chrono.chrono_show()
         self.NP = aseObject
         self.cog = self.NP.get_center_of_mass()
     
@@ -726,37 +779,3 @@ class fccdrDD:
         print("Dual polyhedron: ")
         print("Comment: It can be seen as a cuboctahedron with square pyramids augmented on the top and bottom")
         print(f"coordinates of the center of gravity = {self.cog}")
-
-    def propPostMake(self,skipSymmetryAnalyzis,thresholdCoreSurface, noOutput):
-        """
-        Compute and store various post-construction properties of the nanoparticle.
-    
-        This function calculates moments of inertia (MOI), the insphere and circumscribed sphere, 
-        analyzes symmetry (if required), and identifies core and surface atoms.
-    
-        Parameters:
-        - skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
-        - thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
-        - noOutput (bool): If True, suppresses output messages.
-    
-        Attributes Updated:
-        - self.moi (array): Moment of inertia tensor.
-        - self.moisize (array): Normalized moments of inertia.
-        - self.MOIshape (str): Shape identifier used for size calculations.
-        - self.vertices, self.simplices, self.neighbors, self.equations (arrays): 
-          Geometric properties of the nanoparticle.
-        - self.NPcs (Atoms object): Copy of the nanoparticle with surface atoms visually marked.
-        - self.NP (Atoms object): Original nanoparticle.
-        """
-        self.MOIshape=self.shape
-        self.moi=pyNMBu.moi(self.NP, noOutput=noOutput)
-        self.moisize=np.array(pyNMBu.moi_size(self.NP, noOutput))# MOI mass normalized (m of each atoms=1)
-        pyNMBu.MOI_shapes(self, noOutput)
-    
-        if not skipSymmetryAnalyzis: pyNMBu.MolSym(self.NP, noOutput=noOutput)
-        [self.vertices,self.simplices,self.neighbors,self.equations],surfaceAtoms =\
-            pyNMBu.coreSurface(self,thresholdCoreSurface, noOutput=noOutput)
-        self.NPcs = self.NP.copy()
-        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102 #Nobelium, because it has a nice pinkish color in jmol
-        pyNMBu.Inscribed_circumscribed_spheres(self,noOutput)
-        if self.jmolCrystalShape: self.jMolCS = pyNMBu.defCrystalShapeForJMol(self,noOutput)
