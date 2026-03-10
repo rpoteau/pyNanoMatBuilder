@@ -2142,11 +2142,11 @@ def create_full_dataframe_from_csv_npz(csv_folder_path,
         file_id = row.get(id_col, None)
 
         if file_id is None or pd.isna(file_id):
-            data["q"] = "no data"
-            data["iq_saxs"] = "no data"
-            data["iq_waxs"] = "no data"
-            data["r"] = "no data"
-            data["gr"] = "no data"
+            data["q"] = None
+            data["iq_saxs"] = None
+            data["iq_waxs"] = None
+            data["r"] = None
+            data["gr"] = None
             return pd.Series(data)
 
         iq_path = os.path.join(
@@ -2163,9 +2163,9 @@ def create_full_dataframe_from_csv_npz(csv_folder_path,
                 data["iq_saxs"] = npz_iq["iq_saxs"]
                 data["iq_waxs"] = npz_iq["iq_waxs"]
         else:
-            data["q"] = "no data"
-            data["iq_saxs"] = "no data"
-            data["iq_waxs"] = "no data"
+            data["q"] = None
+            data["iq_saxs"] = None
+            data["iq_waxs"] = None
 
         # Loads G(r)
         if os.path.isfile(gr_path):
@@ -2173,8 +2173,8 @@ def create_full_dataframe_from_csv_npz(csv_folder_path,
                 data["r"] = npz_gr["r"]
                 data["gr"] = npz_gr["gr"]
         else:
-            data["r"] = "no data"
-            data["gr"] = "no data"
+            data["r"] = None
+            data["gr"] = None
 
         return pd.Series(data)
 
@@ -2184,6 +2184,7 @@ def create_full_dataframe_from_csv_npz(csv_folder_path,
     df_final = pd.concat([df, npz_data], axis=1)
 
     return df_final
+
 
 
 
