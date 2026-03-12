@@ -1,0 +1,62 @@
+[project]
+name = "pyNanoMatBuilder"
+version = "0.1.0"
+description = "A comprehensive Python toolbox for physical chemistry and cheminformatics"
+authors = [{name = "Sara Mokhtari, LPCNO", email = "smokhtari@insa-toulouse.fr"}, {name = "Romuald POTEAU, LPCNO", email = "romuald.poteau@utoulouse.fr"}]
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "GPL-3.0-or-later"}
+dependencies = [
+    "ase",              # Atomic Simulation Environment: manipulating and visualizing atomistic structures
+    "ipython",          # Enhanced interactive Python shell for rapid testing and research
+    "ipywidgets",       # Interactive HTML widgets for Jupyter notebooks (sliders, buttons)
+    "jupyter",          # The complete ecosystem for interactive computing and notebooks
+    "matplotlib",       # The standard 2D plotting library for publication-quality figures
+    "numpy",            # Fundamental package for linear algebra and multi-dimensional arrays
+    "pandas",           # Powerful data structures for tabular data analysis and manipulation
+    "plotly",           # High-level interactive 3D and 2D charting library
+    "pubchempy",        # Python interface to interact with the PubChem database
+    "py3Dmol",          # WebGL-based molecular viewer for Jupyter notebooks
+    "pymatgen",         # Materials analysis for VASP, band structures, and crystallography
+    "scipy",            # Advanced scientific computing (optimization, integration, constants)
+    "seaborn",          # Statistical data visualization based on Matplotlib
+]
+
+[project.urls]
+Repository = "https://github.com/rpoteau/pynanomatbuilder"
+Changelog = "https://github.com/rpoteau/pynanomatbuilder/blob/main/CHANGELOG.md"
+Documentation = "https://pynanomatbuilder.readthedocs.io/en/latest/"
+Issues = "https://github.com/rpoteau/pynanomatbuilder/issues"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pyNanoMatBuilder*"]
+
+[tool.setuptools.package-data]
+"pyNanoMatBuilder" = [
+    "resources/css/*.css",
+    "resources/svg/*.svg",
+    "resources/svg/*.png",
+    "resources/svg/*.spt",
+    "resources/svg/*.xyz",
+    "*.py"
+]
+
+[project.optional-dependencies]
+docs = [
+  "sphinx",
+  "sphinx_rtd_theme",
+  "myst-parser",
+  "nbsphinx",
+  "ipykernel",
+  "pandoc",
+  "numpydoc",
+  "sphinx-copybutton"
+]

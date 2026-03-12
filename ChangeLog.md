@@ -1,6 +1,38 @@
 # Development of a pre-release version -> date-based versioning
+
+## 20260310-20260317 *En route* to a pyNnaoMAtBuilder library
+
+### Added
+- **Unified `write()` function** in `utils.py`:
+    - A "smart" entry point that handles `.xyz`, `.cif`, `.script`, and `.spt` files automatically.
+    - **Automatic Directory Creation**: All write operations now use `pathlib` to ensure parent folders (like `coords/` or `figs/`) are created if missing, preventing `FileNotFoundError`.
+- **Timer Class**: Refactored the timing logic into an Object-Oriented `timer` class in `utils.py` for independent performance monitoring of different functions.
+- **Centralized Resource Management**: Moved all non-code assets (`.css`, `.svg`, `.cif`, `.spt`) into a dedicated `resources/` directory within the package.
+
+### Changed
+- **Package Architecture (Namespace Flattening)**: Key tools (`init`, `end`, colors) are now accessible directly via `pyNMB.<tool>` instead of the full submodule path.
+- **API Sanitization**: Removed external dependencies (`np`, `os`, `sys`) from the top-level `__init__.py` to improve auto-completion and prevent namespace pollution.
+- **Internal Namespace Protection**: Standardized internal imports as `import ase.io as ase_io` to prevent name shadowing with our custom `write()` function.
+- **Refined `writexyz()`**: Added support for the `wa` (Write/Append) parameter to enable multi-frame XYZ generation.
+- **Export Control**: Implemented `__all__` in `__init__.py` to explicitly define the public user API.
+- **Directory Structural Overhaul**: Reorganized the project into a "src-layout" style, placing the core logic inside a `pyNanoMatBuilder/` subdirectory to comply with modern Python packaging standards.
+- **Metadata Standardization**: Synchronized versioning and author information across `__init__.py` and packaging configuration files.
+- **PyPI Distribution Readiness**: Created `pyproject.toml` and `MANIFEST.in` to handle project metadata, entry points, and the inclusion of non-Python files (CSS, SVG, CIF) in the distribution.
+- **Documentation Framework**: Established the `docs/` directory structure with Sphinx configuration to support future deployment on **ReadTheDocs**.
+- **Entry Point Optimization**: Streamlined the library initialization process. Users can now trigger the full environment setup (CSS injection, banner display, and metadata logging) with a single, intuitive command: `pyNMB.init()`.
+- **Top-Level Namespace Branding**: Elevated the branding and initialization logic to the package root, reinforcing the library's identity upon import.
+- **Custom Visual Identity**: Developed a unique CSS theme specifically for **pyNMB**. This distinguishes the library's notebook outputs from other group tools through a tailored color palette and improved typography.
+- **Branding Consistency**: Synchronized the CSS colors with the new SVG banner and terminal output colors (`fg`, `bg`, `hl`) to provide a coherent visual experience across all user interfaces.
+- **Symmetry Analysis Upgrade in `utils.py`**:
+  - replaced **deprecated `ase.spacegroup.get_spacegroup`** with `pymatgen.symmetry.analyzer.SpacegroupAnalyzer`. This fixes accuracy issues with non-standard crystal settings and removes `FutureWarning` logs.
+  - **Symmetry Object Refactoring**: Transitioned from ASE-specific `Spacegroup` objects to explicit `ucSG_number` and `ucSG_symbol` attributes sourced from Pymatgen. Updated all display and classification functions (`print_ase_unitcell`, `get_crystal_type`) to support these new data types.
+
+### Fixed
+- Fixed a critical `NameError` caused by missing `from pathlib import Path` in submodules.
+- Fixed a path error in `visualID.end()` where the logo path was duplicated.
+
 ## 20260309
-## changed
+### changed
 Today is commit day ! I just renamed `make_xyz_files_remastered.py` as 
 and  `MakeNPsDatabase.py` and `pyNMB-exmaples-sanspbcolonnes.ipynb` as `pyNMB-exmaples.ipynb`. I deleted a bunch of local folders and files. Also I removed UtilsDC.py and the corresponding notebook because it was not that useful ? To discuss ... (I think redemonstrating the use of an other library can be redundant and make it more heavy for nothing). Instead make a small doc?? 
 
@@ -17,14 +49,15 @@ and  `MakeNPsDatabase.py` and `pyNMB-exmaples-sanspbcolonnes.ipynb` as `pyNMB-ex
 - for `TEM_creator.py` allow to pick specific shapes instead of forcing the user to do all of them.
 
 ## 20260308
-## changed
+### changed
 -`TEM_creator.py`: New doc + big changes in the parameters (some werent even existing) + delete hcp making icosahedron (ive seen weird images). Also changed the final dataframes. Now the metadata should be more intersting and also accurate.
 
 **TO DO**: PEP8 maybe, the doc seems good.
 
 **TO DO**: verify the parameters and effect on the images (quality), verify the position of the NP on the carbon substrate (seems not good for 10x10nm and for 5x5nm always in the same spot, add function to rotate the images maybe?). + HRTEM_params notebook should be reworked probably.
+
 ## 20260304
-## changed
+### changed
 -`TEM_creator.py` et `HRTEM_class.py`: changing the name of the files (too long) and making a final clean dataframe 
 
 **TO DO**: reg ico can be hcp right now, put the condition of lattice == "fcc" for reg ico. Verify the content of the metadata: espcially the size !!!! (what is size index ? ) Final dataframe works but verify its content ! Make a nice doc for the notebook ! either add the other shapes, or precise that it is Wulff + ico only right now + rename all the notebook and class and path and position in the folder (HRTEM not TEM), and work on HRTEM_params notebook
@@ -37,7 +70,7 @@ and  `MakeNPsDatabase.py` and `pyNMB-exmaples-sanspbcolonnes.ipynb` as `pyNMB-ex
 
 
 ## 20260302
-## changed
+### changed
 -`make_xyz_files_remastered.py`: cleaning the module (adding parent class for crystal for example to avoid redundancy). I only did crystals class today. 
 
 -`Make_xyz_files-remastered.ipynb`,`pyNMB-exmaples-sanspbcolonnes.ipynb` : put a new markdown to explain better, 
@@ -58,7 +91,7 @@ and  `MakeNPsDatabase.py` and `pyNMB-exmaples-sanspbcolonnes.ipynb` as `pyNMB-ex
 **To do**: fix the johnson class totally (partially fixed ! just observing smaller interatomic distances along the height for big NPs = the hieght is not well measured in all the cases, however the edges are well measured) + make the doc/pep8, the catalans class (bccrDD, romuald is looking for it also), the platonic class and archimedeans based on it (cube). The rest should be working fine, still some optimizations that could be done and minor fixes (jmol script still printing, dims of new shapes = helix and double ico not accurate). 
 
 ## 20260226
-## changed
+### changed
 -`otherNPs.py`: fixed the printing of the dimensions and updated the documentation (I think it was a bit confusing, made it clearer). Also applied syntax + doc fixes (pep8). Code should be good.
 
 -`johnsonNPs.py`: for fcctbp class: some dimensions were false, I fixed self.heightOfBiPyramid and edgeLength().
@@ -72,7 +105,7 @@ I forced a good number of shells but the structure is still odd.
 
 
 ## 20260225
-## changed
+### changed
 -`archimedeans.py`, `utils.py`, : for the function calculateTruncationPlanesFromVertices(), the issue was that the last layer wasn't being removed when truncating the tetrahedron leading to a not stable tetrahedron. This was only happening to the truncated tetrahedron, the others shapes did not have this problem, even though they're all using this function in the same way. To fix it I tried robust methods that did not work, instead I just put an eps of 0.1 for cutAtVertex (quite a big eps) that makes the right truncature for every sizes (at least until 50 nm). So it's not robust, but it seems to be working fine. May need to find a most robust way. 
 The documentation and syntax were fixed. Also trCube doesn't work since it's calling the cube class from the platonic module. More optimizations should be done, example using boolean masks ? 
 
@@ -81,19 +114,19 @@ The documentation and syntax were fixed. Also trCube doesn't work since it's cal
 **TO DO URGENT** : **fix the cubes and actually use the magic numbers structures** (Creating a cube without it is super easy via ASE).
 
 ## 20260224
-## changed
+### changed
 -`archimedeans.py`: restructuration : I put a main class called ArchimedeanNP() that is a base class for the other classes to put in them commun utilities = makes the code lighter. Also changed nAtomsPerShellAnalytic(): cumulative sum now (optimization), for the truncated tetrahedron I added the inscribed sphere diameter using the general function from utilities.py. Issue: truncated tetrahedron is not truncated well (not 1/3, smaller truncature).
 
 
 ## 20260223
-## changed
+### changed
 -`platonics.py`: restructuration : I put a main class called PlatonicNP() that is a base class for the other classes (regfccOh, regIco etc) to put in them commun utilities = makes the code lighter and would be good to do it for all the modules. Functions:  nAtomsPerShellAnalytic(): cumulative sum now (optimization), regIco class: added the possibility to do the double icosahedron. fccregTd(): added the possibility to make an helix of tetrahedrons (and changed the input). Also changed the documentation and syntax (google format + PEP8) **TO DO**: **change the dimensions computations in these cases (radiuses, volume are wrong now). Also see if we keep sasview_dims, maybe new optimizations ? (for coords vectorization)**
 -`utils.py`: planeFittingLSF(): added the possibility to use many points (3D array) in entry, instead of one point to allow vectorization.
 ISSUE: sometimes the JMOL script is printed even though there is not printing ... still couldn't figure that out
 
 
 ## 20260220
-## changed
+### changed
 - `pyNMB-examples-sanspbcolonnes.ipynb`: notebook of examples: clearer explanations. TO DO: verify the english syntax, rename it wihtout sanspbcolonnes, verify if its always calling writexyz and not the old function that is not working
 - `crystals.py and utils.py`:documentation changed in general, for example, i put "Target sizes"(the entries of the user) and "Measured sizes" (the final sizes) for less confusions. I also added the google format for the docstring and applied PEP8.
 -`crystals.py`: MakeCylinder(): used to not work well, now should be working for any size and growth direction, MakeSpehre(): added the hollow sphere : new parameter = hollow_sphere_diameter (in nm), MakeParallelepiped(): measured sizes are only right when buildPPD = "xyz", need to the same for "abc" !! MakeEllipsoid(): vectorization for delAtom, and in propPostMake() calling defCrystalShapeForJMol() with noOutput = True because too noisy, let's just keep the script (half done since it's still printed sometimes for a reason I ignore)
@@ -103,7 +136,7 @@ So for this class, **TO DO URGENT**: dealing with "abc", see if we keep "sasview
 
 
 ## 20260219
-## changed
+### changed
 -`utils.py`: findNeighbours(), truncateAboveEachPlane(), truncateAbovePlanes(), returnPointsThatLieInPlanes(), Pt2planeSignedDistance(), 
 centerofgravity(), calculateCN(), delAtomsWithCN(), sortVCW = all optimization using numpy (vectorization) or scipy, rdf() = using query ball tree instead of query ball point from scipy (in comments right now, not sure about it), planeAtVertices() = using einsum from numpy but nore sure about it too (keep it as comments), findNeighbours() = using pdist and squareform from sicpy(needs to be verified), reflection_tetra(), Rx(), Ry(), Rz() = np instead of math. 
 Also the imports of numpy inside the functions were removed, now it's only in the beginning of the module.
