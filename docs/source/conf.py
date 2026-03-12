@@ -41,6 +41,9 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '**.ipynb_checkpoints']
 # tells Sphinx to create "fake" objects for these libraries during the build, if they are not installed
 autodoc_mock_imports = ["debyecalculator", "abtem"]
 
+# Concatenates class and __init__ docstrings
+autoclass_content = 'both'
+
 # Configuration MyST to authorize titlew with anchors
 myst_enable_extensions = ["dollarmath", "amsmath"]
 myst_heading_anchors = 3

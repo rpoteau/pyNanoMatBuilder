@@ -28,6 +28,7 @@
 - **Symmetry Analysis Upgrade in `utils.py`**:
   - replaced **deprecated `ase.spacegroup.get_spacegroup`** with `pymatgen.symmetry.analyzer.SpacegroupAnalyzer`. This fixes accuracy issues with non-standard crystal settings and removes `FutureWarning` logs.
   - **Symmetry Object Refactoring**: Transitioned from ASE-specific `Spacegroup` objects to explicit `ucSG_number` and `ucSG_symbol` attributes sourced from Pymatgen. Updated all display and classification functions (`print_ase_unitcell`, `get_crystal_type`) to support these new data types.
+  - `./figs` folder moved to `pyNnaoMatBuilder/resources/figs`
 
 ### Fixed
 - Fixed a **critical `NameError`** caused by missing `from pathlib import Path` in submodules.

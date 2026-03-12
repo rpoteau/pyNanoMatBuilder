@@ -54,254 +54,773 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">🛠️ API Reference (Technical)</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">pyNanoMatBuilder</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pyNanoMatBuilder.html">pyNanoMatBuilder package</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.bg"><code class="docutils literal notranslate"><span class="pre">bg</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.bg.DARKRED"><code class="docutils literal notranslate"><span class="pre">bg.DARKRED</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.bg.DARKREDB"><code class="docutils literal notranslate"><span class="pre">bg.DARKREDB</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.bg.LIGHTBLUE"><code class="docutils literal notranslate"><span class="pre">bg.LIGHTBLUE</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.bg.LIGHTBLUEB"><code class="docutils literal notranslate"><span class="pre">bg.LIGHTBLUEB</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.bg.LIGHTGREEN"><code class="docutils literal notranslate"><span class="pre">bg.LIGHTGREEN</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.bg.LIGHTGREENB"><code class="docutils literal notranslate"><span class="pre">bg.LIGHTGREENB</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.bg.LIGHTRED"><code class="docutils literal notranslate"><span class="pre">bg.LIGHTRED</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.bg.LIGHTREDB"><code class="docutils literal notranslate"><span class="pre">bg.LIGHTREDB</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.bg.LIGHTYELLOW"><code class="docutils literal notranslate"><span class="pre">bg.LIGHTYELLOW</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.bg.LIGHTYELLOWB"><code class="docutils literal notranslate"><span class="pre">bg.LIGHTYELLOWB</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.bg.OFF"><code class="docutils literal notranslate"><span class="pre">bg.OFF</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Core Crystalline Builder</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-pyNanoMatBuilder.crystalNPs">CrystalNPs.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.crystalNPs.Crystal"><code class="docutils literal notranslate"><span class="pre">Crystal</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.crystalNPs.Crystal.loadExternalCif"><code class="docutils literal notranslate"><span class="pre">Crystal.loadExternalCif()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.crystalNPs.Crystal.bulk"><code class="docutils literal notranslate"><span class="pre">Crystal.bulk()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.crystalNPs.Crystal.makeSuperCell"><code class="docutils literal notranslate"><span class="pre">Crystal.makeSuperCell()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.crystalNPs.Crystal.makeSphere"><code class="docutils literal notranslate"><span class="pre">Crystal.makeSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.crystalNPs.Crystal.makeEllipsoid"><code class="docutils literal notranslate"><span class="pre">Crystal.makeEllipsoid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.crystalNPs.Crystal.makeWire"><code class="docutils literal notranslate"><span class="pre">Crystal.makeWire()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.crystalNPs.Crystal.makeCylinder"><code class="docutils literal notranslate"><span class="pre">Crystal.makeCylinder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.crystalNPs.Crystal.makeParallelepiped"><code class="docutils literal notranslate"><span class="pre">Crystal.makeParallelepiped()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.crystalNPs.Crystal.makeWulff"><code class="docutils literal notranslate"><span class="pre">Crystal.makeWulff()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.crystalNPs.Crystal.makeNP"><code class="docutils literal notranslate"><span class="pre">Crystal.makeNP()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.crystalNPs.Crystal.predefinedParameters4WulffShapes"><code class="docutils literal notranslate"><span class="pre">Crystal.predefinedParameters4WulffShapes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.crystalNPs.Crystal.prop"><code class="docutils literal notranslate"><span class="pre">Crystal.prop()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.crystalNPs.Crystal.propPostMake"><code class="docutils literal notranslate"><span class="pre">Crystal.propPostMake()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.centerTitle"><code class="docutils literal notranslate"><span class="pre">centerTitle()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.centertxt"><code class="docutils literal notranslate"><span class="pre">centertxt()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.color"><code class="docutils literal notranslate"><span class="pre">color</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.color.BLACK"><code class="docutils literal notranslate"><span class="pre">color.BLACK</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.color.BLUE"><code class="docutils literal notranslate"><span class="pre">color.BLUE</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.color.BOLD"><code class="docutils literal notranslate"><span class="pre">color.BOLD</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.color.CYAN"><code class="docutils literal notranslate"><span class="pre">color.CYAN</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.color.DARKCYAN"><code class="docutils literal notranslate"><span class="pre">color.DARKCYAN</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.color.DARKGRAY"><code class="docutils literal notranslate"><span class="pre">color.DARKGRAY</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.color.GREEN"><code class="docutils literal notranslate"><span class="pre">color.GREEN</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.color.LIGHTGRAY"><code class="docutils literal notranslate"><span class="pre">color.LIGHTGRAY</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.color.OFF"><code class="docutils literal notranslate"><span class="pre">color.OFF</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.color.PURPLE"><code class="docutils literal notranslate"><span class="pre">color.PURPLE</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.color.RED"><code class="docutils literal notranslate"><span class="pre">color.RED</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.color.WHITE"><code class="docutils literal notranslate"><span class="pre">color.WHITE</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.color.YELLOW"><code class="docutils literal notranslate"><span class="pre">color.YELLOW</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.end"><code class="docutils literal notranslate"><span class="pre">end()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.fg"><code class="docutils literal notranslate"><span class="pre">fg</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.fg.BLACK"><code class="docutils literal notranslate"><span class="pre">fg.BLACK</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.fg.BLUE"><code class="docutils literal notranslate"><span class="pre">fg.BLUE</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.fg.CYAN"><code class="docutils literal notranslate"><span class="pre">fg.CYAN</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.fg.DARKCYAN"><code class="docutils literal notranslate"><span class="pre">fg.DARKCYAN</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.fg.DARKGRAY"><code class="docutils literal notranslate"><span class="pre">fg.DARKGRAY</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.fg.GREEN"><code class="docutils literal notranslate"><span class="pre">fg.GREEN</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.fg.LIGHTGRAY"><code class="docutils literal notranslate"><span class="pre">fg.LIGHTGRAY</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.fg.OFF"><code class="docutils literal notranslate"><span class="pre">fg.OFF</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.fg.PURPLE"><code class="docutils literal notranslate"><span class="pre">fg.PURPLE</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.fg.RED"><code class="docutils literal notranslate"><span class="pre">fg.RED</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.fg.WHITE"><code class="docutils literal notranslate"><span class="pre">fg.WHITE</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.fg.YELLOW"><code class="docutils literal notranslate"><span class="pre">fg.YELLOW</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.hl"><code class="docutils literal notranslate"><span class="pre">hl</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.hl.BLINK"><code class="docutils literal notranslate"><span class="pre">hl.BLINK</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.hl.BOLD"><code class="docutils literal notranslate"><span class="pre">hl.BOLD</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.hl.ITALIC"><code class="docutils literal notranslate"><span class="pre">hl.ITALIC</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.hl.OFF"><code class="docutils literal notranslate"><span class="pre">hl.OFF</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.hl.UNDERL"><code class="docutils literal notranslate"><span class="pre">hl.UNDERL</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.hl.blink"><code class="docutils literal notranslate"><span class="pre">hl.blink</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.hl.bold"><code class="docutils literal notranslate"><span class="pre">hl.bold</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.hl.italic"><code class="docutils literal notranslate"><span class="pre">hl.italic</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.hl.underl"><code class="docutils literal notranslate"><span class="pre">hl.underl</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#geometric-nanoparticle-shapes">Geometric Nanoparticle Shapes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-pyNanoMatBuilder.platonicNPs">platonicNPs.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.PlatonicNP"><code class="docutils literal notranslate"><span class="pre">PlatonicNP</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.PlatonicNP.propPostMake"><code class="docutils literal notranslate"><span class="pre">PlatonicNP.propPostMake()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.init"><code class="docutils literal notranslate"><span class="pre">init()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#subpackages">Subpackages</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.resources.html">pyNanoMatBuilder.resources package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh"><code class="docutils literal notranslate"><span class="pre">regfccOh</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.nAtoms"><code class="docutils literal notranslate"><span class="pre">regfccOh.nAtoms</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.nAtomsPerLayer"><code class="docutils literal notranslate"><span class="pre">regfccOh.nAtomsPerLayer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.nAtomsPerEdge"><code class="docutils literal notranslate"><span class="pre">regfccOh.nAtomsPerEdge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.interLayerDistance"><code class="docutils literal notranslate"><span class="pre">regfccOh.interLayerDistance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.jmolCrystalShape"><code class="docutils literal notranslate"><span class="pre">regfccOh.jmolCrystalShape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.cog"><code class="docutils literal notranslate"><span class="pre">regfccOh.cog</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.imageFile"><code class="docutils literal notranslate"><span class="pre">regfccOh.imageFile</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.trPlanes"><code class="docutils literal notranslate"><span class="pre">regfccOh.trPlanes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.nFaces"><code class="docutils literal notranslate"><span class="pre">regfccOh.nFaces</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.nEdges"><code class="docutils literal notranslate"><span class="pre">regfccOh.nEdges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.nVertices"><code class="docutils literal notranslate"><span class="pre">regfccOh.nVertices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.edgeLengthF"><code class="docutils literal notranslate"><span class="pre">regfccOh.edgeLengthF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.radiusCSF"><code class="docutils literal notranslate"><span class="pre">regfccOh.radiusCSF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.radiusISF"><code class="docutils literal notranslate"><span class="pre">regfccOh.radiusISF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.radiusMSF"><code class="docutils literal notranslate"><span class="pre">regfccOh.radiusMSF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.dihedralAngle"><code class="docutils literal notranslate"><span class="pre">regfccOh.dihedralAngle</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.interShellF"><code class="docutils literal notranslate"><span class="pre">regfccOh.interShellF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.nAtomsF"><code class="docutils literal notranslate"><span class="pre">regfccOh.nAtomsF()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.nAtomsPerShellAnalytic"><code class="docutils literal notranslate"><span class="pre">regfccOh.nAtomsPerShellAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.nAtomsPerShellCumulativeAnalytic"><code class="docutils literal notranslate"><span class="pre">regfccOh.nAtomsPerShellCumulativeAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.nAtomsAnalytic"><code class="docutils literal notranslate"><span class="pre">regfccOh.nAtomsAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.edgeLength"><code class="docutils literal notranslate"><span class="pre">regfccOh.edgeLength()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.radiusCircumscribedSphere"><code class="docutils literal notranslate"><span class="pre">regfccOh.radiusCircumscribedSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.radiusInscribedSphere"><code class="docutils literal notranslate"><span class="pre">regfccOh.radiusInscribedSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.radiusMidSphere"><code class="docutils literal notranslate"><span class="pre">regfccOh.radiusMidSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.area"><code class="docutils literal notranslate"><span class="pre">regfccOh.area()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.volume"><code class="docutils literal notranslate"><span class="pre">regfccOh.volume()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.MakeVertices"><code class="docutils literal notranslate"><span class="pre">regfccOh.MakeVertices()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.coords"><code class="docutils literal notranslate"><span class="pre">regfccOh.coords()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.sasview_dims"><code class="docutils literal notranslate"><span class="pre">regfccOh.sasview_dims()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.prop"><code class="docutils literal notranslate"><span class="pre">regfccOh.prop()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#submodules">Submodules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#module-pyNanoMatBuilder.TEM_creator">pyNanoMatBuilder.TEM_creator module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMImage"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMImage</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMStructure"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMStructure</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.TEM_creator.create_csv"><code class="docutils literal notranslate"><span class="pre">create_csv()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco"><code class="docutils literal notranslate"><span class="pre">regIco</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.nAtoms"><code class="docutils literal notranslate"><span class="pre">regIco.nAtoms</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.nAtomsPerShell"><code class="docutils literal notranslate"><span class="pre">regIco.nAtomsPerShell</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.interShellDistance"><code class="docutils literal notranslate"><span class="pre">regIco.interShellDistance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.jmolCrystalShape"><code class="docutils literal notranslate"><span class="pre">regIco.jmolCrystalShape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.imageFile"><code class="docutils literal notranslate"><span class="pre">regIco.imageFile</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.trPlanes"><code class="docutils literal notranslate"><span class="pre">regIco.trPlanes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.nFaces"><code class="docutils literal notranslate"><span class="pre">regIco.nFaces</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.nEdges"><code class="docutils literal notranslate"><span class="pre">regIco.nEdges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.nVertices"><code class="docutils literal notranslate"><span class="pre">regIco.nVertices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.phi"><code class="docutils literal notranslate"><span class="pre">regIco.phi</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.edgeLengthF"><code class="docutils literal notranslate"><span class="pre">regIco.edgeLengthF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.radiusCSF"><code class="docutils literal notranslate"><span class="pre">regIco.radiusCSF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.interShellF"><code class="docutils literal notranslate"><span class="pre">regIco.interShellF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.radiusISF"><code class="docutils literal notranslate"><span class="pre">regIco.radiusISF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.nAtomsF"><code class="docutils literal notranslate"><span class="pre">regIco.nAtomsF()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.nAtomsPerShellAnalytic"><code class="docutils literal notranslate"><span class="pre">regIco.nAtomsPerShellAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.nAtomsPerShellCumulativeAnalytic"><code class="docutils literal notranslate"><span class="pre">regIco.nAtomsPerShellCumulativeAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.nAtomsAnalytic"><code class="docutils literal notranslate"><span class="pre">regIco.nAtomsAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.edgeLength"><code class="docutils literal notranslate"><span class="pre">regIco.edgeLength()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.radiusCircumscribedSphere"><code class="docutils literal notranslate"><span class="pre">regIco.radiusCircumscribedSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.radiusInscribedSphere"><code class="docutils literal notranslate"><span class="pre">regIco.radiusInscribedSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.area"><code class="docutils literal notranslate"><span class="pre">regIco.area()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.volume"><code class="docutils literal notranslate"><span class="pre">regIco.volume()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.MakeVertices"><code class="docutils literal notranslate"><span class="pre">regIco.MakeVertices()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.edges_to_planes"><code class="docutils literal notranslate"><span class="pre">regIco.edges_to_planes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.edges_to_planes2"><code class="docutils literal notranslate"><span class="pre">regIco.edges_to_planes2()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.coords"><code class="docutils literal notranslate"><span class="pre">regIco.coords()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regIco.prop"><code class="docutils literal notranslate"><span class="pre">regIco.prop()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#module-pyNanoMatBuilder.archimedeanNPs">pyNanoMatBuilder.archimedeanNPs module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.archimedeanNPs.ArchimedeanNP"><code class="docutils literal notranslate"><span class="pre">ArchimedeanNP</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.archimedeanNPs.fccCubo"><code class="docutils literal notranslate"><span class="pre">fccCubo</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube"><code class="docutils literal notranslate"><span class="pre">fccTrCube</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh"><code class="docutils literal notranslate"><span class="pre">fccTrOh</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd"><code class="docutils literal notranslate"><span class="pre">fccTrTd</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd"><code class="docutils literal notranslate"><span class="pre">regfccTd</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.nAtoms"><code class="docutils literal notranslate"><span class="pre">regfccTd.nAtoms</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.nAtomsPerLayer"><code class="docutils literal notranslate"><span class="pre">regfccTd.nAtomsPerLayer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.nAtomsPerEdge"><code class="docutils literal notranslate"><span class="pre">regfccTd.nAtomsPerEdge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.jmolCrystalShape"><code class="docutils literal notranslate"><span class="pre">regfccTd.jmolCrystalShape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.cog"><code class="docutils literal notranslate"><span class="pre">regfccTd.cog</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.imageFile"><code class="docutils literal notranslate"><span class="pre">regfccTd.imageFile</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.trPlanes"><code class="docutils literal notranslate"><span class="pre">regfccTd.trPlanes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.nFaces"><code class="docutils literal notranslate"><span class="pre">regfccTd.nFaces</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.nEdges"><code class="docutils literal notranslate"><span class="pre">regfccTd.nEdges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.nVertices"><code class="docutils literal notranslate"><span class="pre">regfccTd.nVertices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.edgeLengthF"><code class="docutils literal notranslate"><span class="pre">regfccTd.edgeLengthF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.heightOfPyramidF"><code class="docutils literal notranslate"><span class="pre">regfccTd.heightOfPyramidF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.radiusCSF"><code class="docutils literal notranslate"><span class="pre">regfccTd.radiusCSF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.radiusISF"><code class="docutils literal notranslate"><span class="pre">regfccTd.radiusISF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.radiusMSF"><code class="docutils literal notranslate"><span class="pre">regfccTd.radiusMSF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.fveAngle"><code class="docutils literal notranslate"><span class="pre">regfccTd.fveAngle</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.fefAngle"><code class="docutils literal notranslate"><span class="pre">regfccTd.fefAngle</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.vcvAngle"><code class="docutils literal notranslate"><span class="pre">regfccTd.vcvAngle</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.nAtomsF"><code class="docutils literal notranslate"><span class="pre">regfccTd.nAtomsF()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.nAtomsPerLayerAnalytic"><code class="docutils literal notranslate"><span class="pre">regfccTd.nAtomsPerLayerAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.nAtomsAnalytic"><code class="docutils literal notranslate"><span class="pre">regfccTd.nAtomsAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.edgeLength"><code class="docutils literal notranslate"><span class="pre">regfccTd.edgeLength()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.heightOfPyramid"><code class="docutils literal notranslate"><span class="pre">regfccTd.heightOfPyramid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.interLayerDistance"><code class="docutils literal notranslate"><span class="pre">regfccTd.interLayerDistance()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.radiusCircumscribedSphere"><code class="docutils literal notranslate"><span class="pre">regfccTd.radiusCircumscribedSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.radiusInscribedSphere"><code class="docutils literal notranslate"><span class="pre">regfccTd.radiusInscribedSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.radiusMidSphere"><code class="docutils literal notranslate"><span class="pre">regfccTd.radiusMidSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.area"><code class="docutils literal notranslate"><span class="pre">regfccTd.area()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.volume"><code class="docutils literal notranslate"><span class="pre">regfccTd.volume()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.MakeVertices"><code class="docutils literal notranslate"><span class="pre">regfccTd.MakeVertices()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.faces_to_planes"><code class="docutils literal notranslate"><span class="pre">regfccTd.faces_to_planes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.generate_tetrahelix"><code class="docutils literal notranslate"><span class="pre">regfccTd.generate_tetrahelix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.coords"><code class="docutils literal notranslate"><span class="pre">regfccTd.coords()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.prop"><code class="docutils literal notranslate"><span class="pre">regfccTd.prop()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#module-pyNanoMatBuilder.catalanNPs">pyNanoMatBuilder.catalanNPs module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.catalanNPs.CatalanNP"><code class="docutils literal notranslate"><span class="pre">CatalanNP</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.catalanNPs.bccrDD"><code class="docutils literal notranslate"><span class="pre">bccrDD</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.catalanNPs.fccdrDD"><code class="docutils literal notranslate"><span class="pre">fccdrDD</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD"><code class="docutils literal notranslate"><span class="pre">regDD</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.nAtoms"><code class="docutils literal notranslate"><span class="pre">regDD.nAtoms</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.nAtomsPerShell"><code class="docutils literal notranslate"><span class="pre">regDD.nAtomsPerShell</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.interShellDistance"><code class="docutils literal notranslate"><span class="pre">regDD.interShellDistance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.jmolCrystalShape"><code class="docutils literal notranslate"><span class="pre">regDD.jmolCrystalShape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.imageFile"><code class="docutils literal notranslate"><span class="pre">regDD.imageFile</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.trPlanes"><code class="docutils literal notranslate"><span class="pre">regDD.trPlanes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.nFaces"><code class="docutils literal notranslate"><span class="pre">regDD.nFaces</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.nEdges"><code class="docutils literal notranslate"><span class="pre">regDD.nEdges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.nVertices"><code class="docutils literal notranslate"><span class="pre">regDD.nVertices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.phi"><code class="docutils literal notranslate"><span class="pre">regDD.phi</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.edgeLengthF"><code class="docutils literal notranslate"><span class="pre">regDD.edgeLengthF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.radiusCSF"><code class="docutils literal notranslate"><span class="pre">regDD.radiusCSF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.interShellF"><code class="docutils literal notranslate"><span class="pre">regDD.interShellF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.radiusISF"><code class="docutils literal notranslate"><span class="pre">regDD.radiusISF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.nAtomsF"><code class="docutils literal notranslate"><span class="pre">regDD.nAtomsF()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.nAtomsPerShellAnalytic"><code class="docutils literal notranslate"><span class="pre">regDD.nAtomsPerShellAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.nAtomsAnalytic"><code class="docutils literal notranslate"><span class="pre">regDD.nAtomsAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.edgeLength"><code class="docutils literal notranslate"><span class="pre">regDD.edgeLength()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.radiusCircumscribedSphere"><code class="docutils literal notranslate"><span class="pre">regDD.radiusCircumscribedSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.radiusInscribedSphere"><code class="docutils literal notranslate"><span class="pre">regDD.radiusInscribedSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.area"><code class="docutils literal notranslate"><span class="pre">regDD.area()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.volume"><code class="docutils literal notranslate"><span class="pre">regDD.volume()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.MakeVertices"><code class="docutils literal notranslate"><span class="pre">regDD.MakeVertices()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.coords"><code class="docutils literal notranslate"><span class="pre">regDD.coords()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.prop"><code class="docutils literal notranslate"><span class="pre">regDD.prop()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#module-pyNanoMatBuilder.crystalNPs">pyNanoMatBuilder.crystalNPs module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.crystalNPs.Crystal"><code class="docutils literal notranslate"><span class="pre">Crystal</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube"><code class="docutils literal notranslate"><span class="pre">cube</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.nAtoms"><code class="docutils literal notranslate"><span class="pre">cube.nAtoms</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.nAtomsPerShell"><code class="docutils literal notranslate"><span class="pre">cube.nAtomsPerShell</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.nAtomsPerEdge"><code class="docutils literal notranslate"><span class="pre">cube.nAtomsPerEdge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.interLayerDistance"><code class="docutils literal notranslate"><span class="pre">cube.interLayerDistance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.jmolCrystalShape"><code class="docutils literal notranslate"><span class="pre">cube.jmolCrystalShape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.cog"><code class="docutils literal notranslate"><span class="pre">cube.cog</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.imageFile"><code class="docutils literal notranslate"><span class="pre">cube.imageFile</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.trPlanes"><code class="docutils literal notranslate"><span class="pre">cube.trPlanes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.nFaces"><code class="docutils literal notranslate"><span class="pre">cube.nFaces</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.nEdges"><code class="docutils literal notranslate"><span class="pre">cube.nEdges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.nVertices"><code class="docutils literal notranslate"><span class="pre">cube.nVertices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.edgeLengthFfcc"><code class="docutils literal notranslate"><span class="pre">cube.edgeLengthFfcc</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.edgeLengthFbcc"><code class="docutils literal notranslate"><span class="pre">cube.edgeLengthFbcc</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.radiusCSF"><code class="docutils literal notranslate"><span class="pre">cube.radiusCSF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.radiusISF"><code class="docutils literal notranslate"><span class="pre">cube.radiusISF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.nAtomsfccF"><code class="docutils literal notranslate"><span class="pre">cube.nAtomsfccF()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.nAtomsbccF"><code class="docutils literal notranslate"><span class="pre">cube.nAtomsbccF()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.nAtomsPerShellAnalytic"><code class="docutils literal notranslate"><span class="pre">cube.nAtomsPerShellAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.nAtomsPerShellCumulativeAnalytic"><code class="docutils literal notranslate"><span class="pre">cube.nAtomsPerShellCumulativeAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.nAtomsfccAnalytic"><code class="docutils literal notranslate"><span class="pre">cube.nAtomsfccAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.nAtomsbccAnalytic"><code class="docutils literal notranslate"><span class="pre">cube.nAtomsbccAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.edgeLength"><code class="docutils literal notranslate"><span class="pre">cube.edgeLength()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.latticeConstant"><code class="docutils literal notranslate"><span class="pre">cube.latticeConstant()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.radiusCircumscribedSphere"><code class="docutils literal notranslate"><span class="pre">cube.radiusCircumscribedSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.radiusInscribedSphere"><code class="docutils literal notranslate"><span class="pre">cube.radiusInscribedSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.area"><code class="docutils literal notranslate"><span class="pre">cube.area()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.volume"><code class="docutils literal notranslate"><span class="pre">cube.volume()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.coords"><code class="docutils literal notranslate"><span class="pre">cube.coords()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.prop"><code class="docutils literal notranslate"><span class="pre">cube.prop()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#module-pyNanoMatBuilder.data">pyNanoMatBuilder.data module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.data.WulffShapes"><code class="docutils literal notranslate"><span class="pre">WulffShapes</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.data.pyNMBcif"><code class="docutils literal notranslate"><span class="pre">pyNMBcif</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.data.pyNMBdata"><code class="docutils literal notranslate"><span class="pre">pyNMBdata</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.data.pyNMBimg"><code class="docutils literal notranslate"><span class="pre">pyNMBimg</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.data.pyNMBvar"><code class="docutils literal notranslate"><span class="pre">pyNMBvar</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.hollow_shapes"><code class="docutils literal notranslate"><span class="pre">hollow_shapes</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.hollow_shapes.nAtoms"><code class="docutils literal notranslate"><span class="pre">hollow_shapes.nAtoms</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.hollow_shapes.cog"><code class="docutils literal notranslate"><span class="pre">hollow_shapes.cog</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.hollow_shapes.create_hollow"><code class="docutils literal notranslate"><span class="pre">hollow_shapes.create_hollow()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#module-pyNanoMatBuilder.johnsonNPs">pyNanoMatBuilder.johnsonNPs module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.johnsonNPs.JohnsonNP"><code class="docutils literal notranslate"><span class="pre">JohnsonNP</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.johnsonNPs.epbpyM"><code class="docutils literal notranslate"><span class="pre">epbpyM</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.johnsonNPs.fcctbp"><code class="docutils literal notranslate"><span class="pre">fcctbp</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#module-pyNanoMatBuilder.make_files_remastered">pyNanoMatBuilder.make_files_remastered module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.make_files_remastered.ArchimedeansFiles"><code class="docutils literal notranslate"><span class="pre">ArchimedeansFiles</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.make_files_remastered.Catalan_Files"><code class="docutils literal notranslate"><span class="pre">Catalan_Files</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.make_files_remastered.Crystal_Files"><code class="docutils literal notranslate"><span class="pre">Crystal_Files</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.make_files_remastered.Crystals_EllipsoidsParallelepipeds"><code class="docutils literal notranslate"><span class="pre">Crystals_EllipsoidsParallelepipeds</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.make_files_remastered.Crystals_spheres"><code class="docutils literal notranslate"><span class="pre">Crystals_spheres</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.make_files_remastered.Crystals_wires"><code class="docutils literal notranslate"><span class="pre">Crystals_wires</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.make_files_remastered.Johnson_Files"><code class="docutils literal notranslate"><span class="pre">Johnson_Files</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.make_files_remastered.NPFiles"><code class="docutils literal notranslate"><span class="pre">NPFiles</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.make_files_remastered.OtherNPs_Files"><code class="docutils literal notranslate"><span class="pre">OtherNPs_Files</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.make_files_remastered.Platonic_Files"><code class="docutils literal notranslate"><span class="pre">Platonic_Files</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.make_files_remastered.PredefinedWulffFiles"><code class="docutils literal notranslate"><span class="pre">PredefinedWulffFiles</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.make_files_remastered.create_full_dataframe_from_csv_npz"><code class="docutils literal notranslate"><span class="pre">create_full_dataframe_from_csv_npz()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-pyNanoMatBuilder.archimedeanNPs">archimedeanNPs.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.ArchimedeanNP"><code class="docutils literal notranslate"><span class="pre">ArchimedeanNP</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.ArchimedeanNP.propPostMake"><code class="docutils literal notranslate"><span class="pre">ArchimedeanNP.propPostMake()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#module-pyNanoMatBuilder.otherNPs">pyNanoMatBuilder.otherNPs module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.otherNPs.fcctpt"><code class="docutils literal notranslate"><span class="pre">fcctpt</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo"><code class="docutils literal notranslate"><span class="pre">fccCubo</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.nAtoms"><code class="docutils literal notranslate"><span class="pre">fccCubo.nAtoms</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.nAtomsPerShell"><code class="docutils literal notranslate"><span class="pre">fccCubo.nAtomsPerShell</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.interShellDistance"><code class="docutils literal notranslate"><span class="pre">fccCubo.interShellDistance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.self.shape"><code class="docutils literal notranslate"><span class="pre">fccCubo.self.shape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.self.nAtoms"><code class="docutils literal notranslate"><span class="pre">fccCubo.self.nAtoms</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.self.nAtomsPerShell"><code class="docutils literal notranslate"><span class="pre">fccCubo.self.nAtomsPerShell</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.self.interShellDistance"><code class="docutils literal notranslate"><span class="pre">fccCubo.self.interShellDistance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.self.jmolCrystalShape"><code class="docutils literal notranslate"><span class="pre">fccCubo.self.jmolCrystalShape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.self.imageFile"><code class="docutils literal notranslate"><span class="pre">fccCubo.self.imageFile</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.self.trPlanes"><code class="docutils literal notranslate"><span class="pre">fccCubo.self.trPlanes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.nFaces"><code class="docutils literal notranslate"><span class="pre">fccCubo.nFaces</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.nEdges"><code class="docutils literal notranslate"><span class="pre">fccCubo.nEdges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.nVertices"><code class="docutils literal notranslate"><span class="pre">fccCubo.nVertices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.edgeLengthF"><code class="docutils literal notranslate"><span class="pre">fccCubo.edgeLengthF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.radiusCSF"><code class="docutils literal notranslate"><span class="pre">fccCubo.radiusCSF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.interShellF"><code class="docutils literal notranslate"><span class="pre">fccCubo.interShellF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.radiusISF"><code class="docutils literal notranslate"><span class="pre">fccCubo.radiusISF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.nAtomsF"><code class="docutils literal notranslate"><span class="pre">fccCubo.nAtomsF()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.nAtomsPerShellAnalytic"><code class="docutils literal notranslate"><span class="pre">fccCubo.nAtomsPerShellAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.nAtomsPerShellCumulativeAnalytic"><code class="docutils literal notranslate"><span class="pre">fccCubo.nAtomsPerShellCumulativeAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.nAtomsAnalytic"><code class="docutils literal notranslate"><span class="pre">fccCubo.nAtomsAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.edgeLength"><code class="docutils literal notranslate"><span class="pre">fccCubo.edgeLength()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.radiusCircumscribedSphere"><code class="docutils literal notranslate"><span class="pre">fccCubo.radiusCircumscribedSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.radiusInscribedSphere"><code class="docutils literal notranslate"><span class="pre">fccCubo.radiusInscribedSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.area"><code class="docutils literal notranslate"><span class="pre">fccCubo.area()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.volume"><code class="docutils literal notranslate"><span class="pre">fccCubo.volume()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.MakeVertices"><code class="docutils literal notranslate"><span class="pre">fccCubo.MakeVertices()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.coords"><code class="docutils literal notranslate"><span class="pre">fccCubo.coords()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccCubo.prop"><code class="docutils literal notranslate"><span class="pre">fccCubo.prop()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#module-pyNanoMatBuilder.platonicNPs">pyNanoMatBuilder.platonicNPs module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.platonicNPs.PlatonicNP"><code class="docutils literal notranslate"><span class="pre">PlatonicNP</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.platonicNPs.cube"><code class="docutils literal notranslate"><span class="pre">cube</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.platonicNPs.hollow_shapes"><code class="docutils literal notranslate"><span class="pre">hollow_shapes</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.platonicNPs.regDD"><code class="docutils literal notranslate"><span class="pre">regDD</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.platonicNPs.regIco"><code class="docutils literal notranslate"><span class="pre">regIco</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.platonicNPs.regfccOh"><code class="docutils literal notranslate"><span class="pre">regfccOh</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.platonicNPs.regfccTd"><code class="docutils literal notranslate"><span class="pre">regfccTd</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd"><code class="docutils literal notranslate"><span class="pre">fccTrTd</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.self.shape"><code class="docutils literal notranslate"><span class="pre">fccTrTd.self.shape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.self.nAtoms"><code class="docutils literal notranslate"><span class="pre">fccTrTd.self.nAtoms</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.self.cog"><code class="docutils literal notranslate"><span class="pre">fccTrTd.self.cog</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.self.Tdprop"><code class="docutils literal notranslate"><span class="pre">fccTrTd.self.Tdprop</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.self.interLayerDistance"><code class="docutils literal notranslate"><span class="pre">fccTrTd.self.interLayerDistance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.self.nAtomsPerEdge"><code class="docutils literal notranslate"><span class="pre">fccTrTd.self.nAtomsPerEdge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.self.jmolCrystalShape"><code class="docutils literal notranslate"><span class="pre">fccTrTd.self.jmolCrystalShape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.self.imageFile"><code class="docutils literal notranslate"><span class="pre">fccTrTd.self.imageFile</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.self.trPlanes"><code class="docutils literal notranslate"><span class="pre">fccTrTd.self.trPlanes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.nFaces3"><code class="docutils literal notranslate"><span class="pre">fccTrTd.nFaces3</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.nFaces6"><code class="docutils literal notranslate"><span class="pre">fccTrTd.nFaces6</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.nEdges"><code class="docutils literal notranslate"><span class="pre">fccTrTd.nEdges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.nVertices"><code class="docutils literal notranslate"><span class="pre">fccTrTd.nVertices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.edgeLengthF"><code class="docutils literal notranslate"><span class="pre">fccTrTd.edgeLengthF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.radiusCSF"><code class="docutils literal notranslate"><span class="pre">fccTrTd.radiusCSF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.radiusMSF"><code class="docutils literal notranslate"><span class="pre">fccTrTd.radiusMSF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.cutFromVertexAt"><code class="docutils literal notranslate"><span class="pre">fccTrTd.cutFromVertexAt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.nAtomsF"><code class="docutils literal notranslate"><span class="pre">fccTrTd.nAtomsF()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.nAtomsAnalytic"><code class="docutils literal notranslate"><span class="pre">fccTrTd.nAtomsAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.edgeLength"><code class="docutils literal notranslate"><span class="pre">fccTrTd.edgeLength()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.radiusCircumscribedSphere"><code class="docutils literal notranslate"><span class="pre">fccTrTd.radiusCircumscribedSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.radiusMidSphere"><code class="docutils literal notranslate"><span class="pre">fccTrTd.radiusMidSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.area"><code class="docutils literal notranslate"><span class="pre">fccTrTd.area()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.volume"><code class="docutils literal notranslate"><span class="pre">fccTrTd.volume()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.magicEdgeNumberOfTd2MakeATrTd"><code class="docutils literal notranslate"><span class="pre">fccTrTd.magicEdgeNumberOfTd2MakeATrTd()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.NumberOfTdEdgeAtomsValid4ATrTd"><code class="docutils literal notranslate"><span class="pre">fccTrTd.NumberOfTdEdgeAtomsValid4ATrTd()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.coords"><code class="docutils literal notranslate"><span class="pre">fccTrTd.coords()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrTd.prop"><code class="docutils literal notranslate"><span class="pre">fccTrTd.prop()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#module-pyNanoMatBuilder.utils">pyNanoMatBuilder.utils module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.AngleBetweenVV"><code class="docutils literal notranslate"><span class="pre">AngleBetweenVV()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.DrawJmol"><code class="docutils literal notranslate"><span class="pre">DrawJmol()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.EulerRotationMatrix"><code class="docutils literal notranslate"><span class="pre">EulerRotationMatrix()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.EulerRotationMol"><code class="docutils literal notranslate"><span class="pre">EulerRotationMol()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.FindInterAtomicDist"><code class="docutils literal notranslate"><span class="pre">FindInterAtomicDist()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.G"><code class="docutils literal notranslate"><span class="pre">G()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.Gstar"><code class="docutils literal notranslate"><span class="pre">Gstar()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.Inscribed_circumscribed_spheres"><code class="docutils literal notranslate"><span class="pre">Inscribed_circumscribed_spheres()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.MakeFaceCoord"><code class="docutils literal notranslate"><span class="pre">MakeFaceCoord()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.MolSym"><code class="docutils literal notranslate"><span class="pre">MolSym()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.Pt2planeSignedDistance"><code class="docutils literal notranslate"><span class="pre">Pt2planeSignedDistance()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.RAB"><code class="docutils literal notranslate"><span class="pre">RAB()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.RadiusSphereAfterV"><code class="docutils literal notranslate"><span class="pre">RadiusSphereAfterV()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.Rbetween2Points"><code class="docutils literal notranslate"><span class="pre">Rbetween2Points()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.RotationMatrixFromAxisAngle"><code class="docutils literal notranslate"><span class="pre">RotationMatrixFromAxisAngle()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.RotationMol"><code class="docutils literal notranslate"><span class="pre">RotationMol()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.Rx"><code class="docutils literal notranslate"><span class="pre">Rx()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.Ry"><code class="docutils literal notranslate"><span class="pre">Ry()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.Rz"><code class="docutils literal notranslate"><span class="pre">Rz()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.alignV1WithV2_returnR"><code class="docutils literal notranslate"><span class="pre">alignV1WithV2_returnR()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.areDirectionsOrthogonal"><code class="docutils literal notranslate"><span class="pre">areDirectionsOrthogonal()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.areDirectionsParallel"><code class="docutils literal notranslate"><span class="pre">areDirectionsParallel()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.calculateCN"><code class="docutils literal notranslate"><span class="pre">calculateCN()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.calculateTruncationPlanesFromVertices"><code class="docutils literal notranslate"><span class="pre">calculateTruncationPlanesFromVertices()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.center2cog"><code class="docutils literal notranslate"><span class="pre">center2cog()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.centerOfGravity"><code class="docutils literal notranslate"><span class="pre">centerOfGravity()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.centerToVertices"><code class="docutils literal notranslate"><span class="pre">centerToVertices()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.ciflist"><code class="docutils literal notranslate"><span class="pre">ciflist()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.convertuvwh2hkld"><code class="docutils literal notranslate"><span class="pre">convertuvwh2hkld()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.coord2xyz"><code class="docutils literal notranslate"><span class="pre">coord2xyz()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.coreSurface"><code class="docutils literal notranslate"><span class="pre">coreSurface()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.createDir"><code class="docutils literal notranslate"><span class="pre">createDir()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.create_data_csv"><code class="docutils literal notranslate"><span class="pre">create_data_csv()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.defCrystalShapeForJMol"><code class="docutils literal notranslate"><span class="pre">defCrystalShapeForJMol()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.delAtomsWithCN"><code class="docutils literal notranslate"><span class="pre">delAtomsWithCN()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.deleteElementsOfAList"><code class="docutils literal notranslate"><span class="pre">deleteElementsOfAList()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.extract_cif_info"><code class="docutils literal notranslate"><span class="pre">extract_cif_info()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.findNeighbours"><code class="docutils literal notranslate"><span class="pre">findNeighbours()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.full_diagnostics"><code class="docutils literal notranslate"><span class="pre">full_diagnostics()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.get_crystal_type"><code class="docutils literal notranslate"><span class="pre">get_crystal_type()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.get_moments_of_inertia_for_size"><code class="docutils literal notranslate"><span class="pre">get_moments_of_inertia_for_size()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.hklPlaneFitting"><code class="docutils literal notranslate"><span class="pre">hklPlaneFitting()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.imageNameWithPathway"><code class="docutils literal notranslate"><span class="pre">imageNameWithPathway()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.interPlanarSpacing"><code class="docutils literal notranslate"><span class="pre">interPlanarSpacing()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.isPlaneOrthogonal2Line"><code class="docutils literal notranslate"><span class="pre">isPlaneOrthogonal2Line()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.isPlaneParrallel2Line"><code class="docutils literal notranslate"><span class="pre">isPlaneParrallel2Line()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.kDTreeCN"><code class="docutils literal notranslate"><span class="pre">kDTreeCN()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.lattice_cart"><code class="docutils literal notranslate"><span class="pre">lattice_cart()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.listCifsOfTheDatabase"><code class="docutils literal notranslate"><span class="pre">listCifsOfTheDatabase()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.load_cif"><code class="docutils literal notranslate"><span class="pre">load_cif()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.magicNumbers"><code class="docutils literal notranslate"><span class="pre">magicNumbers()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.moi"><code class="docutils literal notranslate"><span class="pre">moi()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.moi_size"><code class="docutils literal notranslate"><span class="pre">moi_size()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.normOfV"><code class="docutils literal notranslate"><span class="pre">normOfV()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.normV"><code class="docutils literal notranslate"><span class="pre">normV()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.normal2MillerPlane"><code class="docutils literal notranslate"><span class="pre">normal2MillerPlane()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.normalizePlane"><code class="docutils literal notranslate"><span class="pre">normalizePlane()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.optimizeEMT"><code class="docutils literal notranslate"><span class="pre">optimizeEMT()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.planeAtPoint"><code class="docutils literal notranslate"><span class="pre">planeAtPoint()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.planeAtVertices"><code class="docutils literal notranslate"><span class="pre">planeAtVertices()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.planeFittingLSF"><code class="docutils literal notranslate"><span class="pre">planeFittingLSF()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.planeRotation"><code class="docutils literal notranslate"><span class="pre">planeRotation()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.plotImageInPropFunction"><code class="docutils literal notranslate"><span class="pre">plotImageInPropFunction()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.plotPalette"><code class="docutils literal notranslate"><span class="pre">plotPalette()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.point2PlaneDistance"><code class="docutils literal notranslate"><span class="pre">point2PlaneDistance()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.printNeighbours"><code class="docutils literal notranslate"><span class="pre">printNeighbours()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.print_ase_unitcell"><code class="docutils literal notranslate"><span class="pre">print_ase_unitcell()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.pyNMB_location"><code class="docutils literal notranslate"><span class="pre">pyNMB_location()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.rdf"><code class="docutils literal notranslate"><span class="pre">rdf()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.reduceHullFacets"><code class="docutils literal notranslate"><span class="pre">reduceHullFacets()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.reflection"><code class="docutils literal notranslate"><span class="pre">reflection()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.reflection_tetra"><code class="docutils literal notranslate"><span class="pre">reflection_tetra()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.remove_duplicate_atoms"><code class="docutils literal notranslate"><span class="pre">remove_duplicate_atoms()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.returnPlaneParallel2Line"><code class="docutils literal notranslate"><span class="pre">returnPlaneParallel2Line()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.returnPointsThatLieInPlanes"><code class="docutils literal notranslate"><span class="pre">returnPointsThatLieInPlanes()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.returnUnitcellData"><code class="docutils literal notranslate"><span class="pre">returnUnitcellData()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.rgb2hex"><code class="docutils literal notranslate"><span class="pre">rgb2hex()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.rotateMoltoAlignItWithAxis"><code class="docutils literal notranslate"><span class="pre">rotateMoltoAlignItWithAxis()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.rotationMolAroundAxis"><code class="docutils literal notranslate"><span class="pre">rotationMolAroundAxis()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.rotation_around_axis_through_point"><code class="docutils literal notranslate"><span class="pre">rotation_around_axis_through_point()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.saveCN4JMol"><code class="docutils literal notranslate"><span class="pre">saveCN4JMol()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.saveCoords_DrawJmol"><code class="docutils literal notranslate"><span class="pre">saveCoords_DrawJmol()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.scaleUnitCell"><code class="docutils literal notranslate"><span class="pre">scaleUnitCell()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.setdAsNegative"><code class="docutils literal notranslate"><span class="pre">setdAsNegative()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.shortestPoint2PlaneVectorDistance"><code class="docutils literal notranslate"><span class="pre">shortestPoint2PlaneVectorDistance()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.signedAngleBetweenVV"><code class="docutils literal notranslate"><span class="pre">signedAngleBetweenVV()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.timer"><code class="docutils literal notranslate"><span class="pre">timer</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.truncateAboveEachPlane"><code class="docutils literal notranslate"><span class="pre">truncateAboveEachPlane()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.truncateAbovePlanes"><code class="docutils literal notranslate"><span class="pre">truncateAbovePlanes()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.vector"><code class="docutils literal notranslate"><span class="pre">vector()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.vectorBetween2Points"><code class="docutils literal notranslate"><span class="pre">vectorBetween2Points()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.vertex"><code class="docutils literal notranslate"><span class="pre">vertex()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.vertexScaled"><code class="docutils literal notranslate"><span class="pre">vertexScaled()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.write"><code class="docutils literal notranslate"><span class="pre">write()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.utils.writexyz"><code class="docutils literal notranslate"><span class="pre">writexyz()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh"><code class="docutils literal notranslate"><span class="pre">fccTrOh</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.self.Ohprop"><code class="docutils literal notranslate"><span class="pre">fccTrOh.self.Ohprop</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.self.self.cog"><code class="docutils literal notranslate"><span class="pre">fccTrOh.self.self.cog</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.self.nAtoms"><code class="docutils literal notranslate"><span class="pre">fccTrOh.self.nAtoms</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.self.nAtomsPerEdge"><code class="docutils literal notranslate"><span class="pre">fccTrOh.self.nAtomsPerEdge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.self.interLayerDistance"><code class="docutils literal notranslate"><span class="pre">fccTrOh.self.interLayerDistance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.self.jmolCrystalShape"><code class="docutils literal notranslate"><span class="pre">fccTrOh.self.jmolCrystalShape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.self.cog"><code class="docutils literal notranslate"><span class="pre">fccTrOh.self.cog</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.self.imageFile"><code class="docutils literal notranslate"><span class="pre">fccTrOh.self.imageFile</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.self.trPlanes"><code class="docutils literal notranslate"><span class="pre">fccTrOh.self.trPlanes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.nFaces4"><code class="docutils literal notranslate"><span class="pre">fccTrOh.nFaces4</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.nFaces6"><code class="docutils literal notranslate"><span class="pre">fccTrOh.nFaces6</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.nEdges"><code class="docutils literal notranslate"><span class="pre">fccTrOh.nEdges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.nVertices"><code class="docutils literal notranslate"><span class="pre">fccTrOh.nVertices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.edgeLengthF"><code class="docutils literal notranslate"><span class="pre">fccTrOh.edgeLengthF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.radiusCSF"><code class="docutils literal notranslate"><span class="pre">fccTrOh.radiusCSF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.radiusMSF"><code class="docutils literal notranslate"><span class="pre">fccTrOh.radiusMSF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.radiusISF"><code class="docutils literal notranslate"><span class="pre">fccTrOh.radiusISF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.cutFromVertexAt"><code class="docutils literal notranslate"><span class="pre">fccTrOh.cutFromVertexAt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.nAtomsF"><code class="docutils literal notranslate"><span class="pre">fccTrOh.nAtomsF()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.nAtomsAnalytic"><code class="docutils literal notranslate"><span class="pre">fccTrOh.nAtomsAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.edgeLength"><code class="docutils literal notranslate"><span class="pre">fccTrOh.edgeLength()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.sasview_dims"><code class="docutils literal notranslate"><span class="pre">fccTrOh.sasview_dims()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.octahedron_truncated_volume"><code class="docutils literal notranslate"><span class="pre">fccTrOh.octahedron_truncated_volume()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.radiusCircumscribedSphere"><code class="docutils literal notranslate"><span class="pre">fccTrOh.radiusCircumscribedSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.radiusMidSphere"><code class="docutils literal notranslate"><span class="pre">fccTrOh.radiusMidSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.radiusInscribedSphere"><code class="docutils literal notranslate"><span class="pre">fccTrOh.radiusInscribedSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.area"><code class="docutils literal notranslate"><span class="pre">fccTrOh.area()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.volume"><code class="docutils literal notranslate"><span class="pre">fccTrOh.volume()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.magicEdgeNumberOfOh2MakeATrOh"><code class="docutils literal notranslate"><span class="pre">fccTrOh.magicEdgeNumberOfOh2MakeATrOh()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.NumberOfOhEdgeAtomsValid4ATrOh"><code class="docutils literal notranslate"><span class="pre">fccTrOh.NumberOfOhEdgeAtomsValid4ATrOh()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.coords"><code class="docutils literal notranslate"><span class="pre">fccTrOh.coords()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrOh.prop"><code class="docutils literal notranslate"><span class="pre">fccTrOh.prop()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="pyNanoMatBuilder.html#module-pyNanoMatBuilder.visualID">pyNanoMatBuilder.visualID module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.visualID.apply_css_style"><code class="docutils literal notranslate"><span class="pre">apply_css_style()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.visualID.bg"><code class="docutils literal notranslate"><span class="pre">bg</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.visualID.centerTitle"><code class="docutils literal notranslate"><span class="pre">centerTitle()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.visualID.centertxt"><code class="docutils literal notranslate"><span class="pre">centertxt()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.visualID.color"><code class="docutils literal notranslate"><span class="pre">color</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.visualID.display_md"><code class="docutils literal notranslate"><span class="pre">display_md()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.visualID.end"><code class="docutils literal notranslate"><span class="pre">end()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.visualID.fg"><code class="docutils literal notranslate"><span class="pre">fg</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.visualID.hdelay"><code class="docutils literal notranslate"><span class="pre">hdelay()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.visualID.hdelay_ms"><code class="docutils literal notranslate"><span class="pre">hdelay_ms()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.visualID.hl"><code class="docutils literal notranslate"><span class="pre">hl</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="pyNanoMatBuilder.html#pyNanoMatBuilder.visualID.init"><code class="docutils literal notranslate"><span class="pre">init()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube"><code class="docutils literal notranslate"><span class="pre">fccTrCube</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.cubeProp"><code class="docutils literal notranslate"><span class="pre">fccTrCube.cubeProp</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.trPlanes"><code class="docutils literal notranslate"><span class="pre">fccTrCube.trPlanes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.nAtomsPerEdge"><code class="docutils literal notranslate"><span class="pre">fccTrCube.nAtomsPerEdge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.cog"><code class="docutils literal notranslate"><span class="pre">fccTrCube.cog</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.self.shape"><code class="docutils literal notranslate"><span class="pre">fccTrCube.self.shape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.self.cubeProp"><code class="docutils literal notranslate"><span class="pre">fccTrCube.self.cubeProp</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.self.nAtoms"><code class="docutils literal notranslate"><span class="pre">fccTrCube.self.nAtoms</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.self.nAtomsPerEdge"><code class="docutils literal notranslate"><span class="pre">fccTrCube.self.nAtomsPerEdge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.self.interLayerDistance"><code class="docutils literal notranslate"><span class="pre">fccTrCube.self.interLayerDistance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.self.jmolCrystalShape"><code class="docutils literal notranslate"><span class="pre">fccTrCube.self.jmolCrystalShape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.self.cog"><code class="docutils literal notranslate"><span class="pre">fccTrCube.self.cog</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.self.imageFile"><code class="docutils literal notranslate"><span class="pre">fccTrCube.self.imageFile</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.self.trPlanes"><code class="docutils literal notranslate"><span class="pre">fccTrCube.self.trPlanes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.nFaces3"><code class="docutils literal notranslate"><span class="pre">fccTrCube.nFaces3</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.nFaces8"><code class="docutils literal notranslate"><span class="pre">fccTrCube.nFaces8</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.nEdges"><code class="docutils literal notranslate"><span class="pre">fccTrCube.nEdges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.nVertices"><code class="docutils literal notranslate"><span class="pre">fccTrCube.nVertices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.edgeLengthF"><code class="docutils literal notranslate"><span class="pre">fccTrCube.edgeLengthF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.radiusCSF"><code class="docutils literal notranslate"><span class="pre">fccTrCube.radiusCSF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.radiusMSF"><code class="docutils literal notranslate"><span class="pre">fccTrCube.radiusMSF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.radiusISF"><code class="docutils literal notranslate"><span class="pre">fccTrCube.radiusISF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.cutFromVertexAt"><code class="docutils literal notranslate"><span class="pre">fccTrCube.cutFromVertexAt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.nAtomsF"><code class="docutils literal notranslate"><span class="pre">fccTrCube.nAtomsF()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.nAtomsAnalytic"><code class="docutils literal notranslate"><span class="pre">fccTrCube.nAtomsAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.edgeLength"><code class="docutils literal notranslate"><span class="pre">fccTrCube.edgeLength()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.radiusCircumscribedSphere"><code class="docutils literal notranslate"><span class="pre">fccTrCube.radiusCircumscribedSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.radiusMidSphere"><code class="docutils literal notranslate"><span class="pre">fccTrCube.radiusMidSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.radiusInscribedSphere"><code class="docutils literal notranslate"><span class="pre">fccTrCube.radiusInscribedSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.area"><code class="docutils literal notranslate"><span class="pre">fccTrCube.area()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.volume"><code class="docutils literal notranslate"><span class="pre">fccTrCube.volume()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.magicEdgeNumberOfCube2MakeATrCube"><code class="docutils literal notranslate"><span class="pre">fccTrCube.magicEdgeNumberOfCube2MakeATrCube()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.NumberOfCubeEdgeAtomsValid4ATrCube"><code class="docutils literal notranslate"><span class="pre">fccTrCube.NumberOfCubeEdgeAtomsValid4ATrCube()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.coords"><code class="docutils literal notranslate"><span class="pre">fccTrCube.coords()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.prop"><code class="docutils literal notranslate"><span class="pre">fccTrCube.prop()</span></code></a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-pyNanoMatBuilder.catalanNPs">catalanNPs.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.CatalanNP"><code class="docutils literal notranslate"><span class="pre">CatalanNP</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.CatalanNP.propPostMake"><code class="docutils literal notranslate"><span class="pre">CatalanNP.propPostMake()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD"><code class="docutils literal notranslate"><span class="pre">bccrDD</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.self.shape"><code class="docutils literal notranslate"><span class="pre">bccrDD.self.shape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.self.nAtoms"><code class="docutils literal notranslate"><span class="pre">bccrDD.self.nAtoms</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.self.nAtomsPerShell"><code class="docutils literal notranslate"><span class="pre">bccrDD.self.nAtomsPerShell</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.self.interShellDistance3"><code class="docutils literal notranslate"><span class="pre">bccrDD.self.interShellDistance3</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.self.interShellDistance4"><code class="docutils literal notranslate"><span class="pre">bccrDD.self.interShellDistance4</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.self.cog"><code class="docutils literal notranslate"><span class="pre">bccrDD.self.cog</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.self.jmolCrystalShape"><code class="docutils literal notranslate"><span class="pre">bccrDD.self.jmolCrystalShape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.self.imageFile"><code class="docutils literal notranslate"><span class="pre">bccrDD.self.imageFile</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.nFaces"><code class="docutils literal notranslate"><span class="pre">bccrDD.nFaces</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.nEdges"><code class="docutils literal notranslate"><span class="pre">bccrDD.nEdges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.nVertices"><code class="docutils literal notranslate"><span class="pre">bccrDD.nVertices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.edgeLengthF"><code class="docutils literal notranslate"><span class="pre">bccrDD.edgeLengthF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.radiusCSF3rdOrderV"><code class="docutils literal notranslate"><span class="pre">bccrDD.radiusCSF3rdOrderV</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.radiusCSF4thOrderV"><code class="docutils literal notranslate"><span class="pre">bccrDD.radiusCSF4thOrderV</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.radiusISF"><code class="docutils literal notranslate"><span class="pre">bccrDD.radiusISF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.radiusMSF"><code class="docutils literal notranslate"><span class="pre">bccrDD.radiusMSF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.interShellF3"><code class="docutils literal notranslate"><span class="pre">bccrDD.interShellF3</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.interShellF4"><code class="docutils literal notranslate"><span class="pre">bccrDD.interShellF4</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.nAtomsF"><code class="docutils literal notranslate"><span class="pre">bccrDD.nAtomsF()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.nAtomsPerShellAnalytic"><code class="docutils literal notranslate"><span class="pre">bccrDD.nAtomsPerShellAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.nAtomsPerShellCumulativeAnalytic"><code class="docutils literal notranslate"><span class="pre">bccrDD.nAtomsPerShellCumulativeAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.nAtomsAnalytic"><code class="docutils literal notranslate"><span class="pre">bccrDD.nAtomsAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.edgeLength"><code class="docutils literal notranslate"><span class="pre">bccrDD.edgeLength()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.radiusCircumscribedSphere3"><code class="docutils literal notranslate"><span class="pre">bccrDD.radiusCircumscribedSphere3()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.radiusCircumscribedSphere4"><code class="docutils literal notranslate"><span class="pre">bccrDD.radiusCircumscribedSphere4()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.radiusMidSphere"><code class="docutils literal notranslate"><span class="pre">bccrDD.radiusMidSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.radiusInscribedSphere"><code class="docutils literal notranslate"><span class="pre">bccrDD.radiusInscribedSphere()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.area"><code class="docutils literal notranslate"><span class="pre">bccrDD.area()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.volume"><code class="docutils literal notranslate"><span class="pre">bccrDD.volume()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.MakeVertices"><code class="docutils literal notranslate"><span class="pre">bccrDD.MakeVertices()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.coords"><code class="docutils literal notranslate"><span class="pre">bccrDD.coords()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.bccrDD.prop"><code class="docutils literal notranslate"><span class="pre">bccrDD.prop()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD"><code class="docutils literal notranslate"><span class="pre">fccdrDD</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.self.shape"><code class="docutils literal notranslate"><span class="pre">fccdrDD.self.shape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.self.nAtoms"><code class="docutils literal notranslate"><span class="pre">fccdrDD.self.nAtoms</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.self.nAtomsPerShell"><code class="docutils literal notranslate"><span class="pre">fccdrDD.self.nAtomsPerShell</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.self.interShellDistance"><code class="docutils literal notranslate"><span class="pre">fccdrDD.self.interShellDistance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.self.jmolCrystalShape"><code class="docutils literal notranslate"><span class="pre">fccdrDD.self.jmolCrystalShape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.self.cog"><code class="docutils literal notranslate"><span class="pre">fccdrDD.self.cog</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.self.imageFile"><code class="docutils literal notranslate"><span class="pre">fccdrDD.self.imageFile</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.nFaces"><code class="docutils literal notranslate"><span class="pre">fccdrDD.nFaces</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.nEdges"><code class="docutils literal notranslate"><span class="pre">fccdrDD.nEdges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.nVertices"><code class="docutils literal notranslate"><span class="pre">fccdrDD.nVertices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.edgeLengthF"><code class="docutils literal notranslate"><span class="pre">fccdrDD.edgeLengthF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.radiusCSF"><code class="docutils literal notranslate"><span class="pre">fccdrDD.radiusCSF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.radiusCSFTB"><code class="docutils literal notranslate"><span class="pre">fccdrDD.radiusCSFTB</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.interShellF"><code class="docutils literal notranslate"><span class="pre">fccdrDD.interShellF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.interShellFTB"><code class="docutils literal notranslate"><span class="pre">fccdrDD.interShellFTB</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.nAtomsF"><code class="docutils literal notranslate"><span class="pre">fccdrDD.nAtomsF()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.nAtomsPerShellAnalytic"><code class="docutils literal notranslate"><span class="pre">fccdrDD.nAtomsPerShellAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.nAtomsPerShellCumulativeAnalytic"><code class="docutils literal notranslate"><span class="pre">fccdrDD.nAtomsPerShellCumulativeAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.nAtomsAnalytic"><code class="docutils literal notranslate"><span class="pre">fccdrDD.nAtomsAnalytic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.edgeLength"><code class="docutils literal notranslate"><span class="pre">fccdrDD.edgeLength()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.area"><code class="docutils literal notranslate"><span class="pre">fccdrDD.area()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.volume"><code class="docutils literal notranslate"><span class="pre">fccdrDD.volume()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.MakeVertices"><code class="docutils literal notranslate"><span class="pre">fccdrDD.MakeVertices()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.coords"><code class="docutils literal notranslate"><span class="pre">fccdrDD.coords()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.catalanNPs.fccdrDD.prop"><code class="docutils literal notranslate"><span class="pre">fccdrDD.prop()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-pyNanoMatBuilder.johnsonNPs">johnsonNPs.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.JohnsonNP"><code class="docutils literal notranslate"><span class="pre">JohnsonNP</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.JohnsonNP.propPostMake"><code class="docutils literal notranslate"><span class="pre">JohnsonNP.propPostMake()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp"><code class="docutils literal notranslate"><span class="pre">fcctbp</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.nAtoms"><code class="docutils literal notranslate"><span class="pre">fcctbp.nAtoms</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.nAtomsPerLayer"><code class="docutils literal notranslate"><span class="pre">fcctbp.nAtomsPerLayer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.nAtomsPerEdge"><code class="docutils literal notranslate"><span class="pre">fcctbp.nAtomsPerEdge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.interLayerDistance"><code class="docutils literal notranslate"><span class="pre">fcctbp.interLayerDistance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.fveAngle"><code class="docutils literal notranslate"><span class="pre">fcctbp.fveAngle</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.fefAngle"><code class="docutils literal notranslate"><span class="pre">fcctbp.fefAngle</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.vcvAngle"><code class="docutils literal notranslate"><span class="pre">fcctbp.vcvAngle</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.heightOfBiPyramid"><code class="docutils literal notranslate"><span class="pre">fcctbp.heightOfBiPyramid</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.imageFile"><code class="docutils literal notranslate"><span class="pre">fcctbp.imageFile</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.cog"><code class="docutils literal notranslate"><span class="pre">fcctbp.cog</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.trPlanes"><code class="docutils literal notranslate"><span class="pre">fcctbp.trPlanes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.nFaces"><code class="docutils literal notranslate"><span class="pre">fcctbp.nFaces</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.nEdges"><code class="docutils literal notranslate"><span class="pre">fcctbp.nEdges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.nVertices"><code class="docutils literal notranslate"><span class="pre">fcctbp.nVertices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.edgeLengthF"><code class="docutils literal notranslate"><span class="pre">fcctbp.edgeLengthF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.heightOfPyramidF"><code class="docutils literal notranslate"><span class="pre">fcctbp.heightOfPyramidF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.heightOfBiPyramidF"><code class="docutils literal notranslate"><span class="pre">fcctbp.heightOfBiPyramidF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.edgeLength"><code class="docutils literal notranslate"><span class="pre">fcctbp.edgeLength()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.coords"><code class="docutils literal notranslate"><span class="pre">fcctbp.coords()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.prop"><code class="docutils literal notranslate"><span class="pre">fcctbp.prop()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM"><code class="docutils literal notranslate"><span class="pre">epbpyM</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.element"><code class="docutils literal notranslate"><span class="pre">epbpyM.element</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.shape"><code class="docutils literal notranslate"><span class="pre">epbpyM.shape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.Rnn"><code class="docutils literal notranslate"><span class="pre">epbpyM.Rnn</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.sizeP"><code class="docutils literal notranslate"><span class="pre">epbpyM.sizeP</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.sizeE"><code class="docutils literal notranslate"><span class="pre">epbpyM.sizeE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.Marks"><code class="docutils literal notranslate"><span class="pre">epbpyM.Marks</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.nAtoms"><code class="docutils literal notranslate"><span class="pre">epbpyM.nAtoms</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.nAtomsPerPentagonalCap"><code class="docutils literal notranslate"><span class="pre">epbpyM.nAtomsPerPentagonalCap</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.nAtomsPerElongatedPart"><code class="docutils literal notranslate"><span class="pre">epbpyM.nAtomsPerElongatedPart</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.nAtomsPerEdgeOfPC"><code class="docutils literal notranslate"><span class="pre">epbpyM.nAtomsPerEdgeOfPC</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.nAtomsPerEdgeOfEP"><code class="docutils literal notranslate"><span class="pre">epbpyM.nAtomsPerEdgeOfEP</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.jmolCrystalShape"><code class="docutils literal notranslate"><span class="pre">epbpyM.jmolCrystalShape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.cog"><code class="docutils literal notranslate"><span class="pre">epbpyM.cog</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.interCompactPlanesDistance"><code class="docutils literal notranslate"><span class="pre">epbpyM.interCompactPlanesDistance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.imageFile"><code class="docutils literal notranslate"><span class="pre">epbpyM.imageFile</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.nFaces3"><code class="docutils literal notranslate"><span class="pre">epbpyM.nFaces3</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.nFaces4"><code class="docutils literal notranslate"><span class="pre">epbpyM.nFaces4</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.nEdgesPbpy"><code class="docutils literal notranslate"><span class="pre">epbpyM.nEdgesPbpy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.nEdgesEpbpy"><code class="docutils literal notranslate"><span class="pre">epbpyM.nEdgesEpbpy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.nVerticesPbpy"><code class="docutils literal notranslate"><span class="pre">epbpyM.nVerticesPbpy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.nVerticesEpbpy"><code class="docutils literal notranslate"><span class="pre">epbpyM.nVerticesEpbpy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.phi"><code class="docutils literal notranslate"><span class="pre">epbpyM.phi</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.edgeLengthF"><code class="docutils literal notranslate"><span class="pre">epbpyM.edgeLengthF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.heightOfPyramidF"><code class="docutils literal notranslate"><span class="pre">epbpyM.heightOfPyramidF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.interCompactPlanesF"><code class="docutils literal notranslate"><span class="pre">epbpyM.interCompactPlanesF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.magicFactorF"><code class="docutils literal notranslate"><span class="pre">epbpyM.magicFactorF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.edgeLength"><code class="docutils literal notranslate"><span class="pre">epbpyM.edgeLength()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.nAtomsPerEdgeOfPC_after_truncation"><code class="docutils literal notranslate"><span class="pre">epbpyM.nAtomsPerEdgeOfPC_after_truncation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.edgeLength_after_truncation"><code class="docutils literal notranslate"><span class="pre">epbpyM.edgeLength_after_truncation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.area"><code class="docutils literal notranslate"><span class="pre">epbpyM.area()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.volume"><code class="docutils literal notranslate"><span class="pre">epbpyM.volume()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.heightOfPyramid"><code class="docutils literal notranslate"><span class="pre">epbpyM.heightOfPyramid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.MakeVertices"><code class="docutils literal notranslate"><span class="pre">epbpyM.MakeVertices()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.truncationPlaneTuples4MarksDecahedron"><code class="docutils literal notranslate"><span class="pre">epbpyM.truncationPlaneTuples4MarksDecahedron()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.coords"><code class="docutils literal notranslate"><span class="pre">epbpyM.coords()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.prop"><code class="docutils literal notranslate"><span class="pre">epbpyM.prop()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-pyNanoMatBuilder.otherNPs">otherNPs.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt"><code class="docutils literal notranslate"><span class="pre">fcctpt</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.nFaces"><code class="docutils literal notranslate"><span class="pre">fcctpt.nFaces</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.nEdges"><code class="docutils literal notranslate"><span class="pre">fcctpt.nEdges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.nVertices"><code class="docutils literal notranslate"><span class="pre">fcctpt.nVertices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.edgeLengthF"><code class="docutils literal notranslate"><span class="pre">fcctpt.edgeLengthF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.element"><code class="docutils literal notranslate"><span class="pre">fcctpt.element</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.shape"><code class="docutils literal notranslate"><span class="pre">fcctpt.shape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.Rnn"><code class="docutils literal notranslate"><span class="pre">fcctpt.Rnn</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.nLayerTd"><code class="docutils literal notranslate"><span class="pre">fcctpt.nLayerTd</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.nLayer"><code class="docutils literal notranslate"><span class="pre">fcctpt.nLayer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.nAtoms"><code class="docutils literal notranslate"><span class="pre">fcctpt.nAtoms</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.interLayerDistance"><code class="docutils literal notranslate"><span class="pre">fcctpt.interLayerDistance</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.nAtomsPerEdge"><code class="docutils literal notranslate"><span class="pre">fcctpt.nAtomsPerEdge</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.cog"><code class="docutils literal notranslate"><span class="pre">fcctpt.cog</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.dim"><code class="docutils literal notranslate"><span class="pre">fcctpt.dim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.jmolCrystalShape"><code class="docutils literal notranslate"><span class="pre">fcctpt.jmolCrystalShape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.imageFile"><code class="docutils literal notranslate"><span class="pre">fcctpt.imageFile</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#id0"><code class="docutils literal notranslate"><span class="pre">fcctpt.nFaces</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#id1"><code class="docutils literal notranslate"><span class="pre">fcctpt.nEdges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#id2"><code class="docutils literal notranslate"><span class="pre">fcctpt.nVertices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#id3"><code class="docutils literal notranslate"><span class="pre">fcctpt.edgeLengthF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.edgeLength"><code class="docutils literal notranslate"><span class="pre">fcctpt.edgeLength()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.coords"><code class="docutils literal notranslate"><span class="pre">fcctpt.coords()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.prop"><code class="docutils literal notranslate"><span class="pre">fcctpt.prop()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.propPostMake"><code class="docutils literal notranslate"><span class="pre">fcctpt.propPostMake()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#tem-simulation-tools">TEM &amp; Simulation Tools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-pyNanoMatBuilder.TEM_creator">TEM_creator.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMStructure"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMStructure</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMStructure.find_surface_atoms"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMStructure.find_surface_atoms()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMStructure.flat_areas_atoms"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMStructure.flat_areas_atoms()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMStructure.place_NPsurface_on_grid"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMStructure.place_NPsurface_on_grid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMStructure.place_NPedge_on_grid"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMStructure.place_NPedge_on_grid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMStructure.create_NP_TEMimages"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMStructure.create_NP_TEMimages()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMImage"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMImage</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMImage.focal_spread"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMImage.focal_spread</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMImage.defocus"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMImage.defocus</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMImage.hrtem_image"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMImage.hrtem_image()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMImage.place_atoms_grid"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMImage.place_atoms_grid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMImage.display_cluster_views"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMImage.display_cluster_views()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMImage.display_combined_views"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMImage.display_combined_views()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMImage.calculate_potentials"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMImage.calculate_potentials()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMImage.create_wave_function"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMImage.create_wave_function()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMImage.perform_multislice"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMImage.perform_multislice()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMImage.calculate_ctf"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMImage.calculate_ctf()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMImage.apply_astigmatism"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMImage.apply_astigmatism()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMImage.apply_partial_coherence"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMImage.apply_partial_coherence()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMImage.apply_poisson_noise"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMImage.apply_poisson_noise()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMImage.calculate_mtf"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMImage.calculate_mtf()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMImage.generate_and_save_image"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMImage.generate_and_save_image()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.CreateHRTEMImage.generate_mask_image"><code class="docutils literal notranslate"><span class="pre">CreateHRTEMImage.generate_mask_image()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.TEM_creator.create_csv"><code class="docutils literal notranslate"><span class="pre">create_csv()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-pyNanoMatBuilder.make_files_remastered">make_files_remastered.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.NPFiles"><code class="docutils literal notranslate"><span class="pre">NPFiles</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.NPFiles.UNSUPPORTED_ELEMENTS"><code class="docutils literal notranslate"><span class="pre">NPFiles.UNSUPPORTED_ELEMENTS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.NPFiles.writexyz_generalized"><code class="docutils literal notranslate"><span class="pre">NPFiles.writexyz_generalized()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.Crystal_Files"><code class="docutils literal notranslate"><span class="pre">Crystal_Files</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.Crystal_Files.create_shapes"><code class="docutils literal notranslate"><span class="pre">Crystal_Files.create_shapes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.Crystal_Files.writexyz_generalized_crystals"><code class="docutils literal notranslate"><span class="pre">Crystal_Files.writexyz_generalized_crystals()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.PredefinedWulffFiles"><code class="docutils literal notranslate"><span class="pre">PredefinedWulffFiles</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.PredefinedWulffFiles.create_wulff_shapes"><code class="docutils literal notranslate"><span class="pre">PredefinedWulffFiles.create_wulff_shapes()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.Crystals_EllipsoidsParallelepipeds"><code class="docutils literal notranslate"><span class="pre">Crystals_EllipsoidsParallelepipeds</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.Crystals_EllipsoidsParallelepipeds.create_shapes"><code class="docutils literal notranslate"><span class="pre">Crystals_EllipsoidsParallelepipeds.create_shapes()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.Crystals_spheres"><code class="docutils literal notranslate"><span class="pre">Crystals_spheres</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.Crystals_spheres.create_shapes"><code class="docutils literal notranslate"><span class="pre">Crystals_spheres.create_shapes()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.Crystals_wires"><code class="docutils literal notranslate"><span class="pre">Crystals_wires</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.Crystals_wires.create_shapes"><code class="docutils literal notranslate"><span class="pre">Crystals_wires.create_shapes()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.Platonic_Files"><code class="docutils literal notranslate"><span class="pre">Platonic_Files</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.Platonic_Files.create_platonic"><code class="docutils literal notranslate"><span class="pre">Platonic_Files.create_platonic()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.ArchimedeansFiles"><code class="docutils literal notranslate"><span class="pre">ArchimedeansFiles</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.ArchimedeansFiles.ARCHIMEDEAN_CONFIG"><code class="docutils literal notranslate"><span class="pre">ArchimedeansFiles.ARCHIMEDEAN_CONFIG</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.Catalan_Files"><code class="docutils literal notranslate"><span class="pre">Catalan_Files</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.Catalan_Files.create_catalan"><code class="docutils literal notranslate"><span class="pre">Catalan_Files.create_catalan()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.Johnson_Files"><code class="docutils literal notranslate"><span class="pre">Johnson_Files</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.Johnson_Files.create_johnson_fcctbp"><code class="docutils literal notranslate"><span class="pre">Johnson_Files.create_johnson_fcctbp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.Johnson_Files.create_johnson_epbpyM"><code class="docutils literal notranslate"><span class="pre">Johnson_Files.create_johnson_epbpyM()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.OtherNPs_Files"><code class="docutils literal notranslate"><span class="pre">OtherNPs_Files</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.OtherNPs_Files.create_OtherNPs"><code class="docutils literal notranslate"><span class="pre">OtherNPs_Files.create_OtherNPs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.make_files_remastered.create_full_dataframe_from_csv_npz"><code class="docutils literal notranslate"><span class="pre">create_full_dataframe_from_csv_npz()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html#utilities-visualization">Utilities &amp; Visualization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-pyNanoMatBuilder.utils">utils.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.timer"><code class="docutils literal notranslate"><span class="pre">timer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.timer.hdelay_ms"><code class="docutils literal notranslate"><span class="pre">timer.hdelay_ms()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.timer.chrono_start"><code class="docutils literal notranslate"><span class="pre">timer.chrono_start()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.timer.chrono_stop"><code class="docutils literal notranslate"><span class="pre">timer.chrono_stop()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.timer.chrono_show"><code class="docutils literal notranslate"><span class="pre">timer.chrono_show()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.returnUnitcellData"><code class="docutils literal notranslate"><span class="pre">returnUnitcellData()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.print_ase_unitcell"><code class="docutils literal notranslate"><span class="pre">print_ase_unitcell()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.listCifsOfTheDatabase"><code class="docutils literal notranslate"><span class="pre">listCifsOfTheDatabase()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.scaleUnitCell"><code class="docutils literal notranslate"><span class="pre">scaleUnitCell()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.MolSym"><code class="docutils literal notranslate"><span class="pre">MolSym()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.get_crystal_type"><code class="docutils literal notranslate"><span class="pre">get_crystal_type()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.FindInterAtomicDist"><code class="docutils literal notranslate"><span class="pre">FindInterAtomicDist()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.extract_cif_info"><code class="docutils literal notranslate"><span class="pre">extract_cif_info()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.load_cif"><code class="docutils literal notranslate"><span class="pre">load_cif()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.ciflist"><code class="docutils literal notranslate"><span class="pre">ciflist()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.pyNMB_location"><code class="docutils literal notranslate"><span class="pre">pyNMB_location()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.RAB"><code class="docutils literal notranslate"><span class="pre">RAB()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.Rbetween2Points"><code class="docutils literal notranslate"><span class="pre">Rbetween2Points()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.vector"><code class="docutils literal notranslate"><span class="pre">vector()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.vectorBetween2Points"><code class="docutils literal notranslate"><span class="pre">vectorBetween2Points()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.coord2xyz"><code class="docutils literal notranslate"><span class="pre">coord2xyz()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.vertex"><code class="docutils literal notranslate"><span class="pre">vertex()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.vertexScaled"><code class="docutils literal notranslate"><span class="pre">vertexScaled()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.RadiusSphereAfterV"><code class="docutils literal notranslate"><span class="pre">RadiusSphereAfterV()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.centerOfGravity"><code class="docutils literal notranslate"><span class="pre">centerOfGravity()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.center2cog"><code class="docutils literal notranslate"><span class="pre">center2cog()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.normOfV"><code class="docutils literal notranslate"><span class="pre">normOfV()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.normV"><code class="docutils literal notranslate"><span class="pre">normV()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.centerToVertices"><code class="docutils literal notranslate"><span class="pre">centerToVertices()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.MakeFaceCoord"><code class="docutils literal notranslate"><span class="pre">MakeFaceCoord()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.moi"><code class="docutils literal notranslate"><span class="pre">moi()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.get_moments_of_inertia_for_size"><code class="docutils literal notranslate"><span class="pre">get_moments_of_inertia_for_size()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.moi_size"><code class="docutils literal notranslate"><span class="pre">moi_size()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.full_diagnostics"><code class="docutils literal notranslate"><span class="pre">full_diagnostics()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.optimizeEMT"><code class="docutils literal notranslate"><span class="pre">optimizeEMT()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.planeFittingLSF"><code class="docutils literal notranslate"><span class="pre">planeFittingLSF()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.convertuvwh2hkld"><code class="docutils literal notranslate"><span class="pre">convertuvwh2hkld()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.hklPlaneFitting"><code class="docutils literal notranslate"><span class="pre">hklPlaneFitting()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.shortestPoint2PlaneVectorDistance"><code class="docutils literal notranslate"><span class="pre">shortestPoint2PlaneVectorDistance()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.Pt2planeSignedDistance"><code class="docutils literal notranslate"><span class="pre">Pt2planeSignedDistance()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.planeAtVertices"><code class="docutils literal notranslate"><span class="pre">planeAtVertices()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.planeAtPoint"><code class="docutils literal notranslate"><span class="pre">planeAtPoint()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.normalizePlane"><code class="docutils literal notranslate"><span class="pre">normalizePlane()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.point2PlaneDistance"><code class="docutils literal notranslate"><span class="pre">point2PlaneDistance()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.AngleBetweenVV"><code class="docutils literal notranslate"><span class="pre">AngleBetweenVV()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.signedAngleBetweenVV"><code class="docutils literal notranslate"><span class="pre">signedAngleBetweenVV()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.normal2MillerPlane"><code class="docutils literal notranslate"><span class="pre">normal2MillerPlane()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.isPlaneParrallel2Line"><code class="docutils literal notranslate"><span class="pre">isPlaneParrallel2Line()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.isPlaneOrthogonal2Line"><code class="docutils literal notranslate"><span class="pre">isPlaneOrthogonal2Line()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.areDirectionsOrthogonal"><code class="docutils literal notranslate"><span class="pre">areDirectionsOrthogonal()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.areDirectionsParallel"><code class="docutils literal notranslate"><span class="pre">areDirectionsParallel()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.returnPlaneParallel2Line"><code class="docutils literal notranslate"><span class="pre">returnPlaneParallel2Line()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.planeRotation"><code class="docutils literal notranslate"><span class="pre">planeRotation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.alignV1WithV2_returnR"><code class="docutils literal notranslate"><span class="pre">alignV1WithV2_returnR()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.rotateMoltoAlignItWithAxis"><code class="docutils literal notranslate"><span class="pre">rotateMoltoAlignItWithAxis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.setdAsNegative"><code class="docutils literal notranslate"><span class="pre">setdAsNegative()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.calculateTruncationPlanesFromVertices"><code class="docutils literal notranslate"><span class="pre">calculateTruncationPlanesFromVertices()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.truncateAboveEachPlane"><code class="docutils literal notranslate"><span class="pre">truncateAboveEachPlane()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.truncateAbovePlanes"><code class="docutils literal notranslate"><span class="pre">truncateAbovePlanes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.returnPointsThatLieInPlanes"><code class="docutils literal notranslate"><span class="pre">returnPointsThatLieInPlanes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.deleteElementsOfAList"><code class="docutils literal notranslate"><span class="pre">deleteElementsOfAList()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.saveCoords_DrawJmol"><code class="docutils literal notranslate"><span class="pre">saveCoords_DrawJmol()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.DrawJmol"><code class="docutils literal notranslate"><span class="pre">DrawJmol()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.write"><code class="docutils literal notranslate"><span class="pre">write()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.writexyz"><code class="docutils literal notranslate"><span class="pre">writexyz()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.create_data_csv"><code class="docutils literal notranslate"><span class="pre">create_data_csv()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.reduceHullFacets"><code class="docutils literal notranslate"><span class="pre">reduceHullFacets()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.defCrystalShapeForJMol"><code class="docutils literal notranslate"><span class="pre">defCrystalShapeForJMol()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.saveCN4JMol"><code class="docutils literal notranslate"><span class="pre">saveCN4JMol()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.plotPalette"><code class="docutils literal notranslate"><span class="pre">plotPalette()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.rgb2hex"><code class="docutils literal notranslate"><span class="pre">rgb2hex()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.calculateCN"><code class="docutils literal notranslate"><span class="pre">calculateCN()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.delAtomsWithCN"><code class="docutils literal notranslate"><span class="pre">delAtomsWithCN()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.findNeighbours"><code class="docutils literal notranslate"><span class="pre">findNeighbours()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.printNeighbours"><code class="docutils literal notranslate"><span class="pre">printNeighbours()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.kDTreeCN"><code class="docutils literal notranslate"><span class="pre">kDTreeCN()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.reflection"><code class="docutils literal notranslate"><span class="pre">reflection()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.reflection_tetra"><code class="docutils literal notranslate"><span class="pre">reflection_tetra()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.Rx"><code class="docutils literal notranslate"><span class="pre">Rx()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.Ry"><code class="docutils literal notranslate"><span class="pre">Ry()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.Rz"><code class="docutils literal notranslate"><span class="pre">Rz()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.EulerRotationMatrix"><code class="docutils literal notranslate"><span class="pre">EulerRotationMatrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.RotationMol"><code class="docutils literal notranslate"><span class="pre">RotationMol()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.EulerRotationMol"><code class="docutils literal notranslate"><span class="pre">EulerRotationMol()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.RotationMatrixFromAxisAngle"><code class="docutils literal notranslate"><span class="pre">RotationMatrixFromAxisAngle()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.rotationMolAroundAxis"><code class="docutils literal notranslate"><span class="pre">rotationMolAroundAxis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.rotation_around_axis_through_point"><code class="docutils literal notranslate"><span class="pre">rotation_around_axis_through_point()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.magicNumbers"><code class="docutils literal notranslate"><span class="pre">magicNumbers()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.interPlanarSpacing"><code class="docutils literal notranslate"><span class="pre">interPlanarSpacing()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.lattice_cart"><code class="docutils literal notranslate"><span class="pre">lattice_cart()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.G"><code class="docutils literal notranslate"><span class="pre">G()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.Gstar"><code class="docutils literal notranslate"><span class="pre">Gstar()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.imageNameWithPathway"><code class="docutils literal notranslate"><span class="pre">imageNameWithPathway()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.plotImageInPropFunction"><code class="docutils literal notranslate"><span class="pre">plotImageInPropFunction()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.coreSurface"><code class="docutils literal notranslate"><span class="pre">coreSurface()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.rdf"><code class="docutils literal notranslate"><span class="pre">rdf()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.createDir"><code class="docutils literal notranslate"><span class="pre">createDir()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.Inscribed_circumscribed_spheres"><code class="docutils literal notranslate"><span class="pre">Inscribed_circumscribed_spheres()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.remove_duplicate_atoms"><code class="docutils literal notranslate"><span class="pre">remove_duplicate_atoms()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html#module-pyNanoMatBuilder.visualID">visualID.py</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.fg"><code class="docutils literal notranslate"><span class="pre">fg</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.fg.PURPLE"><code class="docutils literal notranslate"><span class="pre">fg.PURPLE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.fg.CYAN"><code class="docutils literal notranslate"><span class="pre">fg.CYAN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.fg.DARKCYAN"><code class="docutils literal notranslate"><span class="pre">fg.DARKCYAN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.fg.BLUE"><code class="docutils literal notranslate"><span class="pre">fg.BLUE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.fg.GREEN"><code class="docutils literal notranslate"><span class="pre">fg.GREEN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.fg.YELLOW"><code class="docutils literal notranslate"><span class="pre">fg.YELLOW</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.fg.RED"><code class="docutils literal notranslate"><span class="pre">fg.RED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.fg.LIGHTGRAY"><code class="docutils literal notranslate"><span class="pre">fg.LIGHTGRAY</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.fg.DARKGRAY"><code class="docutils literal notranslate"><span class="pre">fg.DARKGRAY</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.fg.BLACK"><code class="docutils literal notranslate"><span class="pre">fg.BLACK</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.fg.WHITE"><code class="docutils literal notranslate"><span class="pre">fg.WHITE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.fg.OFF"><code class="docutils literal notranslate"><span class="pre">fg.OFF</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.hl"><code class="docutils literal notranslate"><span class="pre">hl</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.hl.BLINK"><code class="docutils literal notranslate"><span class="pre">hl.BLINK</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.hl.blink"><code class="docutils literal notranslate"><span class="pre">hl.blink</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.hl.BOLD"><code class="docutils literal notranslate"><span class="pre">hl.BOLD</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.hl.bold"><code class="docutils literal notranslate"><span class="pre">hl.bold</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.hl.UNDERL"><code class="docutils literal notranslate"><span class="pre">hl.UNDERL</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.hl.underl"><code class="docutils literal notranslate"><span class="pre">hl.underl</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.hl.ITALIC"><code class="docutils literal notranslate"><span class="pre">hl.ITALIC</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.hl.italic"><code class="docutils literal notranslate"><span class="pre">hl.italic</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.hl.OFF"><code class="docutils literal notranslate"><span class="pre">hl.OFF</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.bg"><code class="docutils literal notranslate"><span class="pre">bg</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.bg.DARKRED"><code class="docutils literal notranslate"><span class="pre">bg.DARKRED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.bg.DARKREDB"><code class="docutils literal notranslate"><span class="pre">bg.DARKREDB</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.bg.LIGHTRED"><code class="docutils literal notranslate"><span class="pre">bg.LIGHTRED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.bg.LIGHTREDB"><code class="docutils literal notranslate"><span class="pre">bg.LIGHTREDB</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.bg.LIGHTYELLOW"><code class="docutils literal notranslate"><span class="pre">bg.LIGHTYELLOW</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.bg.LIGHTYELLOWB"><code class="docutils literal notranslate"><span class="pre">bg.LIGHTYELLOWB</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.bg.LIGHTGREEN"><code class="docutils literal notranslate"><span class="pre">bg.LIGHTGREEN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.bg.LIGHTGREENB"><code class="docutils literal notranslate"><span class="pre">bg.LIGHTGREENB</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.bg.LIGHTBLUE"><code class="docutils literal notranslate"><span class="pre">bg.LIGHTBLUE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.bg.LIGHTBLUEB"><code class="docutils literal notranslate"><span class="pre">bg.LIGHTBLUEB</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.bg.OFF"><code class="docutils literal notranslate"><span class="pre">bg.OFF</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.color"><code class="docutils literal notranslate"><span class="pre">color</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.color.PURPLE"><code class="docutils literal notranslate"><span class="pre">color.PURPLE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.color.CYAN"><code class="docutils literal notranslate"><span class="pre">color.CYAN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.color.DARKCYAN"><code class="docutils literal notranslate"><span class="pre">color.DARKCYAN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.color.BLUE"><code class="docutils literal notranslate"><span class="pre">color.BLUE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.color.GREEN"><code class="docutils literal notranslate"><span class="pre">color.GREEN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.color.YELLOW"><code class="docutils literal notranslate"><span class="pre">color.YELLOW</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.color.RED"><code class="docutils literal notranslate"><span class="pre">color.RED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.color.LIGHTGRAY"><code class="docutils literal notranslate"><span class="pre">color.LIGHTGRAY</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.color.DARKGRAY"><code class="docutils literal notranslate"><span class="pre">color.DARKGRAY</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.color.BLACK"><code class="docutils literal notranslate"><span class="pre">color.BLACK</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.color.WHITE"><code class="docutils literal notranslate"><span class="pre">color.WHITE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.color.BOLD"><code class="docutils literal notranslate"><span class="pre">color.BOLD</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.color.OFF"><code class="docutils literal notranslate"><span class="pre">color.OFF</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.apply_css_style"><code class="docutils literal notranslate"><span class="pre">apply_css_style()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.display_md"><code class="docutils literal notranslate"><span class="pre">display_md()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.hdelay"><code class="docutils literal notranslate"><span class="pre">hdelay()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.hdelay_ms"><code class="docutils literal notranslate"><span class="pre">hdelay_ms()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.init"><code class="docutils literal notranslate"><span class="pre">init()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.end"><code class="docutils literal notranslate"><span class="pre">end()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.centerTitle"><code class="docutils literal notranslate"><span class="pre">centerTitle()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.visualID.centertxt"><code class="docutils literal notranslate"><span class="pre">centertxt()</span></code></a></li>
 </ul>
 </li>
 </ul>

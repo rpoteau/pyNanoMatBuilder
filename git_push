@@ -39,11 +39,12 @@ fi
 # --- NEW DOCUMENTATION SECTION ---
 echo "---------------------------------------------------------------"
 echo "📚 Updating API Documentation (sphinx-apidoc)"
-# -f force overwrite, -M modules at top
-sphinx-apidoc -f -M -o docs/source/ ./pyNanoMatBuilder/
+# REMOVED: sphinx-apidoc (To prevent overwriting custom .rst files)
+# sphinx-apidoc -f -M -o docs/source/ ./pyNanoMatBuilder/
 
 echo "🏗️  Building HTML Documentation"
 cd docs
+make clean
 make html
 cd ..
 # ---------------------------------
