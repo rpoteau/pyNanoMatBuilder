@@ -1,5 +1,6 @@
+# External dependencies
+
 import sys
-import tkinter
 import os
 import gzip
 from pathlib import Path
@@ -8,17 +9,7 @@ import importlib
 
 import numpy as np
 import pandas as pd
-import visualID as vID
-from visualID import  fg, hl, bg
 
-from pyNanoMatBuilder import crystalNPs as cyNP
-from pyNanoMatBuilder import platonicNPs as pNP
-from pyNanoMatBuilder import archimedeanNPs as aNP
-from pyNanoMatBuilder import catalanNPs as cNP
-from pyNanoMatBuilder import johnsonNPs as jNP
-from pyNanoMatBuilder import otherNPs as oNP
-from pyNanoMatBuilder import utils as pyNMBu
-from pyNanoMatBuilder import data
 import abtem
 
 from ase import io
@@ -33,6 +24,18 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 import math
 
+# Internal Relative Imports
+from .visualID import fg, hl, bg
+from . import visualID as vID
+
+from . import crystalNPs as cyNP
+from . import platonicNPs as pNP
+from . import archimedeanNPs as aNP
+from . import catalanNPs as cNP
+from . import johnsonNPs as jNP
+from . import otherNPs as oNP
+from . import utils as pyNMBu
+from . import data
 
 class CreateHRTEMStructure:
     """
@@ -44,37 +47,48 @@ class CreateHRTEMStructure:
     for explanations.
 
     Additional Notes:
-    - The supported nanoparticle shapes include: Wulff constructions: cube, octahedron, cuboctahedron, dodecahedron, 
-      spheroids, and their truncated versions
-    - The NPs are laying on  flat areas of the carbon substrate.
-    - The name of the output XYZ files is : {element}_{structure}_{form}_{counter}.xyz
-    - The name of the output PNG files is : {element}_{structure}_{form}_{xyz_counter}_{microscope_counter}.png
-    - Orientation (surface/edge), angles and size metadata are stored in CSV files.
-    - The NPs are created using the crystalNPs class.
-    - Files are created for each NP surface plane and each carbon grid flat surface.
-    - A distance tolerance between the NP and the grid can be choosen by the user.
+        - The supported nanoparticle shapes include: Wulff constructions: cube, octahedron, cuboctahedron, dodecahedron, 
+          spheroids, and their truncated versions
+        - The NPs are laying on  flat areas of the carbon substrate.
+        - The name of the output XYZ files is : {element}_{structure}_{form}_{counter}.xyz
+        - The name of the output PNG files is : {element}_{structure}_{form}_{xyz_counter}_{microscope_counter}.png
+        - Orientation (surface/edge), angles and size metadata are stored in CSV files.
+        - The NPs are created using the crystalNPs class.
+        - Files are created for each NP surface plane and each carbon grid flat surface.
+        - A distance tolerance between the NP and the grid can be choosen by the user.
     
     """
 
     def __init__(self, path, xyz_gz_file, cif_data, wulff_shapes, 
                  nRot, sizes, min_size : float=0, max_size: float=50, tolerance: int=3, noOutput:bool = True):
-      
 
         """
-        Initialize the class with CIF data, Wulff shapes information and size, and the tolerance distance between the NP and the carbon grid.
-            Args:
-        path (str) : Path that will contain the output XYZ files.
-        xyz_gz_file (str): Path to the gzipped (.gz) XYZ file containing atomic coordinates of the carbon substrate.
-        cif_data (dataframe) : the CIF of the compounds.
-        wulff_shapes (dataframe): the Wulff shapes and their informations.
-        nRot (int): Number of rotation of the NP laying on its surface along z (angle = 360/nRot)
-        sizes (array-like): Array of the sizes of the nanoparticles.
-        min_size (float, optional): Minimal size for the NPs, equals to the diameter of the circumscribed sphere, equals 0 nm by default.
-        max_size (float, optional): Maximal size for the NPs, equals to the diameter of the circumscribed sphere, equals 50 nm by default.
-        tolerance (float, optional):  Tolerance distance between the NP and the carbon grid, be careful, if too small, chemical bonds appear in the interface.
-        noOutput (bool): if bool=False: details of the files
-            Methods:
-        self.create_NP_TEMimages(tolerance, noOutput,min_size, max_size, nRot,path,xyz_gz_file)
+        Initialize the class with CIF data, Wulff shapes information and size, 
+        and the tolerance distance between the NP and the carbon grid.
+    
+        Args:
+            path (str): Path that will contain the output XYZ files.
+            xyz_gz_file (str): Path to the gzipped (.gz) XYZ file containing 
+                atomic coordinates of the carbon substrate.
+            cif_data (pd.DataFrame): The CIF data of the compounds.
+            wulff_shapes (pd.DataFrame): The Wulff shapes and their informations.
+            nRot (int): Number of rotations of the NP laying on its surface 
+                along z (angle = 360/nRot).
+            sizes (array_like): Array of the sizes of the nanoparticles.
+            min_size (float, optional): Minimal size for the NPs, equals to the 
+                diameter of the circumscribed sphere. Defaults to 0 nm.
+            max_size (float, optional): Maximal size for the NPs, equals to the 
+                diameter of the circumscribed sphere. Defaults to 50 nm.
+            tolerance (float, optional): Tolerance distance between the NP and 
+                the carbon grid. Be careful: if too small, chemical bonds 
+                appear in the interface. Defaults to 2.0.
+            noOutput (bool): If False, prints details of the generated files.
+    
+        Note:
+            This class utilizes the internal method 
+            :meth:`self.create_NP_TEMimages` using the provided parameters 
+            (tolerance, noOutput, min_size, max_size, nRot, path, xyz_gz_file) 
+            to process the nanoparticle images.
         """
         self.path = path
         self.xyz_gz_file = Path(xyz_gz_file)
@@ -99,28 +113,45 @@ class CreateHRTEMStructure:
     def find_surface_atoms(self,xyz_gz_file, grid_size=2, z_tolerance=6):
         """
         Identify surface atoms from a compressed XYZ file using a grid-based method.
-            Args:
-        xyz_gz_file (str): Path  to the gzipped (.gz) XYZ file containing atomic coordinates of the carbon substrate.
-        grid_size : float Size of the xy-grid cells in angstroms, used to discretize the xy-plane. Smaller grid size results in finer surface resolution, larger grid size is coarser. 
-        z_tolerance : float Maximum allowed vertical distance from global maximum z to consider an atom as a surface atom.
-            Note:
-        If some xy-grid cells do not contain any atoms near the surface (for instance due to vertical gaps or columns), 
-        the algorithm might select atoms located deep within the material. The `z_tolerance` parameter ensures that only 
-        atoms close enough to the global maximum z-value are considered, thus preventing deep internal atoms from being mistakenly identified as surface atoms.
-            Returns:
-        Two files in a subdirectory named 'output_xyz':
-        - `<original_filename>_surface.xyz`: 
-            XYZ file copy where surface carbon atoms are replaced by oxygen atoms ('O') for visualization purposes.
-        - `<original_filename>_surface_atoms.txt`:
-            Text file listing indices (1-based) of atoms identified as surface atoms.
-            Procedure:
-        1. Reads atomic coordinates from the gzipped XYZ file.
-        2. Defines a regular xy-grid over the atomic coordinates.
-        3. Identifies the topmost atom (maximum z-coordinate) in each grid cell, only if close enough to the global maximum z.
-        4. Marks these atoms as surface atoms and replaces their type with 'O'.
-        5. Saves the modified XYZ file and a text file listing surface atom indices.
-            Example:
-        find_surface_atoms('path/to/file.xyz.gz', 'path/to/output_directory', grid_size=2.0, z_tolerance=5.0)
+    
+        Args:
+            xyz_gz_file (str): Path to the gzipped (.gz) XYZ file containing 
+                atomic coordinates of the carbon substrate.
+            grid_size (float, optional): Size of the xy-grid cells in Angstroms, 
+                used to discretize the xy-plane. Smaller grid size results in 
+                finer surface resolution, larger grid size is coarser. 
+                Defaults to 2.
+            z_tolerance (float, optional): Maximum allowed vertical distance from 
+                global maximum z to consider an atom as a surface atom. 
+                Defaults to 6.
+    
+        Returns:
+            None: Generates two files in a subdirectory named 'output_xyz':
+                * **<original_filename>_surface.xyz**: XYZ file copy where surface 
+                  carbon atoms are replaced by oxygen atoms ('O') for 
+                  visualization purposes.
+                * **<original_filename>_surface_atoms.txt**: Text file listing 
+                  indices (1-based) of atoms identified as surface atoms.
+    
+        Note:
+            If some xy-grid cells do not contain any atoms near the surface 
+            (for instance due to vertical gaps or columns), the algorithm might 
+            select atoms located deep within the material. The `z_tolerance` 
+            parameter ensures that only atoms close enough to the global maximum 
+            z-value are considered, preventing deep internal atoms from being 
+            mistakenly identified as surface atoms.
+    
+        Procedure:
+            1. Reads atomic coordinates from the gzipped XYZ file.
+            2. Defines a regular xy-grid over the atomic coordinates.
+            3. Identifies the topmost atom (maximum z-coordinate) in each grid cell, 
+               only if close enough to the global maximum z.
+            4. Marks these atoms as surface atoms and replaces their type with 'O'.
+            5. Saves the modified XYZ file and a text file listing surface 
+               atom indices.
+    
+        Example:
+            >>> find_surface_atoms('file.xyz.gz', grid_size=2.0, z_tolerance=5.0)
         """
 
         with gzip.open(xyz_gz_file, 'rt', encoding='utf-8' ) as f:
@@ -166,25 +197,35 @@ class CreateHRTEMStructure:
     
     def flat_areas_atoms(self,xyz_gz_file, surface_indices, diameter_nm=2, min_cluster_span=20, max_z_variation=5, anisotropy_threshold= 1.1, overlap_tolerance=0.2):
         """
-        Identify candidate grafting sites for a nanoparticle of given diameter using a sliding grid over the xy-plane.
-        Each candidate cluster must:
-        - Contain at least two atoms,
-        - Cover a minimum lateral spatial extent (min_cluster_span),
-        - Remain sufficiently flat (within max_z_variation in the z direction),
-        - Be reasonably isotropic in xy (to avoid long narrow stripes).
-      
-            Args:
-        xyz_gz_file : Path  to the gzipped (.gz) XYZ file containing atomic coordinates of the carbon substrate.
-        surface_indices : list of int
-            List of surface atom indices (0-based) to consider for clustering.
-        diameter_nm : float Diameter of the nanoparticle (in nanometers), used to define the size of sliding xy grid cells. (1 nm = 10 Å)
-        min_cluster_span : floatMinimum lateral spatial extent (in Å) required between atoms in a cluster (in xy-plane).Prevents selecting groups that are too small to accommodate the NP laterally.
-        max_z_variation : float Maximum allowed difference in z-coordinates (in Å) within a cluster.Ensures that the candidate site is sufficiently flat.
-        anisotropy_threshold : float Maximum allowed ratio between std(x) and std(y) (or vice versa) in the cluster.Rejects elongated, anisotropic clusters.
+        Identify candidate grafting sites for a nanoparticle of given diameter 
+        using a sliding grid over the xy-plane.
     
-            Returns
-        accepted_cluster_coords (list): List of the coordinates of the substrate flat area.
-
+        Each candidate cluster must satisfy the following criteria:
+            * Contain at least two atoms.
+            * Cover a minimum lateral spatial extent (min_cluster_span).
+            * Remain sufficiently flat (within max_z_variation in the z direction).
+            * Be reasonably isotropic in xy (to avoid long narrow stripes).
+    
+        Args:
+            xyz_gz_file (str): Path to the gzipped (.gz) XYZ file containing 
+                atomic coordinates of the carbon substrate.
+            surface_indices (list of int): List of surface atom indices (0-based) 
+                to consider for clustering.
+            diameter_nm (float): Diameter of the nanoparticle (in nanometers), 
+                used to define the size of sliding xy grid cells (1 nm = 10 Å).
+            min_cluster_span (float): Minimum lateral spatial extent (in Å) 
+                required between atoms in a cluster (in xy-plane). Prevents 
+                selecting groups that are too small to accommodate the NP laterally.
+            max_z_variation (float): Maximum allowed difference in z-coordinates 
+                (in Å) within a cluster. Ensures that the candidate site is 
+                sufficiently flat.
+            anisotropy_threshold (float): Maximum allowed ratio between std(x) 
+                and std(y) (or vice versa) in the cluster. Rejects elongated, 
+                anisotropic clusters.
+    
+        Returns:
+            list: A list containing the coordinates (np.ndarray) of the 
+            accepted substrate flat areas.
         """
         import numpy as np
         from pathlib import Path
@@ -307,22 +348,33 @@ class CreateHRTEMStructure:
     def place_NPsurface_on_grid(self, path, xyz_gz_file, surface_indices,tolerance,instanceWulff,surfaces_indices, element, structure, form, nRot, number, noOutput, circumsphere_diameter):
 
         """
-        Creates XYZ files of NPs laying on one of their surface on a carbon grid.
-        the interface NP/carbon substrate files, the NP laying on its surface facet.
-        Initialize the class with CIF data, Wulff shapes information and size, and the tolerance distance between the NP and the carbon grid.
-            Args:
-        xyz_gz_file (str) : Path  to the gzipped (.gz) XYZ file containing atomic coordinates of the carbon substrate.
-        tolerance (float, optional):  Tolerance distance between the NP and the carbon grid, be careful, if too small, chemical bonds appear in the interface.
-        instanceWulff(class instance): Instance of the crystalNPs to create the Wulff NP.
-        element (str): Compound elements, defined in create_NP_TEMimages()
-        structure (str): Lattice, defined in create_NP_TEMimages()
-        form (str): Wulff form,  defined in create_NP_TEMimages()
-        nRot (int): Number of rotation of the NP along z (angle = 360/nRot)
-        number (int): Index for the size, defined in create_NP_TEMimages()
-        
-            Returns:
-        The XYZ files for each NPs (each compounds and sizes) laying on one of their surfaces on the carbon grid.
-        
+        Create XYZ files of NPs laying on one of their surfaces on a carbon grid.
+    
+        This function generates the interface between the nanoparticle and the carbon 
+        substrate, positioning the nanoparticle so it lays flat on its surface facet.
+    
+        Args:
+            xyz_gz_file (str): Path to the gzipped (.gz) XYZ file containing 
+                atomic coordinates of the carbon substrate.
+            tolerance (float, optional): Tolerance distance between the NP and 
+                the carbon grid. Be careful: if too small, artificial chemical 
+                bonds may appear at the interface.
+            instanceWulff (object): Instance of the crystalNPs class used to 
+                create the Wulff nanoparticle.
+            element (str): Compound elements, as defined in 
+                :meth:`create_NP_TEMimages`.
+            structure (str): Lattice type, as defined in 
+                :meth:`create_NP_TEMimages`.
+            form (str): Wulff form/shape, as defined in 
+                :meth:`create_NP_TEMimages`.
+            nRot (int): Number of rotations of the NP along the z-axis 
+                (rotation angle = 360/nRot).
+            number (int): Index for the nanoparticle size, as defined in 
+                :meth:`create_NP_TEMimages`.
+    
+        Returns:
+            None: Generates XYZ files for each compound and size, representing 
+            the nanoparticle laying on the carbon grid.
         """
 
         # 1. The NP surface
@@ -426,25 +478,41 @@ class CreateHRTEMStructure:
     def place_NPedge_on_grid(self, path,xyz_gz_file,surface_indices,tolerance,instanceWulff,surfaces_indices, element, structure, form, nRot, number, noOutput, circumsphere_diameter):
 
         """
-        Creates XYZ files of the NPs laying on one of their edges on a carbon grid.
-        First, the edge and the two adjacent planes of the NP are computed. Then,  the edge of the NP is made
-        parallel to the carbon flat surface, and the bisector of the two planes  aligned with the normal of the carbon flat surface. 
-        The idea is to have a perfectly centered NP laying on its edge and be able to tilt it both sides.
-        
-            Args:
-        xyz_gz_file (str) : Path  to the gzipped (.gz) XYZ file containing atomic coordinates of the carbon substrate.
-        tolerance (float, optional):  Tolerance distance between the NP and the carbon grid, be careful, if too small, chemical bonds appear in the interface.
-        instanceWulff(class instance): Instance of the crystalNPs to create the Wulff NP.
-        surfaces_indices (list): Indices of the atoms of the flat carbon surface
-        element (str): Compound elements, defined in create_NP_TEMimages()
-        structure (str): Lattice, defined in create_NP_TEMimages()
-        form (str): Wulff form,  defined in create_NP_TEMimages()
-        nRot (int): Number of rotation of the NP (angle = 360/nRot)
-        number (int): Index for the size, defined in create_NP_TEMimages()
-
-            Returns:
-        The XYZ files for each NPs (each compounds and sizes) laying on one of their edges on the carbon grid.
-        
+        Create XYZ files of nanoparticles laying on one of their edges on a carbon grid.
+    
+        The alignment process follows three main steps:
+        1. The target edge and its two adjacent planes of the NP are computed.
+        2. The NP edge is oriented to be parallel to the carbon flat surface.
+        3. The bisector of the two adjacent planes is aligned with the normal of the carbon flat surface.
+    
+        This configuration ensures a perfectly centered NP laying on its edge, 
+        allowing for balanced tilting on both sides during TEM simulations.
+    
+        Args:
+            xyz_gz_file (str): Path to the gzipped (.gz) XYZ file containing 
+                atomic coordinates of the carbon substrate.
+            tolerance (float, optional): Tolerance distance between the NP and 
+                the carbon grid. Be careful: if too small, artificial chemical 
+                bonds may appear at the interface.
+            instanceWulff (object): Instance of the crystalNPs class used to 
+                create the Wulff nanoparticle.
+            surfaces_indices (list of int): Indices of the atoms belonging to 
+                the identified flat carbon surface.
+            element (str): Compound elements, as defined in 
+                :meth:`create_NP_TEMimages`.
+            structure (str): Lattice type, as defined in 
+                :meth:`create_NP_TEMimages`.
+            form (str): Wulff form/shape, as defined in 
+                :meth:`create_NP_TEMimages`.
+            nRot (int): Number of rotations of the NP (incremental 
+                angle = 360/nRot).
+            number (int): Index for the nanoparticle size, as defined in 
+                :meth:`create_NP_TEMimages`.
+    
+        Returns:
+            None: Generates XYZ files for each compound and size, representing 
+            the nanoparticle laying on one of its edges on the carbon grid.
+            
         """
      
         # 1. Find the NP edge and the two adjacent planes.
@@ -628,13 +696,14 @@ class CreateHRTEMStructure:
     def create_NP_TEMimages(self, tolerance, noOutput,min_size,max_size, nRot, path, xyz_gz_file):
         """
         Generate Wulff shapes and their files for a single specific CIF coumpound.
-         Args:
-        cif file (file): singular cif file
-        noOutput (bool): if bool=False : details of the files
-        min_size (float, optional) : Mainimal size for the NPs, equals to the diameter of the circumscribed sphere, equals 0 nm by default.
-        max_size (float, optional) : Maximal size for the NPs, equals to the diameter of the circumscribed sphere, equals 50 nm by default.
-        path (str) : path that will contain the created xyz/CIF files
-        substrate_size (list) : size of the substrate in each dimension
+
+        Args:
+            cif file (file): singular cif file
+            noOutput (bool): if bool=False : details of the files
+            min_size (float, optional) : Mainimal size for the NPs, equals to the diameter of the circumscribed sphere, equals 0 nm by default.
+            max_size (float, optional) : Maximal size for the NPs, equals to the diameter of the circumscribed sphere, equals 50 nm by default.
+            path (str) : path that will contain the created xyz/CIF files
+            substrate_size (list) : size of the substrate in each dimension
         """   
         surface_indices = self.find_surface_atoms(xyz_gz_file, grid_size=2, z_tolerance=6)
         for cif_name, cif_file in self.cif_data['cif file'].items():
@@ -1243,10 +1312,21 @@ class CreateHRTEMImage:
 
 def create_csv(tem_image_paths, output_csv, noOutput=True):
     """
-    Function that creates a single CSV file containing the metadata of all the PNG files.
-    Usefull for Machine Learning applications.
-    Inputs : tem_image_paths (str): path of the PNG files.
-            output_csv (str): name of the output CSV file.
+    Create a single CSV file containing the metadata of all generated PNG files.
+
+    This utility is particularly useful for Machine Learning applications, 
+    providing a structured dataset that maps image files to their 
+    corresponding physical and structural parameters.
+
+    Args:
+        tem_image_paths (str): The directory path containing the PNG 
+            image files to be indexed.
+        output_csv (str): The filename or full path for the resulting 
+            CSV metadata file.
+
+    Returns:
+        None: Generates a CSV file at the specified location containing 
+        the metadata for all indexed TEM images.
     """
     import csv
 

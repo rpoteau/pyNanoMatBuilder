@@ -126,9 +126,8 @@ def init():
     path2banner = DEFAULT_RES_PATH / 'svg' / 'pyNanoMatBuilder_banner.svg'
     
     if path2banner.exists():
-        with open(path2banner, "r") as f:
-            svg_data = f.read()
-        display(HTML(f'<div style="text-align: center; max-width: 100%; height: auto;">{svg_data}</div>'))
+        with open(path2banner, "r") as f: svg_data = f.read()
+        display(HTML(f'<div style="text-align: center; max-width: 1200px; margin: 0 auto; height: auto;">{svg_data}</div>'))
     else:
         print(f"[Warning] banner file not found at {path2banner}")
     
@@ -164,23 +163,25 @@ def end():
     if path2logo.exists():
         with open(path2logo, "r") as f:
             svg_data = f.read()
-        display(HTML(f'<div style="text-align: center; width: 800px; margin: auto;">{svg_data}</div>'))
+        display(HTML(f'<div style="text-align: center; width: 100%; margin: auto;">{svg_data}</div>'))
     else:
         # Fallback si le logo est manquant
         print(f"[Warning] End logo not found at {path2logo}")
     display_md(md)
     
 def centerTitle(content=None):
-    '''
-    centers and renders as HTML a text in the notebook
+    """
+    Centers and renders as HTML a text in the notebook
     font size = 16px, background color = dark grey, foreground color = white
-    '''
+    """
+    
     from IPython.display import display, HTML
     display(HTML(f"<div style='text-align:center; font-weight: bold; font-size:16px;background-color: #343132;color: #ffffff'>{content}</div>"))
 
 def centertxt(content=None,font='sans', size=12,weight="normal",bgc="#000000",fgc="#ffffff"):
-    '''
-    centers and renders as HTML a text in the notebook
+    """
+    Centers and renders as HTML a text in the notebook
+    
     input: 
         - content = the text to render (default: None)
         - font = font family (default: 'sans', values allowed =  'sans-serif' | 'serif' | 'monospace' | 'cursive' | 'fantasy' | ...)
@@ -188,6 +189,8 @@ def centertxt(content=None,font='sans', size=12,weight="normal",bgc="#000000",fg
         - weight = font weight (default: 'normal', values allowed = 'normal' | 'bold' | 'bolder' | 'lighter' | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 )
         - bgc = background color (name or hex code, default = '#ffffff')
         - fgc = foreground color (name or hex code, default = '#000000')
-    '''
+        
+    """
+    
     from IPython.display import display, HTML
     display(HTML(f"<div style='text-align:center; font-family: {font}; font-weight: {weight}; font-size:{size}px;background-color: {bgc};color: {fgc}'>{content}</div>"))

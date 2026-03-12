@@ -6,10 +6,11 @@
 pyNanoMatBuilder documentation
 ==============================
 
-.. image:: _static/tools4pyPC_banner.svg
+.. image:: _static/pyNanoMatBuilder_banner.svg
    :alt: pyNMB banner
    :align: center
-   :width: 1000px
+   :width: 100%
+   :class: only-light
 
 .. raw:: html
 
@@ -20,6 +21,8 @@ Welcome to **pyNanoMatBuilder**
 .. toctree::
    :maxdepth: 2
    :caption: 📚 Docs and Theory
+
+   theoryDocs/intro
 
 .. toctree::
    :maxdepth: 2

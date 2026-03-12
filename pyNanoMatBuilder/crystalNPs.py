@@ -15,9 +15,9 @@ from ase.visualize import view
 
 # Internal Relative Imports
 from .visualID import fg, hl, bg
-from . import visualID as vID    # Corrected syntax
+from . import visualID as vID
 from . import data
-from . import utils as pyNMBu    # Corrected syntax
+from . import utils as pyNMBu
 
 class Crystal:
     """

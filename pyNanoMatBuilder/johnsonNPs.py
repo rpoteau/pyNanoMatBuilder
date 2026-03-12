@@ -1,22 +1,26 @@
-import visualID as vID
-from visualID import fg, hl, bg
-
+# External dependencies
 import sys
 import numpy as np
-import pyNanoMatBuilder.utils as pyNMBu
+
 import ase
 from ase.build import bulk, make_supercell, cut
 from ase.visualize import view
 import matplotlib.pyplot as plt
-from pyNanoMatBuilder import platonicNPs as pNP
 
+# Internal Relative Imports
+from .visualID import fg, hl, bg
+from . import visualID as vID
+from . import data
+from . import utils as pyNMBu
+from . import platonicNPs as pNP
 
 ###########################################################
 class JohnsonNP:
     """Base class for all Johson nanoparticles providing common functionality."""
 
     def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput):
-        """Compute and store various post-construction properties of the nanoparticle.
+        """
+        Compute and store various post-construction properties of the nanoparticle.
 
         This function calculates moments of inertia (MOI), the inscribed and 
         circumscribed sphere diameters,analyzes symmetry, generates a JMOL
@@ -28,12 +32,14 @@ class JohnsonNP:
             noOutput (bool): If True, suppresses output messages.
     
         Attributes Updated:
-             moi (array): Moment of inertia tensor.
-             moisize (array): Normalized moments of inertia.
-             vertices, simplices, neighbors, equations (arrays):
-                  Geometric properties of the nanoparticle.
-             NPcs (Atoms object): Copy of the nanoparticle with surface atoms visually marked.
-             NP (Atoms object): Original nanoparticle.
+            moi (numpy.ndarray): Moment of inertia tensor.
+            moisize (numpy.ndarray): Normalized moments of inertia.
+            vertices (numpy.ndarray): Geometric vertices of the nanoparticle.
+            simplices (numpy.ndarray): Simplices defining the convex hull.
+            neighbors (numpy.ndarray): Neighboring relations between facets.
+            equations (numpy.ndarray): Plane equations for the hull faces.
+            NPcs (ase.Atoms): Copy of the nanoparticle with surface atoms visually marked.
+            NP (ase.Atoms): Original nanoparticle object.
         """
         
         self.moi = pyNMBu.moi(self.NP, noOutput)
@@ -61,6 +67,7 @@ class fcctbp(JohnsonNP):
     layers and interatomic distances.
 
     Key Features:
+    
     - Generates a trigonal bipyramid shape with customizable
       atomic layers.
     - Computes structural properties like inter-layer distance,
@@ -71,6 +78,7 @@ class fcctbp(JohnsonNP):
       representation.
 
     Additional Notes:
+    
     - The `nLayerTd` parameter determines the number of layers
       in one pyramid.
     - The `Rnn` parameter controls the nearest neighbor
@@ -78,6 +86,7 @@ class fcctbp(JohnsonNP):
     - Symmetry analysis can be skipped to speed up computations.
     - Visualization can be enabled for both the initial structure
       and post-processing stages.
+      
     """
 
     nFaces = 6
@@ -97,8 +106,7 @@ class fcctbp(JohnsonNP):
                  calcPropOnly: bool = False):
 
         """
-        Initializes an fcc trigonal bipyramid (fcctbp)
-        with the given parameters.
+        Initializes an fcc trigonal bipyramid (fcctbp) with the given parameters.
 
         Args:
             element (str): Chemical element used to
@@ -118,29 +126,23 @@ class fcctbp(JohnsonNP):
                 symmetry analysis (default: False).
             jmolCrystalShape (bool): If True, generates a
                 JMOL-compatible crystal shape (default: True).
-            noOutput (bool): If True, suppresses text
-                output (default: False).
+            noOutput (bool): If True, suppresses text output (default: False).
             calcPropOnly (bool): If True, only calculates
                 properties without generating structure
                 (default: False).
 
         Attributes:
             nAtoms (int): Total number of atoms in the NP.
-            nAtomsPerLayer (list): Number of atoms in each
-                atomic layer.
-            nAtomsPerEdge (int): Number of atoms per edge
-                of the bipyramid.
-            interLayerDistance (float): Distance between
-                atomic layers.
+            nAtomsPerLayer (list): Number of atoms in each atomic layer.
+            nAtomsPerEdge (int): Number of atoms per edge of the bipyramid.
+            interLayerDistance (float): Distance between atomic layers.
             fveAngle (float): Face-vertex-edge angle.
             fefAngle (float): Face-edge-face angle.
             vcvAngle (float): Vertex-center-vertex angle.
-            heightOfBiPyramid (float): Height of the
-                bipyramid.
-            imageFile (str): Path to the image representing
-                the structure.
+            heightOfBiPyramid (float): Height of the bipyramid.
+            imageFile (str): Path to the image representing the structure.
             cog (np.array): Center of gravity of the NP.
-            trPlanes (array): Truncation plane equations.
+            trPlanes (np.array): Truncation plane equations.
         """
         
         self.element = element

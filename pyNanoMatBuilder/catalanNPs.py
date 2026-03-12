@@ -1,21 +1,24 @@
-# from visualID import fg, hl, bg
-# import visualID as vID
+# External dependencies
+import sys
+import numpy as np
 
-# import sys
-# import numpy as np
-# import pyNanoMatBuilder.utils as pyNMBu
+import ase
+from ase.build import bulk
+from ase import io
+from ase.visualize import view
 
-# import ase
-# from ase.build import bulk
-# from ase import io
-# from ase.visualize import view
+# Internal Relative Imports
+from .visualID import fg, hl, bg
+from . import visualID as vID
+from . import utils as pyNMBu
 
 ###########################################################################################################
 class CatalanNP:
     """Base class for all Catalan nanoparticles providing common functionality."""
 
     def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput):
-        """Compute and store various post-construction properties of the nanoparticle.
+        """
+        Compute and store various post-construction properties of the nanoparticle.
 
         This function calculates moments of inertia (MOI), the inscribed and 
         circumscribed sphere diameters,analyzes symmetry,
@@ -26,13 +29,16 @@ class CatalanNP:
             thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
             noOutput (bool): If True, suppresses output messages.
     
-        Attributes Updated:
-             moi (array): Moment of inertia tensor.
-             moisize (array): Normalized moments of inertia.
-             vertices, simplices, neighbors, equations (arrays):
-                  Geometric properties of the nanoparticle.
-             NPcs (Atoms object): Copy of the nanoparticle with surface atoms visually marked.
-             NP (Atoms object): Original nanoparticle.
+        Attributes:
+            moi (numpy.ndarray): Moment of inertia tensor.
+            moisize (numpy.ndarray): Normalized moments of inertia.
+            vertices (numpy.ndarray): Geometric vertices of the nanoparticle.
+            simplices (numpy.ndarray): Simplices defining the convex hull.
+            neighbors (numpy.ndarray): Neighboring relations of the hull.
+            equations (numpy.ndarray): Plane equations for the hull faces.
+            NPcs (ase.Atoms): Copy of the nanoparticle with surface atoms 
+                visually marked.
+            NP (ase.Atoms): Original nanoparticle object.
         """
         
         self.moi = pyNMBu.moi(self.NP, noOutput)

@@ -1,14 +1,16 @@
-from .visualID import fg, hl, bg
-from . import visualID as vID
-
+# External dependencies
 import os
 import sys
 import numpy as np
-import pyNanoMatBuilder.utils as pyNMBu
 import ase
 from ase.build import bulk, make_supercell, cut
 from ase.visualize import view
 from ase.cluster.cubic import FaceCenteredCubic
+
+# Internal Relative Imports
+from .visualID import fg, hl, bg
+from . import visualID as vID
+from . import utils as pyNMBu
 
 ###############################################################################
 class PlatonicNP:
@@ -16,7 +18,8 @@ class PlatonicNP:
 
     def propPostMake(self, skipSymmetryAnalyzis,
                      thresholdCoreSurface, noOutput):
-        """Compute and store various post-construction
+        """
+        Compute and store various post-construction
         properties of the nanoparticle.
 
         This function calculates moments of inertia
@@ -31,18 +34,18 @@ class PlatonicNP:
             noOutput (bool): If True, suppresses
                 output messages.
     
-        Attributes Updated:
-             moi (array): Moment of inertia tensor.
-             moisize (array): Normalized moments of inertia.
-             vertices, simplices, neighbors, equations (arrays):
-                  Geometric properties of the nanoparticle.
-             NPcs (Atoms object): Copy of the
-                  nanoparticle with surface atoms
-                  visually marked.
-             NP (Atoms object): Original nanoparticle.
-             sasview_dims (tuple, optional): Dimensions
-                  for SasView (only if sasview_dims()
-                  method exists).
+        Attributes:
+            moi (numpy.ndarray): Moment of inertia tensor.
+            moisize (numpy.ndarray): Normalized moments of inertia.
+            vertices (numpy.ndarray): Geometric vertices of the nanoparticle.
+            simplices (numpy.ndarray): Simplices defining the convex hull.
+            neighbors (numpy.ndarray): Neighboring relations between facets.
+            equations (numpy.ndarray): Plane equations for the hull faces.
+            NPcs (ase.Atoms): Copy of the nanoparticle with surface atoms 
+                visually marked.
+            NP (ase.Atoms): Original nanoparticle object.
+            sasview_dims (tuple, optional): Dimensions for SasView, calculated 
+                only if the sasview_dims() method exists.
         """
         
         self.moi = pyNMBu.moi(self.NP, noOutput)
@@ -389,7 +392,8 @@ class regfccOh(PlatonicNP):
         return np.sqrt(2) * el**3 / 3
 
     def MakeVertices(self, i):
-        """Generates the coordinates of the vertices, edges, and faces
+        """
+        Generates the coordinates of the vertices, edges, and faces
         for the ith shell of an octahedral nanoparticle.
 
         Args:
@@ -401,6 +405,7 @@ class regfccOh(PlatonicNP):
                     of the ith shell of an octahedron
                 - edges (np.ndarray): indexes of the 30 edges
                 - faces (np.ndarray): indexes of the 20 faces
+                
         """
         # If `i == 0`, the function returns a single central vertex
         if (i == 0):
@@ -831,6 +836,7 @@ class regIco(PlatonicNP):
                 - CoordVertices (np.ndarray): the 12 vertex coordinates of the ith shell of an icosahedron
                 - edges (np.ndarray): indexes of the 30 edges
                 - faces (np.ndarray): indexes of the 20 faces
+                
         """
         # If `i == 0`, the function returns a single central vertex
         if (i == 0):
@@ -1252,17 +1258,18 @@ class regfccTd(PlatonicNP):
         return el**3 / (6 * np.sqrt(2)) 
 
     def MakeVertices(self, nL):
-        """Generates the coordinates of the vertices, edges, and faces
+        """
+        Generates the coordinates of the vertices, edges, and faces
         for the ith shell of a tetrahedral nanoparticle.
 
         Args:
             nL (int): number of layers = number of atoms per edge.
 
         Returns:
-            CoordVertices (np.ndarray): the 4 vertex coordinates
-                of a tetrahedron.
-            edges (np.ndarray): indexes of the 6 edges.
-            faces (np.ndarray): indexes of the 4 faces.
+            - CoordVertices (np.ndarray): the 4 vertex coordinates of a tetrahedron.
+            - edges (np.ndarray): indexes of the 6 edges.
+            - faces (np.ndarray): indexes of the 4 faces.
+            
         """
         if (nL > self.nLayer):
             sys.exit(
@@ -1687,10 +1694,10 @@ class regDD(PlatonicNP):
             i (int): Index of the shell.
 
         Returns:
-            CoordVertices (np.ndarray): the 20 vertex coordinates
-                of the ith shell of a dodecahedron.
-            edges (np.ndarray): indexes of the 30 edges.
-            faces (np.ndarray): indexes of the 12 faces.
+            - CoordVertices (np.ndarray): the 20 vertex coordinates of the ith shell of a dodecahedron.
+            - edges (np.ndarray): indexes of the 30 edges.
+            - faces (np.ndarray): indexes of the 12 faces.
+            
         """
         # If `i == 0`, the function returns a single central vertex
         if (i == 0):

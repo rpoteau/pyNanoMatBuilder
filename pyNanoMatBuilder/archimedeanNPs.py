@@ -1,14 +1,16 @@
-import visualID as vID
-from visualID import fg, hl, bg
-
+# External dependencies
 import sys
 import numpy as np
-import pyNanoMatBuilder.utils as pyNMBu
 import ase
 from ase.build import bulk, make_supercell, cut
 from ase.visualize import view
 
-from pyNanoMatBuilder import platonicNPs as pNP
+# Internal Relative Imports
+from .visualID import fg, hl, bg
+from . import visualID as vID
+from . import data
+from . import utils as pyNMBu
+from . import platonicNPs as pNP
 
 class ArchimedeanNP(pNP.PlatonicNP):
     """Base class for all Archimedean nanoparticles providing common functionality."""
@@ -28,8 +30,7 @@ class ArchimedeanNP(pNP.PlatonicNP):
         Attributes Updated:
              moi (array): Moment of inertia tensor.
              moisize (array): Normalized moments of inertia.
-             vertices, simplices, neighbors, equations (arrays):
-                  Geometric properties of the nanoparticle.
+             vertices, simplices, neighbors, equations (arrays): Geometric properties of the nanoparticle.
              NPcs (Atoms object): Copy of the nanoparticle with surface atoms visually marked.
              NP (Atoms object): Original nanoparticle.
              sasview_dims (tuple, optional): Dimensions for SasView (only if sasview_dims() method exists).
@@ -622,8 +623,8 @@ class fccTrTd(ArchimedeanNP):
         and check if it is a valid integer.
         
         Returns:
-        - (bool, float): A tuple where the first element is True if the number is an integer,
-          and the second element is the computed number of edge atoms.
+            (bool, float): A tuple where the first element is True if the number is an integer,
+            and the second element is the computed number of edge atoms.
         """
         import numpy as np
         N = self.nLayer+1

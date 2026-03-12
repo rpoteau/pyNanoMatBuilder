@@ -1,15 +1,16 @@
-import visualID as vID
-from visualID import fg, hl, bg
-
+# External dependencies
 import sys
 import numpy as np
-import pyNanoMatBuilder.utils as pyNMBu
 
 from ase.visualize import view
 
-
-from pyNanoMatBuilder import platonicNPs as pNP
-from pyNanoMatBuilder import johnsonNPs as jNP
+# Internal Relative Imports
+from .visualID import fg, hl, bg
+from . import visualID as vID
+from . import data
+from . import utils as pyNMBu
+from . import platonicNPs as pNP
+from . import johnsonNPs as jNP
 
 ###########################################################################################################
 class fcctpt:
@@ -38,7 +39,6 @@ class fcctpt:
                 ):
              
         """
-        
         Initializes the fcc triangular platelet nanoparticle.
 
         Args:
@@ -83,6 +83,7 @@ class fcctpt:
             jmolCrystalShape (bool): Flag to indicate whether to display the
                 crystal shape in Jmol.
             imageFile (str): Path to the image file of the nanoparticle shape.
+            
         """
         self.element = element
         self.shape = 'fcctpt'
@@ -218,7 +219,8 @@ class fcctpt:
         print(f"coordinates of the center of gravity = {self.cog}")
 
     def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput):
-        """Compute and store post-construction nanoparticle properties.
+        """
+        Compute and store post-construction nanoparticle properties.
 
         This function calculates moments of inertia (MOI), the inscribed and
         circumscribed spheres, determines the nanoparticle shape, analyzes
@@ -226,18 +228,18 @@ class fcctpt:
 
         Args:
             skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
-            thresholdCoreSurface (float): Threshold to distinguish core and
-                surface atoms.
+            thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
             noOutput (bool): If True, suppresses output messages.
 
-        Attributes Updated:
-            self.moi (array): Moment of inertia tensor.
-            self.moisize (array): Normalized moments of inertia.
-            self.vertices, self.simplices, self.neighbors, self.equations
-                (arrays): Geometric properties of the nanoparticle.
-            self.NPcs (Atoms): Copy of the nanoparticle with surface atoms
-                visually marked.
-            self.NP (Atoms): Original nanoparticle.
+        Attributes:
+            moi (numpy.ndarray): Moment of inertia tensor.
+            moisize (numpy.ndarray): Normalized moments of inertia.
+            vertices (numpy.ndarray): Geometric vertices of the nanoparticle.
+            simplices (numpy.ndarray): Simplices defining the convex hull.
+            neighbors (numpy.ndarray): Neighboring relations between facets.
+            equations (numpy.ndarray): Plane equations for the hull faces.
+            NPcs (ase.Atoms): Copy of the nanoparticle with surface atoms visually marked.
+            NP (ase.Atoms): Original nanoparticle object.
         """
         self.moi = pyNMBu.moi(self.NP, noOutput=noOutput)
         self.moisize = np.array(pyNMBu.moi_size(self.NP, noOutput))  # MOI mass normalized (m of each atoms=1)

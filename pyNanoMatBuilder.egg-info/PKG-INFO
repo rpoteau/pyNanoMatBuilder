@@ -33,6 +33,10 @@ Requires-Dist: ipykernel; extra == "docs"
 Requires-Dist: pandoc; extra == "docs"
 Requires-Dist: numpydoc; extra == "docs"
 Requires-Dist: sphinx-copybutton; extra == "docs"
+Provides-Extra: debye
+Requires-Dist: debyecalculator; extra == "debye"
+Provides-Extra: tem
+Requires-Dist: abtem; extra == "tem"
 Dynamic: license-file
 
 <span style="display:block;text-align:center"><img width="600px" src="./styles/svg/pyNanoMatBuilder_banner.png"/></span>

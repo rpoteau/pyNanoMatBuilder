@@ -12,6 +12,9 @@ pymatgen
 scipy
 seaborn
 
+[debye]
+debyecalculator
+
 [docs]
 sphinx
 sphinx_rtd_theme
@@ -21,3 +24,6 @@ ipykernel
 pandoc
 numpydoc
 sphinx-copybutton
+
+[tem]
+abtem

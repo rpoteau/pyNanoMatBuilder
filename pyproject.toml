@@ -60,3 +60,9 @@ docs = [
   "numpydoc",
   "sphinx-copybutton"
 ]
+debye = [
+    "debyecalculator"
+]
+tem = [
+    "abtem"
+]

@@ -8,6 +8,8 @@
     - **Automatic Directory Creation**: All write operations now use `pathlib` to ensure parent folders (like `coords/` or `figs/`) are created if missing, preventing `FileNotFoundError`.
 - **Timer Class**: Refactored the timing logic into an Object-Oriented `timer` class in `utils.py` for independent performance monitoring of different functions.
 - **Centralized Resource Management**: Moved all non-code assets (`.css`, `.svg`, `.cif`, `.spt`) into a dedicated `resources/` directory within the package.
+- **Optional Dependencies**: Structured `pyproject.toml` with "extras" (`debye`, `tem`) to allow lightweight core installation.
+- **Mocking**: Added `autodoc_mock_imports` for heavy dependencies (`abtem`, `debyecalculator`) to ensure documentation builds successfully in restricted environments.
 
 ### Changed
 - **Package Architecture (Namespace Flattening)**: Key tools (`init`, `end`, colors) are now accessible directly via `pyNMB.<tool>` instead of the full submodule path.
@@ -28,8 +30,9 @@
   - **Symmetry Object Refactoring**: Transitioned from ASE-specific `Spacegroup` objects to explicit `ucSG_number` and `ucSG_symbol` attributes sourced from Pymatgen. Updated all display and classification functions (`print_ase_unitcell`, `get_crystal_type`) to support these new data types.
 
 ### Fixed
-- Fixed a critical `NameError` caused by missing `from pathlib import Path` in submodules.
-- Fixed a path error in `visualID.end()` where the logo path was duplicated.
+- Fixed a **critical `NameError`** caused by missing `from pathlib import Path` in submodules.
+- Fixed a **path error** in `visualID.end()` where the logo path was duplicated.
+- Fixed some docstrings to **Google/Napoleon style** across all packages
 
 ## 20260309
 ### changed

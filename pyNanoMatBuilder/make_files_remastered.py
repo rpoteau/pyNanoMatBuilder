@@ -1,27 +1,28 @@
+    # External dependencies
 import os
 import json
-
-import numpy as np
-import pandas as pd
-import visualID as vID
-from visualID import  fg, hl, bg
-
-from pyNanoMatBuilder import crystalNPs as cyNP
-from pyNanoMatBuilder import platonicNPs as pNP
-from pyNanoMatBuilder import archimedeanNPs as aNP
-from pyNanoMatBuilder import catalanNPs as cNP
-from pyNanoMatBuilder import johnsonNPs as jNP
-from pyNanoMatBuilder import otherNPs as oNP
-
-from pyNanoMatBuilder import utils as pyNMBu
-from pyNanoMatBuilder import data
 
 from ase.io import read
 from ase.io import write
 
 import debyecalculator
 
+import numpy as np
+import pandas as pd
 
+# Internal Relative Imports
+from .visualID import fg, hl, bg
+from . import visualID as vID
+
+from . import crystalNPs as cyNP
+from . import platonicNPs as pNP
+from . import archimedeanNPs as aNP
+from . import catalanNPs as cNP
+from . import johnsonNPs as jNP
+from . import otherNPs as oNP
+
+from . import utils as pyNMBu
+from . import data
 
 ################################################ NP Database Base ###
 

@@ -218,11 +218,13 @@ def scaleUnitCell(crystal: Atoms,
     - None: The function modifies the input `crystal` object in place.
 
     Notes:
+    
     - The function first generates a 2×2×2 supercell to ensure a representative environment.
     - It computes the minimum nearest-neighbor distance (`Rmin`) using `kDTreeCN`.
     - The structure is then uniformly scaled so that the new nearest-neighbor distance 
       equals `scaleDmin2`.
     - The ASE `set_cell` method is used with `scale_atoms=True` to adjust atomic positions accordingly.
+    
     """
     from ase.build.supercells import make_supercell
     if not noOutput:
@@ -1288,7 +1290,7 @@ def normal2MillerPlane(Crystal,MillerIndexes,printN=True):
 def isPlaneParrallel2Line(v1,v2,tol=1e-5):
     """
     Return True if line direction and plane normal are parallel.
-    A line direction vector and a plane are parallel if the |angle|
+    A line direction vector and a plane are parallel if $|angle|$
     between the line and the normal vector of the plane is 90°.
 
     Args:
@@ -1307,7 +1309,7 @@ def isPlaneParrallel2Line(v1,v2,tol=1e-5):
 def isPlaneOrthogonal2Line(v1, v2, tol=1e-5):
     """
     Return True if line direction and plane normal are orthogonal.
-    A line direction vector and a plane are orthogonal if the |angle| 
+    A line direction vector and a plane are orthogonal if $|angle|$ 
     between the line and the normal vector of the plane is 0° or 180°.
 
     Args:
@@ -1326,7 +1328,7 @@ def isPlaneOrthogonal2Line(v1, v2, tol=1e-5):
 def areDirectionsOrthogonal(v1, v2, tol=1e-6):
     """
     Return True if directions are orthogonal.
-    Lines are orthogonal if the |angle| between their direction vector is 90°
+    Lines are orthogonal if the $|angle|$ between their direction vector is 90°
 
     Args:   
         v1 (np.ndarray): First direction vector.
@@ -1344,7 +1346,7 @@ def areDirectionsOrthogonal(v1, v2, tol=1e-6):
 def areDirectionsParallel(v1, v2, tol=1e-6):
     """
     Return True if directions are parallel.
-    Lines are parallel if the |angle| between their direction vector is 0° or 180°.
+    Lines are parallel if the $|angle|$ between their direction vector is 0° or 180°.
 
     Args:
         v1 (np.ndarray): First direction vector.
@@ -1360,7 +1362,7 @@ def areDirectionsParallel(v1, v2, tol=1e-6):
     )
 
 def returnPlaneParallel2Line(V, shift=[1,0,0], debug = False):
-    '''
+    """
     Return plane parameters for a plane parallel to a direction vector.
 
     Args:
@@ -1372,11 +1374,13 @@ def returnPlaneParallel2Line(V, shift=[1,0,0], debug = False):
         np.ndarray: Plane normal [a, b, c]; d must be found separately.
 
     Method:
+    
         - choose any arbitrary vector not parallel to V[i,j,k] such as V[i+1,j,k]
         - calculate the vector perpendicular to both of these, i.e. the cross product
         - this is the normal to the plane, i.e. you directly obtain the equation of the plane ax+by+cz+d = 0, d being indeterminate
-        (to find d, it would be necessary to provide an (x0,y0,z0) point that does not belong to the line, hence d = -ax0-by0-cz0)
-    '''
+          (to find d, it would be necessary to provide an (x0,y0,z0) point that does not belong to the line, hence d = -ax0-by0-cz0)
+        
+    """
     arbV = np.array(V.copy())
     arbV = arbV + np.array(shift)
     plane = np.cross(V, arbV)
@@ -2298,11 +2302,20 @@ def rgb2hex(c, frac=True):
 ######################################## coordination numbers
 def calculateCN(coords,Rmax):
     '''
-    returns the coordination number of each atom, where CN is calculated after threshold Rmax
-    - input:
-        - coords: numpy array with shape (N,3) that contains the 3 coordinates for each of the N points
-        - Rmax: threshold to calculate CN
-    returns an array that contains CN for each atom
+    Calculate the coordination number (CN) for each atom.
+
+    The coordination number is determined by counting neighbors within 
+    a spherical cutoff distance defined by Rmax.
+
+    Args:
+        coords (numpy.ndarray): An (N, 3) array containing the Cartesian 
+            coordinates for each of the N points.
+        r_max (float): The threshold distance (cutoff) used to define 
+            a coordination bond.
+
+    Returns:
+        numpy.ndarray: An array of length N containing the calculated 
+            coordination number for each atom.
     '''
     # CN = np.zeros(len(coords))
     # for i,ci in enumerate(coords):
@@ -2500,12 +2513,23 @@ def kDTreeCN(crystal: Atoms,
 
 def reflection(plane,points,doItForAtomsThatLieInTheReflectionPlane=False):
     '''
-    applies a mirror-image symmetry operation of an array of points w.r.t. a plane of symmetry
-    - input:
-        - plane = [u,v,w,d] parameters that define a plane
-        - point = (N, 3) array of points
-        - doItForAtomsThatLieInTheReflectionPlane = slef-explanatory
-    - returns an (N, 3) array of mirror-image points
+    Apply a mirror-image symmetry operation to an array of points.
+
+    Calculates the reflection of each point across a symmetry plane defined by
+    the general equation $ax + by + cz + d = 0$.
+
+    Args:
+        points (numpy.ndarray): An (N, 3) array of Cartesian coordinates 
+            representing the points to be reflected.
+        plane (list or numpy.ndarray): The four parameters $[a, b, c, d]$ 
+            that define the reflection plane equation.
+        include_plane_atoms (bool, optional): If True, points located exactly 
+            on the reflection plane are processed. If False, they are 
+            skipped. Defaults to True.
+
+    Returns:
+        numpy.ndarray: An (N, 3) array containing the coordinates of the 
+        reflected mirror-image points.
     '''
     import numpy as np
     pr = []
