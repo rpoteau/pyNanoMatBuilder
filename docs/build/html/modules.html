@@ -669,6 +669,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.load_cif"><code class="docutils literal notranslate"><span class="pre">load_cif()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.ciflist"><code class="docutils literal notranslate"><span class="pre">ciflist()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.pyNMB_location"><code class="docutils literal notranslate"><span class="pre">pyNMB_location()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.get_resource_path"><code class="docutils literal notranslate"><span class="pre">get_resource_path()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.RAB"><code class="docutils literal notranslate"><span class="pre">RAB()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.Rbetween2Points"><code class="docutils literal notranslate"><span class="pre">Rbetween2Points()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.vector"><code class="docutils literal notranslate"><span class="pre">vector()</span></code></a></li>
@@ -7742,7 +7743,14 @@ returns equivalent atoms.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.pyNMB_location">
 <span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.</span></span><span class="sig-name descname"><span class="pre">pyNMB_location</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.pyNMB_location" title="Link to this definition"></a></dt>
-<dd><p>Returns the root directory of the pyNanoMatBuilder package.</p>
+<dd><p>Returns the absolute path to the root of the installed package.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.get_resource_path">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.</span></span><span class="sig-name descname"><span class="pre">get_resource_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sub_package</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.get_resource_path" title="Link to this definition"></a></dt>
+<dd><p>Generic helper to get the absolute path of a file in resources.
+Usage: get_resource_path(‘resources.figs’, ‘banner.png’)</p>
 </dd></dl>
 
 <dl class="py function">
@@ -8636,17 +8644,8 @@ Lines are parallel if the $|angle|$ between their direction vector is 0° or 180
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.DrawJmol">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.</span></span><span class="sig-name descname"><span class="pre">DrawJmol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scriptJ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.DrawJmol" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.</span></span><span class="sig-name descname"><span class="pre">DrawJmol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scriptJ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.DrawJmol" title="Link to this definition"></a></dt>
 <dd><p>Generate a Jmol visualization from an existing XYZ file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>mol</strong> (<em>str</em>) – Molecule filename (without extension).</p></li>
-<li><p><strong>prefix</strong> (<em>str</em>) – Output image filename prefix.</p></li>
-<li><p><strong>scriptJ</strong> (<em>str</em>) – Additional Jmol script commands.</p></li>
-</ul>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py function">

@@ -413,7 +413,7 @@ def load_cif(self, cif_file, noOutput):
 
     """
     cif_folder = "cif_database"
-    path2cif = pathlib.Path(os.path.join(cif_folder, cif_file)).resolve()
+    path2cif = Path(get_resource_path('resources.cif_database', cif_file))
     self.cif = ase_io.read(path2cif)
     if not noOutput:
         print("Absolute path to CIF:", path2cif)
@@ -435,15 +435,23 @@ def ciflist(dbFolder=data.pyNMBvar.dbFolder):
     path2cif = os.path.join(pyNMB_location(), dbFolder)
     print(os.listdir(path2cif))
 
+from importlib import resources
 def pyNMB_location():
     """
-    Returns the root directory of the pyNanoMatBuilder package.
+    Returns the absolute path to the root of the installed package.
     """
-    import pathlib
-    import pyNanoMatBuilder
-    path = pathlib.Path(pyNanoMatBuilder.__file__)
-    return pathlib.Path(*path.parts[0:-2])
-
+    # This points to the directory containing __init__.py of pyNanoMatBuilder
+    with resources.path("pyNanoMatBuilder", "__init__.py") as p:
+        return p.parent
+        
+def get_resource_path(sub_package, filename):
+    """
+    Generic helper to get the absolute path of a file in resources.
+    Usage: get_resource_path('resources.figs', 'banner.png')
+    """
+    package_path = f"pyNanoMatBuilder.{sub_package}"
+    with resources.path(package_path, filename) as p:
+        return str(p)
 #######################################################################
 ######################################## Coordinates, vectors, etc
 def RAB(coord, a, b):
@@ -1799,54 +1807,130 @@ def saveCoords_DrawJmol(asemol, prefix, scriptJ="", boundaries=False, noOutput=T
     """
     from pyNanoMatBuilder import data
     path2Jmol = data.pyNMBvar.path2Jmol
-    fxyz = "./figs/" + prefix + ".xyz"
-    writexyz(fxyz, asemol)
-    if not boundaries:
+    # fxyz = "./figs/" + prefix + ".xyz"
+    # writexyz(fxyz, asemol)
+
+    # Output directory for the USER (Working Directory)
+    # We save results in a local 'figs' folder so the user can see them
+    user_output_dir = Path("figs")
+    user_output_dir.mkdir(exist_ok=True)
+    fxyz = user_output_dir / f"{prefix}.xyz"
+    writexyz(str(fxyz), asemol)
+    
+    # if not boundaries:
+    #     jmolscript = (
+    #         scriptJ + '; frank off; cpk 0; wireframe 0.05; '
+    #         'script "./figs/script-facettes-345PtLight.spt"; '
+    #         'facettes345ptlight; draw * opaque;'
+    #     )
+    # else:
+    #     jmolscript = scriptJ + '; frank off; cpk 0; wireframe 0.0; draw * opaque;'
+    # jmolscript = (
+    #     jmolscript +
+    #     'set specularPower 80; set antialiasdisplay; set background [xf1f2f3]; '
+    #     'set zShade ON;set zShadePower 1; write image pngt 1024 1024 ./figs/'
+    # )
+    # jmolcmd = (
+    #     "java -Xmx512m -jar " + path2Jmol + "/JmolData.jar " + fxyz +
+    #     " -ij '" + jmolscript + prefix + ".png'" + " >/dev/null "
+    # )
+    # if not noOutput:
+    #     print(jmolcmd)
+    # os.system(jmolcmd)
+    try:
+        with resources.path("pyNanoMatBuilder.resources.figs", "script-facettes-345PtLight.spt") as spt_path:
+            internal_spt = str(spt_path)
+    except (FileNotFoundError, ModuleNotFoundError):
+        internal_spt = None
+
+    # Build the Jmol Script
+    if not boundaries and internal_spt:
         jmolscript = (
-            scriptJ + '; frank off; cpk 0; wireframe 0.05; '
-            'script "./figs/script-facettes-345PtLight.spt"; '
-            'facettes345ptlight; draw * opaque;'
+            f"{scriptJ}; frank off; cpk 0; wireframe 0.05; "
+            f"script '{internal_spt}'; "  # Points to the internal resource
+            "facettes345ptlight; draw * opaque;"
         )
     else:
-        jmolscript = scriptJ + '; frank off; cpk 0; wireframe 0.0; draw * opaque;'
-    jmolscript = (
-        jmolscript +
-        'set specularPower 80; set antialiasdisplay; set background [xf1f2f3]; '
-        'set zShade ON;set zShadePower 1; write image pngt 1024 1024 ./figs/'
+        jmolscript = f"{scriptJ}; frank off; cpk 0; wireframe 0.0; draw * opaque;"
+
+    # Save the PNG to the USER'S local figs folder
+    output_png = user_output_dir / f"{prefix}.png"
+    jmolscript += (
+        "set specularPower 80; set antialiasdisplay; set background [xf1f2f3]; "
+        f"set zShade ON; set zShadePower 1; write image pngt 1024 1024 '{output_png}';"
     )
+
     jmolcmd = (
-        "java -Xmx512m -jar " + path2Jmol + "/JmolData.jar " + fxyz +
-        " -ij '" + jmolscript + prefix + ".png'" + " >/dev/null "
+        f"java -Xmx512m -jar {path2Jmol}/JmolData.jar {fxyz} "
+        f"-ij \"{jmolscript}\" >/dev/null "
     )
+
     if not noOutput:
-        print(jmolcmd)
+        print(f"Saving to: {output_png}")
     os.system(jmolcmd)
 
+# def DrawJmol(mol, prefix, scriptJ=""):
+#     """
+#     Generate a Jmol visualization from an existing XYZ file.
 
-def DrawJmol(mol, prefix, scriptJ=""):
+#     Args:
+#         mol (str): Molecule filename (without extension).
+#         prefix (str): Output image filename prefix.
+#         scriptJ (str): Additional Jmol script commands.
+#     """
+#     path2Jmol = '/usr/local/src/jmol-14.32.50'
+#     fxyz = "./figs/" + mol + ".xyz"
+#     jmolscript = (
+#         scriptJ + '; frank off; set specularPower 80; set antialiasdisplay; '
+#         'set background [xf1f2f3]; set zShade ON;set zShadePower 1; '
+#         'write image pngt 1024 1024 ./figs/'
+#     )
+#     jmolcmd = (
+#         "java -Xmx512m -jar " + path2Jmol + "/JmolData.jar " + fxyz +
+#         " -ij '" + jmolscript + prefix + ".png'" + " >/dev/null "
+#     )
+#     if not noOutput:
+#         print(jmolcmd)
+#     os.system(jmolcmd)
+
+def DrawJmol(mol, prefix, scriptJ="", noOutput=True):
     """
     Generate a Jmol visualization from an existing XYZ file.
-
-    Args:
-        mol (str): Molecule filename (without extension).
-        prefix (str): Output image filename prefix.
-        scriptJ (str): Additional Jmol script commands.
     """
-    path2Jmol = '/usr/local/src/jmol-14.32.50'
-    fxyz = "./figs/" + mol + ".xyz"
-    jmolscript = (
-        scriptJ + '; frank off; set specularPower 80; set antialiasdisplay; '
-        'set background [xf1f2f3]; set zShade ON;set zShadePower 1; '
-        'write image pngt 1024 1024 ./figs/'
-    )
-    jmolcmd = (
-        "java -Xmx512m -jar " + path2Jmol + "/JmolData.jar " + fxyz +
-        " -ij '" + jmolscript + prefix + ".png'" + " >/dev/null "
-    )
-    if not noOutput:
-        print(jmolcmd)
-    os.system(jmolcmd)
+    from pyNanoMatBuilder import data
+    path2Jmol = data.pyNMBvar.path2Jmol  # Use the user-configurable path
+    
+    # 1. Define the local working directory for the user's files
+    user_figs_dir = Path("figs")
+    user_figs_dir.mkdir(exist_ok=True)
+    
+    # 2. Locate the input XYZ (assumed to be in the local figs folder)
+    fxyz = user_figs_dir / f"{mol}.xyz"
+    if not fxyz.exists():
+        if not noOutput:
+            print(f"Error: {fxyz} not found. Cannot generate image.")
+        return
 
+    # 3. Build the Jmol script
+    # We save the .png to the local working directory 'figs/'
+    output_png = user_figs_dir / f"{prefix}.png"
+    
+    jmolscript = (
+        f"{scriptJ}; frank off; set specularPower 80; set antialiasdisplay; "
+        "set background [xf1f2f3]; set zShade ON; set zShadePower 1; "
+        f"write image pngt 1024 1024 '{output_png}';"
+    )
+
+    # 4. Assemble the command
+    jmolcmd = (
+        f"java -Xmx512m -jar {path2Jmol}/JmolData.jar {fxyz} "
+        f"-ij \"{jmolscript}\" >/dev/null "
+    )
+
+    if not noOutput:
+        print(f"Generating Jmol image: {output_png}")
+    
+    os.system(jmolcmd)
 
 #######################################################################
 ######################################## Functions that writes xyz, cif, jmol script files
@@ -3027,9 +3111,7 @@ def imageNameWithPathway(imgName):
     Returns:
         str: The full file path to the image file.
     """
-    path2image = os.path.join(pyNMB_location(), 'figs')
-    imgNameWithPathway = os.path.join(path2image, imgName)
-    return imgNameWithPathway
+    return get_resource_path('resources.figs', imgName)
 
 
 def plotImageInPropFunction(imageFile):

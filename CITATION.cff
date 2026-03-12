@@ -2,21 +2,15 @@
 # Visit https://bit.ly/cffinit to generate yours today!
 
 cff-version: 1.2.0
-title: "pyphyschemtools: A Python toolbox for physical chemistry and cheminformatics"
+title: "pyNanoMatBuilder: mono- and poly-crystalline nanoparticle architectures at the atomic scale"
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
 type: software
 authors:
-  - given-names: Quentin
-    family-names: Jéré
-    email: quentin.jere@utoulouse.fr
-    affiliation: >-
-      LPCNO (INSA, CNRS UMR 5215, Université de
-      Toulouse)
-  - given-names: Lorris
-    family-names: Toucouère
-    email: lorris.toucouere@utoulouse.fr
+  - given-names: Sara
+    family-names: Mokhtari
+    email: sara.mokhtari@insa-toulouse.fr
     affiliation: >-
       LPCNO (INSA, CNRS UMR 5215, Université de
       Toulouse)
@@ -30,15 +24,18 @@ authors:
 identifiers:
   - type: doi
     value: 10.5281/zenodo.18644730
-repository-code: 'https://github.com/rpoteau/pyphyschemtools'
+repository-code: 'https://github.com/rpoteau/pynanomatbuilder'
 abstract: >-
-  pyphyschemtools provides a unified Python ecosystem for physical chemistry 
-  research and education. It acts as an "API of APIs" for computational 
-  workflows (VASP, Gaussian, LOBSTER), microkinetics simulations (KORD), 
-  3D visualization, cheminformatics tools, and other topics.
+  pyNanoMatBuilder is an open-source Python library designed to
+  build and visualize complex monocrystalline and polycristalline
+  nanoparticle architectures, including models on substrates,
+  for materials science, X-ray data analysis,
+  and electron microscopy research
 keywords:
-  - Physical Chemistry
-  - Cheminformatics
+  - Nanochemistry
+  - Molecular structure
+  - Mircoscopy
+  - X-Ray spectrocospy
 license: GPL-3.0-or-later
-version: 0.8.3
+version: 0.1.0
 date-released: '2026-03-04'
