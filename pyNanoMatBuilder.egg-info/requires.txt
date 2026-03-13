@@ -27,3 +27,6 @@ sphinx-copybutton
 
 [tem]
 abtem
+
+[visu]
+tools4pyphyschem

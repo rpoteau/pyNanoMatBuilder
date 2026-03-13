@@ -1,7 +1,7 @@
 [project]
 name = "pyNanoMatBuilder"
 version = "0.1.0"
-description = "A comprehensive Python toolbox for physical chemistry and cheminformatics"
+description = "Build and visualize complex crystalline nanoparticle architectures, including models on substrates, for materials science, X-ray data analysis, and electron microscopy research"
 authors = [{name = "Sara Mokhtari, LPCNO", email = "smokhtari@insa-toulouse.fr"}, {name = "Romuald POTEAU, LPCNO", email = "romuald.poteau@utoulouse.fr"}]
 readme = "README.md"
 requires-python = ">=3.8"
@@ -65,4 +65,7 @@ debye = [
 ]
 tem = [
     "abtem"
+]
+visu = [
+    "tools4pyphyschem"
 ]

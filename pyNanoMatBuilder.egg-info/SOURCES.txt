@@ -69,6 +69,7 @@ docs/build/html/_static/pyNanoMatBuilder_banner.svg
 docs/build/html/_static/pygments.css
 docs/build/html/_static/searchtools.js
 docs/build/html/_static/sphinx_highlight.js
+docs/build/html/_static/visualID.css
 docs/build/html/_static/css/badge_only.css
 docs/build/html/_static/css/theme.css
 docs/build/html/_static/css/fonts/Roboto-Slab-Bold.woff
@@ -122,6 +123,7 @@ docs/source/modules.rst
 docs/source/.ipynb_checkpoints/conf-checkpoint.py
 docs/source/.ipynb_checkpoints/index-checkpoint.rst
 docs/source/_static/pyNanoMatBuilder_banner.svg
+docs/source/_static/visualID.css
 docs/source/theoryDocs/intro.md
 pyNanoMatBuilder/README
 pyNanoMatBuilder/TEM_creator.py
