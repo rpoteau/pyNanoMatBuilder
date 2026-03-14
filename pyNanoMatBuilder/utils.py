@@ -19,8 +19,9 @@ from ase import io as ase_io
 from ase.spacegroup import get_spacegroup
 from ase.visualize import view
 
-from pyNanoMatBuilder import data
+from importlib import resources
 
+from pyNanoMatBuilder import data
 
 #######################################################################
 ######################################## time
@@ -493,14 +494,12 @@ def ciflist(dbFolder="resources/cif_database"):
     Args:
         dbFolder: The database folder name (default is `resources/cif_database`).
     """
-    path2cif = pyNMBu.get_resource_path(dbFolder)
-    path_obj = Path(path2cif)
-    if path_obj.exists():
-        print(os.listdir(path_obj))
+    path2cif = Path(get_resource_path(dbFolder))
+    if path2cif.exists():
+        print(os.listdir(path2cif))
     else:
         print(f"Folder {dbFolder} not found.")
 
-from importlib import resources
 def pyNMB_location():
     """
     Returns the absolute path to the root of the installed package.
