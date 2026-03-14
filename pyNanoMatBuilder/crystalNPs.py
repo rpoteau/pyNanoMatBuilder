@@ -262,9 +262,7 @@ class Crystal:
             SystemExit: If crystal not found and no external CIF provided.
         """
         if self.userDefCif is None:
-            path2cif = os.path.join(
-                pyNMBu.pyNMB_location(), self.dbFolder
-            )
+            path2cif = pyNMBu.get_resource_path("resources/cif_database")
 
             # Search for crystal in database
             if self.crystal.upper() in data.pyNMBcif.CIFdf.index.str.upper():
