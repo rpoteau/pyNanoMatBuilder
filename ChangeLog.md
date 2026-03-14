@@ -1,6 +1,21 @@
+* [Semantic Versioning](#semvers)
+* [Historical Development](#dev-history)
+* [end of the ChangeLog.md file](#firststeps)
+
+<a id="semvers"></a>
+# Semantic Versioning
+
+## [0.8.0] - 2026-03-15 "first 1.0 beta release"
+
+- **Adopted Semantic Versioning**: Transitions the project to the `[Major.Minor.Patch]` format to improve release transparency and dependency reliability.
+    - Major ($x$): Incremented when incompatible API changes are made. If a user's old code will break when they update to this version, the Major number must be bumped (e.g., $1.0.0 \rightarrow 2.0.0$).
+    - Minor ($y$): Incremented when a new functionality is added in a backwards-compatible manner. New builders, new tools, or new parameters that don't break existing scripts go here (e.g., $1.1.0 \rightarrow 1.2.0$).
+    - Patch ($z$): Incremented for backwards-compatible bug fixes. This is exactly what has been doing with the recent path fixes and dependency cleanups (e.g., $1.1.1 \rightarrow 1.1.2$).
+
+<a id="dev-history"></a>
 # Development of a pre-release version -> date-based versioning
 
-## 20260310-20260317 *En route* to a pyNnaoMAtBuilder library
+## 20260310-20260315 *En route* to a pyNnaoMAtBuilder library
 
 ### Documentation & UX
 * **New "Workflow Guides"**: Added a comprehensive "How To?" section at the beginning of the tutorial notebook, providing a clear step-by-step path for new users.
@@ -743,3 +758,5 @@ The idea is to calculate the size from the MOI for each nps in the crystals clas
 
 ## 202404 - 202405
 **Basic architecure of `pyNanoMatBuilder`, overall strategy defined (vertices, edges and planes for basic polyhedra), and first "easy" polyhedra implemented**
+
+<a id="firststeps"></a>

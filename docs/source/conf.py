@@ -9,7 +9,11 @@
 project = 'pyNanoMatBuilder'
 copyright = '2026, Sara Mokhtari, Romuald Poteau'
 author = 'Sara Mokhtari, Romuald Poteau'
-release = '0.1.0'
+
+# The full version, including alpha/beta/rc tags
+release = '0.8.0'
+# The short X.Y version
+version = '0.8'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

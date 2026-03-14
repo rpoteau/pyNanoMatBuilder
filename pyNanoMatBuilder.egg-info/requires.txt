@@ -1,5 +1,4 @@
 ase
-autoreload
 ipython
 ipywidgets
 jupyter

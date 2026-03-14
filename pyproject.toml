@@ -1,6 +1,6 @@
 [project]
 name = "pyNanoMatBuilder"
-version = "0.1.4"
+version = "0.8.0"
 description = "Build and visualize complex crystalline nanoparticle architectures, including models on substrates, for materials science, X-ray data analysis, and electron microscopy research"
 authors = [{name = "Sara Mokhtari, LPCNO", email = "smokhtari@insa-toulouse.fr"}, {name = "Romuald POTEAU, LPCNO", email = "romuald.poteau@utoulouse.fr"}]
 readme = "README.md"
@@ -8,7 +8,6 @@ requires-python = ">=3.8"
 license = {text = "GPL-3.0-or-later"}
 dependencies = [
     "ase",              # Atomic Simulation Environment: manipulating and visualizing atomistic structures
-    "autoreload",       # 
     "ipython",          # Enhanced interactive Python shell for rapid testing and research
     "ipywidgets",       # Interactive HTML widgets for Jupyter notebooks (sliders, buttons)
     "jupyter",          # The complete ecosystem for interactive computing and notebooks

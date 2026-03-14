@@ -279,7 +279,6 @@ class Crystal:
                     f"Please provide a CIF file.{fg.OFF}"
                 )
             full_path_to_cif = pyNMBu.get_resource_path("resources/cif_database", self.cifname)
-            print(f"######################### {full_path_to_cif=}")
             self.cif = io.read(full_path_to_cif)
         else:
             self.cif = io.read(self.userDefCif)

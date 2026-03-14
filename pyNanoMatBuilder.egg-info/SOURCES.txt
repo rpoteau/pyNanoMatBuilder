@@ -99,6 +99,7 @@ docs/build/html/_static/js/badge_only.js
 docs/build/html/_static/js/theme.js
 docs/build/html/_static/js/versions.js
 docs/build/html/theoryDocs/intro.html
+docs/source/.conf.py.swp
 docs/source/conf.py
 docs/source/index.rst
 docs/source/modules.rst
