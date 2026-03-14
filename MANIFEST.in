@@ -11,9 +11,7 @@ recursive-include docs *
 recursive-include pyNanoMatBuilder *
 
 # Include side resources
-recursive-include cif_database *
 recursive-include pyNanoMatBuilder/resources *
-recursive-include userDefCifs *
 
 # Include example notebooks
 include *.ipynb
