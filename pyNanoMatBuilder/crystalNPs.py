@@ -941,7 +941,8 @@ class Crystal:
         # Loop over surface planes to compute truncation
         for i, p in enumerate(self.surfacesWulff):
             if self.symWulff:
-                sym_p = self.ucSG.equivalent_lattice_points(p)
+                # sym_p = self.ucSG.equivalent_lattice_points(p) #deprecated (ase function)
+                sym_p = pyNMBu.get_equivalent_miller_indices(self,p)
                 normal = []
                 for sp in sym_p:
                     normal.append(

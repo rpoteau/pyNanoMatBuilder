@@ -659,6 +659,8 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.returnUnitcellData"><code class="docutils literal notranslate"><span class="pre">returnUnitcellData()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.print_spacegroup_info"><code class="docutils literal notranslate"><span class="pre">print_spacegroup_info()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.get_equivalent_miller_indices"><code class="docutils literal notranslate"><span class="pre">get_equivalent_miller_indices()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.print_ase_unitcell"><code class="docutils literal notranslate"><span class="pre">print_ase_unitcell()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.listCifsOfTheDatabase"><code class="docutils literal notranslate"><span class="pre">listCifsOfTheDatabase()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.scaleUnitCell"><code class="docutils literal notranslate"><span class="pre">scaleUnitCell()</span></code></a></li>
@@ -715,6 +717,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.truncateAbovePlanes"><code class="docutils literal notranslate"><span class="pre">truncateAbovePlanes()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.returnPointsThatLieInPlanes"><code class="docutils literal notranslate"><span class="pre">returnPointsThatLieInPlanes()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.deleteElementsOfAList"><code class="docutils literal notranslate"><span class="pre">deleteElementsOfAList()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.check_jmol"><code class="docutils literal notranslate"><span class="pre">check_jmol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.saveCoords_DrawJmol"><code class="docutils literal notranslate"><span class="pre">saveCoords_DrawJmol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.DrawJmol"><code class="docutils literal notranslate"><span class="pre">DrawJmol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.write"><code class="docutils literal notranslate"><span class="pre">write()</span></code></a></li>
@@ -753,6 +756,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.createDir"><code class="docutils literal notranslate"><span class="pre">createDir()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.Inscribed_circumscribed_spheres"><code class="docutils literal notranslate"><span class="pre">Inscribed_circumscribed_spheres()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.remove_duplicate_atoms"><code class="docutils literal notranslate"><span class="pre">remove_duplicate_atoms()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.clone"><code class="docutils literal notranslate"><span class="pre">clone()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyNanoMatBuilder.visualID">visualID.py</a><ul>
@@ -7593,6 +7597,35 @@ and assigns them to attributes within the <cite>system</cite> instance.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.print_spacegroup_info">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.</span></span><span class="sig-name descname"><span class="pre">print_spacegroup_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sg_number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.print_spacegroup_info" title="Link to this definition"></a></dt>
+<dd><p>Fetch and print crystallographic details for a given space group number.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.get_equivalent_miller_indices">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.</span></span><span class="sig-name descname"><span class="pre">get_equivalent_miller_indices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sg_input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hkl</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.get_equivalent_miller_indices" title="Link to this definition"></a></dt>
+<dd><p>Find all unique Miller indices equivalent to the input (hkl) plane.</p>
+<p>This function mimics ASE’s <cite>equivalent_lattice_points</cite>. It can accept
+either a full pyNanoMatBuilder Crystal system or a standard space group integer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sg_input</strong> (<em>int</em><em> or </em><em>object</em>) – Either the space group number (e.g., 225)
+OR a Crystal system instance containing the SpacegroupAnalyzer (system.sga).</p></li>
+<li><p><strong>hkl</strong> (<em>list</em><em> or </em><em>np.array</em>) – The Miller indices [h, k, l] of the plane.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A 2D array of unique, symmetrically equivalent Miller indices.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.print_ase_unitcell">
 <span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.</span></span><span class="sig-name descname"><span class="pre">print_ase_unitcell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Atoms</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.print_ase_unitcell" title="Link to this definition"></a></dt>
 <dd><p>Function that prints unitcell informations : chemical formula, bravais lattice, n° space group, cell parameters, volume, etc.</p>
@@ -7735,9 +7768,9 @@ returns equivalent atoms.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.ciflist">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.</span></span><span class="sig-name descname"><span class="pre">ciflist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dbFolder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cif_database'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.ciflist" title="Link to this definition"></a></dt>
-<dd><p>Function that prints the CIF files in the dataset.
-:param dbFolder: The database folder name (default is <cite>data.pyNMBvar.dbFolder</cite>).</p>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.</span></span><span class="sig-name descname"><span class="pre">ciflist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dbFolder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'resources/cif_database'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.ciflist" title="Link to this definition"></a></dt>
+<dd><p>Function that prints the CIF files in the built-in dataset.
+:param dbFolder: The database folder name (default is <cite>resources/cif_database</cite>).</p>
 </dd></dl>
 
 <dl class="py function">
@@ -7748,9 +7781,26 @@ returns equivalent atoms.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.get_resource_path">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.</span></span><span class="sig-name descname"><span class="pre">get_resource_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sub_package</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.get_resource_path" title="Link to this definition"></a></dt>
-<dd><p>Generic helper to get the absolute path of a file in resources.
-Usage: get_resource_path(‘resources.figs’, ‘banner.png’)</p>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.</span></span><span class="sig-name descname"><span class="pre">get_resource_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sub_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#pyNanoMatBuilder.utils.get_resource_path" title="Link to this definition"></a></dt>
+<dd><p>Retrieve the absolute path of a resource file within the package.</p>
+<p>This helper uses the modern ‘importlib.resources.files’ API (Python 3.9+)
+to ensure compatibility with various installation environments like
+Google Colab or virtual environments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sub_folder</strong> (<em>str</em>) – Folder path relative to the package root
+(e.g., ‘resources/figs’ or ‘resources/cif_database’).</p></li>
+<li><p><strong>filename</strong> (<em>str</em>) – Name of the file (e.g., ‘banner.png’).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The absolute string path to the file.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -8626,6 +8676,11 @@ Lines are parallel if the $|angle|$ between their direction vector is 0° or 180
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.check_jmol">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.</span></span><span class="sig-name descname"><span class="pre">check_jmol</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.check_jmol" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.saveCoords_DrawJmol">
 <span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.</span></span><span class="sig-name descname"><span class="pre">saveCoords_DrawJmol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asemol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scriptJ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundaries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.saveCoords_DrawJmol" title="Link to this definition"></a></dt>
 <dd><p>Save coordinates and generate a Jmol visualization.</p>
@@ -9400,6 +9455,22 @@ are considered unique and kept.</p></li>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">n_dup</span><span class="p">)</span>  <span class="c1"># 1 (first atom is duplicate)</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.clone">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.</span></span><span class="sig-name descname"><span class="pre">clone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">system</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.clone" title="Link to this definition"></a></dt>
+<dd><p>Create and return a deep copy of any pyNanoMatBuilder system.</p>
+<p>This ensures that all internal arrays, ASE atoms objects,
+and Pymatgen structures are fully independent from the original.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>system</strong> – A pyNanoMatBuilder object (e.g., Crystal, Icosahedron).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A completely independent clone of the input system.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>

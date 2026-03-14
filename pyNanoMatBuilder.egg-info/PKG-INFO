@@ -12,6 +12,7 @@ Requires-Python: >=3.8
 Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: ase
+Requires-Dist: autoreload
 Requires-Dist: ipython
 Requires-Dist: ipywidgets
 Requires-Dist: jupyter
@@ -79,14 +80,33 @@ Let's first make a sphere with a diameter of ~ 4 nm. This is the target size, bu
 from pyNanoMatBuilder import crystalNPs as cyNP
 from pyNanoMatBuilder import utils as pyNMBu
 
-# 
-sphere_diameter = [4] # diameter in nm
-AuNP = cyNP.Crystal("Au fcc",size = sphere_diameter, shape = "sphere", thresholdCoreSurface = 1, skipSymmetryAnalyzis = False, noOutput = False)
+# Define parameters
+sphere_diameter = [4] # Target diameter in nm
+# Instantiate the Crystal object (Au fcc sphere)
+AuNP = cyNP.Crystal(
+    "Au fcc",
+    size=sphere_diameter, 
+    shape="sphere", 
+    thresholdCoreSurface=1, 
+    skipSymmetryAnalyzis=False, 
+    noOutput=False
+)
 
-pyNMBu.write("coords/SphericalAuNP.xyz", AuNP.NP) # XYZ file
-pyNMBu.write("coords/SphericalAuNP_CoreSurface.xyz", AuNP.NPcs) # XYZ file of the core/surface model
-pyNMBu.write("coords/SphericalAuNP.script", AuNP.jMolCS) # JMOL script if postAnalyzis and jmolCrystalShape are True (they are by default)
+# Save the results in various formats
+# The 'write' utility automatically creates the 'coords/' directory, if it does not exist
+pyNMBu.write("coords/SphericalAuNP.xyz", AuNP.NP)                # Main coordinates
+pyNMBu.write("coords/SphericalAuNP_CoreSurface.xyz", AuNP.NPcs)  # Core/surface model
+pyNMBu.write("coords/SphericalAuNP.script", AuNP.jMolCS)         # JMOL visualization script
+
+# Save unitcells
+pyNMBu.write("coords/SphericalAuNP_uc.cif", AuNP.cif)            # The base unitcell
+pyNMBu.write("coords/SphericalAuNP_sc.cif", AuNP.sc)             # The supercell used for shaping
 ```
+
+---
+See more explanations in the **How to? Workflow Guides** section of the Main Tutorial notebook 
+
+**Main Tutorial**: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/rpoteau/pynanomatbuilder/blob/main/pyNMB-examples.ipynb)
 
 ---
 
@@ -96,4 +116,3 @@ pyNMBu.write("coords/SphericalAuNP.script", AuNP.jMolCS) # JMOL script if postAn
 [![Downloads](https://img.shields.io/pypi/dm/pynanomatbuilder)](https://pypi.org/project/pynanomatbuilder/)
 <!-- [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18644730.svg)](https://doi.org/10.5281/zenodo.18644730) -->
 
-**Main Tutorial**: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/rpoteau/pynanomatbuilder/blob/main/pyNMB-examples.ipynb)

@@ -2,6 +2,10 @@
 
 ## 20260310-20260317 *En route* to a pyNnaoMAtBuilder library
 
+### Documentation & UX
+* **New "Workflow Guides"**: Added a comprehensive "How To?" section at the beginning of the tutorial notebook, providing a clear step-by-step path for new users.
+* **PyPI Compatibility**: Conducted intensive testing and adapted the tutorial notebooks to ensure seamless performance with the version of `pyNanoMatBuilder` installed via pip/PyPI.
+
 ### Added
 - **Unified `write()` function** in `utils.py`:
     - A "smart" entry point that handles `.xyz`, `.cif`, `.script`, and `.spt` files automatically.
@@ -10,6 +14,7 @@
 - **Centralized Resource Management**: Moved all non-code assets (`.css`, `.svg`, `.cif`, `.spt`) into a dedicated `resources/` directory within the package.
 - **Optional Dependencies**: Structured `pyproject.toml` with "extras" (`debye`, `tem`) to allow lightweight core installation.
 - **Mocking**: Added `autodoc_mock_imports` for heavy dependencies (`abtem`, `debyecalculator`) to ensure documentation builds successfully in restricted environments.
+- **Internal Resource Management**: Implemented `get_resource_path` across the entire library. This ensures that internal data files (CIFs, templates, etc.) are correctly located regardless of the user's operating system or installation path.
 
 ### Changed
 - **Package Architecture (Namespace Flattening)**: Key tools (`init`, `end`, colors) are now accessible directly via `pyNMB.<tool>` instead of the full submodule path.
@@ -28,7 +33,13 @@
 - **Symmetry Analysis Upgrade in `utils.py`**:
   - replaced **deprecated `ase.spacegroup.get_spacegroup`** with `pymatgen.symmetry.analyzer.SpacegroupAnalyzer`. This fixes accuracy issues with non-standard crystal settings and removes `FutureWarning` logs.
   - **Symmetry Object Refactoring**: Transitioned from ASE-specific `Spacegroup` objects to explicit `ucSG_number` and `ucSG_symbol` attributes sourced from Pymatgen. Updated all display and classification functions (`print_ase_unitcell`, `get_crystal_type`) to support these new data types.
-  - `./figs` folder moved to `pyNnaoMatBuilder/resources/figs`. All paths to `figs` in `utils.py` changed accordingly
+  - **New Symmetry Utility**: Introduced `get_equivalent_miller_indices()`, which replaces the ASE `equivalent_lattice_points()` function.  (*Polymorphic Support*: The function is "smart"—it accepts either a full `Crystal` system object or a standard Space Group integer (e.g., 225), making it compatible with both the library core and user toy-scripts).
+- `./figs` and `./cif_database` folders moved to `pyNnaoMatBuilder/resources/`. All paths to `figs` and `./cif_database` in `utils.py` changed accordingly
+- **Updated `MANIFEST.in`**: Revised recursive inclusion rules to align with the new directory structure, ensuring that `docs`, `cif_database`, and `resources` are bundled into the source distribution.
+- **Refined `pyproject.toml`**: 
+    * Updated `[tool.setuptools.package-data]` to explicitly map new resource locations.
+    * Ensured all critical assets (`.cif`, `.spt`, `.xyz`, `.png`) are recognized as package data for seamless installation via PyPI.
+    * Synchronized project metadata and dependencies to support the latest modular architecture.
 
 ### Fixed
 - Fixed a **critical `NameError`** caused by missing `from pathlib import Path` in submodules.

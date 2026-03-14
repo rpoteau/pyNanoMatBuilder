@@ -24,18 +24,15 @@ from pyNanoMatBuilder import data
 
 #######################################################################
 ######################################## time
-from datetime import datetime
-import datetime, time
+import time, datetime
 class timer:
     """
     Timer class to measure elapsed time in seconds and display it in hh:mm:ss ms.
     """
 
     def __init__(self):
-        _start_time = None
-        _end_time = None
-        _chrono_start = None
-        _chrono_stop = None
+        self._chrono_start = None
+        self._chrono_stop = None
 
     # delay can be timedelta or seconds
     def hdelay_ms(self, delay):
@@ -60,17 +57,18 @@ class timer:
         """
         Starts the chrono.
         """
-        global _chrono_start, _chrono_stop
-        _chrono_start = time.time()
+        self._chrono_start = time.time()
 
     # return delay in seconds or in humain format
     def chrono_stop(self, hdelay=False):
         """
         Stops the chrono and returns the elapsed time.
         """
-        global _chrono_start, _chrono_stop
-        _chrono_stop = time.time()
-        sec = _chrono_stop - _chrono_start
+        if self._chrono_start is None:
+            return "00:00:00 000ms" if hdelay else 0.0
+            
+        self._chrono_stop = time.time()
+        sec = self._chrono_stop - self._chrono_start
         if hdelay:
             return self.hdelay_ms(sec)
         return sec
@@ -79,10 +77,15 @@ class timer:
         """
         Prints the elapsed time.
         """
-        print(f'{fg.BLUE}Duration : {self.hdelay_ms(time.time() - _chrono_start)}{fg.OFF}')
+        if self._chrono_start is None:
+            print(f'{fg.BLUE}Duration : Timer not started{fg.OFF}')
+            return
+            
+        elapsed = time.time() - self._chrono_start
+        print(f'{fg.BLUE}Duration : {self.hdelay_ms(elapsed)}{fg.OFF}')
 
 #######################################################################
-######################################## ase unitcells and symmetry analyzis
+######################################## ase unitcells and pymatgen symmetry analyzis
 def returnUnitcellData(system):
     """
     Function that calculates various unit cell properties from the `system.cif` object 
@@ -110,12 +113,70 @@ def returnUnitcellData(system):
     pmg_struct = AseAtomsAdaptor.get_structure(system.cif)
     # Analyze symmetry
     sga = SpacegroupAnalyzer(pmg_struct, symprec=system.aseSymPrec)
+    # Store the analyzer object so other methods (like makeWulff) can use it
+    system.sga = sga
     # Store the Spacegroup Info (Spglib format)
     # This replaces the old system.ucSG
     system.ucSG_symbol = sga.get_space_group_symbol()
     system.ucSG_number = sga.get_space_group_number()
     system.ucCrystalSystem = sga.get_crystal_system()
 
+def print_spacegroup_info(sg_number):
+    """
+    Fetch and print crystallographic details for a given space group number.
+    """
+
+    from pymatgen.symmetry.groups import SpaceGroup
+    
+    sg = SpaceGroup.from_int_number(sg_number)
+    info = (
+        f"--- Details for Space Group {sg_number} ---\n"
+        f"Symbol (Name)      : {sg.symbol}\n"
+        f"Crystal System     : {sg.crystal_system}\n"
+        f"Number of Ops      : {len(sg.symmetry_ops)}"
+    )
+    return info
+
+def get_equivalent_miller_indices(sg_input, hkl):
+    """
+    Find all unique Miller indices equivalent to the input (hkl) plane.
+
+    This function mimics ASE's `equivalent_lattice_points`. It can accept 
+    either a full pyNanoMatBuilder Crystal system or a standard space group integer.
+
+    Args:
+        sg_input (int or object): Either the space group number (e.g., 225) 
+            OR a Crystal system instance containing the SpacegroupAnalyzer (system.sga).
+        hkl (list or np.array): The Miller indices [h, k, l] of the plane.
+
+    Returns:
+        np.ndarray: A 2D array of unique, symmetrically equivalent Miller indices.
+    """
+    import numpy as np
+    from pymatgen.symmetry.groups import SpaceGroup
+    
+    # 1. Figure out what kind of input we received to get the rotation matrices
+    if isinstance(sg_input, int):
+        # It's a raw integer from your toy script
+        sg = SpaceGroup.from_int_number(sg_input)
+        rotations = [op.rotation_matrix for op in sg.symmetry_ops]
+        
+    elif hasattr(sg_input, 'sga'):
+        # It's your Crystal object from the main library
+        rotations = [op.rotation_matrix for op in sg_input.sga.get_symmetry_operations()]
+        
+    else:
+        raise ValueError("sg_input must be an integer space group number or a Crystal system object.")
+    
+    # 2. Apply each rotation to the vector and round to handle floating-point precision
+    all_variants = np.array([np.dot(rot, hkl) for rot in rotations])
+    all_variants = np.round(all_variants, 8)
+    
+    # 3. Filter for unique rows
+    unique_variants = np.unique(all_variants, axis=0)
+    
+    return unique_variants
+    
 def print_ase_unitcell(system: Atoms):
     """
     Function that prints unitcell informations : chemical formula, bravais lattice, n° space group, cell parameters, volume, etc.
@@ -151,24 +212,24 @@ def print_ase_unitcell(system: Atoms):
 
 def listCifsOfTheDatabase():
     """Display all CIF filenames in the database."""
-    import pathlib
-    import glob
-    from ase.spacegroup import get_spacegroup
-    import re
 
-    path2cifFolder = os.path.join(pyNMB_location(), 'cif_database')
-    print(f"path to cif database = {path2cifFolder}")
+    try:
+        # We target a dummy file or just the directory if supported by the OS
+        db_path = Path(get_resource_path("resources", "cif_database"))
+    except:
+        # Fallback: get the path to the folder directly
+        db_path = Path(pyNMB_location()) / "resources" / "cif_database"
 
+    print(f"Path to cif database: {db_path}")
     sgITField = "_space_group_IT_number"
     sgHMField = "_symmetry_space_group_name_H-M"
 
     class Crystal:
         pass
 
-    for cif in glob.glob(f'{path2cifFolder}/*.cif'):
-        path2cifFile = pathlib.Path(cif)
-        cifName = pathlib.Path(*path2cifFile.parts[-1:])
-        vID.centertxt(f"{cifName}", size=14, weight='bold')
+    for cif in db_path.rglob('*.cif'):
+        relative_name = cif.relative_to(db_path)
+        vID.centertxt(f"{relative_name}", size=14, weight='bold')
         cifContent = ase_io.read(cif)
         cifFile = open(cif, 'r')
         cifFileLines = cifFile.readlines()
@@ -187,15 +248,15 @@ def listCifsOfTheDatabase():
         print_ase_unitcell(c)
         color = "vID.fg.RED"
         print()
-        if int(sgIT) == c.ucSG.no:
+        if int(sgIT) == c.ucSG_number:
             print(
                 f"{vID.fg.GREEN}Symmetry in the cif file = {sgIT}   {sgHM}"
-                f"{vID.hl.BOLD} in agreement with the ase symmetry analyzis{vID.fg.OFF}"
+                f"{vID.hl.BOLD} in agreement with the pymatgen symmetry analyzis{vID.fg.OFF}"
             )
         else:
             print(
                 f"{vID.fg.RED}Symmetry in the cif file = {sgIT}   {sgHM}"
-                f"{vID.hl.BOLD} disagrees with the ase symmetry analyzis{vID.fg.OFF}"
+                f"{vID.hl.BOLD} disagrees with the pymatgen symmetry analyzis (Group Number = {c.ucSG_number}){vID.fg.OFF}"
             )
 
 def scaleUnitCell(crystal: Atoms,
@@ -413,7 +474,7 @@ def load_cif(self, cif_file, noOutput):
 
     """
     cif_folder = "cif_database"
-    path2cif = Path(get_resource_path('resources.cif_database', cif_file))
+    path2cif = Path(get_resource_path('resources/cif_database', cif_file))
     self.cif = ase_io.read(path2cif)
     if not noOutput:
         print("Absolute path to CIF:", path2cif)
@@ -426,14 +487,17 @@ def load_cif(self, cif_file, noOutput):
 
 #######################################################################
 ######################################## Folder pathways
-def ciflist(dbFolder=data.pyNMBvar.dbFolder):
+def ciflist(dbFolder="resources/cif_database"):
     """
-    Function that prints the CIF files in the dataset.
+    Function that prints the CIF files in the built-in dataset.
     Args:
-        dbFolder: The database folder name (default is `data.pyNMBvar.dbFolder`).
+        dbFolder: The database folder name (default is `resources/cif_database`).
     """
-    path2cif = os.path.join(pyNMB_location(), dbFolder)
-    print(os.listdir(path2cif))
+    path2cif = pyNMB_location() / dbFolder
+    if path2cif.exists():
+        print(os.listdir(path2cif))
+    else:
+        print(f"Folder {dbFolder} not found.")
 
 from importlib import resources
 def pyNMB_location():
@@ -441,16 +505,39 @@ def pyNMB_location():
     Returns the absolute path to the root of the installed package.
     """
     # This points to the directory containing __init__.py of pyNanoMatBuilder
-    with resources.path("pyNanoMatBuilder", "__init__.py") as p:
-        return p.parent
+    return Path(str(resources.files("pyNanoMatBuilder")))
         
-def get_resource_path(sub_package, filename):
+def get_resource_path(sub_folder: str, filename: str) -> str:
     """
-    Generic helper to get the absolute path of a file in resources.
-    Usage: get_resource_path('resources.figs', 'banner.png')
+    Retrieve the absolute path of a resource file within the package.
+    
+    This helper uses the modern 'importlib.resources.files' API (Python 3.9+) 
+    to ensure compatibility with various installation environments like 
+    Google Colab or virtual environments.
+
+    Args:
+        sub_folder (str): Folder path relative to the package root 
+                          (e.g., 'resources/figs' or 'resources/cif_database').
+        filename (str): Name of the file (e.g., 'banner.png').
+
+    Returns:
+        str: The absolute string path to the file.
     """
-    package_path = f"pyNanoMatBuilder.{sub_package}"
-    with resources.path(package_path, filename) as p:
+    # Start at the package root
+    traversable_path = resources.files("pyNanoMatBuilder")
+    
+    # Walk down the sub-folders (supports 'a/b/c' notation)
+    for folder in sub_folder.split('/'):
+        traversable_path = traversable_path / folder
+        
+    # Target the specific file
+    file_path = traversable_path / filename
+
+    if not file_path.exists():
+        raise FileNotFoundError(f"❌ Resource not found: {sub_folder}/{filename}")
+
+    # Use as_file to ensure the path is accessible on the physical disk
+    with resources.as_file(file_path) as p:
         return str(p)
 #######################################################################
 ######################################## Coordinates, vectors, etc
@@ -1794,6 +1881,22 @@ def deleteElementsOfAList(t,
 
 #######################################################################
 ######################################## coupling with Jmol & DebyeCalculator
+def check_jmol():
+    from pyNanoMatBuilder import data
+    from pathlib import Path
+    
+    # We check the CURRENT value of the variable in RAM
+    path = Path(data.pyNMBvar.path2Jmol) / "JmolData.jar"
+    
+    if not path.exists():
+        print("---")
+        print("💡 Jmol not found. To enable image rendering, please set the path:")
+        print("from pyNanoMatBuilder import data")
+        print("data.pyNMBvar.path2Jmol = '/your/path/to/jmol'")
+        print("---")
+        return False
+    return True
+    
 def saveCoords_DrawJmol(asemol, prefix, scriptJ="", boundaries=False, noOutput=True):
     """
     Save coordinates and generate a Jmol visualization.
@@ -1806,7 +1909,8 @@ def saveCoords_DrawJmol(asemol, prefix, scriptJ="", boundaries=False, noOutput=T
         noOutput (bool): If True, suppresses command output.
     """
     from pyNanoMatBuilder import data
-    path2Jmol = data.pyNMBvar.path2Jmol
+    path2Jmol = Path(data.pyNMBvar.path2Jmol)
+    jar_file = path2Jmol / "JmolData.jar"
     # fxyz = "./figs/" + prefix + ".xyz"
     # writexyz(fxyz, asemol)
 
@@ -1816,6 +1920,13 @@ def saveCoords_DrawJmol(asemol, prefix, scriptJ="", boundaries=False, noOutput=T
     user_output_dir.mkdir(exist_ok=True)
     fxyz = user_output_dir / f"{prefix}.xyz"
     writexyz(str(fxyz), asemol)
+
+    if not jar_file.exists():
+        if not noOutput:
+            print(f"\n{vID.fg.RED}⚠️ Jmol not found at: {jar_file}{vID.fg.OFF}")
+            print("The .xyz file was saved, but the .png rendering was skipped.")
+            print(f"To fix this, set: {vID.hl.BOLD}data.pyNMBvar.path2Jmol = 'your/path'{vID.hl.OFF}\n")
+        return # Graceful exit
     
     # if not boundaries:
     #     jmolscript = (
@@ -1838,9 +1949,8 @@ def saveCoords_DrawJmol(asemol, prefix, scriptJ="", boundaries=False, noOutput=T
     #     print(jmolcmd)
     # os.system(jmolcmd)
     try:
-        with resources.path("pyNanoMatBuilder.resources.figs", "script-facettes-345PtLight.spt") as spt_path:
-            internal_spt = str(spt_path)
-    except (FileNotFoundError, ModuleNotFoundError):
+        internal_spt = get_resource_path("resources/figs", "script-facettes-345PtLight.spt")
+    except FileNotFoundError:
         internal_spt = None
 
     # Build the Jmol Script
@@ -3111,7 +3221,7 @@ def imageNameWithPathway(imgName):
     Returns:
         str: The full file path to the image file.
     """
-    return get_resource_path('resources.figs', imgName)
+    return get_resource_path('resources/figs', imgName)
 
 
 def plotImageInPropFunction(imageFile):
@@ -3445,3 +3555,19 @@ def remove_duplicate_atoms(coordinates, reference_coords, tolerance):
     n_removed = np.sum(~mask_unique)
     
     return unique_coords, n_removed
+
+def clone(system):
+    """
+    Create and return a deep copy of any pyNanoMatBuilder system.
+    
+    This ensures that all internal arrays, ASE atoms objects, 
+    and Pymatgen structures are fully independent from the original.
+    
+    Args:
+        system: A pyNanoMatBuilder object (e.g., Crystal, Icosahedron).
+        
+    Returns:
+        A completely independent clone of the input system.
+    """
+    import copy
+    return copy.deepcopy(system)

@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 import pandas as pd
 import numpy as np
+import os
+from pathlib import Path
 
 @dataclass
 
@@ -8,8 +10,14 @@ class pyNMBdata:
     clusters = ['regfccOh','regIco','regfccTd','regDD','fccCube','bccCube','fccCubo','fccTrOh','fccTrCube','bccrDD','fccdrDD','pbpy']
 
 class pyNMBvar:
-    dbFolder = 'cif_database'
-    path2Jmol = '/usr/local/src/jmol-16.3.5'
+    dbFolder = 'resources/cif_database'
+    _default_jmol = os.environ.get('JMOL_HOME')
+    if _default_jmol and Path(_default_jmol).exists():
+        path2Jmol = _default_jmol
+    else:
+        # Fallback to a placeholder string. 
+        # Using a string instead of None prevents crashes in your Path() calls later.
+        path2Jmol = "JMOL_NOT_FOUND"
 
 class WulffShapes:
     data = ({

@@ -657,6 +657,8 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.returnUnitcellData"><code class="docutils literal notranslate"><span class="pre">returnUnitcellData()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.print_spacegroup_info"><code class="docutils literal notranslate"><span class="pre">print_spacegroup_info()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.get_equivalent_miller_indices"><code class="docutils literal notranslate"><span class="pre">get_equivalent_miller_indices()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.print_ase_unitcell"><code class="docutils literal notranslate"><span class="pre">print_ase_unitcell()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.listCifsOfTheDatabase"><code class="docutils literal notranslate"><span class="pre">listCifsOfTheDatabase()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.scaleUnitCell"><code class="docutils literal notranslate"><span class="pre">scaleUnitCell()</span></code></a></li>
@@ -713,6 +715,7 @@
 <li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.truncateAbovePlanes"><code class="docutils literal notranslate"><span class="pre">truncateAbovePlanes()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.returnPointsThatLieInPlanes"><code class="docutils literal notranslate"><span class="pre">returnPointsThatLieInPlanes()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.deleteElementsOfAList"><code class="docutils literal notranslate"><span class="pre">deleteElementsOfAList()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.check_jmol"><code class="docutils literal notranslate"><span class="pre">check_jmol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.saveCoords_DrawJmol"><code class="docutils literal notranslate"><span class="pre">saveCoords_DrawJmol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.DrawJmol"><code class="docutils literal notranslate"><span class="pre">DrawJmol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.write"><code class="docutils literal notranslate"><span class="pre">write()</span></code></a></li>
@@ -751,6 +754,7 @@
 <li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.createDir"><code class="docutils literal notranslate"><span class="pre">createDir()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.Inscribed_circumscribed_spheres"><code class="docutils literal notranslate"><span class="pre">Inscribed_circumscribed_spheres()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.remove_duplicate_atoms"><code class="docutils literal notranslate"><span class="pre">remove_duplicate_atoms()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.clone"><code class="docutils literal notranslate"><span class="pre">clone()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="modules.html#module-pyNanoMatBuilder.visualID">visualID.py</a><ul>
@@ -998,6 +1002,8 @@
 </li>
       <li><a href="modules.html#pyNanoMatBuilder.visualID.centertxt">centertxt() (in module pyNanoMatBuilder.visualID)</a>
 </li>
+      <li><a href="modules.html#pyNanoMatBuilder.utils.check_jmol">check_jmol() (in module pyNanoMatBuilder.utils)</a>
+</li>
       <li><a href="modules.html#pyNanoMatBuilder.utils.timer.chrono_show">chrono_show() (pyNanoMatBuilder.utils.timer method)</a>
 </li>
       <li><a href="modules.html#pyNanoMatBuilder.utils.timer.chrono_start">chrono_start() (pyNanoMatBuilder.utils.timer method)</a>
@@ -1005,6 +1011,8 @@
       <li><a href="modules.html#pyNanoMatBuilder.utils.timer.chrono_stop">chrono_stop() (pyNanoMatBuilder.utils.timer method)</a>
 </li>
       <li><a href="modules.html#pyNanoMatBuilder.utils.ciflist">ciflist() (in module pyNanoMatBuilder.utils)</a>
+</li>
+      <li><a href="modules.html#pyNanoMatBuilder.utils.clone">clone() (in module pyNanoMatBuilder.utils)</a>
 </li>
       <li><a href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.cog">cog (pyNanoMatBuilder.archimedeanNPs.fccTrCube attribute)</a>
 
@@ -1360,6 +1368,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules.html#pyNanoMatBuilder.utils.get_equivalent_miller_indices">get_equivalent_miller_indices() (in module pyNanoMatBuilder.utils)</a>
+</li>
       <li><a href="modules.html#pyNanoMatBuilder.utils.get_moments_of_inertia_for_size">get_moments_of_inertia_for_size() (in module pyNanoMatBuilder.utils)</a>
 </li>
       <li><a href="modules.html#pyNanoMatBuilder.utils.get_resource_path">get_resource_path() (in module pyNanoMatBuilder.utils)</a>
@@ -2118,6 +2128,8 @@
       <li><a href="modules.html#pyNanoMatBuilder.make_files_remastered.PredefinedWulffFiles">PredefinedWulffFiles (class in pyNanoMatBuilder.make_files_remastered)</a>
 </li>
       <li><a href="modules.html#pyNanoMatBuilder.utils.print_ase_unitcell">print_ase_unitcell() (in module pyNanoMatBuilder.utils)</a>
+</li>
+      <li><a href="modules.html#pyNanoMatBuilder.utils.print_spacegroup_info">print_spacegroup_info() (in module pyNanoMatBuilder.utils)</a>
 </li>
       <li><a href="modules.html#pyNanoMatBuilder.utils.printNeighbours">printNeighbours() (in module pyNanoMatBuilder.utils)</a>
 </li>

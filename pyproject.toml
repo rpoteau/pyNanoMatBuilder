@@ -8,6 +8,7 @@ requires-python = ">=3.8"
 license = {text = "GPL-3.0-or-later"}
 dependencies = [
     "ase",              # Atomic Simulation Environment: manipulating and visualizing atomistic structures
+    "autoreload",       # 
     "ipython",          # Enhanced interactive Python shell for rapid testing and research
     "ipywidgets",       # Interactive HTML widgets for Jupyter notebooks (sliders, buttons)
     "jupyter",          # The complete ecosystem for interactive computing and notebooks
@@ -40,14 +41,12 @@ where = ["."]
 include = ["pyNanoMatBuilder*"]
 
 [tool.setuptools.package-data]
-"pyNanoMatBuilder" = [
-    "resources/css/*.css",
-    "resources/svg/*.svg",
-    "resources/svg/*.png",
-    "resources/svg/*.spt",
-    "resources/svg/*.xyz",
-    "*.py"
-]
+# Root resources directory (CSS, SVG, etc.)
+"pyNanoMatBuilder.resources" = ["*/*.css", "*/*.svg", "*/*.png", "*/*.spt", "*/*.xyz"]
+# CIF Database (includes root files and the 'amorphousC' subdirectory)
+"pyNanoMatBuilder.resources.cif_database" = ["*.cif", "*.xyz", "*.xyz.gz", "*/*.xyz.gz"]
+# Jmol scripts, images, and base64 assets
+"pyNanoMatBuilder.resources.figs" = ["*.spt", "*.png", "*.xyz", "*.base64"]
 
 [project.optional-dependencies]
 docs = [
