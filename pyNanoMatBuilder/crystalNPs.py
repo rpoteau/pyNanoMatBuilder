@@ -263,6 +263,7 @@ class Crystal:
         """
         if self.userDefCif is None:
             path2cif = pyNMBu.get_resource_path("resources/cif_database")
+            print(f"######################### {path2cif=}")
 
             # Search for crystal in database
             if self.crystal.upper() in data.pyNMBcif.CIFdf.index.str.upper():
