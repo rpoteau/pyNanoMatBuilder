@@ -493,9 +493,10 @@ def ciflist(dbFolder="resources/cif_database"):
     Args:
         dbFolder: The database folder name (default is `resources/cif_database`).
     """
-    path2cif = pyNMB_location() / dbFolder
-    if path2cif.exists():
-        print(os.listdir(path2cif))
+    path2cif = pyNMBu.get_resource_path(dbFolder)
+    path_obj = Path(path2cif)
+    if path_obj.exists():
+        print(os.listdir(path_obj))
     else:
         print(f"Folder {dbFolder} not found.")
 

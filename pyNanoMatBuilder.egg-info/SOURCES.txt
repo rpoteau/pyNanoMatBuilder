@@ -327,4 +327,3 @@ pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_banner.png
 pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_banner.svg
 pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_logo.png
 pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_logo.svg
-userDefCifs/Fe2N-zeta-1668016.cif
