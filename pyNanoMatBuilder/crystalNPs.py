@@ -262,9 +262,6 @@ class Crystal:
             SystemExit: If crystal not found and no external CIF provided.
         """
         if self.userDefCif is None:
-            path2cif = pyNMBu.get_resource_path("resources/cif_database")
-            print(f"######################### {path2cif=}")
-
             # Search for crystal in database
             if self.crystal.upper() in data.pyNMBcif.CIFdf.index.str.upper():
                 dftmp = pd.DataFrame(index=data.pyNMBcif.CIFdf.index.copy())
@@ -281,8 +278,9 @@ class Crystal:
                     f"bulk parameters for '{self.crystal}' crystal.\n"
                     f"Please provide a CIF file.{fg.OFF}"
                 )
-
-            self.cif = io.read(os.path.join(path2cif, self.cifname))
+            full_path_to_cif = pyNMBu.get_resource_path("resources/cif_database", self.cifname)
+            print(f"######################### {full_path_to_cif=}")
+            self.cif = io.read(full_path_to_cif)
         else:
             self.cif = io.read(self.userDefCif)
             path2extCif = Path(self.userDefCif)

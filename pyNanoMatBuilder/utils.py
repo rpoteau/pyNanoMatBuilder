@@ -494,7 +494,7 @@ def ciflist(dbFolder="resources/cif_database"):
     Args:
         dbFolder: The database folder name (default is `resources/cif_database`).
     """
-    path2cif = Path(get_resource_path(dbFolder))
+    path2cif = Path(get_resource_path(dbFolder, ""))
     if path2cif.exists():
         print(os.listdir(path2cif))
     else:
