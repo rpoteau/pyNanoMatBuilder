@@ -6,9 +6,9 @@
 #
 ##################################################################################################
 
-__author__ = "Romuald POTEAU"
-__maintainer__ =  "Romuald POTEAU"
-__email__ = "romuald.poteau@univ-tlse3.fr"
+__author__ = "Romuald Poteau"
+__maintainer__ =  "Romuald Poteau"
+__email__ = "romuald.poteau@utoulouse.fr"
 __status__ = "Development"
 
 import os,sys,platform
@@ -27,55 +27,6 @@ _end_time     = None
 _chrono_start = None
 _chrono_stop  = None
 
-class fg:
-    PURPLE = '\033[95m'
-    CYAN = '\033[96m'
-    DARKCYAN = '\033[36m'
-    BLUE = '\033[94m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    LIGHTGRAY = "\033[37m"
-    DARKGRAY = "\033[90m"    
-    BLACK = '\033[30m'
-    WHITE = "\033[38;5;231m"
-    OFF = '\033[0m'
-class hl:
-    BLINK = "\033[5m"
-    blink = "\033[25m" #reset blink
-    BOLD = '\033[1m'
-    bold = "\033[21m" #reset bold
-    UNDERL = '\033[4m'
-    underl = "\033[24m" #reset underline
-    ITALIC = "\033[3m"
-    italic = "\033[23m"
-    OFF = '\033[0m'
-class bg:
-    DARKRED = "\033[38;5;231;48;5;52m"
-    DARKREDB = "\033[38;5;231;48;5;52;1m"
-    LIGHTRED = "\033[48;5;217m"
-    LIGHTREDB = "\033[48;5;217;1m"
-    LIGHTYELLOW = "\033[48;5;228m"
-    LIGHTYELLOWB = "\033[48;5;228;1m"
-    LIGHTGREEN = "\033[48;5;156m"
-    LIGHTGREENB = "\033[48;5;156;1m"
-    LIGHTBLUE = "\033[48;5;117m"
-    LIGHTBLUEB = "\033[48;5;117;1m"
-    OFF = "\033[0m"
-class color:
-    PURPLE = '\033[95m'
-    CYAN = '\033[96m'
-    DARKCYAN = '\033[36m'
-    BLUE = '\033[94m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    LIGHTGRAY = "\033[37m"
-    DARKGRAY = "\033[90m"    
-    BLACK = '\033[30m'
-    WHITE = "\033[38;5;231m"
-    BOLD = '\033[1m'
-    OFF = '\033[0m'
 
 def apply_css_style():
     """
@@ -169,28 +120,4 @@ def end():
         print(f"[Warning] End logo not found at {path2logo}")
     display_md(md)
     
-def centerTitle(content=None):
-    """
-    Centers and renders as HTML a text in the notebook
-    font size = 16px, background color = dark grey, foreground color = white
-    """
-    
-    from IPython.display import display, HTML
-    display(HTML(f"<div style='text-align:center; font-weight: bold; font-size:16px;background-color: #343132;color: #ffffff'>{content}</div>"))
 
-def centertxt(content=None,font='sans', size=12,weight="normal",bgc="#000000",fgc="#ffffff"):
-    """
-    Centers and renders as HTML a text in the notebook
-    
-    input: 
-        - content = the text to render (default: None)
-        - font = font family (default: 'sans', values allowed =  'sans-serif' | 'serif' | 'monospace' | 'cursive' | 'fantasy' | ...)
-        - size = font size (default: 12)
-        - weight = font weight (default: 'normal', values allowed = 'normal' | 'bold' | 'bolder' | 'lighter' | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 )
-        - bgc = background color (name or hex code, default = '#ffffff')
-        - fgc = foreground color (name or hex code, default = '#000000')
-        
-    """
-    
-    from IPython.display import display, HTML
-    display(HTML(f"<div style='text-align:center; font-family: {font}; font-weight: {weight}; font-size:{size}px;background-color: {bgc};color: {fgc}'>{content}</div>"))

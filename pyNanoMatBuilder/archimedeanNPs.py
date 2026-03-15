@@ -6,11 +6,12 @@ from ase.build import bulk, make_supercell, cut
 from ase.visualize import view
 
 # Internal Relative Imports
-from .visualID import fg, hl, bg
+from .utils import fg, hl, bg
 from . import visualID as vID
 from . import data
 from . import utils as pyNMBu
 from . import platonicNPs as pNP
+from .utils import hl, fg, bg
 
 class ArchimedeanNP(pNP.PlatonicNP):
     """Base class for all Archimedean nanoparticles providing common functionality."""
@@ -170,7 +171,7 @@ class fccCubo(ArchimedeanNP):
         self.jmolCrystalShape = jmolCrystalShape
         self.imageFile = pyNMBu.imageNameWithPathway("cubo-C.png")
         self.trPlanes = None
-        if not noOutput: vID.centerTitle(f"{nShell} shells cuboctahedron")
+        if not noOutput: pyNMBu.centerTitle(f"{nShell} shells cuboctahedron")
 
         if not noOutput: self.prop()
         if not calcPropOnly:
@@ -341,7 +342,7 @@ class fccCubo(ArchimedeanNP):
         - noOutput (bool): If True, suppresses output messages.
         """
         
-        if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
+        if not noOutput: pyNMBu.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pyNMBu.timer()
         chrono.chrono_start()
         # central atom = "1st shell"
@@ -424,7 +425,7 @@ class fccCubo(ArchimedeanNP):
         """
         Display unit cell and nanoparticle properties.
         """
-        vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
+        pyNMBu.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
         pyNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)
@@ -537,7 +538,7 @@ class fccTrTd(ArchimedeanNP):
         self.jmolCrystalShape = jmolCrystalShape
         self.imageFile = pyNMBu.imageNameWithPathway("trTd-C.png")
         self.trPlanes = None
-        if not noOutput: vID.centerTitle(f"Truncated fcc Td, made from a {nLayer} layers Td")
+        if not noOutput: pyNMBu.centerTitle(f"Truncated fcc Td, made from a {nLayer} layers Td")
           
         if not noOutput: self.prop()
         if not calcPropOnly:
@@ -637,16 +638,16 @@ class fccTrTd(ArchimedeanNP):
         Args:
             noOutput (bool): If True, suppress printing and progress output.
         """
-        if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
+        if not noOutput: pyNMBu.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pyNMBu.timer()
         chrono.chrono_start()
-        if not noOutput: vID.centertxt("Generation of the coordinates of the tetrahedron",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        if not noOutput: pyNMBu.centertxt("Generation of the coordinates of the tetrahedron",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         
         # Generate a regular fcc tetrahedron using the class "regfccTd" of the "pNP" module
         Td = pNP.regfccTd(self.element,self.Rnn,self.nLayer+1,postAnalyzis=False,noOutput=True)
         self.NP0 = Td.NP.copy()
         aseTd = Td.NP
-        if not noOutput: vID.centertxt("Removing atoms ",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        if not noOutput: pyNMBu.centertxt("Removing atoms ",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         if not noOutput: print('First searching for the coordinates of the vertices (atoms 1-4) and of the cog')
         coordVertices = aseTd.get_positions()[0:4]
         if not noOutput: print("Now calculating the coordinates of the planes orthogonal the the cog-vertex directions")
@@ -681,7 +682,7 @@ class fccTrTd(ArchimedeanNP):
         """
         Display unit cell and nanoparticle properties.
         """
-        vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
+        pyNMBu.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
         pyNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)
@@ -795,7 +796,7 @@ class fccTrOh(ArchimedeanNP):
         self.jmolCrystalShape = jmolCrystalShape
         self.imageFile = pyNMBu.imageNameWithPathway("trOh-C.png")
         self.trPlanes = None
-        if not noOutput: vID.centerTitle(f"Truncated fcc octahedron, made from a {nOrder}th order Oh")
+        if not noOutput: pyNMBu.centerTitle(f"Truncated fcc octahedron, made from a {nOrder}th order Oh")
           
         if not noOutput: self.prop()
         if not calcPropOnly:
@@ -950,16 +951,16 @@ class fccTrOh(ArchimedeanNP):
         Args:
         - noOutput (bool): If True, suppresses output messages.
         """
-        if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
+        if not noOutput: pyNMBu.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pyNMBu.timer()
         chrono.chrono_start()
-        if not noOutput: vID.centertxt("Generation of the coordinates of the octahedron",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        if not noOutput: pyNMBu.centertxt("Generation of the coordinates of the octahedron",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
 
         # Generate a regular fcc octahedron using the class "regfccOh" of the module "pNP"
         Oh = pNP.regfccOh(self.element,self.Rnn,self.nOrder,postAnalyzis=False,noOutput=True)
         self.NP0 = Oh.NP.copy()
         aseOh = Oh.NP
-        if not noOutput: vID.centertxt("Removing atoms ",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        if not noOutput: pyNMBu.centertxt("Removing atoms ",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         if not noOutput: print('First searching for the coordinates of the vertices (atoms 1-6) and of the cog')
         coordVertices = aseOh.get_positions()[0:6]
         if not noOutput: print("Now calculating the coordinates of the planes orthogonal the the cog-vertex directions")
@@ -992,7 +993,7 @@ class fccTrOh(ArchimedeanNP):
         """
         Display unit cell and nanoparticle properties.
         """
-        vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
+        pyNMBu.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
         pyNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)
@@ -1095,7 +1096,7 @@ class fccTrCube(ArchimedeanNP):
         self.nAtoms = 0
         self.cog = np.array([0., 0., 0.])
         self.nOrder = nOrder
-        if not noOutput: vID.centerTitle(f"fcc truncated cube")
+        if not noOutput: pyNMBu.centerTitle(f"fcc truncated cube")
         self.jmolCrystalShape = jmolCrystalShape
         self.trPlanes = None
         self.imageFile = pyNMBu.imageNameWithPathway("trOh-C.png")
@@ -1235,7 +1236,7 @@ class fccTrCube(ArchimedeanNP):
         Args:
             noOutput (bool): If True, suppress printing and progress output.
         """
-        if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
+        if not noOutput: pyNMBu.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         def findVertices(c):
             """Locate corner vertices of the cube from positions array.
 
@@ -1256,18 +1257,18 @@ class fccTrCube(ArchimedeanNP):
             return indexV, coordV
         chrono = pyNMBu.timer()
         chrono.chrono_start()
-        if not noOutput: vID.centertxt("Generation of the coordinates of the cube",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        if not noOutput: pyNMBu.centertxt("Generation of the coordinates of the cube",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
 
         # Generate a regular fcc cube using the class `cube` of the module `pNP`.
         aseCube = pNP.cube(
             'fcc', self.element, self.Rnn, self.nOrder, noOutput=True, postAnalyzis=False
         ).NP
-        if not noOutput: vID.centertxt("Cube moved to origin",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        if not noOutput: pyNMBu.centertxt("Cube moved to origin",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         c2cog = pyNMBu.center2cog(aseCube.get_positions())
         aseCube.set_positions(c2cog)
         self.NP0 = aseCube.copy()
         #  print('aseCube after moving to cog', aseCube.get_positions())
-        if not noOutput: vID.centertxt("Removing atoms ",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        if not noOutput: pyNMBu.centertxt("Removing atoms ",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         if not noOutput: print('First searching for the coordinates of the vertices and of the cog')
         indexV, coordVertices = findVertices(aseCube.get_positions())
         if not noOutput: print("Vertices = coords ", coordVertices)
@@ -1304,7 +1305,7 @@ class fccTrCube(ArchimedeanNP):
         """
         Display unit cell and nanoparticle properties.
         """
-        vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
+        pyNMBu.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
         # pyNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)

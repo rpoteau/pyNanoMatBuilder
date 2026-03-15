@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 
 # Internal Relative Imports
-from .visualID import fg, hl, bg
 from . import visualID as vID
 
 from . import crystalNPs as cyNP
@@ -23,6 +22,7 @@ from . import otherNPs as oNP
 
 from . import utils as pyNMBu
 from . import data
+from .utils import hl, fg, bg
 
 ################################################ NP Database Base ###
 

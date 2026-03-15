@@ -8,9 +8,9 @@ from ase.visualize import view
 from ase.cluster.cubic import FaceCenteredCubic
 
 # Internal Relative Imports
-from .visualID import fg, hl, bg
 from . import visualID as vID
 from . import utils as pyNMBu
+from .utils import hl, fg, bg
 
 ###############################################################################
 class PlatonicNP:
@@ -257,7 +257,7 @@ class regfccOh(PlatonicNP):
         self.imageFile = pyNMBu.imageNameWithPathway("fccOh-C.png")
         self.trPlanes = None
         if not noOutput:
-            vID.centerTitle(f"{nOrder}th order regular fcc Octahedron")
+            pyNMBu.centerTitle(f"{nOrder}th order regular fcc Octahedron")
 
         if not noOutput:
             self.prop()
@@ -462,7 +462,7 @@ class regfccOh(PlatonicNP):
         """
 
         if not noOutput:
-            vID.centertxt("Generation of coordinates",
+            pyNMBu.centertxt("Generation of coordinates",
                           bgc='#007a7a', size='14', weight='bold')
         chrono = pyNMBu.timer()
         chrono.chrono_start()
@@ -586,7 +586,7 @@ class regfccOh(PlatonicNP):
     def prop(self):
         """Display unit cell and nanoparticle properties.
         """
-        vID.centertxt("Properties", bgc='#007a7a', size='14', weight='bold')
+        pyNMBu.centertxt("Properties", bgc='#007a7a', size='14', weight='bold')
         print(self)
         pyNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ", self.element)
@@ -703,7 +703,7 @@ class regIco(PlatonicNP):
         self.imageFile = pyNMBu.imageNameWithPathway("ico-C.png")
         self.trPlanes = None
         if not noOutput:
-            vID.centerTitle(f"{nShell} shells icosahedron")
+            pyNMBu.centerTitle(f"{nShell} shells icosahedron")
 
         if not noOutput:
             self.prop()
@@ -943,7 +943,7 @@ class regIco(PlatonicNP):
             None (updates class attributes).
         """
         if not noOutput:
-            vID.centertxt("Generation of coordinates",
+            pyNMBu.centertxt("Generation of coordinates",
                           bgc='#007a7a', size='14',
                           weight='bold')
         chrono = pyNMBu.timer()
@@ -1037,7 +1037,7 @@ class regIco(PlatonicNP):
     def prop(self):
         """Display unit cell and nanoparticle properties.
         """
-        vID.centertxt("Properties", bgc='#007a7a', size='14', weight='bold')
+        pyNMBu.centertxt("Properties", bgc='#007a7a', size='14', weight='bold')
         print(self)
         pyNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ", self.element)
@@ -1168,7 +1168,7 @@ class regfccTd(PlatonicNP):
         self.NP = None
         self.trPlanes = None
         if not noOutput:
-            vID.centerTitle(f"fcc tetrahedron: {nLayer} atoms/edge = number of layers")
+            pyNMBu.centerTitle(f"fcc tetrahedron: {nLayer} atoms/edge = number of layers")
           
         if not noOutput:
             self.prop()
@@ -1387,7 +1387,7 @@ class regfccTd(PlatonicNP):
             None (updates class attributes).
         """
         if not noOutput:
-            vID.centertxt("Generation of coordinates",
+            pyNMBu.centertxt("Generation of coordinates",
                           bgc='#007a7a', size='14',
                           weight='bold')
         chrono = pyNMBu.timer()
@@ -1489,7 +1489,7 @@ class regfccTd(PlatonicNP):
     
     def prop(self):
         """Display unit cell and nanoparticle properties."""
-        vID.centertxt("Properties", bgc='#007a7a', size='14', weight='bold')
+        pyNMBu.centertxt("Properties", bgc='#007a7a', size='14', weight='bold')
         print(self)
         pyNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ", self.element)
@@ -1614,7 +1614,7 @@ class regDD(PlatonicNP):
         self.imageFile = pyNMBu.imageNameWithPathway("rDD-C.png")
         self.trPlanes = None
         if not noOutput:
-            vID.centerTitle(f"{nShell} shells regular dodecahedron")
+            pyNMBu.centerTitle(f"{nShell} shells regular dodecahedron")
           
         if not noOutput:
             self.prop()
@@ -1770,7 +1770,7 @@ class regDD(PlatonicNP):
             None (updates class attributes).
         """
         if not noOutput:
-            vID.centertxt("Generation of coordinates",
+            pyNMBu.centertxt("Generation of coordinates",
                           bgc='#007a7a', size='14',
                           weight='bold')
         chrono = pyNMBu.timer()
@@ -1885,7 +1885,7 @@ class regDD(PlatonicNP):
 
     def prop(self):
         """Display unit cell and nanoparticle properties."""
-        vID.centertxt("Properties", bgc='#007a7a', size='14', weight='bold')
+        pyNMBu.centertxt("Properties", bgc='#007a7a', size='14', weight='bold')
         print(self)
         pyNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ", self.element)
@@ -2007,7 +2007,7 @@ class cube(PlatonicNP):
         self.trPlanes = None
 
         if not noOutput:
-            vID.centerTitle(f"{nOrder}x{nOrder}x{nOrder} {self.crystalStructure} cube")
+            pyNMBu.centerTitle(f"{nOrder}x{nOrder}x{nOrder} {self.crystalStructure} cube")
 
         if not noOutput:
             self.prop()
@@ -2188,7 +2188,7 @@ class cube(PlatonicNP):
         """
         # crystalline structure
         if not noOutput:
-            vID.centertxt("Generation of coordinates",
+            pyNMBu.centertxt("Generation of coordinates",
                           bgc='#007a7a', size='14',
                           weight='bold')
         chrono = pyNMBu.timer()
@@ -2237,7 +2237,7 @@ class cube(PlatonicNP):
     def prop(self):
         """Display unit cell and nanoparticle properties.
         """
-        vID.centertxt("Properties", bgc='#007a7a', size='14', weight='bold')
+        pyNMBu.centertxt("Properties", bgc='#007a7a', size='14', weight='bold')
         print(self)
         pyNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ", self.element)

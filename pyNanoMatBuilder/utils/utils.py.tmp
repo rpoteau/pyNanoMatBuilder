@@ -1,0 +1,75 @@
+import time, datetime
+import importlib
+import os
+import pathlib
+from pathlib import Path
+import re
+
+import numpy as np
+from scipy import linalg
+import math
+import sys
+from . import visualID as vID
+from .visualID import bg, fg, hl
+
+from ase.atoms import Atoms
+from ase.geometry import cellpar_to_cell
+from ase import io as ase_io
+from ase.spacegroup import get_spacegroup
+from ase.visualize import view
+
+from importlib import resources
+
+from pyNanoMatBuilder import data
+
+
+
+
+
+
+
+#######################################################################
+
+
+#######################################################################
+
+# New : for cylinder
+
+
+# def isnt_inside_cylinder(position, radius, radius_squared, half_height):
+#     """
+#     Checks whether a given position is outside a cylinder.
+
+#     The cylinder is defined by a radius and half height and aligned along the
+#     z-axis. If the position lies outside the circular base or beyond the half
+#     height of the cylinder, the function returns True. Otherwise, it returns
+#     False.
+
+#     Args:
+#         position (tuple or list): The (x, y, z) coordinates of the point to
+#             check.
+#         radius (float): The radius of the cylinder's base.
+#         radius_squared (float): The square of the radius, for optimization
+#             purposes.
+#         half_height (float): Half the height of the cylinder (from the center
+#             along the z-axis).
+
+#     Returns:
+#         bool: Returns True if the position is outside the cylinder, False
+#             otherwise.
+#     """
+#     # coord défini dans writexyz
+#     if (
+#         abs(position[0]) > radius
+#         or abs(position[1]) > radius
+#         or abs(position[2]) > half_height
+#     ):
+#         return True
+#     if position[0] ** 2 + position[1] ** 2 > radius_squared:
+#         return True
+#     return False
+
+
+
+
+

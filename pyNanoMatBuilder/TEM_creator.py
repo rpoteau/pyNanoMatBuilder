@@ -25,7 +25,6 @@ from sklearn.decomposition import PCA
 import math
 
 # Internal Relative Imports
-from .visualID import fg, hl, bg
 from . import visualID as vID
 
 from . import crystalNPs as cyNP
@@ -36,6 +35,7 @@ from . import johnsonNPs as jNP
 from . import otherNPs as oNP
 from . import utils as pyNMBu
 from . import data
+from .utils import hl, fg, bg
 
 class CreateHRTEMStructure:
     """

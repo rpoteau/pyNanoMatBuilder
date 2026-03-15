@@ -5,12 +5,12 @@ import numpy as np
 from ase.visualize import view
 
 # Internal Relative Imports
-from .visualID import fg, hl, bg
 from . import visualID as vID
 from . import data
 from . import utils as pyNMBu
 from . import platonicNPs as pNP
 from . import johnsonNPs as jNP
+from .utils import hl, fg, bg
 
 ###########################################################################################################
 class fcctpt:
@@ -102,7 +102,7 @@ class fcctpt:
             sys.exit(f"Number of layers of the triangular platelet ({self.nLayer}) cannot be > to the total number of layers of the trigonal bipyramid {self.nLayertbp}")
         self.imageFile = pyNMBu.imageNameWithPathway("tpt-C.png")
         if not noOutput:
-            vID.centerTitle(
+            pyNMBu.centerTitle(
                 f"fcc triangular platelet with {nLayer*2+1} remaining shells, made from a trigonal bipyramid with {nLayerTd} shells per pyramid"
             )
 
@@ -136,14 +136,14 @@ class fcctpt:
             noOutput (bool): Whether to suppress output messages.
         """
         if not noOutput:
-            vID.centertxt("Generation of coordinates", bgc='#007a7a', size='14', weight='bold')
+            pyNMBu.centertxt("Generation of coordinates", bgc='#007a7a', size='14', weight='bold')
         chrono = pyNMBu.timer()
         chrono.chrono_start()
 
         
         # Create the trigonal bipyramid nanoparticle
         if not noOutput:
-            vID.centertxt(
+            pyNMBu.centertxt(
                 "Generation of the coordinates of the trigonal bipyramid, based on the fcc tetrahedron",
                 bgc='#cbcbcb',
                 size='12',
@@ -158,7 +158,7 @@ class fcctpt:
         # print("cog = ",cog)
 
         # Truncate the trigonal bipyramid based on twin plane and truncation planes
-        if not noOutput: vID.centertxt("Truncation of the trigonal bipyramid",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+        if not noOutput: pyNMBu.centertxt("Truncation of the trigonal bipyramid",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         if not noOutput:
             print("Now calculating the coordinates of the twin plane (defined by atoms 0, 1, 2)")
         coordTwPVertices = asetpt.get_positions()[[0, 1, 2]]

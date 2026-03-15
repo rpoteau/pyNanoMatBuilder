@@ -1,8 +1,8 @@
 [project]
 name = "pyNanoMatBuilder"
-version = "0.8.0"
+version = "0.9.0"
 description = "Build and visualize complex crystalline nanoparticle architectures, including models on substrates, for materials science, X-ray data analysis, and electron microscopy research"
-authors = [{name = "Sara Mokhtari, LPCNO", email = "smokhtari@insa-toulouse.fr"}, {name = "Romuald POTEAU, LPCNO", email = "romuald.poteau@utoulouse.fr"}]
+authors = [{name = "Sara Mokhtari, LPCNO", email = "smokhtari@insa-toulouse.fr"}, {name = "Romuald Poteau, LPCNO", email = "romuald.poteau@utoulouse.fr"}]
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "GPL-3.0-or-later"}
@@ -27,6 +27,7 @@ Repository = "https://github.com/rpoteau/pynanomatbuilder"
 Changelog = "https://github.com/rpoteau/pynanomatbuilder/blob/main/CHANGELOG.md"
 Documentation = "https://pynanomatbuilder.readthedocs.io/en/latest/"
 Issues = "https://github.com/rpoteau/pynanomatbuilder/issues"
+"Try on Colab" = "https://colab.research.google.com/github/rpoteau/pyNanoMatBuilder/blob/main/pyNMB-examples.ipynb"
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]

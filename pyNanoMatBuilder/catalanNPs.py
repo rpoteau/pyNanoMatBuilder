@@ -8,9 +8,9 @@ from ase import io
 from ase.visualize import view
 
 # Internal Relative Imports
-from .visualID import fg, hl, bg
 from . import visualID as vID
 from . import utils as pyNMBu
+from .utils import hl, fg, bg
 
 ###########################################################################################################
 class CatalanNP:
@@ -145,7 +145,7 @@ class bccrDD(CatalanNP):
         self.jmolCrystalShape = jmolCrystalShape
         self.imageFile = pyNMBu.imageNameWithPathway("bccrdd-C.png")
         
-        if not noOutput: vID.centerTitle(f"{nShell} shells bcc rhombic dodecahedron ")
+        if not noOutput: pyNMBu.centerTitle(f"{nShell} shells bcc rhombic dodecahedron ")
 
         if not noOutput: self.prop()
         if not calcPropOnly:
@@ -318,7 +318,7 @@ class bccrDD(CatalanNP):
             noOutput (bool): If False, displays progress and timing information.
         """
         
-        if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
+        if not noOutput: pyNMBu.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pyNMBu.timer()
         chrono.chrono_start()
         # central atom = "1st shell"
@@ -397,7 +397,7 @@ class bccrDD(CatalanNP):
         """
         Display unit cell and nanoparticle properties.
         """
-        vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
+        pyNMBu.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
         pyNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)
@@ -512,7 +512,7 @@ class fccdrDD(CatalanNP):
         self.cog = np.array([0., 0., 0.])
         self.jmolCrystalShape = jmolCrystalShape
         self.imageFile = pyNMBu.imageNameWithPathway("fccrdd-C.png")
-        if not noOutput: vID.centerTitle(f"{nShell} shells fcc rhombic dodecahedron")
+        if not noOutput: pyNMBu.centerTitle(f"{nShell} shells fcc rhombic dodecahedron")
 
         if not noOutput: self.prop()
         if not calcPropOnly:
@@ -685,7 +685,7 @@ class fccdrDD(CatalanNP):
             None (updates class attributes).
         """
         
-        if not noOutput: vID.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
+        if not noOutput: pyNMBu.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
         chrono = pyNMBu.timer()
         chrono.chrono_start()
         # central atom = "1st shell"
@@ -759,7 +759,7 @@ class fccdrDD(CatalanNP):
         """
         Display unit cell and nanoparticle properties.
         """
-        vID.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
+        pyNMBu.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
         print(self)
         pyNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)

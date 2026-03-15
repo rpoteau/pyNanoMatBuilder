@@ -5,6 +5,23 @@
 <a id="semvers"></a>
 # Semantic Versioning
 
+## [0.9.0] - 2026-03-15 "misc"
+
+### Added
+* **Metadata Expansion**: Added a direct "Try on Colab" link to `pyproject.toml` URLs to facilitate immediate library testing.
+
+### Architectural Changes (Major Refactoring)
+Modularization of utils: Split the monolithic `utils.py` into a structured sub-package pyNanoMatBuilder `.utils/`:
+
+- `core.py`
+- `crystals.py`
+- `energy.py`
+- `external_pgm.py`
+- `geometry.py`
+- `io.py`
+- `prop.py`
+- `symmetry.py`
+
 ## [0.8.0] - 2026-03-15 "first 1.0 beta release"
 
 - **Adopted Semantic Versioning**: Transitions the project to the `[Major.Minor.Patch]` format to improve release transparency and dependency reliability.
@@ -15,7 +32,7 @@
 <a id="dev-history"></a>
 # Development of a pre-release version -> date-based versioning
 
-## 20260310-20260315 *En route* to a pyNnaoMAtBuilder library
+## 20260310-20260315 "*En route* to a pyNanoMatBuilder library"
 
 ### Documentation & UX
 * **New "Workflow Guides"**: Added a comprehensive "How To?" section at the beginning of the tutorial notebook, providing a clear step-by-step path for new users.

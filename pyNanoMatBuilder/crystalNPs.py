@@ -14,10 +14,10 @@ from ase.geometry import cellpar_to_cell
 from ase.visualize import view
 
 # Internal Relative Imports
-from .visualID import fg, hl, bg
 from . import visualID as vID
 from . import data
 from . import utils as pyNMBu
+from .utils import hl, fg, bg
 
 class Crystal:
     """
@@ -171,7 +171,7 @@ class Crystal:
             self.loadExternalCif()
 
         if not noOutput:
-            vID.centerTitle(f"{self.crystal} {self.shape}")
+            pyNMBu.centerTitle(f"{self.crystal} {self.shape}")
 
         self.bulk(noOutput)
         if scaleDmin2 is not None:
@@ -303,7 +303,7 @@ class Crystal:
             chrono = pyNMBu.timer()
             chrono.chrono_start()
         if not noOutput:
-            vID.centertxt(
+            pyNMBu.centertxt(
                 "Making a multiple cell",
                 bgc="#cbcbcb",
                 size="12",
@@ -503,7 +503,7 @@ class Crystal:
             noOutput (bool): If False, details are printed.
         """
         if not noOutput:
-            vID.centertxt(
+            pyNMBu.centertxt(
                 "Removing atoms to make a sphere",
                 bgc="#cbcbcb",
                 size="12",
@@ -564,7 +564,7 @@ class Crystal:
             noOutput (bool): If False, details are printed.
         """
         if not noOutput:
-            vID.centertxt(
+            pyNMBu.centertxt(
                 "Removing atoms to make an ellipsoid",
                 bgc="#cbcbcb",
                 size="12",
@@ -649,7 +649,7 @@ class Crystal:
             ase.Atoms: The generated nanowire structure.
         """
         if not noOutput:
-            vID.centertxt(
+            pyNMBu.centertxt(
                 "Removing atoms to make a wire",
                 bgc="#cbcbcb",
                 size="12",
@@ -699,7 +699,7 @@ class Crystal:
         self.trPlanes = tr_planes
 
         if not noOutput:
-            vID.centertxt(
+            pyNMBu.centertxt(
                 "Nanowire moved to the center of the unit cell",
                 bgc="#cbcbcb",
                 size="12",
@@ -822,7 +822,7 @@ class Crystal:
             noOutput (bool): If False, details are printed.
         """
         if not noOutput:
-            vID.centertxt(
+            pyNMBu.centertxt(
                 "Removing atoms to make a parallelepiped",
                 bgc="#cbcbcb",
                 size="12",
@@ -917,7 +917,7 @@ class Crystal:
             Updates self.NP with the truncated structure.
         """
         if not noOutput:
-            vID.centertxt(
+            pyNMBu.centertxt(
                 "Calculating truncation distances",
                 bgc="#cbcbcb",
                 size="12",
@@ -1015,7 +1015,7 @@ class Crystal:
             Updates self.nAtoms, self.cog, and self.trPlanes attributes.
         """
         if not noOutput:
-            vID.centertxt("Builder", bgc="#007a7a", size="14", weight="bold")
+            pyNMBu.centertxt("Builder", bgc="#007a7a", size="14", weight="bold")
 
         # Set default size if not provided
         if self.size is None:
@@ -1212,11 +1212,11 @@ class Crystal:
             noOutput (bool): If False, details are printed.
         """
         if not noOutput:
-            vID.centertxt(
+            pyNMBu.centertxt(
                 "Unit cell properties", bgc="#007a7a", size="14", weight="bold"
             )
             pyNMBu.print_ase_unitcell(self)
-            vID.centertxt("Properties", bgc="#007a7a", size="14", weight="bold")
+            pyNMBu.centertxt("Properties", bgc="#007a7a", size="14", weight="bold")
             print(self)
 
     def propPostMake(

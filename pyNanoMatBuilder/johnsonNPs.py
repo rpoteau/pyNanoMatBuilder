@@ -8,11 +8,11 @@ from ase.visualize import view
 import matplotlib.pyplot as plt
 
 # Internal Relative Imports
-from .visualID import fg, hl, bg
 from . import visualID as vID
 from . import data
 from . import utils as pyNMBu
 from . import platonicNPs as pNP
+from .utils import hl, fg, bg
 
 ###########################################################
 class JohnsonNP:
@@ -168,7 +168,7 @@ class fcctbp(JohnsonNP):
         self.jmolCrystalShape = jmolCrystalShape
 
         if not noOutput:
-            vID.centerTitle(
+            pyNMBu.centerTitle(
                 f"fcc trigonal bipyramid with"
                 f" {nLayerTd} shells per pyramid")
 
@@ -211,13 +211,13 @@ class fcctbp(JohnsonNP):
                 messages.
         """
         if not noOutput:
-            vID.centertxt(
+            pyNMBu.centertxt(
                 "Generation of coordinates",
                 bgc='#007a7a', size='14', weight='bold')
         chrono = pyNMBu.timer()
         chrono.chrono_start()
         if not noOutput:
-            vID.centertxt(
+            pyNMBu.centertxt(
                 "Generation of the coordinates"
                 " of the tetrahedron",
                 bgc='#cbcbcb', size='12',
@@ -233,7 +233,7 @@ class fcctbp(JohnsonNP):
         # Get the positions of the atoms in the tetrahedron
         c = aseTd.get_positions()
         if not noOutput:
-            vID.centertxt(
+            pyNMBu.centertxt(
                 "Applying mirror reflection w.r.t."
                 " facet defined by atoms (0,1,2) ",
                 bgc='#cbcbcb', size='12',
@@ -470,7 +470,7 @@ class epbpyM(JohnsonNP):
             self.imageFile = pyNMBu.imageNameWithPathway(
                 "MarksD-C.png")
         if not noOutput:
-            vID.centerTitle(
+            pyNMBu.centerTitle(
                 f"Pentagonal bipyramid with {sizeP}"
                 f" atoms/edge, a x{sizeE} elongation"
                 f" (Ino) and a x{Marks} edge"
@@ -707,7 +707,7 @@ class epbpyM(JohnsonNP):
             None. Updates class attributes directly.
         """
         if not noOutput:
-            vID.centertxt(
+            pyNMBu.centertxt(
                 "Generation of coordinates",
                 bgc='#007a7a', size='14',
                 weight='bold')

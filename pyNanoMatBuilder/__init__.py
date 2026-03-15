@@ -15,9 +15,12 @@ from . import utils as pyNMBu
 # Fast import: move internal objects to the top-level namespace
 # This allows: pyNMB.init() instead of pyNMB.visualID.init()
 from . import visualID as vID
+
 from .visualID import (
-    fg, hl, bg, color, 
     init, end, 
+)
+from .utils import (
+    fg, hl, bg, color, 
     centerTitle, centertxt
 )
 

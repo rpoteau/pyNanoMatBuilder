@@ -11,9 +11,9 @@ copyright = '2026, Sara Mokhtari, Romuald Poteau'
 author = 'Sara Mokhtari, Romuald Poteau'
 
 # The full version, including alpha/beta/rc tags
-release = '0.8.0'
+release = '0.9.0'
 # The short X.Y version
-version = '0.8'
+version = '0.9'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
