@@ -323,7 +323,6 @@ pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_banner.png
 pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_banner.svg
 pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_logo.png
 pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_logo.svg
-pyNanoMatBuilder/utils/.energy.py.swp
 pyNanoMatBuilder/utils/__init__.py
 pyNanoMatBuilder/utils/core.py
 pyNanoMatBuilder/utils/crystals.py

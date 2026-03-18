@@ -13,7 +13,6 @@ import sys
 from ase.atoms import Atoms
 from ase.geometry import cellpar_to_cell
 from ase import io as ase_io
-from ase.spacegroup import get_spacegroup
 from ase.visualize import view
 
 from importlib import resources

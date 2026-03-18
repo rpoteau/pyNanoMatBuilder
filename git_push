@@ -49,17 +49,88 @@ make html
 cd ..
 # ---------------------------------
 
+# --- NEW VERSIONING SECTION ---
+read -p "Do you want to increment the version? [major/minor/patch/no]: " VERSION_TYPE
+
+if [[ "$VERSION_TYPE" =~ ^(major|minor|patch)$ ]]; then
+    echo "🔄 Incrementing $VERSION_TYPE version..."
+    
+    # Script Python inline pour gérer le SemVer proprement
+    python3 - <<EOF
+import re
+import os
+
+files = ["pyproject.toml", "pyNanoMatBuilder/__init__.py"]
+version_type = "$VERSION_TYPE"
+
+# 1. Trouver la version actuelle (depuis pyproject.toml par défaut)
+with open("pyproject.toml", "r") as f:
+    content = f.read()
+    match = re.search(r'version = "(\d+)\.(\d+)\.(\d+)"', content)
+    if not match:
+        print("❌ Version not found in pyproject.toml")
+        exit(1)
+    
+    major, minor, patch = map(int, match.groups())
+
+# 2. Incrémenter
+if version_type == "major": major += 1; minor = 0; patch = 0
+elif version_type == "minor": minor += 1; patch = 0
+elif version_type == "patch": patch += 1
+
+new_version = f"{major}.{minor}.{patch}"
+print(f"✅ New version: {new_version}")
+
+# 3. Mettre à jour les fichiers
+for filepath in files:
+    if os.path.exists(filepath):
+        with open(filepath, "r") as f:
+            content = f.read()
+        # Remplace la version dans pyproject (version = "x.y.z") 
+        # ou __init__ (__version__ = "x.y.z")
+        new_content = re.sub(r'version = "(\d+\.\d+\.\d+)"', f'version = "{new_version}"', content)
+        new_content = re.sub(r'__version__ = "(\d+\.\d+\.\d+)"', f'__version__ = "{new_version}"', new_content)
+        
+        with open(filepath, "w") as f:
+            f.write(new_content)
+EOF
+    # Mettre à jour le message de commit pour inclure la version
+    COMMIT_MSG="$1 (v\$(python3 -c 'import re; print(re.search(r\"version = \"([^\"]+)\"\", open(\"pyproject.toml\").read()).group(1))'))"
+else
+    COMMIT_MSG="$1"
+fi
+
 while true; do
     read -p "Do you wish to add > commit > push? (y/n) " yn
     case $yn in
         [Yy]* )
             echo "---------------------------------------------------------------"
             echo "Now processing git add > commit > push"
+            
+            # Récupération de la version actuelle (mise à jour par le script Python précédemment)
+            CURRENT_V=$(python3 -c 'import re; print(re.search(r"version = \"([^\"]+)\"", open("pyproject.toml").read()).group(1))')
+            
+            # On ajuste le message de commit si une version a été incrémentée
+            if [[ "$VERSION_TYPE" =~ ^(major|minor|patch)$ ]]; then
+                FULL_COMMIT_MSG="$1 (v$CURRENT_V)"
+            else
+                FULL_COMMIT_MSG="$1"
+            fi
+
             git add --all
             git status
-            git commit -m "$1"
-	    git push
-	    break
+            git commit -m "$FULL_COMMIT_MSG"
+
+            # Gestion du Tag et du Push
+            if [[ "$VERSION_TYPE" =~ ^(major|minor|patch)$ ]]; then
+                echo "Creating Git Tag: v$CURRENT_V"
+                git tag -a "v$CURRENT_V" -m "Release v$CURRENT_V"
+                git push origin main --tags
+            else
+                git push origin main
+            fi
+            
+            break
             ;;
         [Nn]* )
             exit

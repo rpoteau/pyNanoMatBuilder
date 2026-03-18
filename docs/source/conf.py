@@ -10,10 +10,14 @@ project = 'pyNanoMatBuilder'
 copyright = '2026, Sara Mokhtari, Romuald Poteau'
 author = 'Sara Mokhtari, Romuald Poteau'
 
-# The full version, including alpha/beta/rc tags
-release = '0.9.0'
-# The short X.Y version
-version = '0.9'
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../../'))
+import pyNanoMatBuilder
+
+project = 'pyNanoMatBuilder'
+release = pyNanoMatBuilder.__version__
+version = '.'.join(release.split('.')[:2])
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
