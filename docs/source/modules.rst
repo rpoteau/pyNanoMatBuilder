@@ -50,24 +50,6 @@ otherNPs.py
    :show-inheritance:
    :member-order: bysource
 
-TEM & Simulation Tools
-----------------------
-TEM_creator.py
-~~~~~~~~~~~~~~
-.. automodule:: pyNanoMatBuilder.TEM_creator
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :member-order: bysource
-
-make_files_remastered.py
-~~~~~~~~~~~~~~~~~~~~~~~~
-.. automodule:: pyNanoMatBuilder.make_files_remastered
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :member-order: bysource
-
 Utilities (utils/)
 ------------------
 core functions (core.py)

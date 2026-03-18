@@ -1,26 +1,39 @@
 #!/bin/bash
 
+# Couleurs pour le terminal
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
+
 set -e  # exit on any error
 
 if [ -n "$1" ]; then
-   echo "---------------------------------------------------------------"
-   echo "✅ commit message = "$1
+   echo -e "${BLUE}---------------------------------------------------------------${NC}"
+   echo -e "✅ Commit message logic: ${BOLD}$1${NC}"
 else
-   echo "❌ commit message must be given as a parameter of this git_push command"
-   echo "exit"
+   echo -e "❌ ${BOLD}Error:${NC} Commit message must be given as a parameter."
+   echo -e "Usage: ./git_push.sh \"My message\""
    exit 1
 fi
-echo "---------------------------------------------------------------"
+echo -e "${BLUE}---------------------------------------------------------------${NC}"
 echo "First finding if there are large files in [sub]folders"
 find . -size +49M -print | sed 's|^\./||' > .LargeFiles
+if [ -s .LargeFiles ]; then
+    echo -e "${YELLOW}⚠️  Large files found and added to .gitignore:${NC}"
+    cat .LargeFiles
+else
+    echo -e "✅ No large files detected."
+fi
 /bin/cp .gitignore .gitignore.bak
 cat .gitignore_base .LargeFiles > .gitignore
 echo "Content of the .gitignore file"
 cat .gitignore
-echo "---------------------------------------------------------------"
+echo -e "📝 .gitignore has been updated and backed up (.gitignore.bak)."
+echo -e "${BLUE}---------------------------------------------------------------${NC}"
 echo "now processing git status"
 git status
-echo "---------------------------------------------------------------"
+echo -e "${BLUE}---------------------------------------------------------------${NC}"
 echo "🛠️  Updating local installation (Editable mode)"
 
 set +e # Désactive temporairement l'arrêt automatique
@@ -29,15 +42,15 @@ PIP_STATUS=$?
 set -e # Réactive l'arrêt automatique
 
 if [ $PIP_STATUS -eq 0 ]; then
-    echo "✅ Installation locale réussie."
+    echo "✅ Installation successful."
 else
-    echo "❌ Échec de l'installation locale (vérifiez votre pyproject.toml)."
-    echo "Fermeture du script. Aucun push effectué."
+    echo "❌ ${BOLD}Installation failed.${NC} Please check pyproject.toml."
+    echo "Script stopped. No push to github."
     exit 1
 fi
 
 # --- NEW DOCUMENTATION SECTION ---
-echo "---------------------------------------------------------------"
+echo -e "${BLUE}---------------------------------------------------------------${NC}"
 echo "📚 Updating API Documentation (sphinx-apidoc)"
 # REMOVED: sphinx-apidoc (To prevent overwriting custom .rst files)
 # sphinx-apidoc -f -M -o docs/source/ ./pyNanoMatBuilder/
@@ -47,64 +60,94 @@ cd docs
 make clean
 make html
 cd ..
+echo -e "✅ Documentation updated in docs/build/html."
 # ---------------------------------
 
 # --- NEW VERSIONING SECTION ---
-read -p "Do you want to increment the version? [major/minor/patch/no]: " VERSION_TYPE
+echo -e "Do you want to increment the version? [${BOLD}M${NC}]ajor, [${BOLD}m${NC}]inor, [${BOLD}p${NC}]atch, [${BOLD}n${NC}]o"
+read -n 1 -s VERSION_KEY  # -n 1: un seul caractère, -s: ne pas l'afficher (optionnel)
+echo "" # Pour revenir à la ligne après la saisie du caractère
+
+if [[ "$VERSION_KEY" == "M" ]]; then
+    VERSION_TYPE="major"
+elif [[ "$VERSION_KEY" == "m" ]]; then
+    VERSION_TYPE="minor"
+elif [[ "$VERSION_KEY" == "p" ]]; then
+    VERSION_TYPE="patch"
+else
+    VERSION_TYPE="no"
+fi
+
+TODAY=$(date +%Y-%m-%d)
 
 if [[ "$VERSION_TYPE" =~ ^(major|minor|patch)$ ]]; then
     echo "🔄 Incrementing $VERSION_TYPE version..."
     
     # Script Python inline pour gérer le SemVer proprement
-    python3 - <<EOF
+    NEW_V_INFO=$(python3 - <<EOF
 import re
 import os
+from datetime import datetime
 
-files = ["pyproject.toml", "pyNanoMatBuilder/__init__.py"]
-version_type = "$VERSION_TYPE"
+files = {
+    "pyproject.toml": r'version\s*=\s*"(\d+\.\d+\.\d+)"',
+    "pyNanoMatBuilder/__init__.py": r'__version__\s*=\s*"(\d+\.\d+\.\d+)"'
+}
+init_file = "pyNanoMatBuilder/__init__.py"
+today = "$TODAY"
 
-# 1. Trouver la version actuelle (depuis pyproject.toml par défaut)
+# 1. Lecture version actuelle
 with open("pyproject.toml", "r") as f:
     content = f.read()
-    match = re.search(r'version = "(\d+)\.(\d+)\.(\d+)"', content)
+    match = re.search(r'version\s*=\s*"(\d+)\.(\d+)\.(\d+)"', content)
     if not match:
-        print("❌ Version not found in pyproject.toml")
+        print("ERROR: Version not found")
         exit(1)
     
     major, minor, patch = map(int, match.groups())
 
-# 2. Incrémenter
-if version_type == "major": major += 1; minor = 0; patch = 0
-elif version_type == "minor": minor += 1; patch = 0
-elif version_type == "patch": patch += 1
+# 2. Incrément
+if "$VERSION_TYPE" == "major": major += 1; minor = 0; patch = 0
+elif "$VERSION_TYPE" == "minor": minor += 1; patch = 0
+elif "$VERSION_TYPE" == "patch": patch += 1
 
-new_version = f"{major}.{minor}.{patch}"
-print(f"✅ New version: {new_version}")
+new_v = f"{major}.{minor}.{patch}"
 
-# 3. Mettre à jour les fichiers
-for filepath in files:
+# 3. Mise à jour des fichiers
+for filepath, pattern in files.items():
     if os.path.exists(filepath):
         with open(filepath, "r") as f:
-            content = f.read()
-        # Remplace la version dans pyproject (version = "x.y.z") 
-        # ou __init__ (__version__ = "x.y.z")
-        new_content = re.sub(r'version = "(\d+\.\d+\.\d+)"', f'version = "{new_version}"', content)
-        new_content = re.sub(r'__version__ = "(\d+\.\d+\.\d+)"', f'__version__ = "{new_version}"', new_content)
+            text = f.read()
         
-        with open(filepath, "w") as f:
-            f.write(new_content)
-EOF
-    # Mettre à jour le message de commit pour inclure la version
-    COMMIT_MSG="$1 (v\$(python3 -c 'import re; print(re.search(r\"version = \"([^\"]+)\"\", open(\"pyproject.toml\").read()).group(1))'))"
-else
-    COMMIT_MSG="$1"
-fi
+        # Update Version
+        text = re.sub(pattern, lambda m: m.group(0).replace(m.group(1), new_v), text)
+        
+        # Update Date (uniquement pour __init__.py)
+        if filepath == init_file:
+            text = re.sub(r'__last_update__\s*=\s*".*"', f'__last_update__ = "{today}"', text)
+            print(f"  ✨ Date updated in {filepath}")
 
+        with open(filepath, "w") as f:
+            f.write(text)
+        print(f"  ✨ Updated {filepath} to v{new_v}")
+
+print(f"RESULT_V:{new_v}")
+EOF
+)
+    CURRENT_V=$(echo "$NEW_V_INFO" | grep "RESULT_V:" | cut -d':' -f2)
+    FULL_COMMIT_MSG="$1 (v$CURRENT_V)"
+    echo -e "✅ Versioning complete: ${BOLD}v$CURRENT_V${NC} (Last update: $TODAY)"
+else
+    # Si pas d'incrément, on récupère juste la version actuelle pour l'affichage
+    CURRENT_V=$(python3 -c 'import re; print(re.search(r"version = \"([^\"]+)\"", open("pyproject.toml").read()).group(1))')
+    FULL_COMMIT_MSG="$1"
+    echo -e "ℹ️  Staying on version ${BOLD}v$CURRENT_V${NC}"
+fi
 while true; do
     read -p "Do you wish to add > commit > push? (y/n) " yn
     case $yn in
         [Yy]* )
-            echo "---------------------------------------------------------------"
+            echo -e "${BLUE}---------------------------------------------------------------${NC}"
             echo "Now processing git add > commit > push"
             
             # Récupération de la version actuelle (mise à jour par le script Python précédemment)
@@ -126,13 +169,26 @@ while true; do
                 echo "Creating Git Tag: v$CURRENT_V"
                 git tag -a "v$CURRENT_V" -m "Release v$CURRENT_V"
                 git push origin main --tags
+		REPO_URL=$(git config --get remote.origin.url | sed 's/\.git$//' | sed 's/git@github.com:/https:\/\/github.com\//')
+
+		echo -e "---------------------------------------------------------------"
+		echo -e "${GREEN}✅ Release $CURRENT_V created on GitHub!${NC}"
+		echo -e "${GREEN}✅ Successfully pushed $CURRENT_V to GitHub${NC}"
+		echo -e "---------------------------------------------------------------"
+		echo -e "${BLUE}${BOLD}🚀 PUBLISHED VERSION: $CURRENT_V${NC}"
+		echo -e "📌 Tag & GitHub Release are active."
+		echo -e "🔗 View it here: ${BLUE}${REPO_URL}/releases/tag/v$CURRENT_V${NC}"
+		echo -e "---------------------------------------------------------------"
             else
+	       echo -e "📤 Pushing to main (no new tag)..."
                 git push origin main
+		echo -e "${GREEN}✅ Push successful.${NC}"
             fi
             
             break
             ;;
-        [Nn]* )
+	 [Nn]*) 
+	    echo -e "❌ Aborted by user."
             exit
             ;;
         * )
