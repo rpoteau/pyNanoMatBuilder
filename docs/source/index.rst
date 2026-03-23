@@ -23,6 +23,7 @@ Welcome to **pyNanoMatBuilder**
    :caption: 📚 Docs and Theory
 
    theoryDocs/intro
+   theoryDocs/polydispersity
 
 .. toctree::
    :maxdepth: 2

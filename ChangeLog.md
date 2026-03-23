@@ -3,7 +3,24 @@
 * [end of the ChangeLog.md file](#firststeps)
 
 <a id="semvers"></a>
-# Semantic Versioning
+# Semantic Versioning ([SemVer](https://semver.org/))
+
+## [0.9.4] - 2026-03-23 "polydispersity"
+
+### Added
+- new `utils.polydispersity.py` sub-package, with the `NanoparticleDistribution` class that has migrated from the  `pyphyschemtools` project to the `pyNanoMatBuilder` project
+- new `polydispersity.md` documentation
+
+## [0.9.1-0.9.3] - 2026-03-18 "tests pyPi"
+
+### Fixed
+- various minor bug fixes and correction of typos
+
+### Changed
+- some packages, that will be part of a future 2.0 release, have bee removed
+
+### Added
+- update of the `git_psuh` utility, with new automatic "tag and/or release" commands
 
 ## [0.9.0] - 2026-03-15 "misc"
 

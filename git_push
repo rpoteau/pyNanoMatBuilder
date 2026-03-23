@@ -164,26 +164,43 @@ while true; do
             git status
             git commit -m "$FULL_COMMIT_MSG"
 
-            # Gestion du Tag et du Push
-            if [[ "$VERSION_TYPE" =~ ^(major|minor|patch)$ ]]; then
-                echo "Creating Git Tag: v$CURRENT_V"
-                git tag -a "v$CURRENT_V" -m "Release v$CURRENT_V"
-                git push origin main --tags
-		REPO_URL=$(git config --get remote.origin.url | sed 's/\.git$//' | sed 's/git@github.com:/https:\/\/github.com\//')
-
-		echo -e "---------------------------------------------------------------"
-		echo -e "${GREEN}✅ Release $CURRENT_V created on GitHub!${NC}"
-		echo -e "${GREEN}✅ Successfully pushed $CURRENT_V to GitHub${NC}"
-		echo -e "---------------------------------------------------------------"
-		echo -e "${BLUE}${BOLD}🚀 PUBLISHED VERSION: $CURRENT_V${NC}"
-		echo -e "📌 Tag & GitHub Release are active."
-		echo -e "🔗 View it here: ${BLUE}${REPO_URL}/releases/tag/v$CURRENT_V${NC}"
-		echo -e "---------------------------------------------------------------"
-            else
-	       echo -e "📤 Pushing to main (no new tag)..."
-                git push origin main
-		echo -e "${GREEN}✅ Push successful.${NC}"
-            fi
+	    # --- Dans la section [Yy]* du case final ---
+	    
+	    # Gestion du Tag et du Push
+	    if [[ "$VERSION_TYPE" =~ ^(major|minor|patch)$ ]]; then
+	        echo -e "${BLUE}Creating Git Tag: v$CURRENT_V${NC}"
+	        git tag -a "v$CURRENT_V" -m "Release v$CURRENT_V"
+	        git push origin main --tags
+	    
+	        # --- NOUVELLE QUESTION : RELEASE OFFICIELLE ---
+	        echo -e "${BLUE}---------------------------------------------------------------${NC}"
+	        read -n 1 -p "🚀 Do you want to create an official GitHub Release? (y/n): " DO_RELEASE
+	        echo ""
+	    
+	        if [[ "$DO_RELEASE" =~ ^[Yy]$ ]]; then
+	            if command -v gh &> /dev/null; then
+	                echo "📦 Creating GitHub Release v$CURRENT_V..."
+	                gh release create "v$CURRENT_V" --title "Release v$CURRENT_V" --generate-notes
+	            else
+	                echo -e "⚠️  ${BOLD}gh cli not found.${NC} Please install it or create the release manually on GitHub."
+	            fi
+	        fi
+	    
+	        REPO_URL=$(git config --get remote.origin.url | sed 's/\.git$//' | sed 's/git@github.com:/https:\/\/github.com\//')
+	    
+	        echo -e "---------------------------------------------------------------"
+	        echo -e "${GREEN}✅ Successfully pushed $CURRENT_V to GitHub${NC}"
+	        echo -e "🔗 View Tag: ${BLUE}${REPO_URL}/releases/tag/v$CURRENT_V${NC}"
+	        
+	        if [[ "$DO_RELEASE" =~ ^[Yy]$ ]]; then
+	            echo -e "🔗 View Release: ${BLUE}${REPO_URL}/releases/latest${NC}"
+	        fi
+	        echo -e "---------------------------------------------------------------"
+	    else
+	        echo -e "📤 Pushing to main (no new tag)..."
+	        git push origin main
+	        echo -e "${GREEN}✅ Push successful.${NC}"
+	    fi
             
             break
             ;;
