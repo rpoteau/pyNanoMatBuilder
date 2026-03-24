@@ -65,7 +65,7 @@ echo -e "✅ Documentation updated in docs/build/html."
 
 # --- NEW VERSIONING SECTION ---
 echo -e "Do you want to increment the version? [${BOLD}M${NC}]ajor, [${BOLD}m${NC}]inor, [${BOLD}p${NC}]atch, [${BOLD}n${NC}]o"
-read -n 1 -s VERSION_KEY  # -n 1: un seul caractère, -s: ne pas l'afficher (optionnel)
+read -p "Selection: " VERSION_KEY  
 echo "" # Pour revenir à la ligne après la saisie du caractère
 
 if [[ "$VERSION_KEY" == "M" ]]; then
@@ -174,7 +174,7 @@ while true; do
 	    
 	        # --- NOUVELLE QUESTION : RELEASE OFFICIELLE ---
 	        echo -e "${BLUE}---------------------------------------------------------------${NC}"
-	        read -n 1 -p "🚀 Do you want to create an official GitHub Release? (y/n): " DO_RELEASE
+	        read -p "🚀 Do you want to create an official GitHub Release? (y/n): " DO_RELEASE
 	        echo ""
 	    
 	        if [[ "$DO_RELEASE" =~ ^[Yy]$ ]]; then
