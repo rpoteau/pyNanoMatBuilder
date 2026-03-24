@@ -741,16 +741,18 @@ class NanoparticleDistribution:
         # Calculate bar width based on data spacing
         bar_width = (self.sizes[1] - self.sizes[0]) * 0.9
         
-        # Plotting Data and Fit
-        if plot_histogram and self.sizes is not None: plt.bar(self.sizes, self.counts, width=bar_width, color=color_histo, label='Exp. data')
-            
         # --- 2. Scaling Logic ---
         # If the model was fitted (covariance exists), use raw amplitude (scaling = 1.0).
         # In simulation mode, scale the PDF by the bin width to match histogram counts.
         if self.cov is not None and np.any(self.cov > 0):
             scaling_w = 1.0
+            histo_label = "Exp. data" # Legend for real TEM data
         else:
             scaling_w = self.bin_width_nm if self.bin_width_nm else 1.0
+            histo_label = f"Binned Model (w={scaling_w:.2f} nm)" # Legend for simulation
+
+        # --- 3. Plotting Data and Fit ---
+        if plot_histogram and self.sizes is not None: plt.bar(self.sizes, self.counts, width=bar_width, color=color_histo, label=histo_label)    
             
         # --- 4. Distribution Curve ---
         # Generate smooth x values for the curve
@@ -759,10 +761,12 @@ class NanoparticleDistribution:
         # Apply scaling to the model for visual alignment
         if self.model_type == 'gaussian':
             y_smooth = self._gaussian_model(x_smooth, *self.params) * scaling_w
+            model_name = "Gaussian"
         else:
             y_smooth = self._lognormal_model(x_smooth, *self.params) * scaling_w
+            model_name = "Log-Normal"
         
-        label_text = (f"Gaussian Fit:\n"
+        label_text = (f"{model_name} {'Fit' if scaling_w == 1.0 else 'Model'}:\n"
                       f"$\mu$ = {res['mean']:.2f} nm\n"
                       f"$\sigma$ = {res['sigma']:.2f} nm\n"
                       f"Polydispersity = {res['cv_percentage']:.1f}%")

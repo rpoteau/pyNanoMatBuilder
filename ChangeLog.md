@@ -5,7 +5,7 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
-## [0.9.5-0.9.6] - 2026-03-24 "polydispersity II"
+## [0.9.5-0.9.8] - 2026-03-24 "polydispersity II"
 
 ### Added
 - **Pseudo-Histogram Generation**: `get_binned_statistics` now populates `self.sizes` and `self.counts` with theoretical bin data when no experimental data is present.
