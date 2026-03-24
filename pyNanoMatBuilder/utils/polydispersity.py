@@ -23,21 +23,30 @@ class NanoparticleDistribution:
     This tool provides methods for curve fitting, statistical breakdown by size bins, 
     and publication-ready visualization.
     """
+    bin_width_nm = None
 
-    def __init__(self, sizes=None, counts=None):
+    def __init__(self):
         """
-        Initialize the distribution with experimental data.
-        
-        Args:
-            sizes (array-like): Measured particle sizes (e.g., in nm).
-            counts (array-like): Number of nanoparticles for each size.
-        """
-        self.sizes = np.array(sizes)
-        self.counts = np.array(counts)
+        Initialize the distribution.
+        """        
         self.params = None  # Will store [A, mu, sigma] after fitting
         self.cov = None     # Covariance matrix for error analysis
         self.model_type = 'gaussian'  # Default model
         self._results_dict = {}       # Private storage for results
+        self.bin_width_nm = None
+
+    @classmethod
+    def from_TEM(cls, sizes, counts):
+        """
+        Args:
+            sizes (array-like): Measured particle sizes (e.g., in nm).
+            counts (array-like): Number of nanoparticles for each size.
+        """
+        instance=cls()
+        instance.sizes = np.array(sizes)
+        instance.counts = np.array(counts)
+        instance.model_type = 'gaussian'
+        return instance
 
     @classmethod
     def from_gaussian_params(cls, mu, sigma, total_n=1000):
@@ -55,7 +64,19 @@ class NanoparticleDistribution:
         
         # Generate enough points so that np.sum(counts * dx) is accurate
         # But for your binned stats, we just need to store the intention
-        instance.sizes = np.linspace(mu - 4*sigma, mu + 4*sigma, 500)
+        if cls.bin_width_nm is None:
+            bin_width_nm = sigma
+        else:
+            bin_width_nm = cls.bin_width_nm
+        # Create symmetrical bin centers around mu
+        # We go up to ~4 sigma to cover the distribution
+        half_range = 4 * sigma
+        num_steps = int(half_range / bin_width_nm)
+        
+        # This generates: [mu - N*w, ..., mu, ..., mu + N*w]
+        offsets = np.arange(-num_steps, num_steps + 1) * bin_width_nm
+        instance.sizes = mu + offsets
+        # instance.sizes = np.linspace(mu - 4*sigma, mu + 4*sigma, 10)
         instance.counts = instance._gaussian_model(instance.sizes, *instance.params)
         
         # We manually set a 'total_n' attribute or just rely on the math
@@ -63,6 +84,7 @@ class NanoparticleDistribution:
         
         instance.cov = np.zeros((3, 3))
         instance.total_n_expected = total_n
+        instance.model_type = 'gaussian'
         return instance
 
     @classmethod
@@ -375,6 +397,7 @@ class NanoparticleDistribution:
         # Set defaults
         if bin_width_nm is None: 
             bin_width_nm = sigma
+        self.bin_width_nm = bin_width_nm
         if total_n is None:
             # 1. On regarde d'abord si une valeur a été stockée explicitement
             if hasattr(self, 'total_n_expected') and self.total_n_expected is not None:
@@ -462,8 +485,74 @@ class NanoparticleDistribution:
               f"{running_prob*100:>{w_prob-2}.1f}% | "
               f"{'-':>{w_ratio-2}} | "
               f"{running_norm:>{w_norm-2}.3f}")
+
+    def get_proportions(self, target_sizes, bin_width_nm=None):
+        """
+        Calculate proportions for specific sizes, including normalization 
+        relative to the full binned distribution.
+        """
+        targets = np.atleast_1d(target_sizes)
+        stats = self.results
+        mu, sigma = stats['mean'], stats['sigma']
         
-    def plot(self, title='Nanoparticle Size Distribution', color_histo="skyblue", color_gaussian="red", save_img=None, dpi=300):
+        # 1. Calculate the total_ratio_sum from the theoretical bins (for normalization)
+        if bin_width_nm is None: bin_width_nm = sigma
+        limit_min, limit_max = mu - 3.5 * sigma, mu + 3.5 * sigma
+        if getattr(self, 'model_type', 'gaussian') == 'lognormal':
+            limit_min = max(0.01, limit_min)
+            
+        r_edges = np.arange(mu + bin_width_nm/2, limit_max + bin_width_nm, bin_width_nm)
+        l_edges = np.arange(mu - bin_width_nm/2, limit_min - bin_width_nm, -bin_width_nm)
+        edges = np.sort(np.concatenate([l_edges, r_edges]))
+        
+        total_ratio_sum = 0
+        for i in range(len(edges) - 1):
+            bc = (edges[i] + edges[i+1]) / 2
+            if getattr(self, 'model_type', 'gaussian') == 'lognormal':
+                peak = self._lognormal_model(stats['median'], 1, stats['median'], stats['sigma_g'])
+                total_ratio_sum += self._lognormal_model(bc, 1, stats['median'], stats['sigma_g']) / peak
+            else:
+                total_ratio_sum += np.exp(-0.5 * ((bc - mu) / sigma)**2)
+
+        # 2. Calculate ratios for the specific targets
+        if self.model_type == 'lognormal':
+            peak_val = self._lognormal_model(stats['median'], 1, stats['median'], stats['sigma_g'])
+            ratios = self._lognormal_model(targets, 1, stats['median'], stats['sigma_g']) / peak_val
+        else:
+            z = (targets - mu) / sigma
+            ratios = np.exp(-0.5 * z**2)
+
+        # 3. Normalize based on the distribution sum
+        norm_values = ratios / total_ratio_sum if total_ratio_sum > 0 else 0
+        counts = ratios * (stats['amplitude'] if self.params is not None else 1000)
+        
+        return {
+            "sizes": targets,
+            "ratios": ratios,
+            "counts": counts,
+            "norms": norm_values
+        }
+        
+    def print_specific_proportions(self, target_sizes):
+        """
+        Prints a formatted summary including the normalized distribution value.
+        """
+        data = self.get_proportions(target_sizes)
+        
+        centerTitle("Specific Diameter Proportions")
+        # Added Norm. (1) column
+        header = f"{'Diameter (nm)':<15} | {'Ratio/Peak':<12} | {'Est. Count':<12} | {'Norm. (1)':<12}"
+        print(header)
+        print("-" * len(header))
+        
+        for i in range(len(data['sizes'])):
+            print(f"{data['sizes'][i]:>12.2f} nm | "
+                  f"{data['ratios'][i]:>10.3f}   | "
+                  f"{data['counts'][i]:>10.0f}   | "
+                  f"{data['norms'][i]:>10.3f}")
+        print("-" * len(header))
+        
+    def plot(self, title='Nanoparticle Size Distribution', color_histo="skyblue", color_gaussian="red", plot_histogram=True, highlight_sizes=None, save_img=None, dpi=300):
         """
         Visualize the experimental histogram overlaid with the Gaussian fit.
         
@@ -471,6 +560,7 @@ class NanoparticleDistribution:
             title (str): Graph title.
             color_histo (str): Hex code or name for the bars.
             color_gaussian (str): Hex code or name for the fit line.
+            plot_histogram (bool): Superpose the experimental histogram. Requires instantiation of NanoparticleDistribution with (sizes, counts)
             save_img (str, optional): Filename or path for saving. Supports .png and .svg.
             dpi (int): Resolution for raster exports (default 300).
         """
@@ -483,7 +573,7 @@ class NanoparticleDistribution:
         bar_width = (self.sizes[1] - self.sizes[0]) * 0.9
         
         # Plotting Data and Fit
-        plt.bar(self.sizes, self.counts, width=bar_width, color=color_histo, label='Exp. data')
+        if plot_histogram and self.sizes is not None: plt.bar(self.sizes, self.counts, width=bar_width, color=color_histo, label='Exp. data')
         
         x_smooth = np.linspace(self.sizes.min() * 0.8, self.sizes.max() * 1.2, 500)
         y_smooth = self._gaussian_model(x_smooth, *self.params)
@@ -513,7 +603,24 @@ class NanoparticleDistribution:
         plt.legend()
         plt.grid(axis='y', alpha=0.3)
         plt.tight_layout()
-
+        
+        if highlight_sizes is not None:
+            props = self.get_proportions(highlight_sizes)
+            
+            for i, size in enumerate(highlight_sizes):
+                # Access the specific ratio for this size
+                current_norm = props['norms'][i]
+                
+                # Calculate Y position on the curve
+                y_pos = self._gaussian_model(size, *self.params) if self.model_type == 'gaussian' \
+                        else self._lognormal_model(size, *self.params)
+                
+                plt.scatter(size, y_pos, color='black', zorder=5)
+                plt.annotate(f"{size:.2f}nm\n({current_norm:.3f})", 
+                             (size, y_pos), textcoords="offset points", 
+                             xytext=(0,10), ha='center', fontsize=9, fontweight='bold',
+                             bbox=dict(boxstyle='round,pad=0.3', fc='white', alpha=0.7))
+                
         # --- Enhanced Save Logic ---
         if save_img:
             save_path = Path(save_img)

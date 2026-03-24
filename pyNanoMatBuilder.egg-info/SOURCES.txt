@@ -11,6 +11,7 @@ docs/build/doctrees/environment.pickle
 docs/build/doctrees/index.doctree
 docs/build/doctrees/modules.doctree
 docs/build/doctrees/theoryDocs/intro.doctree
+docs/build/doctrees/theoryDocs/polydispersity.doctree
 docs/build/html/.buildinfo
 docs/build/html/.nojekyll
 docs/build/html/CNAME
@@ -25,6 +26,7 @@ docs/build/html/_images/pyNanoMatBuilder_banner.svg
 docs/build/html/_sources/index.rst.txt
 docs/build/html/_sources/modules.rst.txt
 docs/build/html/_sources/theoryDocs/intro.md.txt
+docs/build/html/_sources/theoryDocs/polydispersity.md.txt
 docs/build/html/_static/_sphinx_javascript_frameworks_compat.js
 docs/build/html/_static/base-stemmer.js
 docs/build/html/_static/basic.css
@@ -98,6 +100,7 @@ docs/build/html/_static/js/badge_only.js
 docs/build/html/_static/js/theme.js
 docs/build/html/_static/js/versions.js
 docs/build/html/theoryDocs/intro.html
+docs/build/html/theoryDocs/polydispersity.html
 docs/source/conf.py
 docs/source/index.rst
 docs/source/modules.rst

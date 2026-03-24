@@ -5,11 +5,18 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
+## [0.9.5] - 2026-03-24 "polydispersity II"
+
+### Added
+- **Pseudo-Histogram Generation**: `get_binned_statistics` now populates `self.sizes` and `self.counts` with theoretical bin data when no experimental data is present.
+- **Symmetrical Binning Logic**: Implemented class-level and instance-level `bin_width_nm` to ensure theoretical bin bars are perfectly centered on the mean ($\mu$) in the `plot` method.
+- **Vectorized Proportions**: Added `get_proportions` and `print_specific_proportions` to handle multiple diameter targets without external loops, including a new **Norm. (1)** column. And add it to the plot, if available
+
 ## [0.9.4] - 2026-03-23 "polydispersity"
 
 ### Added
 - new `utils.polydispersity.py` sub-package, with the `NanoparticleDistribution` class that has migrated from the  `pyphyschemtools` project to the `pyNanoMatBuilder` project
-- new `polydispersity.md` documentation
+- new embryonic `polydispersity.md` documentation
 
 ## [0.9.1-0.9.3] - 2026-03-18 "tests pyPi"
 
