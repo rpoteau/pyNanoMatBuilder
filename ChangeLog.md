@@ -5,11 +5,11 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
-## [0.9.5] - 2026-03-24 "polydispersity II"
+## [0.9.5-0.9.6] - 2026-03-24 "polydispersity II"
 
 ### Added
 - **Pseudo-Histogram Generation**: `get_binned_statistics` now populates `self.sizes` and `self.counts` with theoretical bin data when no experimental data is present.
-- **Symmetrical Binning Logic**: Implemented class-level and instance-level `bin_width_nm` to ensure theoretical bin bars are perfectly centered on the mean ($\mu$) in the `plot` method.
+- **Symmetrical Binning Logic with gaussian distribution**: Implemented class-level and instance-level `bin_width_nm` to ensure theoretical bin bars are perfectly centered on the mean ($\mu$) in the `plot` method.
 - **Vectorized Proportions**: Added `get_proportions` and `print_specific_proportions` to handle multiple diameter targets without external loops, including a new **Norm. (1)** column. And add it to the plot, if available
 
 ## [0.9.4] - 2026-03-23 "polydispersity"

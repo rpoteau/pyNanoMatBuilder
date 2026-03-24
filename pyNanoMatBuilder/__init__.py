@@ -3,7 +3,7 @@ pyNanoMatBuilder
 A versatile Python library designed to generate atomic-scale 3D structures of nanoparticles (NPs)
 """
 
-__version__ = "0.9.5"
+__version__ = "0.9.6"
 __last_update__ = "2026-03-24"
 __author__ = "Sara Mokhtari, Romuald Poteau"
 

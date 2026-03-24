@@ -46,13 +46,32 @@ class NanoparticleDistribution:
         instance.sizes = np.array(sizes)
         instance.counts = np.array(counts)
         instance.model_type = 'gaussian'
+        instance.bin_width_nm = None
         return instance
 
     @classmethod
     def from_gaussian_params(cls, mu, sigma, total_n=1000):
         """
-        Instantiate with a specific total population (total_n).
-        The amplitude is calculated so the integral equals total_n.
+        Instantiate the class using specific Gaussian parameters and a total population.
+
+        This factory method calculates the peak amplitude (A) required to ensure 
+        the integral of the distribution equals the target population (total_n). 
+        It also generates initial binned pseudo-data (sizes and counts) centered 
+        around the mean.
+
+        Args:
+            mu (float): Mean diameter of the particles (nm).
+            sigma (float): Standard deviation of the distribution (nm).
+            total_n (int/float, optional): Total number of nanoparticles 
+                in the distribution. Defaults to 1000.
+
+        Returns:
+            NanoparticleDistribution: An instance initialized with a theoretical 
+                Gaussian model and generated binned data.
+
+        Note:
+            The bin width (w) defaults to the class-level bin_width_nm if set; 
+            otherwise, it defaults to sigma. The generated range covers mu ± 4σ.
         """
         instance = cls()
         
@@ -64,18 +83,15 @@ class NanoparticleDistribution:
         
         # Generate enough points so that np.sum(counts * dx) is accurate
         # But for your binned stats, we just need to store the intention
-        if cls.bin_width_nm is None:
-            bin_width_nm = sigma
-        else:
-            bin_width_nm = cls.bin_width_nm
+        w = cls.bin_width_nm if cls.bin_width_nm is not None else sigma
+        instance.bin_width_nm = w
         # Create symmetrical bin centers around mu
         # We go up to ~4 sigma to cover the distribution
         half_range = 4 * sigma
-        num_steps = int(half_range / bin_width_nm)
+        num_steps = int(half_range / w)
         
         # This generates: [mu - N*w, ..., mu, ..., mu + N*w]
-        offsets = np.arange(-num_steps, num_steps + 1) * bin_width_nm
-        instance.sizes = mu + offsets
+        instance.sizes = mu + np.arange(-num_steps, num_steps + 1) * w
         # instance.sizes = np.linspace(mu - 4*sigma, mu + 4*sigma, 10)
         instance.counts = instance._gaussian_model(instance.sizes, *instance.params)
         
@@ -91,8 +107,23 @@ class NanoparticleDistribution:
     def from_polydispersity(cls, mu, pd_pct, amplitude=1000):
         """
         Instantiate the class using mean diameter and Polydispersity Index (CV%).
-        
-        Formula: sigma = (PD% / 100) * mu
+
+        This method acts as a convenience wrapper for from_gaussian_params, 
+        automatically calculating the standard deviation (sigma) based on the 
+        Coefficient of Variation (CV% or PD%).
+
+        Formula:
+            sigma = (PD% / 100) * mu
+
+        Args:
+            mu (float): Mean diameter of the particles (nm).
+            pd_pct (float): Polydispersity percentage (Coefficient of Variation %).
+            amplitude (int/float, optional): Total number of nanoparticles 
+                to be simulated (Total N). Defaults to 1000.
+
+        Returns:
+            NanoparticleDistribution: An instance initialized with the derived 
+                Gaussian parameters.
         """
         sigma = (pd_pct / 100) * mu
         return cls.from_gaussian_params(mu, sigma, amplitude)
@@ -255,8 +286,22 @@ class NanoparticleDistribution:
 
     def get_fit_accuracy(self):
         """
-        Calculates the statistical uncertainty of the fit parameters 
-        and the R-squared value.
+        Calculate the statistical uncertainty of the fit parameters and the R-squared value.
+
+        This method extracts the standard errors (1-sigma uncertainty) for the 
+        distribution parameters from the diagonal of the covariance matrix. 
+        It also calculates the R-squared (coefficient of determination) to 
+        quantify how well the Gaussian model accounts for the variance in the data.
+
+        Returns:
+            dict: A dictionary containing:
+                - "mu_error": Standard error of the mean (nm).
+                - "sigma_error": Standard error of the standard deviation (nm).
+                - "r_squared": The R-squared value (0 to 1).
+
+        Raises:
+            ValueError: If the covariance matrix (self.cov) is None, indicating 
+                that the fit() method has not been successfully executed.
         """
         if self.cov is None:
             raise ValueError("Fit the model first.")
@@ -277,7 +322,24 @@ class NanoparticleDistribution:
         }
 
     def print_accuracy_report(self):
-        """Prints a detailed report on the fit reliability."""
+        """
+        Print a formatted statistical report on the reliability of the Gaussian fit.
+
+        This method retrieves the R-squared value and parameter uncertainties 
+        from get_fit_accuracy() and displays them alongside a qualitative 
+        assessment (Reliable/Acceptable/Poor) based on the fit quality.
+
+        Args:
+            None: This method uses the results and errors stored in the instance.
+
+        Returns:
+            None: Outputs a formatted summary to the console.
+
+        Note:
+            This method indirectly requires self.cov to be defined. If fit() 
+            has not been called, the internal call to get_fit_accuracy() 
+            will raise a ValueError.
+        """
         acc = self.get_fit_accuracy()
         res = self.results
         
@@ -322,15 +384,27 @@ class NanoparticleDistribution:
             "cv_percentage": cv
         }
 
-    def get_relative_height(self, x_value):
-        """Calculates height relative to the peak (mu)."""
-        mu = self.results['mean']
-        sigma = self.results['sigma']
-        z = (x_value - mu) / sigma
-        return np.exp(-0.5 * z**2)
-        
     def print_results(self):
-        """Print a formatted summary with dynamically calculated coverage."""
+        """
+        Display a formatted summary of the distribution's statistical properties.
+
+        This method outputs basic parameters (Mean, Amplitude, Polydispersity) 
+        and calculates the theoretical population coverage for both Gaussian 
+        and Log-normal models. It dynamically computes the probability of 
+        finding a particle within 1, 2, and 3 standard deviations (or geometric 
+        steps) from the center.
+
+        Args:
+            None: Retrieves data from the results property and internal state.
+
+        Returns:
+            None: Prints a formatted summary directly to the console.
+
+        Note:
+            For Log-normal models, the coverage is calculated using geometric 
+            multiples of the geometric standard deviation (sigma_g) around 
+            the median.
+        """
         from scipy.stats import norm, lognorm
         
         centerTitle("Summary of the distribution statistics")
@@ -378,11 +452,42 @@ class NanoparticleDistribution:
             print(f"  μ ± 1σ     ({mu-sigma:>5.2f}-{mu+sigma:<5.2f} nm) : {get_prob(mu-sigma, mu+sigma):.1f}%")
             print(f"  μ ± 2σ     ({mu-2*sigma:>5.2f}-{mu+2*sigma:<5.2f} nm) : {get_prob(mu-2*sigma, mu+2*sigma):.1f}%")
             print(f"  μ ± 3σ     ({mu-3*sigma:>5.2f}-{mu+3*sigma:<5.2f} nm) : {get_prob(mu-3*sigma, mu+3*sigma):.1f}%")
+
+    def get_relative_height(self, x_value):
+        """Calculates height relative to the peak (mu)."""
+        mu = self.results['mean']
+        sigma = self.results['sigma']
+        z = (x_value - mu) / sigma
+        return np.exp(-0.5 * z**2)
+        
         
     def get_binned_statistics(self, bin_width_nm=None, total_n=None):
         """
-        Calculate theoretical populations using a fixed bin width in nanometers.
-        Supports both Gaussian and Log-normal models.
+        Calculate and display theoretical populations using fixed-width size bins.
+
+        This method discretizes the continuous Gaussian or Log-normal distribution into 
+        bins of a specified width. It calculates the expected particle count for each 
+        bin using the Cumulative Distribution Function (CDF) and determines the 
+        relative height of each bin center compared to the peak.
+
+        The results are printed in a formatted table and the instance's plotting 
+        data (self.sizes, self.counts) is synchronized to reflect the new binning.
+
+        Args:
+            bin_width_nm (float, optional): The width of each size bin in nanometers. 
+                If not provided, it follows a priority chain: 
+                Instance setting > Class setting > Sigma (fallback).
+            total_n (int/float, optional): The total number of particles to distribute. 
+                Defaults to the value stored during instantiation or 1000.
+
+        Returns:
+            None: Outputs a summary table to the console and updates internal state.
+
+        Note:
+            - For Gaussian models, bins are generated symmetrically around the mean.
+            - For Log-normal models, the lower limit is strictly clamped at 0.01 nm.
+            - Synchronization: Updating the bins here will immediately change the 
+              appearance of the histogram in the plot() method.
         """
         from scipy.stats import norm, lognorm
 
@@ -394,10 +499,23 @@ class NanoparticleDistribution:
         mu = stats['mean']
         sigma = stats['sigma']
         
-        # Set defaults
-        if bin_width_nm is None: 
-            bin_width_nm = sigma
-        self.bin_width_nm = bin_width_nm
+        if bin_width_nm is not None:
+            w = bin_width_nm
+            self.bin_width_nm = bin_width_nm # On ne touche PAS à NanoparticleDistribution.bin_width_nm
+        elif self.bin_width_nm is not None:
+            w = self.bin_width_nm
+        elif self.__class__.bin_width_nm is not None:
+            w = self.__class__.bin_width_nm
+        else:
+            w = sigma
+        
+        # 2. Logic to pick the best available width
+        # Priority: Instance > Class > Sigma
+        w = self.bin_width_nm if self.bin_width_nm else (self.__class__.bin_width_nm if self.__class__.bin_width_nm else sigma)
+        
+        # Update the local helper 'w' and ensure the instance knows it
+        self.bin_width_nm = w
+
         if total_n is None:
             # 1. On regarde d'abord si une valeur a été stockée explicitement
             if hasattr(self, 'total_n_expected') and self.total_n_expected is not None:
@@ -420,8 +538,8 @@ class NanoparticleDistribution:
         
         # 2. Generate bin edges starting from mu to ensure symmetry (for Gaussian)
         # or just a consistent range for Log-normal
-        right_edges = np.arange(mu + bin_width_nm/2, limit_max + bin_width_nm, bin_width_nm)
-        left_edges = np.arange(mu - bin_width_nm/2, limit_min - bin_width_nm, -bin_width_nm)
+        right_edges = np.arange(mu + w/2, limit_max + w, w)
+        left_edges = np.arange(mu - w/2, limit_min - w, -w)
         edges = np.sort(np.concatenate([left_edges, right_edges]))
         
         # --- 1. First pass: calculate data and sum of ratios for normalization ---
@@ -448,6 +566,7 @@ class NanoparticleDistribution:
             total_ratio_sum += ratio_to_peak
             bins_results.append({
                 'range': f"[{s1:>5.2f}, {s2:<5.2f}[",
+                'center': (s2 + s1)/2,
                 'count': prob * total_n,
                 'prob': prob,
                 'ratio': ratio_to_peak
@@ -456,7 +575,7 @@ class NanoparticleDistribution:
         # --- 2. Formatting and Output ---
         w_range, w_count, w_prob, w_ratio, w_norm = 18, 10, 10, 12, 12
         
-        centerTitle(f'Binned Population (Step={bin_width_nm:.3f} nm, N={total_n})')
+        centerTitle(f'Binned Population (Step={w:.3f} nm, N={total_n})')
         
         header = (f"{'Size Range (nm)':<{w_range}} | {'Count':<{w_count}}| "
                   f"{'Area (%)':<{w_prob}}| {'Ratio/Peak':<{w_ratio}}| {'Norm. (1)':<{w_norm}}")
@@ -465,6 +584,8 @@ class NanoparticleDistribution:
         
         running_count, running_prob, running_norm = 0, 0, 0
         
+        new_sizes = []
+        new_counts = []
         for b in bins_results:
             # Normalize so that the sum of the column equals 1.000
             norm_val = b['ratio'] / total_ratio_sum if total_ratio_sum > 0 else 0
@@ -472,13 +593,19 @@ class NanoparticleDistribution:
             running_count += b['count']
             running_prob += b['prob']
             running_norm += norm_val
+
+            new_sizes.append(b['center']) 
+            new_counts.append(b['count'])
             
             print(f"{b['range']:<{w_range}} | "
                   f"{int(round(b['count'])):>{w_count-1}} | "
                   f"{b['prob']*100:>{w_prob-2}.1f}% | "
                   f"{b['ratio']:>{w_ratio-2}.3f} | "
                   f"{norm_val:>{w_norm-2}.3f}")
-        
+            
+        self.sizes = np.array(new_sizes)
+        self.counts = np.array(new_counts)
+
         print("-" * len(header))
         print(f"{'Total Covered':<{w_range}} | "
               f"{int(round(running_count)):>{w_count-1}} | "
@@ -488,8 +615,29 @@ class NanoparticleDistribution:
 
     def get_proportions(self, target_sizes, bin_width_nm=None):
         """
-        Calculate proportions for specific sizes, including normalization 
-        relative to the full binned distribution.
+        Calculate relative proportions and estimated counts for specific diameters.
+
+        This method determines how specific particle sizes relate to the overall 
+        distribution. It calculates the ratio of the probability density at the 
+        target size relative to the peak (Ratio/Peak). 
+
+        Critically, it also provides a 'Normalized' value (Norm. (1)). This is 
+        calculated by summing the relative heights of all theoretical bins in 
+        the distribution and dividing the target's ratio by this sum, allowing 
+        for a discrete weight comparison.
+
+        Args:
+            target_sizes (float or array-like): The specific diameters (nm) to evaluate.
+            bin_width_nm (float, optional): The reference bin width used to 
+                calculate the total distribution sum for normalization. 
+                Defaults to sigma.
+
+        Returns:
+            dict: A dictionary containing:
+                - "sizes": The input target diameters.
+                - "ratios": Probability at target relative to the peak (0 to 1).
+                - "counts": Estimated number of particles at these specific sizes.
+                - "norms": Normalized weight relative to the full binned distribution.
         """
         targets = np.atleast_1d(target_sizes)
         stats = self.results
@@ -552,18 +700,39 @@ class NanoparticleDistribution:
                   f"{data['norms'][i]:>10.3f}")
         print("-" * len(header))
         
-    def plot(self, title='Nanoparticle Size Distribution', color_histo="skyblue", color_gaussian="red", plot_histogram=True, highlight_sizes=None, save_img=None, dpi=300):
+    def plot(self, title='Nanoparticle Size Distribution', color_histo="skyblue",
+             color_gaussian="red", plot_histogram=True, highlight_sizes=None,
+             save_img=None, dpi=300):
         """
-        Visualize the experimental histogram overlaid with the Gaussian fit.
-        
+        Visualize the nanoparticle size distribution (histogram) overlaid with the 
+        fitted or theoretical Gaussian model.
+
+        The method automatically detects the context: 
+        - For experimental fits, it plots raw counts.
+        - For theoretical simulations, it scales the Gaussian PDF by the bin width 
+          to ensure the curve peak aligns visually with the histogram bars.
+
         Args:
-            title (str): Graph title.
-            color_histo (str): Hex code or name for the bars.
-            color_gaussian (str): Hex code or name for the fit line.
-            plot_histogram (bool): Superpose the experimental histogram. Requires instantiation of NanoparticleDistribution with (sizes, counts)
-            save_img (str, optional): Filename or path for saving. Supports .png and .svg.
-            dpi (int): Resolution for raster exports (default 300).
+            title (str): Graph title displayed at the top.
+            color_histo (str): Color name or hex code for the histogram bars.
+            color_gaussian (str): Color name or hex code for the Gaussian fit line.
+            plot_histogram (bool): If True, superimposes the bars over the curve. 
+                Requires sizes and counts to be initialized.
+            highlight_sizes (list/array, optional): Specific diameters (nm) to mark 
+                with dots and labels on the distribution curve.
+            save_img (str, optional): File path or name (e.g., 'plot.png' or 'plot.svg'). 
+                The directory is created automatically if it doesn't exist.
+            dpi (int): Image resolution for raster formats like PNG (default 300).
+
+        Returns:
+            None: Displays the plot using plt.show() and optionally saves to disk.
         """
+        # --- 1. Safety Check ---
+        # Ensure model parameters exist before attempting to plot
+        if self.params is None:
+            raise ValueError("Cannot plot: Distribution parameters are not defined. "
+                             "Please run fit() or instantiate using from_gaussian_params().")
+            
         res = self.results
         mu = res['mean']
         sigma = res['sigma']
@@ -574,9 +743,24 @@ class NanoparticleDistribution:
         
         # Plotting Data and Fit
         if plot_histogram and self.sizes is not None: plt.bar(self.sizes, self.counts, width=bar_width, color=color_histo, label='Exp. data')
-        
+            
+        # --- 2. Scaling Logic ---
+        # If the model was fitted (covariance exists), use raw amplitude (scaling = 1.0).
+        # In simulation mode, scale the PDF by the bin width to match histogram counts.
+        if self.cov is not None and np.any(self.cov > 0):
+            scaling_w = 1.0
+        else:
+            scaling_w = self.bin_width_nm if self.bin_width_nm else 1.0
+            
+        # --- 4. Distribution Curve ---
+        # Generate smooth x values for the curve
         x_smooth = np.linspace(self.sizes.min() * 0.8, self.sizes.max() * 1.2, 500)
-        y_smooth = self._gaussian_model(x_smooth, *self.params)
+        
+        # Apply scaling to the model for visual alignment
+        if self.model_type == 'gaussian':
+            y_smooth = self._gaussian_model(x_smooth, *self.params) * scaling_w
+        else:
+            y_smooth = self._lognormal_model(x_smooth, *self.params) * scaling_w
         
         label_text = (f"Gaussian Fit:\n"
                       f"$\mu$ = {res['mean']:.2f} nm\n"
@@ -584,26 +768,22 @@ class NanoparticleDistribution:
                       f"Polydispersity = {res['cv_percentage']:.1f}%")
         
         plt.plot(x_smooth, y_smooth, color=color_gaussian, lw=2, label=label_text)
-        plt.hlines(y=res['amplitude']/2, 
+
+        # Plot FWHM (Full Width at Half Maximum) indicator line
+        plt.hlines(y=res['amplitude']/2 * scaling_w, 
                    xmin=res['mean'] - res['fwhm']/2, 
                    xmax=res['mean'] + res['fwhm']/2, 
                    colors='green', linestyles='--',
                    label=f"FWHM span ({res['fwhm']:.2f} nm)")
 
-        # Polydispersity Visualization (Vertical lines at ±1 sigma)
-        # We use axvline for vertical lines
+        # --- 5. Statistical Overlays ---
+        # Vertical lines at +/- 1 and 2 sigma to visualize spread
         plt.axvline(x=mu - sigma, color='#3f8188', linestyle=':', lw=1.5, label=f"$\pm 1\sigma$ (Spread)")
         plt.axvline(x=mu + sigma, color='#3f8188', linestyle=':', lw=1.5)
         plt.axvline(x=mu - 2*sigma, color='#3f8188', linestyle=':', lw=1.5, label=f"$\pm 2\sigma$ (Spread)")
         plt.axvline(x=mu + 2*sigma, color='#3f8188', linestyle=':', lw=1.5)
 
-        plt.title(title)
-        plt.xlabel('Size (nm)')
-        plt.ylabel('Count')
-        plt.legend()
-        plt.grid(axis='y', alpha=0.3)
-        plt.tight_layout()
-        
+        # --- 6. Specific Point Highlighting ---
         if highlight_sizes is not None:
             props = self.get_proportions(highlight_sizes)
             
@@ -612,16 +792,24 @@ class NanoparticleDistribution:
                 current_norm = props['norms'][i]
                 
                 # Calculate Y position on the curve
-                y_pos = self._gaussian_model(size, *self.params) if self.model_type == 'gaussian' \
-                        else self._lognormal_model(size, *self.params)
+                y_pos = self._gaussian_model(size, *self.params) * scaling_w if self.model_type == 'gaussian' \
+                        else self._lognormal_model(size, *self.params) * scaling_w
                 
                 plt.scatter(size, y_pos, color='black', zorder=5)
                 plt.annotate(f"{size:.2f}nm\n({current_norm:.3f})", 
                              (size, y_pos), textcoords="offset points", 
                              xytext=(0,10), ha='center', fontsize=9, fontweight='bold',
                              bbox=dict(boxstyle='round,pad=0.3', fc='white', alpha=0.7))
-                
-        # --- Enhanced Save Logic ---
+
+        # --- 7. Final Formatting ---
+        plt.title(title)
+        plt.xlabel('Size (nm)')
+        plt.ylabel('Count')
+        plt.legend()
+        plt.grid(axis='y', alpha=0.3)
+        plt.tight_layout()
+                        
+        # --- 8. Enhanced Save Logic ---
         if save_img:
             save_path = Path(save_img)
             
