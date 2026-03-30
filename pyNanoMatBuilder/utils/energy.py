@@ -25,9 +25,10 @@ from .core import (pyNMB_location, get_resource_path, timer, RAB, Rbetween2Point
                    planeFittingLSF, AngleBetweenVV, signedAngleBetweenVV
                    )
 from .core import centertxt, centerTitle, fg, bg, hl, color
+from pyNanoMatBuilder import utils as pyNMBu
 
 ######################################## Geometry optimization
-def full_diagnostics(atoms, verbose=True):
+def full_diagnosticsEMT(atoms, verbose=True):
     """
     Run basic diagnostics on an ASE Atoms object for EMT calculations.
 
@@ -126,7 +127,7 @@ def optimizeEMT(model: Atoms, saveCoords=True, pathway="./coords/model", fthresh
     chrono = timer()
     chrono.chrono_start()
     centerTitle("ase EMT calculator & Quasi Newton algorithm for geometry optimization")
-    full_diagnostics(model, verbose=True)
+    full_diagnosticsEMT(model, verbose=True)
     model.set_pbc(False)
     model.center(vacuum=5.0)
     model.calc = EMT()
@@ -147,4 +148,68 @@ def optimizeEMT(model: Atoms, saveCoords=True, pathway="./coords/model", fthresh
     chrono.chrono_stop(hdelay=False)
     chrono.chrono_show()
     return model
+
+def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1):
+    """
+    Optimize the geometry of an atomic system using various energy calculators and geometry optimization algorithms.
+
+    Args:
+        model (ase.Atoms): Atomic system to optimize.
+        saveCoords (bool, optional): If True, saves the optimized coordinates.
+        pathway (str, optional): Path to save the trajectory and final structure.
+        fthreshold (float, optional): Convergence threshold for forces (in eV/Å).
+
+    Creates:
+        self.NP_opt (ase.Atoms): Optimized atomic model.
+
+    The following properties are also created, by calling propPostMake()
+        self.cog_opt
+        self.vertices_opt
+        self.simplices_opt
+        self.neighbors_opt
+        self.equations_opt
+        jMolCS_opt
+    """
+    from ase.io import write
+    from ase import Atoms
+    from ase.calculators.emt import EMT
+    CALC = calculator.upper()
+    OPT = optimizer.upper()
+    if CALC == 'EMT':
+        from ase.calculators.emt import EMT
+        nrj = EMT()
+        nrj_txt = "ase EMT calculator" 
+    else:
+        raise ValueError(f"Calculator '{calculator}' is not yet supported.")
+    if OPT == 'QN':
+        from ase.optimize import QuasiNewton
+        opt = QuasiNewton
+        opt_txt = "ase Quasi Newton"
+    else:
+        raise ValueError(f"'{optimizer}' geometry optimizer is not yet supported.")    
+    chrono = timer()
+    chrono.chrono_start()
+    centerTitle(f"{nrj_txt} & {opt_txt} algorithms for geometry optimization")
+
+    if CALC == 'EMT':
+        model = self.NP
+        full_diagnosticsEMT(model, verbose=True)
+        model.set_pbc(False)
+        model.calc = EMT()
+        model.get_potential_energy()
+    if OPT == "QN":
+        dyn = QuasiNewton(model, trajectory=None)
+        dyn.run(fmax=fthreshold)
+
+    self.NP_opt = model
+    self.is_optimized = True
+    self.cog_opt = self.NP_opt.get_center_of_mass()
+    
+    self.propPostMake(skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
+                      thresholdCoreSurface=self.thresholdCoreSurface,
+                      noOutput=False, is_optimized=True)
+    
+    chrono.chrono_stop(hdelay=False)
+    chrono.chrono_show()
+
 

@@ -701,3 +701,50 @@ def planeFittingLSF(coords: np.float64,
         print(errors)
         print(f"residual: {residual}")
     return np.array([u,v,w,h]).real
+
+#--------------------------------------------------------------------------------------------
+
+def _flush_stale_data(self, shape_update=None):
+    """
+    Internal method to synchronize the NP state and reset analysis data
+    after any structural modification - such as peeling processes 
+
+    Ensures metadata (nAtoms, cog) is current and stale data is removed.
+
+    It must not be applied after geometry optimization (in such case, both self.NP and self.NP_opt do coexist)
+
+    Args:
+        shape_update (str): Optional suffix to append to obj.shape (e.g., "_peeled").
+    """
+    import numpy as np
+
+    # 0. Update Lineage/History
+    if shape_update and hasattr(self, 'shape'):
+        self.shape += shape_update
+
+    # 1. Synchronize Metadata from the current self.NP
+    if hasattr(self, 'NP') and self.NP is not None:
+        self.nAtoms = len(self.NP)
+        # Recalculate the Center of Gravity (COG) for the new structure
+        if self.nAtoms > 0:
+            self.cog = self.NP.get_positions().mean(axis=0)
+        else:
+            self.cog = np.array([0.0, 0.0, 0.0])
+    
+    # 2. Reset optimization and analysis state
+    self.is_optimized = False
+    self.cog_opt = []
+
+    # 3. List of attributes to delete (stale analysis)
+    attrs_to_clean = [
+        'NP_opt', 'NPcs', 'NPcs_opt',
+        'jMolCS', 'jMolCS_opt',
+        'surfaceatoms', 'surfaceatoms_opt', 
+        'vertices', 'vertices_opt', 
+        'trPlanes', 'trPlanes_opt', 
+        'ellipsoid', 'moi', 'moi_opt'
+    ]
+    
+    for attr in attrs_to_clean:
+        if hasattr(self, attr):
+            delattr(self, attr)

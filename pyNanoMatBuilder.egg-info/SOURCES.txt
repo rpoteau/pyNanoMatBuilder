@@ -121,6 +121,7 @@ pyNanoMatBuilder/data.py
 pyNanoMatBuilder/johnsonNPs.py
 pyNanoMatBuilder/otherNPs.py
 pyNanoMatBuilder/platonicNPs.py
+pyNanoMatBuilder/pyNMBcore.py
 pyNanoMatBuilder/visualID.py
 pyNanoMatBuilder.egg-info/PKG-INFO
 pyNanoMatBuilder.egg-info/SOURCES.txt
@@ -137,6 +138,7 @@ pyNanoMatBuilder/.ipynb_checkpoints/johnsonNPs-checkpoint.py
 pyNanoMatBuilder/.ipynb_checkpoints/make_files_remastered-checkpoint.py
 pyNanoMatBuilder/.ipynb_checkpoints/otherNPs-checkpoint.py
 pyNanoMatBuilder/.ipynb_checkpoints/platonicNPs-checkpoint.py
+pyNanoMatBuilder/.ipynb_checkpoints/pyNMBcore-checkpoint.py
 pyNanoMatBuilder/.ipynb_checkpoints/utils-checkpoint.py
 pyNanoMatBuilder/.ipynb_checkpoints/visualID-checkpoint.py
 pyNanoMatBuilder/resources/__init__.py

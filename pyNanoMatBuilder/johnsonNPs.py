@@ -13,51 +13,55 @@ from . import data
 from . import utils as pyNMBu
 from . import platonicNPs as pNP
 from .utils import hl, fg, bg
+from .pyNMBcore import pyNMBcore
 
 ###########################################################
-class JohnsonNP:
+class JohnsonNP(pyNMBcore):
     """Base class for all Johson nanoparticles providing common functionality."""
-
-    def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput):
-        """
-        Compute and store various post-construction properties of the nanoparticle.
-
-        This function calculates moments of inertia (MOI), the inscribed and 
-        circumscribed sphere diameters,analyzes symmetry, generates a JMOL
-        script, and identifies core and surface atoms.
-
-        Args:
-            skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
-            thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
-            noOutput (bool): If True, suppresses output messages.
     
-        Attributes Updated:
-            moi (numpy.ndarray): Moment of inertia tensor.
-            moisize (numpy.ndarray): Normalized moments of inertia.
-            vertices (numpy.ndarray): Geometric vertices of the nanoparticle.
-            simplices (numpy.ndarray): Simplices defining the convex hull.
-            neighbors (numpy.ndarray): Neighboring relations between facets.
-            equations (numpy.ndarray): Plane equations for the hull faces.
-            NPcs (ase.Atoms): Copy of the nanoparticle with surface atoms visually marked.
-            NP (ase.Atoms): Original nanoparticle object.
-        """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    # def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput):
+    #     """
+    #     Compute and store various post-construction properties of the nanoparticle.
+
+    #     This function calculates moments of inertia (MOI), the inscribed and 
+    #     circumscribed sphere diameters,analyzes symmetry, generates a JMOL
+    #     script, and identifies core and surface atoms.
+
+    #     Args:
+    #         skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
+    #         thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
+    #         noOutput (bool): If True, suppresses output messages.
+    
+    #     Attributes Updated:
+    #         moi (numpy.ndarray): Moment of inertia tensor.
+    #         moisize (numpy.ndarray): Normalized moments of inertia.
+    #         vertices (numpy.ndarray): Geometric vertices of the nanoparticle.
+    #         simplices (numpy.ndarray): Simplices defining the convex hull.
+    #         neighbors (numpy.ndarray): Neighboring relations between facets.
+    #         equations (numpy.ndarray): Plane equations for the hull faces.
+    #         NPcs (ase.Atoms): Copy of the nanoparticle with surface atoms visually marked.
+    #         NP (ase.Atoms): Original nanoparticle object.
+    #     """
         
-        self.moi = pyNMBu.moi(self.NP, noOutput)
-        self.moisize = np.array(pyNMBu.moi_size(self.NP, noOutput))  # MOI mass normalized (m of each atoms=1)
+    #     self.moi = pyNMBu.moi(self.NP, noOutput)
+    #     self.moisize = np.array(pyNMBu.moi_size(self.NP, noOutput))  # MOI mass normalized (m of each atoms=1)
 
-        if not skipSymmetryAnalyzis:
-            pyNMBu.MolSym(self.NP, noOutput=noOutput)
+    #     if not skipSymmetryAnalyzis:
+    #         pyNMBu.MolSym(self.NP, noOutput=noOutput)
 
-        [self.vertices, self.simplices, self.neighbors, self.equations], surfaceAtoms = \
-            pyNMBu.coreSurface(self, thresholdCoreSurface, noOutput=noOutput)
-        self.NPcs = self.NP.copy()
-        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102  # Nobelium, because it has a nice pinkish color in jmol
-        self.surfaceatoms = self.NPcs[surfaceAtoms]
+    #     [self.vertices, self.simplices, self.neighbors, self.equations], surfaceAtoms = \
+    #         pyNMBu.coreSurface(self, self.thresholdCoreSurface, noOutput=noOutput)
+    #     self.NPcs = self.NP.copy()
+    #     self.NPcs.numbers[np.invert(surfaceAtoms)] = 102  # Nobelium, because it has a nice pinkish color in jmol
+    #     self.surfaceatoms = self.NPcs[surfaceAtoms]
 
-        pyNMBu.Inscribed_circumscribed_spheres(self,noOutput)
+    #     pyNMBu.Inscribed_circumscribed_spheres(self,noOutput)
 
-        if hasattr(self, 'jmolCrystalShape') and self.jmolCrystalShape:
-            self.jMolCS = pyNMBu.defCrystalShapeForJMol(self, noOutput=True)  # do not print the jmol script
+    #     if hasattr(self, 'jmolCrystalShape') and self.jmolCrystalShape:
+    #         self.jMolCS = pyNMBu.defCrystalShapeForJMol(self, noOutput=True)  # do not print the jmol script
 
 
 class fcctbp(JohnsonNP):
@@ -96,14 +100,11 @@ class fcctbp(JohnsonNP):
     heightOfPyramidF = edgeLengthF * np.sqrt(2 / 3)
     heightOfBiPyramidF = 2 * heightOfPyramidF
 
-    def __init__(self, element: str = 'Au', Rnn: float = 2.7,
-                 nLayerTd: int = 1, postAnalyzis: bool = True,
-                 aseView: bool = False,
-                 thresholdCoreSurface: float = 1.,
-                 skipSymmetryAnalyzis: bool = False,
-                 jmolCrystalShape: bool = True,
-                 noOutput: bool = False,
-                 calcPropOnly: bool = False):
+    def __init__(self, element: str = 'Au',
+                 Rnn: float = 2.7,
+                 nLayerTd: int = 1,
+                 **kwargs
+                ):
 
         """
         Initializes an fcc trigonal bipyramid (fcctbp) with the given parameters.
@@ -145,6 +146,7 @@ class fcctbp(JohnsonNP):
             trPlanes (np.array): Truncation plane equations.
         """
         
+        super().__init__(**kwargs)
         self.element = element
         self.shape = 'fcctbp'
         self.Rnn = Rnn
@@ -153,11 +155,9 @@ class fcctbp(JohnsonNP):
             self.element, self.Rnn, self.nLayerTd,
             noOutput=True, calcPropOnly=True)
         self.nLayer = 2 * self.nLayerTd - 1
-        self.nAtoms = 0
         self.nAtomsPerLayer = []
         self.interLayerDistance = self.Tdprop.interLayerDistance()
         self.nAtomsPerEdge = self.nLayerTd + 1
-        self.cog = np.array([0., 0., 0.])
         self.fveAngle = self.Tdprop.fveAngle
         self.fefAngle = self.Tdprop.fefAngle
         self.vcvAngle = self.Tdprop.vcvAngle
@@ -165,7 +165,7 @@ class fcctbp(JohnsonNP):
             2 * self.Tdprop.heightOfPyramid()
             + 2 * (self.Rnn * np.sqrt(2 / 3)))
         self.imageFile = pyNMBu.imageNameWithPathway("tbp-C.png")
-        self.jmolCrystalShape = jmolCrystalShape
+        noOutput = self.noOutput
 
         if not noOutput:
             pyNMBu.centerTitle(
@@ -176,13 +176,13 @@ class fcctbp(JohnsonNP):
             self.prop()
         if not calcPropOnly:
             self.coords(noOutput)
-            if aseView:
+            if self.aseView:
                 view(self.NP)
-            if postAnalyzis:
+            if self.postAnalyzis:
                 self.propPostMake(
-                    skipSymmetryAnalyzis,
-                    thresholdCoreSurface, noOutput)
-                if aseView:
+                    self.skipSymmetryAnalyzis,
+                    self.thresholdCoreSurface, noOutput)
+                if self.aseView:
                     view(self.NPcs)
 
     def __str__(self):
@@ -365,23 +365,16 @@ class epbpyM(JohnsonNP):
         2 * heightOfPyramidF / edgeLengthF
     )
 
-    def __init__(
-            self,
-            element: str = 'Au',
-            Rnn: float = 2.7,
-            sizeP: int = 1,
-            sizeE: int = 0,
-            Marks: int = 0,
-            Multiples_index_plan: bool = False,
-            Hollow: bool = False,
-            postAnalyzis: bool = True,
-            aseView: bool = False,
-            thresholdCoreSurface=1.,
-            skipSymmetryAnalyzis: bool = False,
-            jmolCrystalShape: bool = True,
-            noOutput: bool = False,
-            calcPropOnly: bool = False,
-    ):
+    def __init__(self,
+                 element: str = 'Au',
+                Rnn: float = 2.7,
+                sizeP: int = 1,
+                sizeE: int = 0,
+                Marks: int = 0,
+                Multiples_index_plan: bool = False,
+                Hollow: bool = False,
+                **kwargs
+                ):
         """Initialize the class with the necessary parameters.
 
         Args:
@@ -436,6 +429,7 @@ class epbpyM(JohnsonNP):
                 between compact planes.
             imageFile (str): Path to the image file.
         """
+        super().__init__(**kwargs)
         self.element = element
         self.shape = 'epbpyM'
         self.Rnn = Rnn
@@ -445,14 +439,12 @@ class epbpyM(JohnsonNP):
         # For the creation of (11n) bipyramids
         self.Multiples_index_plan = Multiples_index_plan
         self.Hollow = Hollow
-        self.nAtoms = 0
         self.nAtomsPerPentagonalCap = 0
         self.nAtomsPerElongatedPart = 0
         self.nAtomsPerEdgeOfPC = self.sizeP + 1
         self.nAtomsPerEdgeOfEP = self.sizeE + 1
-        self.jmolCrystalShape = jmolCrystalShape
-        self.cog = np.array([0., 0., 0.])
         self.interCompactPlanesDistance = self.interCompactPlanesF * self.Rnn
+        noOutput = self.noOutput
         if self.Marks == 0 and self.sizeE == 0:
             # pentagonal bpy
             self.imageFile = pyNMBu.imageNameWithPathway(
@@ -480,14 +472,14 @@ class epbpyM(JohnsonNP):
             self.prop()
         if not calcPropOnly:
             self.coords(noOutput)
-            if aseView:
+            if self.aseView:
                 view(self.NP)
-            if postAnalyzis:
+            if self.postAnalyzis:
                 self.propPostMake(
-                    skipSymmetryAnalyzis,
-                    thresholdCoreSurface,
+                    self.skipSymmetryAnalyzis,
+                    self.thresholdCoreSurface,
                     noOutput)
-                if aseView:
+                if self.aseView:
                     view(self.NPcs)
 
     def __str__(self):

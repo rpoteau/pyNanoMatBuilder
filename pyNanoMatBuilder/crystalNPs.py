@@ -18,8 +18,9 @@ from . import visualID as vID
 from . import data
 from . import utils as pyNMBu
 from .utils import hl, fg, bg
+from .pyNMBcore import pyNMBcore
 
-class Crystal:
+class Crystal(pyNMBcore):
     """
     A class for generating XYZ and CIF files of crystalline nanoparticles (NPs) 
     of various shapes and sizes, based on user-defined compounds (either by 
@@ -67,17 +68,11 @@ class Crystal:
         eSurfacesWulff: np.ndarray = None,
         sizesWulff: np.ndarray = None,
         symWulff: bool = True,
-        jmolCrystalShape: bool = True,
         aseSymPrec: float = 1e-4,
         pbc: bool = False,
         threshold: float = 1e-3,
         dbFolder: str = None,
-        postAnalyzis: bool = True,
-        aseView: bool = False,
-        thresholdCoreSurface: float = 1.0,
-        skipSymmetryAnalyzis: bool = False,
-        noOutput: bool = False,
-        calcPropOnly: bool = False,
+        **kwargs,
     ):
         """
         Initialize a Crystal nanoparticle generator with specified parameters.
@@ -117,6 +112,7 @@ class Crystal:
             noOutput (bool): Suppress printed output (default: False).
             calcPropOnly (bool): Calculate properties only without structure generation (default: False).
         """
+        super().__init__(**kwargs)
         # Initialize default values to avoid mutable default arguments
         if size is None:
             size = [2, 2, 2]
@@ -148,16 +144,13 @@ class Crystal:
         self.eSurfacesWulff = eSurfacesWulff
         self.sizesWulff = sizesWulff
         self.symWulff = symWulff
-        self.jmolCrystalShape = jmolCrystalShape
         self.aseSymPrec = aseSymPrec
         self.pbc = pbc
         self.threshold = threshold
-        self.nAtoms = 0
         self.cif = None
         self.cifname = None
         self.userDefCif = userDefCif
-        self.trPlanes = None
-
+        noOutput = self.noOutput
 
         if "Wulff" in self.shape:
             self.WulffShape = self.shape.split(":")
@@ -178,18 +171,18 @@ class Crystal:
             pyNMBu.scaleUnitCell(self, scaleDmin2, noOutput=noOutput)
         if setSymbols2 is not None:
             self.cif.set_chemical_symbols(setSymbols2)
-        if aseView:
+        if self.aseView:
             view(self.cif)
 
-        if not calcPropOnly:
+        if not self.calcPropOnly:
             self.makeNP(noOutput)
-            if aseView:
+            if self.aseView:
                 view(self.sc)
                 view(self.NP)
-            if postAnalyzis:
+            if self.postAnalyzis:
                 self.prop(noOutput)
-                self.propPostMake(skipSymmetryAnalyzis, thresholdCoreSurface, noOutput)
-                if aseView:
+                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                if self.aseView:
                     view(self.NPcs)
     def __str__(self):
         """Return string representation of the Crystal instance."""
@@ -1219,52 +1212,52 @@ class Crystal:
             pyNMBu.centertxt("Properties", bgc="#007a7a", size="14", weight="bold")
             print(self)
 
-    def propPostMake(
-        self, skip_symmetry_analysis, thresholdCoreSurface, noOutput
-    ):
-        """
-        Compute post-construction nanoparticle properties.
+    # def propPostMake(
+    #     self, skip_symmetry_analysis, self.thresholdCoreSurface, noOutput
+    # ):
+    #     """
+    #     Compute post-construction nanoparticle properties.
 
-        Calculates moments of inertia, symmetry analysis (optional), core/surface
-        differentiation, and geometric properties via convex hull.
+    #     Calculates moments of inertia, symmetry analysis (optional), core/surface
+    #     differentiation, and geometric properties via convex hull.
 
-        Args:
-            skip_symmetry_analysis (bool): If True, skip symmetry analysis.
-            thresholdCoreSurface (float): Threshold for core/surface differentiation.
-            noOutput (bool): If False, details are printed.
+    #     Args:
+    #         skip_symmetry_analysis (bool): If True, skip symmetry analysis.
+    #         thresholdCoreSurface (float): Threshold for core/surface differentiation.
+    #         noOutput (bool): If False, details are printed.
 
-        Note:
-            Updates self.moi, self.moisize, MOI size from inertia tensor.
-            Updates self.NPcs with surface atoms marked with Nobelium (102).
-        """
-        # Compute moment of inertia
-        self.moi = pyNMBu.moi(self.NP, noOutput)
-        self.moisize = np.array(
-            pyNMBu.moi_size(self.NP, noOutput)
-        )  # Mass-normalized MOI
+    #     Note:
+    #         Updates self.moi, self.moisize, MOI size from inertia tensor.
+    #         Updates self.NPcs with surface atoms marked with Nobelium (102).
+    #     """
+    #     # Compute moment of inertia
+    #     self.moi = pyNMBu.moi(self.NP, noOutput)
+    #     self.moisize = np.array(
+    #         pyNMBu.moi_size(self.NP, noOutput)
+    #     )  # Mass-normalized MOI
 
-        if not skip_symmetry_analysis:
-            pyNMBu.MolSym(self.NP, noOutput=noOutput)
+    #     if not skip_symmetry_analysis:
+    #         pyNMBu.MolSym(self.NP, noOutput=noOutput)
 
-        # Analyze convex hull and core/surface atoms
-        (
-            self.vertices,
-            self.simplices,
-            self.neighbors,
-            self.equations,
-        ), surface_atoms = pyNMBu.coreSurface(
-            self, thresholdCoreSurface, noOutput=noOutput
-        )
+    #     # Analyze convex hull and core/surface atoms
+    #     (
+    #         self.vertices,
+    #         self.simplices,
+    #         self.neighbors,
+    #         self.equations,
+    #     ), surface_atoms = pyNMBu.coreSurface(
+    #         self, self.thresholdCoreSurface, noOutput=noOutput
+    #     )
 
-        # Generate JMol visualization if enabled
-        if self.jmolCrystalShape:
-            self.jMolCS = pyNMBu.defCrystalShapeForJMol(self, noOutput=True)
+    #     # Generate JMol visualization if enabled
+    #     if self.jmolCrystalShape:
+    #         self.jMolCS = pyNMBu.defCrystalShapeForJMol(self, noOutput=True)
 
-        # Mark surface atoms (Nobelium=102 for visualization)
-        self.NPcs = self.NP.copy()
-        self.NPcs.numbers[np.invert(surface_atoms)] = 102
-        self.surfaceatoms = self.NPcs[surface_atoms]
+    #     # Mark surface atoms (Nobelium=102 for visualization)
+    #     self.NPcs = self.NP.copy()
+    #     self.NPcs.numbers[np.invert(surface_atoms)] = 102
+    #     self.surfaceatoms = self.NPcs[surface_atoms]
 
-        # Compute inscribed and circumscribed sphere radii
-        pyNMBu.Inscribed_circumscribed_spheres(self, noOutput=noOutput)
+    #     # Compute inscribed and circumscribed sphere radii
+    #     pyNMBu.Inscribed_circumscribed_spheres(self, noOutput=noOutput)
  

@@ -11,155 +11,14 @@ from ase.cluster.cubic import FaceCenteredCubic
 from . import visualID as vID
 from . import utils as pyNMBu
 from .utils import hl, fg, bg
+from .pyNMBcore import pyNMBcore
 
 ###############################################################################
-class PlatonicNP:
+class PlatonicNP(pyNMBcore):
     """Base class for all Platonic nanoparticles providing common functionality."""
 
-    def propPostMake(self, skipSymmetryAnalyzis,
-                     thresholdCoreSurface, noOutput):
-        """
-        Compute and store various post-construction
-        properties of the nanoparticle.
-
-        This function calculates moments of inertia
-        (MOI), determines the nanoparticle shape,
-        analyzes symmetry (if required), and identifies
-        core and surface atoms.
-
-        Args:
-            skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
-            thresholdCoreSurface (float): Threshold
-                to distinguish core and surface atoms.
-            noOutput (bool): If True, suppresses
-                output messages.
-    
-        Attributes:
-            moi (numpy.ndarray): Moment of inertia tensor.
-            moisize (numpy.ndarray): Normalized moments of inertia.
-            vertices (numpy.ndarray): Geometric vertices of the nanoparticle.
-            simplices (numpy.ndarray): Simplices defining the convex hull.
-            neighbors (numpy.ndarray): Neighboring relations between facets.
-            equations (numpy.ndarray): Plane equations for the hull faces.
-            NPcs (ase.Atoms): Copy of the nanoparticle with surface atoms 
-                visually marked.
-            NP (ase.Atoms): Original nanoparticle object.
-            sasview_dims (tuple, optional): Dimensions for SasView, calculated 
-                only if the sasview_dims() method exists.
-        """
-        
-        self.moi = pyNMBu.moi(self.NP, noOutput)
-        # MOI mass normalized (m of each atoms=1)
-        self.moisize = np.array(
-            pyNMBu.moi_size(self.NP, noOutput)
-        )
-        
-        # Specific print for hollow_shapes in
-        # original code, maybe generic?
-        if isinstance(self, hollow_shapes):
-            print(self.moi)
-
-        if not skipSymmetryAnalyzis:
-            pyNMBu.MolSym(self.NP, noOutput=noOutput)
-
-        (
-            [self.vertices, self.simplices,
-             self.neighbors, self.equations],
-            surfaceAtoms
-        ) = pyNMBu.coreSurface(
-            self, thresholdCoreSurface,
-            noOutput=noOutput
-        )
-
-        self.NPcs = self.NP.copy()
-        # Nobelium, because it has a nice pinkish
-        # color in jmol
-        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102
-        self.surfaceatoms = self.NPcs[surfaceAtoms]
-
-        # Specific update for hollow_shapes
-        # in original code
-        if isinstance(self, hollow_shapes):
-            self.cog = self.NP.get_center_of_mass()
-
-        if hasattr(self, 'trPlanes') and self.trPlanes is not None:
-            self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
-
-        if (hasattr(self, 'jmolCrystalShape')
-                and self.jmolCrystalShape):
-            # do not print the jmol script
-            self.jMolCS = pyNMBu.defCrystalShapeForJMol(
-                self, noOutput=True
-            )
-        
-        # Specific print for regfccTd helix
-        if (hasattr(self, 'n_tetrahedrons')
-                and self.n_tetrahedrons > 1
-                and not noOutput):
-            # Just checking attribute existence
-            # to avoid error on other classes
-            if (hasattr(self, 'nAtomsAnalytic')
-                    and hasattr(self, 'nAtoms_helix')):
-                print(f"\n{'=' * 60}")
-                print(f"Helix Information:")
-                print(
-                    f"  Number of tetrahedrons"
-                    f" in helix:"
-                    f" {self.n_tetrahedrons}"
-                )
-                print(
-                    f"  Atoms per single"
-                    f" tetrahedron:"
-                    f" {self.nAtomsAnalytic()}"
-                )
-                print(
-                    f"  Total atoms in helix:"
-                    f" {self.nAtoms_helix}"
-                )
-                print(f"{'=' * 60}\n")
-
-
-        # Specific fix for regfccOh which has a
-        # sasview_dims method that returns dimensions
-        # and overwrites itself. We check if the method
-        # exists in the class definition.
-        if (hasattr(self, 'sasview_dims')
-                and callable(
-                    getattr(self, 'sasview_dims'))):
-            # Check if it's still a method
-            # (hasn't been overwritten yet)
-            try:
-                self.sasview_dims = self.sasview_dims()
-                if not noOutput:
-                    print(f"{'=' * 60}\n")
-                    print(
-                        f"SasView dimensions (for"
-                        f" comparaison purposes when"
-                        f" comparing to SasView"
-                        f" models):"
-                    )
-                    print(
-                        f"  t = {self.sasview_dims[1]}"
-                        ", t being the truncature"
-                        " that is defined by the"
-                        " ratio d(truncated_demi"
-                        "_axis)/d(demi_axis)"
-                    )
-                    print(
-                        f"  a = {self.sasview_dims[0]}"
-                        " Angs, a being the"
-                        " demi_axis being the"
-                        " distance from the center"
-                        " of the octahedron to a"
-                        " vertice (in Å)):"
-                        f" {self.sasview_dims}"
-                    )
-                    print(f"{'=' * 60}\n")
-            except TypeError:
-                # If it's not callable, it might have
-                # already been overwritten or is a
-                # property
-                pass
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
 ###############################################################################
 class regfccOh(PlatonicNP):
@@ -203,13 +62,7 @@ class regfccOh(PlatonicNP):
                  Rnn: float = 2.7,
                  nOrder: int = 1,
                  shape: str = 'regfccOh',
-                 postAnalyzis: bool = True,
-                 aseView: bool = False,
-                 thresholdCoreSurface: float = 1.,
-                 skipSymmetryAnalyzis: bool = False,
-                 jmolCrystalShape: bool = True,
-                 noOutput: bool = False,
-                 calcPropOnly: bool = False,
+                 **kwargs
                  ):
         """Initialize the class with all necessary parameters.
 
@@ -244,30 +97,28 @@ class regfccOh(PlatonicNP):
             imageFile (str): Path to a reference image.
             trPlanes (array): Truncation plane equations.
         """
+        super().__init__(**kwargs)
         self.element = element
         self.shape = shape
         self.Rnn = Rnn
         self.nOrder = nOrder
-        self.nAtoms = 0
         self.nAtomsPerLayer = []
         self.nAtomsPerEdge = self.nOrder + 1
         self.interLayerDistance = self.Rnn / self.interShellF
-        self.jmolCrystalShape = jmolCrystalShape
-        self.cog = np.array([0., 0., 0.])
         self.imageFile = pyNMBu.imageNameWithPathway("fccOh-C.png")
-        self.trPlanes = None
+        noOutput = self.noOutput
         if not noOutput:
             pyNMBu.centerTitle(f"{nOrder}th order regular fcc Octahedron")
 
         if not noOutput:
             self.prop()
-        if not calcPropOnly:
+        if not self.calcPropOnly:
             self.coords(noOutput)
-            if aseView:
+            if self.aseView:
                 view(self.NP)
-            if postAnalyzis:
-                self.propPostMake(skipSymmetryAnalyzis, thresholdCoreSurface, noOutput)
-                if aseView:
+            if self.postAnalyzis:
+                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                if self.aseView:
                     view(self.NPcs)
 
     def __str__(self):
@@ -656,13 +507,7 @@ class regIco(PlatonicNP):
                  nShell: int = 1,
                  shape: str = 'regIco',
                  double_ico: bool = False,
-                 postAnalyzis: bool = True,
-                 aseView: bool = False,
-                 thresholdCoreSurface=1.,
-                 skipSymmetryAnalyzis=False,
-                 jmolCrystalShape: bool = True,
-                 noOutput=False,
-                 calcPropOnly=False,
+                 **kwargs,
                  ):
         """Initialize the class with all necessary parameters.
 
@@ -691,29 +536,28 @@ class regIco(PlatonicNP):
             imageFile (str): Path to a reference image.
             trPlanes (array): Truncation plane equations.
         """
+        super().__init__(**kwargs)
         self.element = element
         self.shape = shape
         self.Rnn = Rnn
         self.nShell = nShell
         self.double_ico = double_ico
-        self.nAtoms = 0
         self.nAtomsPerShell = [0]
         self.interShellDistance = self.Rnn / self.interShellF
-        self.jmolCrystalShape = jmolCrystalShape
         self.imageFile = pyNMBu.imageNameWithPathway("ico-C.png")
-        self.trPlanes = None
+        noOutput = self.noOutput
         if not noOutput:
             pyNMBu.centerTitle(f"{nShell} shells icosahedron")
 
         if not noOutput:
             self.prop()
-        if not calcPropOnly:
+        if not self.calcPropOnly:
             self.coords(noOutput)
-            if aseView:
+            if self.aseView:
                 view(self.NP)
-            if postAnalyzis:
-                self.propPostMake(skipSymmetryAnalyzis, thresholdCoreSurface, noOutput)
-                if aseView:
+            if self.postAnalyzis:
+                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                if self.aseView:
                     view(self.NPcs)
 
     def __str__(self):
@@ -1107,13 +951,7 @@ class regfccTd(PlatonicNP):
                  nLayer: int = 1,
                  shape: str = 'regfccTd',
                  n_tetrahedrons: int = 1,
-                 postAnalyzis=True,
-                 aseView: bool = False,
-                 thresholdCoreSurface=1.,
-                 skipSymmetryAnalyzis=False,
-                 jmolCrystalShape: bool = True,
-                 noOutput=False,
-                 calcPropOnly=False,
+                 **kwargs
                  ):
         """Initialize the class with all necessary parameters.
 
@@ -1153,11 +991,11 @@ class regfccTd(PlatonicNP):
             trPlanes (array): Truncation plane equations.
 
         """
+        super().__init__(**kwargs)
         self.element = element
         self.shape = shape
         self.Rnn = Rnn
         self.nLayer = nLayer
-        self.nAtoms = 0
         self.nAtomsPerLayer = []
         self.nAtomsPerEdge = self.nLayer
         self.jmolCrystalShape = jmolCrystalShape
@@ -1165,21 +1003,20 @@ class regfccTd(PlatonicNP):
         self.n_tetrahedrons = n_tetrahedrons
         self.nAtoms_helix = 0  # Initialize to 0, will be computed in generate_tetrahelix()
         self.imageFile = pyNMBu.imageNameWithPathway("fccTd-C.png")
-        self.NP = None
-        self.trPlanes = None
+        noOutput = self.noOutput
         if not noOutput:
             pyNMBu.centerTitle(f"fcc tetrahedron: {nLayer} atoms/edge = number of layers")
           
         if not noOutput:
             self.prop()
 
-        if not calcPropOnly:
+        if not self.calcPropOnly:
             self.coords(noOutput)
-            if aseView:
+            if self.aseView:
                 view(self.NP)
-            if postAnalyzis:
-                self.propPostMake(skipSymmetryAnalyzis, thresholdCoreSurface, noOutput=noOutput)
-                if aseView:
+            if self.postAnalyzis:
+                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput=noOutput)
+                if self.aseView:
                     view(self.NPcs)
           
     def __str__(self):
@@ -1561,13 +1398,7 @@ class regDD(PlatonicNP):
                  Rnn: float = 2.7,
                  nShell: int = 1,
                  shape: str = 'regDD',
-                 postAnalyzis=True,
-                 aseView: bool = False,
-                 thresholdCoreSurface=1.,
-                 skipSymmetryAnalyzis=False,
-                 jmolCrystalShape: bool = True,
-                 noOutput=False,
-                 calcPropOnly=False,
+                 **kwargs,
                  ):
         """Initialize the class with all necessary parameters.
 
@@ -1603,28 +1434,27 @@ class regDD(PlatonicNP):
             trPlanes (array): Truncation plane equations.
 
         """
+        super().__init__(**kwargs)
         self.element = element
         self.shape = shape
         self.Rnn = Rnn
         self.nShell = nShell
-        self.nAtoms = 0
         self.nAtomsPerShell = [0]
         self.interShellDistance = self.Rnn / self.interShellF
-        self.jmolCrystalShape = jmolCrystalShape
         self.imageFile = pyNMBu.imageNameWithPathway("rDD-C.png")
-        self.trPlanes = None
+        noOutput = self.noOutput
         if not noOutput:
             pyNMBu.centerTitle(f"{nShell} shells regular dodecahedron")
           
         if not noOutput:
             self.prop()
-        if not calcPropOnly:
+        if not self.calcPropOnly:
             self.coords(noOutput)
-            if aseView:
+            if self.aseView:
                 view(self.NP)
-            if postAnalyzis:
-                self.propPostMake(skipSymmetryAnalyzis, thresholdCoreSurface, noOutput=noOutput)
-                if aseView:
+            if self.postAnalyzis:
+                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput=noOutput)
+                if self.aseView:
                     view(self.NPcs)
           
     def __str__(self):
@@ -1946,13 +1776,6 @@ class cube(PlatonicNP):
                  nOrder: int = 1,
                  size: int = 0,
                  shape: str = 'cube',
-                 postAnalyzis=True,
-                 aseView: bool = False,
-                 thresholdCoreSurface=1.,
-                 skipSymmetryAnalyzis=False,
-                 jmolCrystalShape: bool = True,
-                 noOutput=False,
-                 calcPropOnly=False,
                  ):
         """Initialize the class with all necessary parameters.
 
@@ -1992,6 +1815,7 @@ class cube(PlatonicNP):
             imageFile (str): Path to a reference image.
             trPlanes (array): Truncation plane equations.
         """
+        super().__init__(**kwargs)
         self.crystalStructure = crystalStructure
         self.element = element
         self.shape = shape
@@ -1999,25 +1823,22 @@ class cube(PlatonicNP):
         self.nOrder = nOrder
         self.size = size * 10  # in angs
         self.nAtomsPerEdge = nOrder + 1
-        self.nAtoms = 0
         self.nAtomsPerShell = [0]
-        self.jmolCrystalShape = jmolCrystalShape
-        self.cog = np.array([0., 0., 0.])
         self.imageFile = pyNMBu.imageNameWithPathway("cube-C.png")
-        self.trPlanes = None
+        noOutput = self.noOutput
 
         if not noOutput:
             pyNMBu.centerTitle(f"{nOrder}x{nOrder}x{nOrder} {self.crystalStructure} cube")
 
         if not noOutput:
             self.prop()
-        if not calcPropOnly:
+        if not self.calcPropOnly:
             self.coords(noOutput)
-            if aseView:
+            if self.aseView:
                 view(self.NP)
-            if postAnalyzis:
-                self.propPostMake(skipSymmetryAnalyzis, thresholdCoreSurface, noOutput=noOutput)
-                if aseView:
+            if self.postAnalyzis:
+                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput=noOutput)
+                if self.aseView:
                     view(self.NPcs)
 
     def __str__(self):
@@ -2294,13 +2115,7 @@ class hollow_shapes(PlatonicNP):
     def __init__(self,
                  full_cube,
                  nOrder_hollow: int = 0,  # Angs?
-                 postAnalyzis=True,
-                 aseView: bool = False,
-                 thresholdCoreSurface=1.,
-                 skipSymmetryAnalyzis=False,
-                 jmolCrystalShape: bool = True,
-                 noOutput=False,
-                 calcPropOnly=False
+                 **kwargs
                  ):
         """Initialize the class with all necessary parameters.
 
@@ -2337,23 +2152,22 @@ class hollow_shapes(PlatonicNP):
             cog (np.array): Center of gravity of
                 the NP.
         """
+        super().__init__(**kwargs)
         if not isinstance(full_cube, cube):
             raise TypeError("full_cube must be an instance of the Class Cube")
         self.full_cube = full_cube
         self.nOrder_hollow = nOrder_hollow
-        self.nAtoms = 0
         self.edgeLength = self.full_cube.edgeLength()
         self.nAtomsPerEdge = self.full_cube.nAtomsPerEdge
-        self.cog = np.array([0., 0., 0.])
-        self.jmolCrystalShape = jmolCrystalShape
+        noOutput = self.noOutput
         if not calcPropOnly:
             self.create_hollow(noOutput)
 
             # if aseView: view(self.NP)
-            if postAnalyzis:
+            if self.postAnalyzis:
                 self.propPostMake(
-                    skipSymmetryAnalyzis,
-                    thresholdCoreSurface,
+                    self.skipSymmetryAnalyzis,
+                    self.thresholdCoreSurface,
                     noOutput=noOutput
                 )
             # #     if aseView: view(self.NPcs)

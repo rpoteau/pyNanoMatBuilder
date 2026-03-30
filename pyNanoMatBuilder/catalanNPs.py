@@ -11,52 +11,55 @@ from ase.visualize import view
 from . import visualID as vID
 from . import utils as pyNMBu
 from .utils import hl, fg, bg
+from .pyNMBcore import pyNMBcore
 
 ###########################################################################################################
-class CatalanNP:
+class CatalanNP(pyNMBcore):
     """Base class for all Catalan nanoparticles providing common functionality."""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-    def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput):
-        """
-        Compute and store various post-construction properties of the nanoparticle.
+        # def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput):
+        # """
+        # Compute and store various post-construction properties of the nanoparticle.
 
-        This function calculates moments of inertia (MOI), the inscribed and 
-        circumscribed sphere diameters,analyzes symmetry,
-        generates a JMOL script, and identifies core and surface atoms.
+        # This function calculates moments of inertia (MOI), the inscribed and 
+        # circumscribed sphere diameters,analyzes symmetry,
+        # generates a JMOL script, and identifies core and surface atoms.
 
-        Args:
-            skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
-            thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
-            noOutput (bool): If True, suppresses output messages.
+        # Args:
+        #     skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
+        #     thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
+        #     noOutput (bool): If True, suppresses output messages.
     
-        Attributes:
-            moi (numpy.ndarray): Moment of inertia tensor.
-            moisize (numpy.ndarray): Normalized moments of inertia.
-            vertices (numpy.ndarray): Geometric vertices of the nanoparticle.
-            simplices (numpy.ndarray): Simplices defining the convex hull.
-            neighbors (numpy.ndarray): Neighboring relations of the hull.
-            equations (numpy.ndarray): Plane equations for the hull faces.
-            NPcs (ase.Atoms): Copy of the nanoparticle with surface atoms 
-                visually marked.
-            NP (ase.Atoms): Original nanoparticle object.
-        """
+        # Attributes:
+        #     moi (numpy.ndarray): Moment of inertia tensor.
+        #     moisize (numpy.ndarray): Normalized moments of inertia.
+        #     vertices (numpy.ndarray): Geometric vertices of the nanoparticle.
+        #     simplices (numpy.ndarray): Simplices defining the convex hull.
+        #     neighbors (numpy.ndarray): Neighboring relations of the hull.
+        #     equations (numpy.ndarray): Plane equations for the hull faces.
+        #     NPcs (ase.Atoms): Copy of the nanoparticle with surface atoms 
+        #         visually marked.
+        #     NP (ase.Atoms): Original nanoparticle object.
+        # """
         
-        self.moi = pyNMBu.moi(self.NP, noOutput)
-        self.moisize = np.array(pyNMBu.moi_size(self.NP, noOutput))  # MOI mass normalized (m of each atoms=1)
+        # self.moi = pyNMBu.moi(self.NP, noOutput)
+        # self.moisize = np.array(pyNMBu.moi_size(self.NP, noOutput))  # MOI mass normalized (m of each atoms=1)
 
-        if not skipSymmetryAnalyzis:
-            pyNMBu.MolSym(self.NP, noOutput=noOutput)
+        # if not self.skipSymmetryAnalyzis:
+        #     pyNMBu.MolSym(self.NP, noOutput=self.noOutput)
 
-        [self.vertices, self.simplices, self.neighbors, self.equations], surfaceAtoms = \
-            pyNMBu.coreSurface(self, thresholdCoreSurface, noOutput=noOutput)
-        self.NPcs = self.NP.copy()
-        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102  # Nobelium, because it has a nice pinkish color in jmol
-        self.surfaceatoms = self.NPcs[surfaceAtoms]
+        # [self.vertices, self.simplices, self.neighbors, self.equations], surfaceAtoms = \
+        #     pyNMBu.coreSurface(self, self.thresholdCoreSurface, noOutput=noOutput)
+        # self.NPcs = self.NP.copy()
+        # self.NPcs.numbers[np.invert(surfaceAtoms)] = 102  # Nobelium, because it has a nice pinkish color in jmol
+        # self.surfaceatoms = self.NPcs[surfaceAtoms]
 
-        pyNMBu.Inscribed_circumscribed_spheres(self,noOutput)
+        # pyNMBu.Inscribed_circumscribed_spheres(self,noOutput)
 
-        if hasattr(self, 'jmolCrystalShape') and self.jmolCrystalShape:
-            self.jMolCS = pyNMBu.defCrystalShapeForJMol(self, noOutput=True)  # do not print the jmol script
+        # if hasattr(self, 'jmolCrystalShape') and self.jmolCrystalShape:
+        #     self.jMolCS = pyNMBu.defCrystalShapeForJMol(self, noOutput=True)  # do not print the jmol script
 
 
 
@@ -93,13 +96,7 @@ class bccrDD(CatalanNP):
                  element: str='Au',
                  Rnn: float=2.7,
                  nShell: int=1,
-                 postAnalyzis: bool=True,
-                 aseView: bool=False,
-                 thresholdCoreSurface: float=1.,
-                 skipSymmetryAnalyzis: bool=False,
-                 jmolCrystalShape: bool=True,
-                 noOutput: bool=False,
-                 calcPropOnly: bool=False,
+                 **kwargs,
                 ):
 
         """
@@ -133,27 +130,26 @@ class bccrDD(CatalanNP):
 
         """
         
+        super().__init__(**kwargs)
         self.element = element
         self.shape='bccrDD'
         self.Rnn = Rnn
         self.nShell = nShell
-        self.nAtoms = 0
         self.nAtomsPerShell = [0]
         self.interShellDistance3 = self.Rnn / self.interShellF3
         self.interShellDistance4 = self.Rnn / self.interShellF4
-        self.cog = np.array([0., 0., 0.])
-        self.jmolCrystalShape = jmolCrystalShape
         self.imageFile = pyNMBu.imageNameWithPathway("bccrdd-C.png")
+        noOutput = self.noOutput
         
         if not noOutput: pyNMBu.centerTitle(f"{nShell} shells bcc rhombic dodecahedron ")
 
         if not noOutput: self.prop()
-        if not calcPropOnly:
+        if not self.calcPropOnly:
             self.coords(noOutput)
-            if aseView: view(self.NP)
-            if postAnalyzis:
-                self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface, noOutput)
-                if aseView: view(self.NPcs)
+            if self.aseView: view(self.NP)
+            if self.postAnalyzis:
+                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                if self.aseView: view(self.NPcs)
           
     def __str__(self):
         return(f"Bcc rhombic dodecahedron with {self.nShell} shell(s) and Rnn = {self.Rnn}")
@@ -465,13 +461,7 @@ class fccdrDD(CatalanNP):
                  element: str='Au',
                  Rnn: float=2.7,
                  nShell: int=1,
-                 postAnalyzis: bool=True,
-                 aseView: bool=False,
-                 thresholdCoreSurface = 1.,
-                 skipSymmetryAnalyzis: bool=False,
-                 jmolCrystalShape: bool=True,
-                 noOutput: bool=False,
-                 calcPropOnly: bool=False,
+                 **kwargs,
                 ):
         """
         Initialize the class with all necessary parameters.
@@ -501,26 +491,25 @@ class fccdrDD(CatalanNP):
             self.imageFile (str): Path to a reference image.
 
         """
+        super().__init__(**kwargs)
         self.element = element
         self.shape='fccdrDD'
         self.Rnn = Rnn
         self.nShell = nShell
-        self.nAtoms = 0
         self.nAtomsPerShell = [0]
         self.interShellDistance = self.Rnn / self.interShellF
         self.interShellDistanceTB = self.Rnn / self.interShellFTB
-        self.cog = np.array([0., 0., 0.])
-        self.jmolCrystalShape = jmolCrystalShape
         self.imageFile = pyNMBu.imageNameWithPathway("fccrdd-C.png")
+        noOutput = self.noOutput
         if not noOutput: pyNMBu.centerTitle(f"{nShell} shells fcc rhombic dodecahedron")
 
         if not noOutput: self.prop()
-        if not calcPropOnly:
+        if not self.calcPropOnly:
             self.coords(noOutput)
-            if aseView: view(self.NP)
-            if postAnalyzis:
-                self.propPostMake(skipSymmetryAnalyzis,thresholdCoreSurface, noOutput)
-                if aseView: view(self.NPcs)
+            if self.aseView: view(self.NP)
+            if self.postAnalyzis:
+                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                if self.aseView: view(self.NPcs)
           
     def __str__(self):
         return(f"Dihedral rhombic dodecahedron (drDD) with {self.nShell} shell(s) and Rnn = {self.Rnn}")

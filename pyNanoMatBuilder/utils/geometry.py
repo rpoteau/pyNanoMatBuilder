@@ -88,105 +88,8 @@ def MakeFaceCoord(Rnn,f,coord,nAtomsOnFaces,coordFaceAt):
             nAtomsOnFaces += 1
     return nAtomsOnFaces,coordFaceAt
 
-#######################################################################
-######################################## Momenta of inertia
-def moi(model: Atoms,
-        noOutput: bool=False,
-       ):
-    """
-    Get the moments of inertia along the principal axes.
-
-    Notes:
-        Units of the moments of inertia are amu.angstrom**2.
-        Periodic boundary conditions are ignored.
-    """
-    if not noOutput:
-        centertxt(
-            "Moments of inertia", bgc='#007a7a', size='14', weight='bold'
-        )
-    model.moi = model.get_moments_of_inertia()  # in amu*angstrom**2
-    if not noOutput:
-        print(
-            f"Moments of inertia = {model.moi[0]:.2f} {model.moi[1]:.2f} "
-            f"{model.moi[2]:.2f} amu.Å2"
-        )
-    model.masses = model.get_masses()
-    model.M = model.masses.sum()
-    model.moiM = model.moi/(model.M)
-    moiM=model.moiM
-    if not noOutput:
-        print(
-            f"Moments of inertia / M = {model.moiM[0]:.2f} {model.moiM[1]:.2f} "
-            f"{model.moiM[2]:.2f} amu.Å2"
-        )
-    return moiM
-   
-
-
-#NEW
-def get_moments_of_inertia_for_size(self, vectors=False):  # from ASE with mass modification
-    """
-    Get the moments of inertia along the principal axes with mass normalization.
-
-    Args:
-        vectors (bool, optional): If True, returns both eigenvalues and eigenvectors.
-            If False, returns only eigenvalues. Defaults to False.
-
-    Returns:
-        np.ndarray: Principal moments of inertia (3 values).
-        np.ndarray: Principal axes (3x3 matrix) if vectors is True.
-
-    Notes:
-        Periodic boundary conditions are ignored.
-        Units of the moments of inertia are angstrom**2.
-    """
-    com = self.get_center_of_mass()
-    positions = self.get_positions()
-    #number_atoms=len(positions)
-    positions -= com  # translate center of mass to origin
-    # masses = self.get_masses() # mass normalization is done by setting all masses to 1 in the inertia tensor calculation
-
-    # Initialize elements of the inertial tensor
-    I11 = np.sum(positions[:, 1]**2 + positions[:, 2]**2)
-    I22 = np.sum(positions[:, 0]**2 + positions[:, 2]**2)
-    I33 = np.sum(positions[:, 0]**2 + positions[:, 1]**2)
-    I12 = -np.sum(positions[:, 0] * positions[:, 1])
-    I13 = -np.sum(positions[:, 0] * positions[:, 2])
-    I23 = -np.sum(positions[:, 1] * positions[:, 2])
-    Itensor = np.array([[I11, I12, I13],
-                        [I12, I22, I23],
-                        [I13, I23, I33]])
-
-    evals, evecs = np.linalg.eigh(Itensor)  # valeurs propes de la matrice
-    if vectors:
-        return evals, evecs.transpose()
-    else:
-        return evals
-
-
-def moi_size(model: Atoms,  # normalized moment of inertia with masses=1
-             noOutput: bool=False,
-            ):
-    """
-    Get the moments of inertia along the principal axes with mass normalization.
-
-    Notes:
-        Units of the moments of inertia are angstrom**2.
-    """
-
-    model.moi_size_all = get_moments_of_inertia_for_size(model)
-    positions = model.get_positions()
-    number_atoms = len(positions)
-    model.moi_size = model.moi_size_all/(number_atoms)
-    if not noOutput:
-        print(
-            f"Moments of inertia with mass=1/M = {model.moi_size[0]:.2f} "
-            f"{model.moi_size[1]:.2f} {model.moi_size[2]:.2f} Å2"
-        )
-    return [model.moi_size[0], model.moi_size[1], model.moi_size[2]]
-  
 ###############################################################################################
-def reduceHullFacets(Crystal: Atoms,
+def reduceHullFacets(self,
                      noOutput: bool=False,
                      tolAngle: float=2.0,
                     ):
@@ -194,7 +97,6 @@ def reduceHullFacets(Crystal: Atoms,
     Reduce crystal facets based on convex hull and coplanarit of facets.
 
     Args:
-        Crystal (Atoms): The crystal object containing the planes for the facet reduction.
         feasible_point (np.ndarray): A feasible point for half-space intersection. Default is [0, 0, 0].
         tolAngle (float): Tolerance angle to define coplanarity. Default is 2.0.
         noOutput (bool): If True, suppresses output to the console. Default is False.
@@ -207,12 +109,21 @@ def reduceHullFacets(Crystal: Atoms,
     """
     from scipy.spatial import HalfspaceIntersection
     from scipy.spatial import ConvexHull
-    import networkx as nx
     import scipy as sp
 
-    cog = Crystal.cog
-    feasible_point = cog
-    hs = HalfspaceIntersection(Crystal.trPlanes, feasible_point)
+    if self.is_optimized:
+        target_planes = np.array(self.trPlanes_opt)
+        target_cog = self.cog_opt
+        status = "optimized structure"
+    else:
+        target_planes = np.array(self.trPlanes)
+        target_cog = self.cog
+        status = "initial structure"
+    if target_planes is None or target_cog is None:
+        raise ValueError(f"Missing data for the {status}. Please check the building process or the optimization results.")
+        
+    feasible_point = np.array(target_cog)
+    hs = HalfspaceIntersection(target_planes, feasible_point)
     vertices = hs.intersections
     hull = ConvexHull(vertices)
 
@@ -263,6 +174,7 @@ def reduceHullFacets(Crystal: Atoms,
 
     def reduceFaces(F, coordsVertices):
         """Reduce the number of faces by merging coplanar ones."""
+        import networkx as nx
         flatten = lambda l: [item for sublist in l for item in sublist]
 
         # create a graph in which nodes represent triangles
@@ -286,7 +198,22 @@ def reduceHullFacets(Crystal: Atoms,
         simplified = [
             set(flatten(F[index] for index in component)) for component in components
         ]
-
+        # pList = []
+        # for f in F:
+        #     planeDef = coordsVertices[f] # Direct indexing with numpy is faster
+        #     pList.append(planeFittingLSF(planeDef, printErrors=False, printEq=False))
+        # # Compare every face with every other face (Global check)
+        # for i in range(len(pList)):
+        #     for j in range(i + 1, len(pList)):
+        #         # If they are coplanar, they belong to the same large facet
+        #         if isCoplanar(pList[i], pList[j], tolAngle):
+        #             G.add_edge(i, j)
+    
+        # # Group connected triangles into single facets
+        # components = list(nx.connected_components(G))
+        # simplified = [
+        #     set(flatten(F[index] for index in component)) for component in components
+        # ]
         return simplified
 
     new_faces = reduceFaces(faces, vertices)
@@ -303,7 +230,10 @@ def reduceHullFacets(Crystal: Atoms,
             planeDef.append(vertices[v])
         planeDef = np.array(planeDef)
         trPlanes.append(planeFittingLSF(planeDef, printErrors=False, printEq=False))
-    Crystal.trPlanes = setdAsNegative(np.array(trPlanes))
+    if self.is_optimized:
+        self.trPlanes_opt = setdAsNegative(np.array(trPlanes))
+    else:
+        self.trPlanes = setdAsNegative(np.array(trPlanes))
     return vertices, new_facesS
 
 
@@ -523,61 +453,6 @@ def reflection_tetra(plane,points):
     vp2plane, dp2plane = shortestPoint2PlaneVectorDistance(plane, points)
     return points + 2 * vp2plane
 
-def Inscribed_circumscribed_spheres(self, noOutput):
-    """
-    Calculates the diameters of the inscribed and circumscribed spheres for the nanoparticle (NP) based on 
-    its positions and the plane equations.
-
-    The circumscribed sphere is the smallest sphere that completely encloses the NP, while the inscribed sphere 
-    is the largest sphere that fits within the NP.
-
-    Args:
-        noOutput (bool, optional): If set to True, suppresses output during the
-            analysis. Default is False.
-
-    Returns:
-        None: The function updates the object's attributes with the calculated
-            diameters of the spheres.
-
-    Notes:
-        The circumscribed sphere radius is calculated as the maximum distance from the center of gravity 
-        (COG) to the NP positions, and the inscribed sphere radius is calculated as the minimum distance 
-        from the NP positions to the planes (based on Hull equations)
-    """
-    if self.shape == 'ellipsoid':
-        self.radiusInscribedSphere = min(self.sasview_dims)
-        self.radiusCircumscribedSphere = max(self.sasview_dims)
-    elif self.shape == 'sphere':
-        self.radiusInscribedSphere = self.radius
-        self.radiusCircumscribedSphere = self.radius
-    else:
-        distances = np.linalg.norm(self.NP.positions - self.cog, axis=1)
-        self.radiusCircumscribedSphere = np.max(distances)
-        distances = [
-            abs(d) / np.sqrt(a ** 2 + b ** 2 + c ** 2)
-            for a, b, c, d in self.equations
-        ]
-        self.radiusInscribedSphere = np.min(distances)
-
-    if not noOutput:
-        centertxt(
-            "Diameters of the inscribed and circumscribed sphere using the "
-            "Hull equations",
-            bgc='#007a7a',
-            size='14',
-            weight='bold'
-        )
-    if not noOutput:
-        print(
-            f"diameters of the circumscribed sphere: "
-            f"{self.radiusCircumscribedSphere * 2 * 0.1:.2f} nm"
-        )
-        print(
-            f"diameters of the inscribed sphere: "
-            f"{self.radiusInscribedSphere * 2 * 0.1:.2f} nm"
-        )
-
-    return self.radiusInscribedSphere, self.radiusCircumscribedSphere
 
 #######################################################################
 def remove_duplicate_atoms(coordinates, reference_coords, tolerance):
@@ -1215,7 +1090,7 @@ def returnPointsThatLieInPlanes(planes: np.ndarray,
         noOutput (bool, optional): If True, suppresses output messages.
 
     Returns:
-        np.ndarray: A boolean array where True indicates that the atom lies in one of the planes.
+        AtomsInPlane (np.ndarray): A boolean array where True indicates that the atom lies in one of the planes.
     """
     coords = np.asarray(coords)
     planes = np.asarray(planes)
@@ -1252,22 +1127,24 @@ def returnPointsThatLieInPlanes(planes: np.ndarray,
     return AtomsInPlane
 
 ######################################## Core/surface identification / Convex Hull analysis
-def coreSurface(Crystal: Atoms,
-                threshold,
+def coreSurface(self,
+                threshold_CoreSurface: float=1e-3,
                 noOutput=False,
                ):
     """
-    Identify the core and surface atoms of a crystal using Convex Hull analysis.
+    Identify the core and surface atoms of a nanoparticle.
+    This method distinguishes surface atoms from core atoms by calculating the 
+    geometric convex hull of the atomic coordinates. It can target either the 
+    initial structure (NP) or the relaxed structure (NP_opt).
 
     Args:
-        Crystal (Atoms): Crystal structure object.
-        threshold (float): The threshold used to identify surface atoms.
+        threshold_CoreSurface (float): The threshold used to identify surface atoms.
         noOutput (bool): If True, suppresses output during the analysis.
 
     Returns:
         tuple: A tuple containing:
             - list: [Hull vertices, Hull simplices, Hull neighbors, Hull equations]
-            - surfaceAtoms (numpy.ndarray): The atomic positions of atoms on the surface.
+            - surfaceAtoms (numpy.ndarray): A boolean array where True indicates that the atom lies on the surface.
     """
     from ase.visualize import view
     from scipy.spatial import ConvexHull
@@ -1276,7 +1153,14 @@ def coreSurface(Crystal: Atoms,
     if not noOutput:
         chrono = timer()
         chrono.chrono_start()
-    coords = Crystal.NP.get_positions()
+    if self.is_optimized and self.NP_opt is not None:
+        target_atoms = self.NP_opt
+        status = "optimized structure"
+    else:
+        target_atoms = self.NP
+        status = "initial structure"
+
+    coords = target_atoms.get_positions()
     if not noOutput:
         centertxt(
             "Convex Hull analyzis",
@@ -1286,22 +1170,171 @@ def coreSurface(Crystal: Atoms,
             weight='bold',
         )
     hull = ConvexHull(coords)
+
+    if status == "optimized structure":
+        self.trPlanes_opt = hull.equations
+        current_planes = self.trPlanes_opt
+    else:
+        self.trPlanes = hull.equations
+        current_planes = self.trPlanes
+        
     if not noOutput:
         print("Found:")
         print(f"  - {len(hull.vertices)} vertices")
         print(f"  - {len(hull.simplices)} simplices")
-    Crystal.trPlanes = hull.equations
-    # print("Crystal.trplanes inside coreSurface")
-    # print(Crystal.trPlanes)
-    # print(np.unique(Crystal.trPlanes, axis=0, return_counts=True))
-    # print(Crystal.trPlanes.shape)
-    #_ = defCrystalShapeForJMol(Crystal,noOutput=noOutput)
-    # print("Crystal.trplanes inside coreSurface after defCrystalShapeForJMol")
-    # print(Crystal.trPlanes)
+        
     if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
     if not noOutput: chrono = timer(); chrono.chrono_start()
-    surfaceAtoms = returnPointsThatLieInPlanes(Crystal.trPlanes, coords, noOutput=noOutput,threshold=threshold)
+    surfaceAtoms = returnPointsThatLieInPlanes(current_planes, coords, noOutput=noOutput, threshold=threshold_CoreSurface)
     if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
     return [hull.vertices, hull.simplices, hull.neighbors, hull.equations],surfaceAtoms
 
+################################################################
+
+from .prop import kDTreeCN
+def peel_by_coordination(self, threshold_peeling=6, Rmax=2.9, noOutput=False):
+    """
+    Remove surface atoms with low coordination numbers to simulate truncation or 
+    incomplete shell growth.
+
+    This method uses a KDTree-based neighbor search (via self.kDTreeCN) to identify 
+    and delete atoms that are weakly bonded, such as vertices or edge atoms.
+
+    The method updates self.NP in place. If an optimized structure (NPopt) 
+    existed, it is used as the coordinate source for the peeling, then 
+    deleted. self.is_optimized is reset to False.
+
+    Args:
+        threshold_peeling (int): Minimum coordination number required to keep an atom. 
+        Rmax (float): The cutoff distance (in Angstroms) for defining a 
+                      nearest neighbor.
+        noOutput (bool): If True, suppresses output messages.
+
+    Returns:
+        ase.Atoms: The updated nanoparticle (self.NP) after peeling.
+    """
+    import numpy as np
+    
+    # 1. Determine which structure to peel
+    if self.is_optimized and hasattr(self, 'NP_opt'):
+        target_attr = 'NP_opt'
+        status = "optimized structure"
+    else:
+        target_attr = 'NP'
+        status = "initial structure"
+
+    target_atoms = getattr(self, target_attr)
+    
+    # 2. Retrieve Coordination Numbers (CN)
+    # Using your internal KDTree tool
+    _, CN = kDTreeCN(target_atoms, Rmax=Rmax, returnD=False, noOutput=noOutput)
+
+    # 3. Identify atoms to keep
+    CN = np.array(CN)
+    indices_to_keep = np.where(CN >= threshold_peeling)[0]
+    
+    # 4. Update the structure in place
+    old_count = len(target_atoms)
+    self.NP = target_atoms[indices_to_keep]
+    if not noOutput:
+        print(f"Peeling the {status} (CN < {threshold_peeling}): "
+              f"removed {old_count - self.nAtoms} atoms. self.NP updated.")
+    
+    # Sync Metadata and Clean Stale Data !!!
+    self._flush_stale_data(shape_update="_peeled_CN")
+    self.is_optimized = False
+    self.propPostMake(skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
+                      thresholdCoreSurface=self.thresholdCoreSurface,
+                      noOutput=False, is_optimized=False)
+    
+
+def peel_by_shifted_ellipsoid(self, shift_dist=2.5, noOutput=False):
+    """
+    Truncate the nanoparticle using a shape-adaptive envelope shifted in a 
+    random direction.
+
+    This method simulates asymmetric growth or partial dissolution by shifting 
+    a volume of control (defined by the particle's own inertia tensor) and 
+    removing atoms that fall outside. By projecting coordinates into the 
+    Principal Component Analysis (PCA) local frame, the truncation volume 
+    perfectly matches the eccentricity of the NP, making it robust for both 
+    spherical and cylindrical (nanorod) geometries.
+
+    The method updates self.NP in place. If an optimized structure (NP_opt) 
+    existed, it is used as the coordinate source, then deleted. 
+    self.is_optimized is reset to False.
+
+    Args:
+        shift_dist (float): The distance to shift the envelope (in Angstroms). 
+                            2.5 A corresponds to approximately one atomic layer.
+        noOutput (bool): If True, suppresses output messages.
+    """
+    import numpy as np
+    
+    # 1. Ensure geometric data exists
+    if not hasattr(self, 'ellipsoid'):
+        self.get_ellipsoid_analysis(noOutput=True)
+    
+    # 2. Identify source data using your updated keys
+    if self.is_optimized and hasattr(self, 'NP_opt'):
+        target_atoms = self.NP_opt
+        key = 'optimized structure'
+    else:
+        target_atoms = self.NP
+        key = 'initial structure'
+        
+    # Re-run analysis if the specific key is missing
+    if key not in self.ellipsoid:
+        self.get_ellipsoid_analysis(noOutput=True)    
+        
+    res = self.ellipsoid[key]
+    a, b, c = res['D1']/2, res['D2']/2, res['D3']/2
+    
+    # 3. Perform a quick PCA to get the current orientation (evecs)
+    # This ensures the 'sheath' is perfectly aligned with the target_atoms
+    pos = target_atoms.get_positions()
+    center_orig = pos.mean(axis=0)
+    pos_c = pos - center_orig
+    S = (pos_c.T @ pos_c) / len(pos)
+    evals, evecs = np.linalg.eigh(S)
+    
+    # Sort eigenvectors to match D1, D2, D3 order (descending)
+    idx = np.argsort(evals)[::-1]
+    evecs = evecs[:, idx]
+    
+    # 4. Define the Shift in Cartesian space
+    random_vec = np.random.normal(size=3)
+    random_vec /= np.linalg.norm(random_vec)
+    shift_vec = random_vec * shift_dist
+    
+    # New center for the truncation volume
+    new_center = center_orig + shift_vec
+    
+    # 5. Transform atom positions to the Ellipsoid's local frame
+    # This aligns the axes with the particle's elongation (e.g., Cylinder axis)
+    relative_pos = pos - new_center
+    local_pos = relative_pos @ evecs
+    
+    # 6. Apply the ellipsoid inequality in local coordinates
+    inside = (local_pos[:,0]**2 / a**2 + 
+              local_pos[:,1]**2 / b**2 + 
+              local_pos[:,2]**2 / c**2) <= 1.0
+    
+    # 7. Update and Reset
+    old_count = len(target_atoms)
+    self.NP = target_atoms[inside]
+    if not noOutput:
+        # Calculating the two ratios (Major/Intermediate and Major/Minor)
+        # This reflects the full 3D shape (Cylindrical vs Spheroidal)
+        print(f"Shifted Truncation ({key}):")
+        print(f"  - Envelope matched to particle length ({a*0.1:.2f} nm) and shape.")
+        print(f"  - Aspect Ratios: a/b = {a/b:.2f} ; a/c = {a/c:.2f}")
+        print(f"  - Atoms removed: {old_count - self.nAtoms}. self.NP updated.")
+    
+    # Sync Metadata and Clean Stale Data !!!
+    self._flush_stale_data(shape_update="_peeled_ellipsoid")
+    self.is_optimized = False
+    self.propPostMake(skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
+                      thresholdCoreSurface=self.thresholdCoreSurface,
+                      noOutput=False, is_optimized=False)
 

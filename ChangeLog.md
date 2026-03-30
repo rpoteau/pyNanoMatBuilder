@@ -5,6 +5,72 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
+## [0.10.0] - 2026-03-30 "pyNMBcore"
+
+**<div style="color:blue">This is major architecture change, already started in version 0.9.9</div>**
+
+### Changed
+
+- **Key Sanitization**: Internal dictionary keys for analysis now consistently replace spaces with underscores (e.g., `initial_structure`, `optimized_structure`).
+- **Unification**: Standardized `propPostMake()` across all builder classes via `pyNMBcore` inheritance.
+    - Moved logic to `utils.prop` to ensure all NPs share the same analysis pipeline.
+    - Integrated safe-checks for specialized geometries (Hollow shapes, Helices, ...).
+    - *<div style="color:red">**work in progress.** Has only been done for platonicNPs, so far.</div>*
+- Optimization section in `pyNMB-examples.ipynb` adapted to the new object-oriented logic
+- Context-Aware Property Mapping: Standardized `propPostMake()` to dynamically route analysis metadata (moi, surface atoms, symmetry) to either base or `_opt` attributes using a boolean toggle, ensuring consistent characterization of both raw and relaxed structures
+
+### Added
+- **New Core Methods called in `pyNMBcore` (`pyNMBcore.py`)**:
+    - **`utils.prop.get_ellipsoid_analysis(noOutput=False)`**: 
+        - Implements **Principal Component Analysis (PCA)** on Convex Hull vertices to fit a circumscribed ellipsoid.
+        - Features **Major/Intermediate/Minor diameter** ($D_1, D_2, D_3$) calculation.
+        - Includes **adaptive scaling** to match maximum radial distance (e.g., matching the 1.63 nm shell-based diameter for icosahedra).
+        - Calculates Volume and Surface Area (Knud Thomsen approximation).
+        - Generates a **Jmol-ready command** using `ellipsoid AXES CENTER` for precise 3D orientation.
+    - **`utils.geometry.peel_by_coordination(threshold_peeling=6, Rmax=2.9, noOutput=False)`**:
+        - Structural modifier simulating surface truncation or incomplete shell growth.
+        - Uses a high-performance **KDTree neighbor search** (via `utils.prop.kDTreeCN`) to identify weakly bonded atoms.
+        - Enables targeted removal of specific features (e.g., `threshold=6` specifically targets icosahedral vertices).
+    - **`utils.geometry.peel_by_shifted_ellipsoid(shift_dist=2.5, noOutput=False)`**:
+        - Advanced truncation method simulating **asymmetric growth/dissolution**.
+        - **Shape-Aware Logic**: Projects coordinates into the PCA local frame, ensuring truncation respects the particle's eccentricity (crucial for nanorods/cylinders).
+        - Useful for modeling "intermediate" diameters observed in experimental HRTEM samples.
+    - **Cache Invalidation**: **`utils.core._flush_stale_data()`** proactively deletes stale analysis attributes (`ellipsoid`, `moi`, `vertices`, `NPopt`...) to force fresh, accurate calculations.
+    - All structural "peeling" methods update `self.NP` in-place and explicitly reset `self.is_optimized` to `False` (deleting `self.NPopt`) to ensure consistency for subsequent optimizations
+    - Complete list: 
+        - `optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1)`
+        - `Inscribed_circumscribed_spheres(self, noOutput=None)`
+        - `get_ellipsoid_analysis(self, noOutput=None)`
+        - `peel_by_coordination(self, threshold_peeling=6, Rmax=2.9, noOutput=None)`
+        - `peel_by_shifted_ellipsoid(self, shift_dist=2.5, noOutput=None)`
+        - `_flush_stale_data(self, shape_update=None)`
+        - `propPostMake(self, skipSymmetryAnalyzis=None, thresholdCoreSurface=None, noOutput=None, is_optimized=None)`
+
+## [0.9.9] - 2026-03-27 "pyNMBcore 0"
+
+### Changed
+- **Architecture**: Introduced in the new `pyNMBcore.py` file a `pyNMBcore` base class to centralize common attributes methods across all nanoparticle types, *i.e.* all classes.
+
+    - This **core parent class** thus provides a standardized set of attributes and methods to all nanoparticle builder classes (Platonic, Catalan, Crystals, etc.). 
+    - **`pyNMBcore` is a high-level API Wrapper**. The class methods now use lazy-loading (imports within methods) to delegate heavy computational logic to the utils/ sub-package (`utils.prop`, `utils.geometry`, `utils.energy`)
+    - <div style="color:blue">It is an <b>Object-Oriented API</b>: transitions from functional calls to internalized methods, e.g. <code>ico.optimize()</code> instead of <code>optimize(ico.NP)</code></div>
+    - **Shared State Management**: All builders now inherit a consistent internal state (e.g., `nAtoms`, `cog`, `is_optimized`, `ellipsoid`) ensuring predictable behavior across different geometries.
+    - List of common arguments:
+         - `postAnalyzis: bool = True`,
+         - `aseView: bool = False`,
+         - `thresholdCoreSurface: float = 1.`,
+         - `skipSymmetryAnalyzis: bool = False`,
+         - `jmolCrystalShape: bool = True`,
+         - `noOutput: bool = False`,
+         - `calcPropOnly: bool = False`
+
+    **<div style="color:red">All particle classes now inherit from pyNMBcore</div>**
+
+- **Optimization**:
+
+    - Renamed the geometry optimization `energy.optimizeEMT()` function as `energy.optimize()`, EMT energy and Quasi-Newton optimizer being now parameters of the function
+    - `optimize()` available to the `pyNMBcore` level, enabling the `energy.optimize()` method on all NPs.
+
 ## [0.9.5-0.9.8] - 2026-03-24 "polydispersity II"
 
 ### Added

@@ -11,9 +11,10 @@ from . import utils as pyNMBu
 from . import platonicNPs as pNP
 from . import johnsonNPs as jNP
 from .utils import hl, fg, bg
+from .pyNMBcore import pyNMBcore
 
 ###########################################################################################################
-class fcctpt:
+class fcctpt(pyNMBcore):
     """
     This class generates and manages the properties of an fcc triangular platelet, which is based on 
     a trigonal bipyramid structure. It provides methods to calculate and manipulate atomic coordinates, 
@@ -29,13 +30,7 @@ class fcctpt:
                  Rnn: float=2.7,
                  nLayerTd: int=1, 
                  nLayer: int = 3, 
-                 postAnalyzis: bool=True,
-                 aseView: bool=False,
-                 thresholdCoreSurface: float=1.,
-                 skipSymmetryAnalyzis: bool=False,
-                 jmolCrystalShape: bool=True,
-                 noOutput: bool=False,
-                 calcPropOnly: bool=False,
+                 **kwargs
                 ):
              
         """
@@ -85,6 +80,7 @@ class fcctpt:
             imageFile (str): Path to the image file of the nanoparticle shape.
             
         """
+        super().__init__(**kwargs)
         self.element = element
         self.shape = 'fcctpt'
         self.Rnn = Rnn
@@ -92,28 +88,27 @@ class fcctpt:
         self.tbpprop = jNP.fcctbp(self.element, self.Rnn, self.nLayerTd, noOutput=True, calcPropOnly=True)
         self.nLayertbp = 2 * self.nLayerTd - 1
         self.nLayer = nLayer * 2 + 1  # total number of layers
-        self.nAtoms = 0
         self.interLayerDistance = self.tbpprop.interLayerDistance
         self.nAtomsPerEdge = self.nLayerTd + 1
-        self.cog = np.array([0.0, 0.0, 0.0])
         self.dim = [0, 0, 0]
         self.jmolCrystalShape = jmolCrystalShape
         if self.nLayer > self.nLayertbp:
             sys.exit(f"Number of layers of the triangular platelet ({self.nLayer}) cannot be > to the total number of layers of the trigonal bipyramid {self.nLayertbp}")
         self.imageFile = pyNMBu.imageNameWithPathway("tpt-C.png")
+        noOutput = self.noOutput
         if not noOutput:
             pyNMBu.centerTitle(
                 f"fcc triangular platelet with {nLayer*2+1} remaining shells, made from a trigonal bipyramid with {nLayerTd} shells per pyramid"
             )
 
         if not noOutput: self.prop()
-        if not calcPropOnly:
+        if not self.calcPropOnly:
             self.coords(noOutput)
-            if aseView:
+            if self.aseView:
                 view(self.NP)
-            if postAnalyzis:
-                self.propPostMake(skipSymmetryAnalyzis, thresholdCoreSurface, noOutput)
-                if aseView:
+            if self.postAnalyzis:
+                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                if self.aseView:
                     view(self.NPcs)
 
     def __str__(self):
@@ -218,46 +213,46 @@ class fcctpt:
         print(f"vertex-center-vertex (tetrahedral bond) angle in Td = {self.tbpprop.vcvAngle:.1f}°")
         print(f"coordinates of the center of gravity = {self.cog}")
 
-    def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput):
-        """
-        Compute and store post-construction nanoparticle properties.
+    # def propPostMake(self, skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput):
+    #     """
+    #     Compute and store post-construction nanoparticle properties.
 
-        This function calculates moments of inertia (MOI), the inscribed and
-        circumscribed spheres, determines the nanoparticle shape, analyzes
-        symmetry (if required), and identifies core and surface atoms.
+    #     This function calculates moments of inertia (MOI), the inscribed and
+    #     circumscribed spheres, determines the nanoparticle shape, analyzes
+    #     symmetry (if required), and identifies core and surface atoms.
 
-        Args:
-            skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
-            thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
-            noOutput (bool): If True, suppresses output messages.
+    #     Args:
+    #         skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
+    #         thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
+    #         noOutput (bool): If True, suppresses output messages.
 
-        Attributes:
-            moi (numpy.ndarray): Moment of inertia tensor.
-            moisize (numpy.ndarray): Normalized moments of inertia.
-            vertices (numpy.ndarray): Geometric vertices of the nanoparticle.
-            simplices (numpy.ndarray): Simplices defining the convex hull.
-            neighbors (numpy.ndarray): Neighboring relations between facets.
-            equations (numpy.ndarray): Plane equations for the hull faces.
-            NPcs (ase.Atoms): Copy of the nanoparticle with surface atoms visually marked.
-            NP (ase.Atoms): Original nanoparticle object.
-        """
-        self.moi = pyNMBu.moi(self.NP, noOutput=noOutput)
-        self.moisize = np.array(pyNMBu.moi_size(self.NP, noOutput))  # MOI mass normalized (m of each atoms=1)
+    #     Attributes:
+    #         moi (numpy.ndarray): Moment of inertia tensor.
+    #         moisize (numpy.ndarray): Normalized moments of inertia.
+    #         vertices (numpy.ndarray): Geometric vertices of the nanoparticle.
+    #         simplices (numpy.ndarray): Simplices defining the convex hull.
+    #         neighbors (numpy.ndarray): Neighboring relations between facets.
+    #         equations (numpy.ndarray): Plane equations for the hull faces.
+    #         NPcs (ase.Atoms): Copy of the nanoparticle with surface atoms visually marked.
+    #         NP (ase.Atoms): Original nanoparticle object.
+    #     """
+    #     self.moi = pyNMBu.moi(self.NP, noOutput=noOutput)
+    #     self.moisize = np.array(pyNMBu.moi_size(self.NP, noOutput))  # MOI mass normalized (m of each atoms=1)
 
-        if not skipSymmetryAnalyzis:
-            pyNMBu.MolSym(self.NP, noOutput=noOutput)
+    #     if not skipSymmetryAnalyzis:
+    #         pyNMBu.MolSym(self.NP, noOutput=noOutput)
 
-        [
-            self.vertices,
-            self.simplices,
-            self.neighbors,
-            self.equations,
-        ], surfaceAtoms = pyNMBu.coreSurface(self, thresholdCoreSurface, noOutput=noOutput)
-        self.NPcs = self.NP.copy()
-        self.NPcs.numbers[np.invert(surfaceAtoms)] = 102  # Nobelium (visual color in jmol)
-        self.surfaceatoms = self.NPcs[surfaceAtoms]
+    #     [
+    #         self.vertices,
+    #         self.simplices,
+    #         self.neighbors,
+    #         self.equations,
+    #     ], surfaceAtoms = pyNMBu.coreSurface(self, self.thresholdCoreSurface, noOutput=noOutput)
+    #     self.NPcs = self.NP.copy()
+    #     self.NPcs.numbers[np.invert(surfaceAtoms)] = 102  # Nobelium (visual color in jmol)
+    #     self.surfaceatoms = self.NPcs[surfaceAtoms]
 
-        pyNMBu.Inscribed_circumscribed_spheres(self, noOutput)
+    #     pyNMBu.Inscribed_circumscribed_spheres(self, noOutput)
 
-        if self.jmolCrystalShape:
-            self.jMolCS = pyNMBu.defCrystalShapeForJMol(self, noOutput)
+    #     if self.jmolCrystalShape:
+    #         self.jMolCS = pyNMBu.defCrystalShapeForJMol(self, noOutput)

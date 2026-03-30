@@ -29,49 +29,27 @@ from .core import centertxt, centerTitle, fg, bg, hl, color
 from .geometry import reduceHullFacets
 from .prop import kDTreeCN
 
-def defCrystalShapeForJMol(Crystal: Atoms,
+def defCrystalShapeForJMol(self,
                            noOutput: bool=True,
                           ):
     """
-    Generate a Jmol command to visualize the crystal shape based on the facets of the crystal.
+    Generate a Jmol command to visualize the crystal shape based on the facets of the NP.
 
     Args:
-        Crystal (Atoms): The crystal structure object containing the facets and planes.
         noOutput (bool): If True, suppresses the output of the command.
 
     Returns:
         str: The Jmol command string for visualizing the crystal shape.
     """
-
-    if Crystal.trPlanes is not None:
-        ####################################################### Trying alpha shape algorithm for concave NPs
-        # if Crystal.shape=='epbpyM':
-        #     vertices, redFacets = Crystal.alpha_vertices, Crystal.alpha_faces
-        #     if not noOutput: centertxt("generating the jmol command line to view the crystal shape",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
-        #     cmd = ""
-        #     for i,nf in enumerate(redFacets):
-        #         cmd += "draw facet" + str(i) + " polygon "
-        #         cmd += '['
-        #         for at in nf:
-        #             cmd+=f"{{{vertices[at][0]:.4f},{vertices[at][1]:.4f},{vertices[at][2]:.4f}}},"
-        #         cmd+="]; "
-        #     cmd += "color $facet* translucent 70 [x828282]" 
-        #     cmde = ""
-        #     index = 0
-        #     for nf in redFacets:
-        #         nfcycle = np.append(nf,nf[0])
-        #         for i, at in enumerate(nfcycle[:-1]):
-        #             cmde += "draw line" + str(index) + " ["
-        #             cmde += f"{{{vertices[at][0]:.4f},{vertices[at][1]:.4f},{vertices[at][2]:.4f}}},"
-        #             cmde += f"{{{vertices[nfcycle[i+1]][0]:.4f},{vertices[nfcycle[i+1]][1]:.4f},{vertices[nfcycle[i+1]][2]:.4f}}},"
-        #             cmde += "] width 0.2; "
-        #             index += 1
-        #     cmde += "color $line* [xd6d6d6]; "
-        #     cmd = cmde + cmd 
-        # else:
-        # ############################################################################################################
-
-        vertices, redFacets = reduceHullFacets(Crystal, noOutput=noOutput)
+    if self.is_optimized and hasattr(self, 'equations_opt'):
+        target_planes = self.equations_opt
+        status = "optimized geometry"
+    else:
+        target_planes = getattr(self, 'trPlanes', None)
+        status = "initial geometry"
+        
+    if target_planes is not None:
+        vertices, redFacets = reduceHullFacets(self, noOutput=noOutput)
         if not noOutput:
             centertxt(
                 "generating the jmol command line to view the crystal shape",

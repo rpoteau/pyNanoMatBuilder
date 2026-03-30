@@ -358,3 +358,492 @@ def rdf(NP: Atoms,
     if not noOutput: print("(Intensity and position of the returned RDF profile normalized w.r.t. this first peak)")
     if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
     return radii, g_r, len(radii)
+
+
+######################################## Momenta of inertia
+def moi(model: Atoms,
+        noOutput: bool=False,
+       ):
+    """
+    Get the moments of inertia along the principal axes.
+
+    Notes:
+        Units of the moments of inertia are amu.angstrom**2.
+        Periodic boundary conditions are ignored.
+    """
+    if not noOutput:
+        centertxt(
+            "Moments of inertia", bgc='#007a7a', size='14', weight='bold'
+        )
+    model.moi = model.get_moments_of_inertia()  # in amu*angstrom**2
+    if not noOutput:
+        print(
+            f"Moments of inertia = {model.moi[0]:.2f} {model.moi[1]:.2f} "
+            f"{model.moi[2]:.2f} amu.Å2"
+        )
+    model.masses = model.get_masses()
+    model.M = model.masses.sum()
+    model.moiM = model.moi/(model.M)
+    moiM=model.moiM
+    if not noOutput:
+        print(
+            f"Moments of inertia / M = {model.moiM[0]:.2f} {model.moiM[1]:.2f} "
+            f"{model.moiM[2]:.2f} amu.Å2"
+        )
+    return moiM
+   
+
+
+#NEW
+def get_moments_of_inertia_for_size(self, vectors=False):  # from ASE with mass modification
+    """
+    Get the moments of inertia along the principal axes with mass normalization.
+
+    Args:
+        vectors (bool, optional): If True, returns both eigenvalues and eigenvectors.
+            If False, returns only eigenvalues. Defaults to False.
+
+    Returns:
+        np.ndarray: Principal moments of inertia (3 values).
+        np.ndarray: Principal axes (3x3 matrix) if vectors is True.
+
+    Notes:
+        Periodic boundary conditions are ignored.
+        Units of the moments of inertia are angstrom**2.
+    """
+    com = self.get_center_of_mass()
+    positions = self.get_positions()
+    #number_atoms=len(positions)
+    positions -= com  # translate center of mass to origin
+    # masses = self.get_masses() # mass normalization is done by setting all masses to 1 in the inertia tensor calculation
+
+    # Initialize elements of the inertial tensor
+    I11 = np.sum(positions[:, 1]**2 + positions[:, 2]**2)
+    I22 = np.sum(positions[:, 0]**2 + positions[:, 2]**2)
+    I33 = np.sum(positions[:, 0]**2 + positions[:, 1]**2)
+    I12 = -np.sum(positions[:, 0] * positions[:, 1])
+    I13 = -np.sum(positions[:, 0] * positions[:, 2])
+    I23 = -np.sum(positions[:, 1] * positions[:, 2])
+    Itensor = np.array([[I11, I12, I13],
+                        [I12, I22, I23],
+                        [I13, I23, I33]])
+
+    evals, evecs = np.linalg.eigh(Itensor)  # valeurs propes de la matrice
+    if vectors:
+        return evals, evecs.transpose()
+    else:
+        return evals
+
+
+def moi_size(model: Atoms,  # normalized moment of inertia with masses=1
+             noOutput: bool=False,
+            ):
+    """
+    Get the moments of inertia along the principal axes with mass normalization.
+
+    Notes:
+        Units of the moments of inertia are angstrom**2.
+    """
+
+    model.moi_size_all = get_moments_of_inertia_for_size(model)
+    positions = model.get_positions()
+    number_atoms = len(positions)
+    model.moi_size = model.moi_size_all/(number_atoms)
+    if not noOutput:
+        print(
+            f"Moments of inertia with mass=1/M = {model.moi_size[0]:.2f} "
+            f"{model.moi_size[1]:.2f} {model.moi_size[2]:.2f} Å2"
+        )
+    return [model.moi_size[0], model.moi_size[1], model.moi_size[2]]
+
+#------------------------------------------------------------------------------------------------------------------------
+    
+def Inscribed_circumscribed_spheres(self, noOutput):
+    """
+    Calculates the diameters of the inscribed and circumscribed spheres for the nanoparticle (NP) based on 
+    its positions and the plane equations.
+
+    The circumscribed sphere is the smallest sphere that completely encloses the NP, while the inscribed sphere 
+    is the largest sphere that fits within the NP.
+
+    Args:
+        noOutput (bool, optional): If set to True, suppresses output during the
+            analysis. Default is False.
+
+    Returns:
+        None: The function updates the object's attributes with the calculated
+            radius of the spheres, in Angströms.
+
+    Notes:
+        The circumscribed sphere radius is calculated as the maximum distance from the center of gravity 
+        (COG) to the NP positions, and the inscribed sphere radius is calculated as the minimum distance 
+        from the NP positions to the planes (based on Hull equations)
+    """
+    # --- Target Selection ---
+    # If the system is optimized, we use NP_opt, otherwise we use the builder's NP
+    if self.is_optimized and self.NP_opt is not None:
+        target_atoms = self.NP_opt
+        target_cog   = getattr(self, 'cog_opt', None)
+        target_eq    = getattr(self, 'equations_opt', None)
+        status_text = "optimized structure"
+    else:
+        target_atoms = self.NP
+        target_cog   = getattr(self, 'cog', None)
+        target_eq    = getattr(self, 'equations', None)
+        status_text = "initial structure"
+
+    if target_atoms is None or len(target_atoms) == 0:
+        raise ValueError(f"CRITICAL: No atoms found in {status_text} structure. "
+                         "Build the particle before calling sphere analysis.")
+
+    if target_cog is None or len(target_cog) != 3:
+        raise ValueError(f"CRITICAL: Center of Mass (COG) is missing for {status_text} structure. "
+                         "Ensure propPostMake() or set_cog() has been executed.")
+
+    if target_eq is None or len(target_eq) == 0:
+        raise ValueError(f"CRITICAL: Hull equations are missing for {status_text} structure. "
+                         "Inscribed sphere calculation requires surface plane equations.")
+        
+    if self.shape == 'ellipsoid' and not self.is_optimized:
+        self.radiusInscribedSphere = min(self.sasview_dims)
+        self.radiusCircumscribedSphere = max(self.sasview_dims)
+    elif self.shape == 'sphere' and not self.is_optimized:
+        self.radiusInscribedSphere = self.radius
+        self.radiusCircumscribedSphere = self.radius
+    else:
+        distances = np.linalg.norm(target_atoms.positions - target_cog, axis=1)
+        self.radiusCircumscribedSphere = np.max(distances)
+        distances = [
+            abs(d) / np.sqrt(a ** 2 + b ** 2 + c ** 2)
+            for a, b, c, d in target_eq
+        ]
+        self.radiusInscribedSphere = np.min(distances)
+
+    if not noOutput:
+        centertxt(
+            f"Diameters of the inscribed and circumscribed sphere using the "
+            f"Hull equations ({status_text})",
+            bgc='#007a7a',
+            size='14',
+            weight='bold'
+        )
+    if not noOutput:
+        print(
+            f"diameters of the circumscribed sphere: "
+            f"{self.radiusCircumscribedSphere * 2 * 0.1:.2f} nm"
+        )
+        print(
+            f"diameters of the inscribed sphere: "
+            f"{self.radiusInscribedSphere * 2 * 0.1:.2f} nm"
+        )
+
+    return self.radiusInscribedSphere, self.radiusCircumscribedSphere
+
+def get_ellipsoid_analysis(self, noOutput=False):
+        """
+        Perform a Principal Component Analysis (PCA) on the outer envelope to 
+        calculate the best-fitting circumscribed ellipsoid.
+
+        This method identifies the principal axes of the nanoparticle's surface 
+        by analyzing the covariance matrix of the Convex Hull vertices. The 
+        resulting ellipsoid is scaled such that its major semi-axis matches 
+        the maximum radial distance found in the structure, ensuring a perfect 
+        fit for circumscribed diameter measurements (e.g., 1.63 nm for a 
+        3-shell icosahedron).
+
+        The analysis automatically selects between 'initial structure' and 
+        'optimized structure' based on the current state of the object.
+
+        Args:
+            noOutput (bool): If True, suppresses printed summaries and Jmol 
+                command generation. Defaults to False.
+
+        Returns:
+            dict: A dictionary containing the following physical properties:
+                - "status": String indicating which envelope was analyzed.
+                - "D1", "D2", "D3": Major, intermediate, and minor diameters (Å).
+                - "volume": Volume of the ellipsoid (Å³).
+                - "surface": Approximate surface area (Å²) using Knud Thomsen's formula.
+                - "asphericity": Ratio of D1/D3 (1.0 for a perfect sphere).
+
+        Raises:
+            ValueError: If fewer than 4 Hull vertices are found, indicating 
+                that coreSurface() has not been run or the NP is invalid.
+
+        Notes:
+            - Scaling Logic: The semi-axes are derived from the square root of 
+              the eigenvalues of the covariance matrix. The scale factor is 
+              defined as: scale = max_radius / sqrt(max_eigenvalue).
+            - Surface Area: Calculated using an approximation with p=1.6075, 
+              limiting the maximum relative error to 1.061%.
+            - Visualization: Generates a Jmol-ready command using the 'AXES' 
+              and 'CENTER' keywords for precise orientation.
+        """
+        import numpy as np
+        if not hasattr(self, 'ellipsoid'):
+            self.ellipsoid = {}
+            
+        # 1. Select the correct envelope data
+        if self.is_optimized and hasattr(self, 'vertices_opt'):
+            target_atoms = self.NP_opt
+            hull_indices = self.vertices_opt
+            status = "optimized envelope"
+            key = "optimized structure"
+        else:
+            target_atoms = self.NP
+            hull_indices = self.vertices
+            status = "initial envelope"
+            key = "initial structure"
+
+        hull_coords = target_atoms.get_positions()[hull_indices]
+        pts = np.asarray(hull_coords)
+    
+        if hull_coords is None or len(hull_coords) < 4:
+            raise ValueError(f"Insufficient Hull vertices found for {status} ({len(hull_coords)} is < 4). "
+                         "Please run coreSurface() before this analysis.")
+
+        # 2. PCA on the envelope vertices only
+        # Center the vertices on their own center of geometry
+        center = pts.mean(axis=0)
+        pos_c = pts - center
+        
+        # Compute covariance matrix of the surface points
+        S = (pos_c.T @ pos_c) / len(hull_coords)
+        # We use eigh to get the vectors (v)
+        evals, evecs = np.linalg.eigh(S)
+        # Sort both in descending order (Major -> Minor)
+        idx = np.argsort(evals)[::-1]
+        evals = evals[idx]
+        evecs = evecs[:, idx] # Columns are the eigenvectors
+        
+        # 3. Scaling to match the circumscribed sphere (1.63 nm logic)
+        # We ensure the major semi-axis 'a' equals the max distance from center
+        max_dist = np.max(np.linalg.norm(pos_c, axis=1))
+        scale_factor = max_dist / np.sqrt(evals[0])
+        
+        # Calculate semi-axes a, b, c
+        a, b, c = scale_factor * np.sqrt(evals)
+        
+        # 4. Physical Properties
+        # Volume: (4/3) * pi * a * b * c
+        volume = (4/3) * np.pi * a * b * c
+        
+        # Surface Area (Knud Thomsen's formula - approximation error < 1.06%)
+        p = 1.6075
+        surface_area = 4 * np.pi * (
+            ((a*b)**p + (a*c)**p + (b*c)**p) / 3
+        )**(1/p)
+
+        # 5. Results Dictionary
+        D1, D2, D3 = 2*a, 2*b, 2*c
+        self.ellipsoid[key] = {
+            "status": status,
+            "D1": D1, # Major (Å) -> Should match 2 * max_dist
+            "D2": D2, # Intermediate (Å)
+            "D3": D3, # Minor (Å)
+            "volume": volume,
+            "surface": surface_area,
+            "asphericity": D1 / D3 if c > 0 else 1.0
+        }
+
+        if not noOutput:
+            results = self.ellipsoid[key]
+            centertxt(f"Hull Ellipsoid Analysis ({status})", 
+                        bgc='#007a7a',
+                        size='14',
+                        weight='bold')
+            print(f"  - Dimensions (nm): {results['D1']*0.1:.2f} x {results['D2']*0.1:.2f} x {results['D3']*0.1:.2f}")
+            print(f"  - Volume: {results['volume']:.1f} Å³")
+            print(f"  - Surface: {results['surface']:.1f} Å²")
+            print(f"  - Asphericity: {results['asphericity']:.2f}")
+            print(f"  - Max Radius found: {max_dist*0.1:.3f} nm")
+            # --- Jmol Command Generation ---
+            # Semi-axes vectors for Jmol
+            v1, v2, v3 = evecs[:,0]*a, evecs[:,1]*b, evecs[:,2]*c
+            
+            # THE VALIDATED JMOL COMMAND
+            key_cmd = key.replace(" ", "_")
+            jmol_cmd = (f"ellipsoid ID {key_cmd}_el AXES "
+                        f"{{{v1[0]:.6f} {v1[1]:.6f} {v1[2]:.6f}}} "
+                        f"{{{v2[0]:.6f} {v2[1]:.6f} {v2[2]:.6f}}} "
+                        f"{{{v3[0]:.6f} {v3[1]:.6f} {v3[2]:.6f}}}; "
+                        f"ellipsoid ID {key_cmd}_el CENTER {{{center[0]:.3f} {center[1]:.3f} {center[2]:.3f}}}; "
+                        f"color ${key_cmd}_el [x919191] translucent 0.3;")
+            
+            print("\n  [Jmol Command to visualize the ellipsoid]:")
+            print(f"  {jmol_cmd}")
+
+#------------------------------------------------------------------------------------------------------------------------
+
+from .geometry import coreSurface, setdAsNegative
+from .symmetry import MolSym
+from .external_pgm import defCrystalShapeForJMol
+
+def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput, is_optimized=False):
+    """
+    Compute and store various post-construction
+    properties of the nanoparticle.
+
+    This function calculates moments of inertia
+    (MOI), determines the nanoparticle shape,
+    analyzes symmetry (if required), and identifies
+    core and surface atoms.
+
+    Args:
+        skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
+        thresholdCoreSurface (float): Threshold
+            to distinguish core and surface atoms.
+        noOutput (bool): If True, suppresses
+            output messages.
+
+    Attributes:
+        moi (numpy.ndarray): Moment of inertia tensor.
+        moisize (numpy.ndarray): Normalized moments of inertia.
+        vertices (numpy.ndarray): Geometric vertices of the nanoparticle.
+        simplices (numpy.ndarray): Simplices defining the convex hull.
+        neighbors (numpy.ndarray): Neighboring relations between facets.
+        equations (numpy.ndarray): Plane equations for the hull faces.
+        NPcs (ase.Atoms): Copy of the nanoparticle with surface atoms 
+            visually marked.
+        NP (ase.Atoms): Original nanoparticle object.
+        sasview_dims (tuple, optional): Dimensions for SasView, calculated 
+            only if the sasview_dims() method exists.
+    """
+
+    # Determine the "Target" and the "Suffix"
+    # This replaces hardcoded self.NP with a dynamic target
+    suffix = "_opt" if is_optimized else ""
+    target_np = self.NP_opt if is_optimized else self.NP
+    status_label = "optimized structure" if is_optimized else "initial structure"
+
+    if not noOutput:
+        centertxt(
+            f"Post-Make Calculation of Properties for the {status_label}", bgc='#004848', size='14', weight='bold', fgc="white",
+        )
+
+    if target_np is None:
+        label = "NP_opt" if is_optimized else "NP"
+        # This will stop the entire execution and show a red error block in Jupyter
+        raise AttributeError(f"Structure Error: '{label}' is None. "
+                             f"Cannot perform propPostMake() on an empty structure.")
+
+    setattr(self, f"moi{suffix}", moi(target_np, noOutput))
+    setattr(self, f"moisize{suffix}", np.array(moi_size(target_np, noOutput)))
+    
+    # Specific print for hollow_shapes in
+    # original code, maybe generic?
+    try:
+        if isinstance(self, hollow_shapes):
+            print(getattr(self, f"moi{suffix}"))
+    except NameError:
+        # hollow_shapes is not defined, so we skip this check
+        pass
+
+    if not skipSymmetryAnalyzis:
+        MolSym(target_np, noOutput=noOutput)
+
+    (
+        [v, s, n, e], 
+        surfaceAtoms
+    ) = coreSurface(self, thresholdCoreSurface, noOutput=noOutput)
+
+    # Map hull properties to self.vertices / self.vertices_opt, etc.
+    setattr(self, f"vertices{suffix}", v)
+    setattr(self, f"simplices{suffix}", s)
+    setattr(self, f"neighbors{suffix}", n)
+    setattr(self, f"equations{suffix}", e)
+    
+    # 102 is Nobelium, because it has a nice pinkish
+    # color in jmol
+    npcs_copy = target_np.copy()
+    npcs_copy.numbers[np.invert(surfaceAtoms)] = 102
+
+    setattr(self, f"NPcs{suffix}", npcs_copy)
+    setattr(self, f"surfaceatoms{suffix}", npcs_copy[surfaceAtoms])
+
+    # Specific update for hollow_shapes
+    # in original code
+    try:
+        if isinstance(self, hollow_shapes):
+            # Updates self.cog or self.cog_opt
+            setattr(self, f"cog{suffix}", target_np.get_center_of_mass())
+    except NameError:
+        pass
+        
+    if hasattr(self, f'trPlanes{suffix}') and getattr(self, f'trPlanes{suffix}') is not None:
+        current_planes = getattr(self, f'trPlanes{suffix}')
+        setattr(self, f'trPlanes{suffix}', setdAsNegative(current_planes))
+
+    if getattr(self, 'jmolCrystalShape', False):
+        # We assume defCrystalShape... can handle the suffix or we pass use_opt
+        cs = defCrystalShapeForJMol(self, noOutput=True)
+        setattr(self, f"jMolCS{suffix}", cs)
+        
+    # Specific print for regfccTd helix
+    if (hasattr(self, 'n_tetrahedrons')
+            and self.n_tetrahedrons > 1
+            and not noOutput):
+        # Just checking attribute existence
+        # to avoid error on other classes
+        if (hasattr(self, 'nAtomsAnalytic')
+                and hasattr(self, 'nAtoms_helix')):
+            print(f"\n{'=' * 60}")
+            print(f"Helix Information:")
+            print(
+                f"  Number of tetrahedrons"
+                f" in helix:"
+                f" {self.n_tetrahedrons}"
+            )
+            print(
+                f"  Atoms per single"
+                f" tetrahedron:"
+                f" {self.nAtomsAnalytic()}"
+            )
+            print(
+                f"  Total atoms in helix:"
+                f" {self.nAtoms_helix}"
+            )
+            print(f"{'=' * 60}\n")
+
+
+    # Specific fix for regfccOh which has a
+    # sasview_dims method that returns dimensions
+    # and overwrites itself. We check if the method
+    # exists in the class definition.
+    if (hasattr(self, 'sasview_dims')
+            and callable(
+                getattr(self, 'sasview_dims'))):
+        # Check if it's still a method
+        # (hasn't been overwritten yet)
+        try:
+            self.sasview_dims = self.sasview_dims()
+            if not noOutput:
+                print(f"{'=' * 60}\n")
+                print(
+                    f"SasView dimensions (for"
+                    f" comparaison purposes when"
+                    f" comparing to SasView"
+                    f" models):"
+                )
+                print(
+                    f"  t = {self.sasview_dims[1]}"
+                    ", t being the truncature"
+                    " that is defined by the"
+                    " ratio d(truncated_demi"
+                    "_axis)/d(demi_axis)"
+                )
+                print(
+                    f"  a = {self.sasview_dims[0]}"
+                    " Angs, a being the"
+                    " demi_axis being the"
+                    " distance from the center"
+                    " of the octahedron to a"
+                    " vertice (in Å)):"
+                    f" {self.sasview_dims}"
+                )
+                print(f"{'=' * 60}\n")
+        except TypeError:
+            # If it's not callable, it might have
+            # already been overwritten or is a
+            # property
+            pass
