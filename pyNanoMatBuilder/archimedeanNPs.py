@@ -20,82 +20,6 @@ class ArchimedeanNP(pNP.PlatonicNP):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    # def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput):
-    #     """Compute and store various post-construction properties of the nanoparticle.
-
-    #         This function calculates moments of inertia (MOI), the inscribed and 
-    #         circumscribed sphere diameters, sasview dimensions, analyzes symmetry,
-    #         generates a JMOL script, and identifies core and surface atoms.
-
-    #     Args:
-    #         skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
-    #         thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
-    #         noOutput (bool): If True, suppresses output messages.
-    
-    #     Attributes Updated:
-    #          moi (array): Moment of inertia tensor.
-    #          moisize (array): Normalized moments of inertia.
-    #          vertices, simplices, neighbors, equations (arrays): Geometric properties of the nanoparticle.
-    #          NPcs (Atoms object): Copy of the nanoparticle with surface atoms visually marked.
-    #          NP (Atoms object): Original nanoparticle.
-    #          sasview_dims (tuple, optional): Dimensions for SasView (only if sasview_dims() method exists).
-    #          Inscribed_circumscribed_sphere (tuple, optional): Diameters of inscribed and circumscribed spheres (only if Inscribed_circumscribed_sphere() method exists).
-    #     """
-        
-    #     self.moi = pyNMBu.moi(self.NP, noOutput)
-    #     self.moisize = np.array(pyNMBu.moi_size(self.NP, noOutput))  # MOI mass normalized (m of each atoms=1)
-        
-    #     if not skipSymmetryAnalyzis:
-    #         pyNMBu.MolSym(self.NP, noOutput=noOutput)
-
-    #     [self.vertices, self.simplices, self.neighbors, self.equations], surfaceAtoms = \
-    #         pyNMBu.coreSurface(self, self.thresholdCoreSurface, noOutput=noOutput)
-
-    #     self.NPcs = self.NP.copy()
-    #     self.NPcs.numbers[np.invert(surfaceAtoms)] = 102  # Nobelium, because it has a nice pinkish color in jmol
-    #     self.surfaceatoms = self.NPcs[surfaceAtoms]
-
-    #     if hasattr(self, 'trPlanes') and self.trPlanes is not None:
-    #         self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
-
-    #     if hasattr(self, 'jmolCrystalShape') and self.jmolCrystalShape:
-    #         self.jMolCS = pyNMBu.defCrystalShapeForJMol(self, noOutput=True)  # do not print the jmol script
-        
-    #     if hasattr(self, 'sasview_dims') and callable(getattr(self, 'sasview_dims')):
-    #         try:
-    #             self.sasview_dims = self.sasview_dims()
-    #             self.volume_diff_trunc = self.octahedron_truncated_volume(self.sasview_dims[0], self.sasview_dims[1])
-    #             if not noOutput:
-    #                 print(f"{'=' * 60}\n")
-    #                 print(
-    #                     "SasView dimensions (for comparaison purposes when comparing to "
-    #                     "SasView models):"
-    #                 )
-    #                 print(
-    #                     f"  t = {self.sasview_dims[1]:.3f}, t being the truncature "
-    #                     "that is defined by the ratio d(truncated_demi_axis)/d(demi_axis)"
-    #                 )
-    #                 print(
-    #                     f"  a = {self.sasview_dims[0]:.2f} Angs, a being the demi_axis "
-    #                     "being the distance from the center of the octahedron to a "
-    #                     f"vertice (in Å)): {self.sasview_dims}"
-    #                 )
-    #                 print(f"{'=' * 60}\n")
-    #         except TypeError:
-    #             # If it's not callable, it might have already been overwritten or is a property
-    #             pass
-
-    #     if self.shape == "fccTrTd": # only for the TrTd compute the inscribed and circumscribed sphere diameters
-    #     # because they are not trivial to compute for a truncated tetrahedron.
-    #         try:
-    #             self.radiusInscribedSphere, self.radiusCircumscribedSphere = pyNMBu.Inscribed_circumscribed_spheres(self,noOutput)
-    #             if not noOutput:
-    #                 print(f"(the inscribed sphere was not given before because it was not trivial to compute it based on the truncated tetrahedron geometry. The general method is now used)")
-    #         except TypeError:
-    #             # If it's not callable, it might have already been overwritten or is a property
-    #             pass
-
-
 ###########################################################################################################
 class fccCubo(ArchimedeanNP):
     """A class for generating XYZ and CIF files of fcc cuboctahedral
@@ -1065,7 +989,8 @@ class fccTrCube(ArchimedeanNP):
 
         """
         super().__init__(**kwargs)
-        self.cubeProp = pNP.cube('fcc',element,Rnn,nOrder,noOutput=True,calcPropOnly=True)
+        self.cubeProp = pNP.cube(crystalStructure= 'fcc', element = element,
+                                 Rnn = Rnn , nOrder = nOrder, noOutput=True, calcPropOnly=True)
         self.element = element
         self.shape='fccTrCube'
         self.Rnn = Rnn
@@ -1233,9 +1158,8 @@ class fccTrCube(ArchimedeanNP):
         if not noOutput: pyNMBu.centertxt("Generation of the coordinates of the cube",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
 
         # Generate a regular fcc cube using the class `cube` of the module `pNP`.
-        aseCube = pNP.cube(
-            'fcc', self.element, self.Rnn, self.nOrder, noOutput=True, postAnalyzis=False
-        ).NP
+        aseCube = pNP.cube( crystalStructure= 'fcc', element = self.element, 
+                           Rnn= self.Rnn, nOrder = self.nOrder, noOutput=True, postAnalyzis=False).NP
         if not noOutput: pyNMBu.centertxt("Cube moved to origin",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
         c2cog = pyNMBu.center2cog(aseCube.get_positions())
         aseCube.set_positions(c2cog)

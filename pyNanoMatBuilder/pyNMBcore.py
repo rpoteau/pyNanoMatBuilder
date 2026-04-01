@@ -51,6 +51,7 @@ class pyNMBcore:
         self.cog_opt = []
         self.trPlanes_opt = None
         self.is_optimized = False
+        self.is_peeled = False
         self.moi_opt = None
 
         self.ellipsoid = {} #two keys: "initial structure" or "optimized structure"
@@ -59,6 +60,10 @@ class pyNMBcore:
     def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1):
         from .utils.energy import optimize
         return optimize(self, calculator, optimizer, fthreshold)
+    
+    def _update_sasview_dims_from_spheres(self, noOutput = None):
+        from .utils.prop import _update_sasview_dims_from_spheres
+        return _update_sasview_dims_from_spheres(self, noOutput)
 
     def Inscribed_circumscribed_spheres(self, noOutput=None):
         from .utils.prop import Inscribed_circumscribed_spheres

@@ -523,19 +523,20 @@ class Crystal(pyNMBcore):
         self.NP = self.sc.copy()
         del self.NP[del_atom]
 
-        # Compute measured diameters
-        positions = self.NP.get_positions()
-        zmax = max(positions[:, 2])
-        zmin = min(positions[:, 2])
-        self.radius = (zmax - zmin) / 2
-        self.sasview_dims = [self.radius]  # For consistency with ellipsoid
+        # Compute the real diameter
+        com = self.NP.get_center_of_mass()
+        distances = np.linalg.norm(self.NP.positions - com, axis=1)
+        actual_radius = np.max(distances)  # Rayon réel mesuré en Ångströms
 
-        # Compute volume
-        self.volume = (4 / 3) * math.pi * (self.radius ** 3)
-
+        # Store SasView dimension and volume based on actual radius
+        self.sasview_dims = [actual_radius]
+        self.volume = (4/3) * math.pi * (actual_radius)**3
         if not noOutput:
-            print(f"Measured radius = {self.radius:.2f} Å")
-
+            print(f"Target sphere radius: {sphere_radius*10:.2f} Å")
+            print(f"Actual sphere radius (circumscribed): {actual_radius:.2f} Å")
+            print(f"SasView dimension: diameter = {self.sasview_dims[0]*2:.2f} Å")
+            print(f"Volume: {self.volume:.2f} Å³")
+            
         # Handle hollow sphere (Kirkendall effect)
         if not self.hollow_sphere_diameter[0] == 0.0:
             for atom_coord in self.NP.positions:
@@ -614,7 +615,7 @@ class Crystal(pyNMBcore):
 
         if not noOutput:
             print(
-                f"Measured diameters: a = {a_real*2:.2f} Å, "
+                f"Measured diameters (also = SasView dimensions): a = {a_real*2:.2f} Å, "
                 f"b = {b_real*2:.2f} Å, c = {c_real*2:.2f} Å"
             )
 
@@ -790,7 +791,7 @@ class Crystal(pyNMBcore):
 
         if not noOutput:
             print(
-                f"Measured dimensions: "
+                f"Measured dimensions (also = SasView dimensions): "
                 f"length = {length_meas:.2f} Å, radius = {radius_meas:.2f} Å"
             )
 
@@ -877,7 +878,7 @@ class Crystal(pyNMBcore):
 
             if not noOutput:
                 print(
-                    f"Measured lengths: "
+                    f"Measured lengths (also = SasView dimensions): "
                     f"a = {a_real:.2f} Å, b = {b_real:.2f} Å, c = {c_real:.2f} Å"
                 )
 
@@ -1131,7 +1132,7 @@ class Crystal(pyNMBcore):
             self.volume = math.pi * (radius_measured ** 2) * length_measured
             if not noOutput:
                 print(
-                    f"Measured wire dimensions: "
+                    f"Measured wire dimensions (also = SasView dimensions): "
                     f"length = {length_measured:.2f} Å, "
                     f"diameter = {2*radius_measured:.2f} Å"
                 )
@@ -1212,52 +1213,4 @@ class Crystal(pyNMBcore):
             pyNMBu.centertxt("Properties", bgc="#007a7a", size="14", weight="bold")
             print(self)
 
-    # def propPostMake(
-    #     self, skip_symmetry_analysis, self.thresholdCoreSurface, noOutput
-    # ):
-    #     """
-    #     Compute post-construction nanoparticle properties.
-
-    #     Calculates moments of inertia, symmetry analysis (optional), core/surface
-    #     differentiation, and geometric properties via convex hull.
-
-    #     Args:
-    #         skip_symmetry_analysis (bool): If True, skip symmetry analysis.
-    #         thresholdCoreSurface (float): Threshold for core/surface differentiation.
-    #         noOutput (bool): If False, details are printed.
-
-    #     Note:
-    #         Updates self.moi, self.moisize, MOI size from inertia tensor.
-    #         Updates self.NPcs with surface atoms marked with Nobelium (102).
-    #     """
-    #     # Compute moment of inertia
-    #     self.moi = pyNMBu.moi(self.NP, noOutput)
-    #     self.moisize = np.array(
-    #         pyNMBu.moi_size(self.NP, noOutput)
-    #     )  # Mass-normalized MOI
-
-    #     if not skip_symmetry_analysis:
-    #         pyNMBu.MolSym(self.NP, noOutput=noOutput)
-
-    #     # Analyze convex hull and core/surface atoms
-    #     (
-    #         self.vertices,
-    #         self.simplices,
-    #         self.neighbors,
-    #         self.equations,
-    #     ), surface_atoms = pyNMBu.coreSurface(
-    #         self, self.thresholdCoreSurface, noOutput=noOutput
-    #     )
-
-    #     # Generate JMol visualization if enabled
-    #     if self.jmolCrystalShape:
-    #         self.jMolCS = pyNMBu.defCrystalShapeForJMol(self, noOutput=True)
-
-    #     # Mark surface atoms (Nobelium=102 for visualization)
-    #     self.NPcs = self.NP.copy()
-    #     self.NPcs.numbers[np.invert(surface_atoms)] = 102
-    #     self.surfaceatoms = self.NPcs[surface_atoms]
-
-    #     # Compute inscribed and circumscribed sphere radii
-    #     pyNMBu.Inscribed_circumscribed_spheres(self, noOutput=noOutput)
- 
+  

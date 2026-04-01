@@ -91,7 +91,6 @@ class fcctpt(pyNMBcore):
         self.interLayerDistance = self.tbpprop.interLayerDistance
         self.nAtomsPerEdge = self.nLayerTd + 1
         self.dim = [0, 0, 0]
-        self.jmolCrystalShape = jmolCrystalShape
         if self.nLayer > self.nLayertbp:
             sys.exit(f"Number of layers of the triangular platelet ({self.nLayer}) cannot be > to the total number of layers of the trigonal bipyramid {self.nLayertbp}")
         self.imageFile = pyNMBu.imageNameWithPathway("tpt-C.png")

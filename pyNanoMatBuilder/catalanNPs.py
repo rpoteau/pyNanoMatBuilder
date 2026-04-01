@@ -19,49 +19,6 @@ class CatalanNP(pyNMBcore):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        # def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput):
-        # """
-        # Compute and store various post-construction properties of the nanoparticle.
-
-        # This function calculates moments of inertia (MOI), the inscribed and 
-        # circumscribed sphere diameters,analyzes symmetry,
-        # generates a JMOL script, and identifies core and surface atoms.
-
-        # Args:
-        #     skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
-        #     thresholdCoreSurface (float): Threshold to distinguish core and surface atoms.
-        #     noOutput (bool): If True, suppresses output messages.
-    
-        # Attributes:
-        #     moi (numpy.ndarray): Moment of inertia tensor.
-        #     moisize (numpy.ndarray): Normalized moments of inertia.
-        #     vertices (numpy.ndarray): Geometric vertices of the nanoparticle.
-        #     simplices (numpy.ndarray): Simplices defining the convex hull.
-        #     neighbors (numpy.ndarray): Neighboring relations of the hull.
-        #     equations (numpy.ndarray): Plane equations for the hull faces.
-        #     NPcs (ase.Atoms): Copy of the nanoparticle with surface atoms 
-        #         visually marked.
-        #     NP (ase.Atoms): Original nanoparticle object.
-        # """
-        
-        # self.moi = pyNMBu.moi(self.NP, noOutput)
-        # self.moisize = np.array(pyNMBu.moi_size(self.NP, noOutput))  # MOI mass normalized (m of each atoms=1)
-
-        # if not self.skipSymmetryAnalyzis:
-        #     pyNMBu.MolSym(self.NP, noOutput=self.noOutput)
-
-        # [self.vertices, self.simplices, self.neighbors, self.equations], surfaceAtoms = \
-        #     pyNMBu.coreSurface(self, self.thresholdCoreSurface, noOutput=noOutput)
-        # self.NPcs = self.NP.copy()
-        # self.NPcs.numbers[np.invert(surfaceAtoms)] = 102  # Nobelium, because it has a nice pinkish color in jmol
-        # self.surfaceatoms = self.NPcs[surfaceAtoms]
-
-        # pyNMBu.Inscribed_circumscribed_spheres(self,noOutput)
-
-        # if hasattr(self, 'jmolCrystalShape') and self.jmolCrystalShape:
-        #     self.jMolCS = pyNMBu.defCrystalShapeForJMol(self, noOutput=True)  # do not print the jmol script
-
-
 
 class bccrDD(CatalanNP):
     """

@@ -742,7 +742,8 @@ def _flush_stale_data(self, shape_update=None):
         'surfaceatoms', 'surfaceatoms_opt', 
         'vertices', 'vertices_opt', 
         'trPlanes', 'trPlanes_opt', 
-        'ellipsoid', 'moi', 'moi_opt'
+        'ellipsoid', 'moi', 'moi_opt',
+
     ]
     
     for attr in attrs_to_clean:

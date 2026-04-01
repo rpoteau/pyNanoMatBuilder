@@ -504,20 +504,15 @@ def Inscribed_circumscribed_spheres(self, noOutput):
         raise ValueError(f"CRITICAL: Hull equations are missing for {status_text} structure. "
                          "Inscribed sphere calculation requires surface plane equations.")
         
-    if self.shape == 'ellipsoid' and not self.is_optimized:
-        self.radiusInscribedSphere = min(self.sasview_dims)
-        self.radiusCircumscribedSphere = max(self.sasview_dims)
-    elif self.shape == 'sphere' and not self.is_optimized:
-        self.radiusInscribedSphere = self.radius
-        self.radiusCircumscribedSphere = self.radius
-    else:
-        distances = np.linalg.norm(target_atoms.positions - target_cog, axis=1)
-        self.radiusCircumscribedSphere = np.max(distances)
-        distances = [
-            abs(d) / np.sqrt(a ** 2 + b ** 2 + c ** 2)
-            for a, b, c, d in target_eq
-        ]
-        self.radiusInscribedSphere = np.min(distances)
+
+    # Inscribed and circumscribed sphere
+    distances = np.linalg.norm(target_atoms.positions - target_cog, axis=1)
+    self.radiusCircumscribedSphere = np.max(distances)
+    distances = [
+        abs(d) / np.sqrt(a ** 2 + b ** 2 + c ** 2)
+        for a, b, c, d in target_eq
+    ]
+    self.radiusInscribedSphere = np.min(distances)
 
     if not noOutput:
         centertxt(
@@ -529,15 +524,82 @@ def Inscribed_circumscribed_spheres(self, noOutput):
         )
     if not noOutput:
         print(
-            f"diameters of the circumscribed sphere: "
-            f"{self.radiusCircumscribedSphere * 2 * 0.1:.2f} nm"
+            f"Diameter of the circumscribed sphere: "
+            f"{self.radiusCircumscribedSphere * 2:.2f} Å"
         )
         print(
-            f"diameters of the inscribed sphere: "
-            f"{self.radiusInscribedSphere * 2 * 0.1:.2f} nm"
+            f"Diameter of the inscribed sphere: "
+            f"{self.radiusInscribedSphere * 2:.2f} Å"
         )
 
+
     return self.radiusInscribedSphere, self.radiusCircumscribedSphere
+
+
+def _update_sasview_dims_from_spheres(self, noOutput):
+    """
+    Update sasview_dims based on inscribed/circumscribed sphere radii.
+
+    IMPORTANT:
+    - Initial structure: sasview_dims set in make*() methods
+    - After optimization/peeling: recalculated here using real sphere radii
+    
+    Only recalculates sasview_dims if the structure was optimized or peeled,
+    ensuring that the dimensions reflect the actual geometry of the NP after
+    modifications. If the shape attribute is missing, it skips the update 
+    and issues a warning.
+    The supported shapes for sasview_dims updates are "sphere", "cylinder"/"wire",
+    and "regfccOh".
+    """
+
+    if not (self.is_optimized or self.is_peeled):
+        return  # keep initial dims
+    
+    if not hasattr(self, 'radiusCircumscribedSphere') or self.radiusCircumscribedSphere is None:
+        if not noOutput:
+            print("⚠ radiusCircumscribedSphere not calculated, skipping sasview_dims update")
+        return
+    
+    if not hasattr(self, 'shape') or self.shape is None:
+        if not noOutput:
+            print("⚠ shape attribute missing, skipping sasview_dims update")
+        return
+
+    
+    # Else: recalculate sasview_dims based on the shape and the sphere radii
+    try:
+        if self.shape == "sphere":
+            self.sasview_dims = [self.radiusCircumscribedSphere]
+            self.volume = (4/3) * math.pi * (self.radiusCircumscribedSphere)**3
+            if not noOutput :
+                print(f"New sasview dimensions of the sphere based on the inscribed/circumscribed sphere diameters:"
+                      f"diameter = {self.sasview_dims[0]*2:.2f} Å, "
+                      f"volume = {self.volume :.2f} Å³")
+       
+        elif self.shape in ("cylinder", "wire"):
+            self.radius = self.radiusInscribedSphere
+            self.length = 2 * np.sqrt(self.radiusCircumscribedSphere**2 - self.radius**2)
+            self.volume = math.pi * self.radius**2 * self.length
+            self.sasview_dims = [self.radius, self.length]
+            if not noOutput :
+                print(f"New  sasview dimensions of the cylinder/wire based on the inscribed/circumscribed sphere diameters:"
+                      f" diameter = {self.radius*2:.2f} Å,"
+                      f" length = {self.length:.2f} Å,"
+                      f" volume = {self.volume :.2f} Å³.")
+    
+        elif self.shape == "regfccOh":
+            self.demi_axis = self.radiusCircumscribedSphere
+            self.truncature = 1
+            self.sasview_dims = [self.demi_axis, self.truncature]
+            self.volume = (4/3) * self.demi_axis**3
+            if not noOutput :
+                print(f"New sasview dimensions of the regfccOh based on the inscribed/circumscribed sphere diameters:"
+                      f": demi_axis = {self.demi_axis:.2f} Å, "
+                      f"truncature = {self.truncature}, volume = {self.volume :.2f} Å³.")
+    
+    except AttributeError as e:
+        if not noOutput:
+            print(f"⚠ Error updating sasview_dims: {e}")
 
 def get_ellipsoid_analysis(self, noOutput=False):
         """
@@ -652,11 +714,11 @@ def get_ellipsoid_analysis(self, noOutput=False):
                         bgc='#007a7a',
                         size='14',
                         weight='bold')
-            print(f"  - Dimensions (nm): {results['D1']*0.1:.2f} x {results['D2']*0.1:.2f} x {results['D3']*0.1:.2f}")
+            print(f"  - Dimensions (Å): {results['D1']:.2f} x {results['D2']:.2f} x {results['D3']:.2f}")
             print(f"  - Volume: {results['volume']:.1f} Å³")
             print(f"  - Surface: {results['surface']:.1f} Å²")
             print(f"  - Asphericity: {results['asphericity']:.2f}")
-            print(f"  - Max Radius found: {max_dist*0.1:.3f} nm")
+            print(f"  - Max Radius found: {max_dist:.3f} Å")
             # --- Jmol Command Generation ---
             # Semi-axes vectors for Jmol
             v1, v2, v3 = evecs[:,0]*a, evecs[:,1]*b, evecs[:,2]*c
@@ -729,16 +791,8 @@ def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput, is_
 
     setattr(self, f"moi{suffix}", moi(target_np, noOutput))
     setattr(self, f"moisize{suffix}", np.array(moi_size(target_np, noOutput)))
-    
-    # Specific print for hollow_shapes in
-    # original code, maybe generic?
-    try:
-        if isinstance(self, hollow_shapes):
-            print(getattr(self, f"moi{suffix}"))
-    except NameError:
-        # hollow_shapes is not defined, so we skip this check
-        pass
 
+    # Core/surface
     if not skipSymmetryAnalyzis:
         MolSym(target_np, noOutput=noOutput)
 
@@ -753,31 +807,34 @@ def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput, is_
     setattr(self, f"neighbors{suffix}", n)
     setattr(self, f"equations{suffix}", e)
     
-    # 102 is Nobelium, because it has a nice pinkish
-    # color in jmol
+    # Core/surface visualization
+    # 102 is Nobelium, because it has a nice pinkish color in Jmol
     npcs_copy = target_np.copy()
     npcs_copy.numbers[np.invert(surfaceAtoms)] = 102
 
     setattr(self, f"NPcs{suffix}", npcs_copy)
     setattr(self, f"surfaceatoms{suffix}", npcs_copy[surfaceAtoms])
 
-    # Specific update for hollow_shapes
-    # in original code
-    try:
-        if isinstance(self, hollow_shapes):
-            # Updates self.cog or self.cog_opt
-            setattr(self, f"cog{suffix}", target_np.get_center_of_mass())
-    except NameError:
-        pass
-        
+    # Surface planes
     if hasattr(self, f'trPlanes{suffix}') and getattr(self, f'trPlanes{suffix}') is not None:
         current_planes = getattr(self, f'trPlanes{suffix}')
         setattr(self, f'trPlanes{suffix}', setdAsNegative(current_planes))
 
+    # Jmol Crystal Shape
     if getattr(self, 'jmolCrystalShape', False):
         # We assume defCrystalShape... can handle the suffix or we pass use_opt
         cs = defCrystalShapeForJMol(self, noOutput=True)
         setattr(self, f"jMolCS{suffix}", cs)
+
+
+    # Inscribed and circumscribed spheres
+    Inscribed_circumscribed_spheres(self, noOutput)
+
+    # Compute sasview_dims if the NP was optimized and if the method exists in the class definition
+    _update_sasview_dims_from_spheres(self, noOutput)
+
+    # Ellipsoid analysis (also calculates inscribed/circumscribed sphere radii
+    get_ellipsoid_analysis(self, noOutput) 
         
     # Specific print for regfccTd helix
     if (hasattr(self, 'n_tetrahedrons')
@@ -804,46 +861,3 @@ def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput, is_
                 f" {self.nAtoms_helix}"
             )
             print(f"{'=' * 60}\n")
-
-
-    # Specific fix for regfccOh which has a
-    # sasview_dims method that returns dimensions
-    # and overwrites itself. We check if the method
-    # exists in the class definition.
-    if (hasattr(self, 'sasview_dims')
-            and callable(
-                getattr(self, 'sasview_dims'))):
-        # Check if it's still a method
-        # (hasn't been overwritten yet)
-        try:
-            self.sasview_dims = self.sasview_dims()
-            if not noOutput:
-                print(f"{'=' * 60}\n")
-                print(
-                    f"SasView dimensions (for"
-                    f" comparaison purposes when"
-                    f" comparing to SasView"
-                    f" models):"
-                )
-                print(
-                    f"  t = {self.sasview_dims[1]}"
-                    ", t being the truncature"
-                    " that is defined by the"
-                    " ratio d(truncated_demi"
-                    "_axis)/d(demi_axis)"
-                )
-                print(
-                    f"  a = {self.sasview_dims[0]}"
-                    " Angs, a being the"
-                    " demi_axis being the"
-                    " distance from the center"
-                    " of the octahedron to a"
-                    " vertice (in Å)):"
-                    f" {self.sasview_dims}"
-                )
-                print(f"{'=' * 60}\n")
-        except TypeError:
-            # If it's not callable, it might have
-            # already been overwritten or is a
-            # property
-            pass

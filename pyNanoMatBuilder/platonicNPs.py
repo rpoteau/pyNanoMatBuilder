@@ -114,6 +114,7 @@ class regfccOh(PlatonicNP):
             self.prop()
         if not self.calcPropOnly:
             self.coords(noOutput)
+            self.calc_sasview_dims(noOutput)
             if self.aseView:
                 view(self.NP)
             if self.postAnalyzis:
@@ -413,26 +414,29 @@ class regfccOh(PlatonicNP):
         self.NP = aseObject
         self.cog = self.NP.get_center_of_mass()
 
-    def sasview_dims(self):
-        """Converts the dimensions for SasView use.
 
-        In pyNanoMatBuilder, the truncature is defined by the ratio d(truncated_edge)/d(edge).
-        In Sasview, the truncature is defined by the ratio d(truncated_demi_axis)/d(demi_axis),
-        the demi_axis being the distance from the center of the octahedron to a vertice (in Å).
-
-        Returns:
-            tuple: (demi_axis, truncature_ratio)
-        """
-        # Full demi axis
+    def calc_sasview_dims(self,noOutput):
+        """ Computes the dimensions of the nanoparticle for
+            direct comparison with SasView models."""
+        
         positions = self.NP.get_positions()
         # Find the distance between two points (x,y,zmax) and (x,y,zmin)
         zmax = max(positions[:, 2])
         zmin = min(positions[:, 2])
         demi_axis = (zmax - zmin) / 2
-
         truncature_ratio = 1
-
-        return demi_axis, truncature_ratio
+        self.sasview_dims = [demi_axis, truncature_ratio]
+        if not noOutput:
+            print(f"{'=' * 60}\n")
+            print(f"SasView dimensions (for comparaison purposes when"
+                f" comparing to SasView models):")
+            print(f"  t = {self.sasview_dims[1]}, t being the truncature"
+                " that is defined by the ratio d(truncated_demi_axis)/d(demi_axis)")
+            print(f"  a = {self.sasview_dims[0]} Angs, a being the"
+                " demi_axis being the distance from the center"
+                " of the octahedron to a vertice (Å)): {self.sasview_dims:.2f}")
+            print(f"{'=' * 60}\n")
+        return self.sasview_dims
 
     def prop(self):
         """Display unit cell and nanoparticle properties.
@@ -998,7 +1002,6 @@ class regfccTd(PlatonicNP):
         self.nLayer = nLayer
         self.nAtomsPerLayer = []
         self.nAtomsPerEdge = self.nLayer
-        self.jmolCrystalShape = jmolCrystalShape
         self.cog = np.array([0., 0., 0.])
         self.n_tetrahedrons = n_tetrahedrons
         self.nAtoms_helix = 0  # Initialize to 0, will be computed in generate_tetrahelix()
@@ -1398,7 +1401,7 @@ class regDD(PlatonicNP):
                  Rnn: float = 2.7,
                  nShell: int = 1,
                  shape: str = 'regDD',
-                 **kwargs,
+                 **kwargs
                  ):
         """Initialize the class with all necessary parameters.
 
@@ -1770,12 +1773,13 @@ class cube(PlatonicNP):
     radiusISF = 1 / 2
 
     def __init__(self,
-                 crystalStructure='fcc',
+                 crystalStructure = 'fcc',
                  element='Au',
                  Rnn: float = 2.7,
                  nOrder: int = 1,
                  size: int = 0,
                  shape: str = 'cube',
+                 **kwargs
                  ):
         """Initialize the class with all necessary parameters.
 

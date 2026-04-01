@@ -9,6 +9,23 @@
 
 **<div style="color:blue">This is major architecture change, already started in version 0.9.9</div>**
 
+
+### Changed
+
+### Changed
+- **Unification and Fixes**: Ensured proper inheritance from `pyNMBcore` by:
+    - Adding missing `**kwargs` to child class methods.
+    - Removing redundant variables already defined in the parent class.
+- **Fix**: Updated `make_sphere()` in `crystalNPs.py` to correct the computation of the measured diameter, ensuring accuracy.
+- **Documentation**: Updated the documentation of the geometry optimization part of the  `pyNMB-examples.ipynb` notebook.
+### Added
+- **New Core Methods in `pyNMBcore` (`pyNMBcore.py`)**:
+    - `Inscribed_circumscribed_spheres()`: Computes updated inscribed and circumscribed sphere diameters after optimization or peeling.
+    - `_update_sasview_dims_from_spheres()`: Calculates updated specific SASView dimensions for the nanoparticle after optimization or peeling. The calculations are based on the inscribed and circumscribed sphere diameters and include:
+        - Sphere: Diameter.
+        - Cylinder/Wire: Radius and length.
+        - Octahedron: Truncation ratio and semi-axis.
+    - Both functions can be called individually or as part of `propPostMake()` for a comprehensive global analysis.
 ### Changed
 
 - **Key Sanitization**: Internal dictionary keys for analysis now consistently replace spaces with underscores (e.g., `initial_structure`, `optimized_structure`).
