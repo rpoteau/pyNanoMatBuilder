@@ -5,19 +5,21 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
-## [0.10.0] - 2026-03-30 "pyNMBcore"
+## [0.10.2] - 2026-04-07 "surfaceAtoms"
 
-**<div style="color:blue">This is major architecture change, already started in version 0.9.9</div>**
+### Added
+- new `surfaceAtoms` boolean array attribute created in `propPostMake()`
 
+## [unreleased version] - 2026-04-02 
 
 ### Changed
-
-### Changed
+- Unification of `propPostMake()` function in `utils.prop`
 - **Unification and Fixes**: Ensured proper inheritance from `pyNMBcore` by:
     - Adding missing `**kwargs` to child class methods.
     - Removing redundant variables already defined in the parent class.
 - **Fix**: Updated `make_sphere()` in `crystalNPs.py` to correct the computation of the measured diameter, ensuring accuracy.
 - **Documentation**: Updated the documentation of the geometry optimization part of the  `pyNMB-examples.ipynb` notebook.
+
 ### Added
 - **New Core Methods in `pyNMBcore` (`pyNMBcore.py`)**:
     - `Inscribed_circumscribed_spheres()`: Computes updated inscribed and circumscribed sphere diameters after optimization or peeling.
@@ -26,6 +28,11 @@
         - Cylinder/Wire: Radius and length.
         - Octahedron: Truncation ratio and semi-axis.
     - Both functions can be called individually or as part of `propPostMake()` for a comprehensive global analysis.
+
+## [0.10.0] - 2026-03-30 "pyNMBcore"
+
+**<div style="color:blue">This is major architecture change, already started in version 0.9.9</div>**
+
 ### Changed
 
 - **Key Sanitization**: Internal dictionary keys for analysis now consistently replace spaces with underscores (e.g., `initial_structure`, `optimized_structure`).

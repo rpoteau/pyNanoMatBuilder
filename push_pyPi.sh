@@ -140,23 +140,23 @@ if [[ "$REPLY" =~ ^[Yy]$ ]]; then
         echo "__last_update__ = \"$today\"" >> "${project_name}/__init__.py"
     fi
     # Update version in docs/source/conf.py
-    CONF_PY="docs/source/conf.py"
-    if [ -f "$CONF_PY" ]; then
-        # On extrait X.Y pour le paramètre 'version' de Sphinx
-        VERSION_XY=$(echo "$NEW_VERSION" | cut -d'.' -f1,2)
-        
-        # Mise à jour de 'version' (ex: 1.2)
-        if grep -q "^version =" "$CONF_PY"; then
-            sed -i "s/^version *= *['\"].*['\"]/version = '$VERSION_XY'/" "$CONF_PY"
-        else
-            sed -i "/^project *=/a version = '$VERSION_XY'" "$CONF_PY"
-        fi
-        # 2. Update 'release' (supports both ' and " quotes)
-        sed -i "s/^release *= *['\"].*['\"]/release = '$NEW_VERSION'/" "$CONF_PY"
-            echo "     - version & release updated in docs/source/conf.py ... Done"
-    else
-        echo -e "${YELLOW}     - Warning: docs/source/conf.py not found, skipping documentation update.${RESET}"
-    fi
+#    CONF_PY="docs/source/conf.py"
+#    if [ -f "$CONF_PY" ]; then
+#        # On extrait X.Y pour le paramètre 'version' de Sphinx
+#        VERSION_XY=$(echo "$NEW_VERSION" | cut -d'.' -f1,2)
+#        
+#        # Mise à jour de 'version' (ex: 1.2)
+#        if grep -q "^version =" "$CONF_PY"; then
+#            sed -i "s/^version *= *['\"].*['\"]/version = '$VERSION_XY'/" "$CONF_PY"
+#        else
+#            sed -i "/^project *=/a version = '$VERSION_XY'" "$CONF_PY"
+#        fi
+#        # 2. Update 'release' (supports both ' and " quotes)
+#        sed -i "s/^release *= *['\"].*['\"]/release = '$NEW_VERSION'/" "$CONF_PY"
+#            echo "     - version & release updated in docs/source/conf.py ... Done"
+#    else
+#        echo -e "${YELLOW}     - Warning: docs/source/conf.py not found, skipping documentation update.${RESET}"
+#    fi
     # Update version and date in CITATION.cff
     CITATION_CFF="CITATION.cff"
     if [ -f "$CITATION_CFF" ]; then
@@ -168,12 +168,31 @@ if [[ "$REPLY" =~ ^[Yy]$ ]]; then
     fi
     # --- DOC VALIDATION ---
     echo -e "${CYAN}Checking documentation health before commit...${RESET}"
-    (cd docs && make clean && make html > /dev/null 2>&1)
+    
+    # On lance le build. On ne redirige plus les erreurs vers /dev/null 
+    # pour que tu puisses voir ce qui cloche si ça rate vraiment.
+    (cd docs && make clean && make html)
+    
     if [ $? -ne 0 ]; then
-        echo -e "${RED}❌ Sphinx build failed! Please fix docstrings before pushing.${RESET}"
+        echo -e "${RED}❌ Sphinx build failed!${RESET}"
+        echo -e "${YELLOW}Rolling back version changes before exiting...${RESET}"
+        
+        # --- AUTOMATIC ROLLBACK ---
+        sed -i "s/^version = \"$NEW_VERSION\"/version = \"$CURRENT_VERSION\"/" "$PYPROJECT"
+        sed -i "s/^__version__ = \"$NEW_VERSION\"/__version__ = \"$CURRENT_VERSION\"/" "${project_name}/__init__.py"
+#        if [ -f "docs/source/conf.py" ]; then
+#            VERSION_XY_OLD=$(echo "$CURRENT_VERSION" | cut -d'.' -f1,2)
+#            sed -i "s/^version *= *['\"].*['\"]/version = '$VERSION_XY_OLD'/" "docs/source/conf.py"
+#            sed -i "s/^release *= *['\"].*['\"]/release = '$CURRENT_VERSION'/" "docs/source/conf.py"
+#        fi
+        if [ -f "CITATION.cff" ]; then
+            sed -i "s/^version: .*/version: $CURRENT_VERSION/" "CITATION.cff"
+        fi
+        
+        echo -e "${GREEN}✅ Version reverted to $CURRENT_VERSION. Fix your docstrings and try again.${RESET}"
         exit 1
     fi
-    echo "     - Documentation build ... OK"
+    echo "      - Documentation build ... OK"
 
     # --- GIT SECTION ---
     echo -e "$SEPARATOR"

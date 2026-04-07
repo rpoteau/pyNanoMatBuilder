@@ -814,6 +814,7 @@ def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput, is_
 
     setattr(self, f"NPcs{suffix}", npcs_copy)
     setattr(self, f"surfaceatoms{suffix}", npcs_copy[surfaceAtoms])
+    setattr(self, f"surfaceAtoms{suffix}", surfaceAtoms)
 
     # Surface planes
     if hasattr(self, f'trPlanes{suffix}') and getattr(self, f'trPlanes{suffix}') is not None:

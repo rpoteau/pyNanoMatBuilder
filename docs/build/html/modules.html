@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.9.8 documentation</title>
+  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.10.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="canonical" href="https://pynanomatbuilder.readthedocs.io/modules.html" />
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=1a282f62"></script>
+      <script src="_static/documentation_options.js?v=b59eaf29"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -115,7 +115,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.platonicNPs.regfccOh.volume"><code class="docutils literal notranslate"><span class="pre">regfccOh.volume()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.platonicNPs.regfccOh.MakeVertices"><code class="docutils literal notranslate"><span class="pre">regfccOh.MakeVertices()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.platonicNPs.regfccOh.coords"><code class="docutils literal notranslate"><span class="pre">regfccOh.coords()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.platonicNPs.regfccOh.sasview_dims"><code class="docutils literal notranslate"><span class="pre">regfccOh.sasview_dims()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.platonicNPs.regfccOh.calc_sasview_dims"><code class="docutils literal notranslate"><span class="pre">regfccOh.calc_sasview_dims()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.platonicNPs.regfccOh.prop"><code class="docutils literal notranslate"><span class="pre">regfccOh.prop()</span></code></a></li>
 </ul>
 </li>
@@ -1485,20 +1485,10 @@ for the ith shell of an octahedral nanoparticle.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="pyNanoMatBuilder.platonicNPs.regfccOh.sasview_dims">
-<span class="sig-name descname"><span class="pre">sasview_dims</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.platonicNPs.regfccOh.sasview_dims" title="Link to this definition"></a></dt>
-<dd><p>Converts the dimensions for SasView use.</p>
-<p>In pyNanoMatBuilder, the truncature is defined by the ratio d(truncated_edge)/d(edge).
-In Sasview, the truncature is defined by the ratio d(truncated_demi_axis)/d(demi_axis),
-the demi_axis being the distance from the center of the octahedron to a vertice (in Å).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>(demi_axis, truncature_ratio)</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>tuple</p>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="pyNanoMatBuilder.platonicNPs.regfccOh.calc_sasview_dims">
+<span class="sig-name descname"><span class="pre">calc_sasview_dims</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">noOutput</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.platonicNPs.regfccOh.calc_sasview_dims" title="Link to this definition"></a></dt>
+<dd><p>Computes the dimensions of the nanoparticle for
+direct comparison with SasView models.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2551,7 +2541,7 @@ for the ith shell of a dodecahedral nanoparticle.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.platonicNPs.cube">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.platonicNPs.</span></span><span class="sig-name descname"><span class="pre">cube</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crystalStructure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'fcc'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">element</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Au'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rnn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nOrder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'cube'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.platonicNPs.cube" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.platonicNPs.</span></span><span class="sig-name descname"><span class="pre">cube</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crystalStructure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'fcc'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">element</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Au'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rnn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nOrder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'cube'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.platonicNPs.cube" title="Link to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pyNanoMatBuilder.platonicNPs.PlatonicNP" title="pyNanoMatBuilder.platonicNPs.PlatonicNP"><code class="xref py py-class docutils literal notranslate"><span class="pre">PlatonicNP</span></code></a></p>
 <p>A class for generating XYZ and CIF files of cubic nanoparticles (NPs).</p>
 <p>Generates NPs of various sizes based on user-defined compounds (either by
