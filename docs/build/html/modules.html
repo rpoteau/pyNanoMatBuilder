@@ -688,6 +688,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.coreSurface"><code class="docutils literal notranslate"><span class="pre">coreSurface()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.peel_by_coordination"><code class="docutils literal notranslate"><span class="pre">peel_by_coordination()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.peel_by_shifted_ellipsoid"><code class="docutils literal notranslate"><span class="pre">peel_by_shifted_ellipsoid()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.plot_npr_triangle"><code class="docutils literal notranslate"><span class="pre">plot_npr_triangle()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyNanoMatBuilder.utils.crystals">Crystal &amp; Wulff Utilities (crystals.py)</a><ul>
@@ -737,6 +738,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.moi"><code class="docutils literal notranslate"><span class="pre">moi()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.get_moments_of_inertia_for_size"><code class="docutils literal notranslate"><span class="pre">get_moments_of_inertia_for_size()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.moi_size"><code class="docutils literal notranslate"><span class="pre">moi_size()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.calculate_rg"><code class="docutils literal notranslate"><span class="pre">calculate_rg()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.calculate_npr"><code class="docutils literal notranslate"><span class="pre">calculate_npr()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.Inscribed_circumscribed_spheres"><code class="docutils literal notranslate"><span class="pre">Inscribed_circumscribed_spheres()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.get_ellipsoid_analysis"><code class="docutils literal notranslate"><span class="pre">get_ellipsoid_analysis()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.propPostMake"><code class="docutils literal notranslate"><span class="pre">propPostMake()</span></code></a><ul>
@@ -749,6 +752,8 @@
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.NPcs"><code class="docutils literal notranslate"><span class="pre">NPcs</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.NP"><code class="docutils literal notranslate"><span class="pre">NP</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.sasview_dims"><code class="docutils literal notranslate"><span class="pre">sasview_dims</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.NPR"><code class="docutils literal notranslate"><span class="pre">NPR</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.Rg"><code class="docutils literal notranslate"><span class="pre">Rg</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -7503,6 +7508,12 @@ self.is_optimized is reset to False.</p>
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.plot_npr_triangle">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">plot_npr_triangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_optimized</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">external_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Rg'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'viridis'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.plot_npr_triangle" title="Link to this definition"></a></dt>
+<dd><p>Hybrid Sauer Plotter for pyNanoMatBuilder with precise colorbar scaling and bold formatting.</p>
+</dd></dl>
+
 </section>
 <section id="module-pyNanoMatBuilder.utils.crystals">
 <span id="crystal-wulff-utilities-crystals-py"></span><h2>Crystal &amp; Wulff Utilities (crystals.py)<a class="headerlink" href="#module-pyNanoMatBuilder.utils.crystals" title="Link to this heading"></a></h2>
@@ -8196,6 +8207,46 @@ Units of the moments of inertia are angstrom**2.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.calculate_rg">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">calculate_rg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mass_weighted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.calculate_rg" title="Link to this definition"></a></dt>
+<dd><p>Calculates the radius of gyration for an ASE Atoms object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>atoms</strong> (<em>ase.Atoms</em>) – The system to analyze.</p></li>
+<li><p><strong>mass_weighted</strong> (<em>bool</em>) – If True, weights by atomic mass.
+If False, calculates geometric Rg.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If False, prints a formatted summary.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The radius of gyration in nm.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.calculate_npr">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">calculate_npr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">moi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.calculate_npr" title="Link to this definition"></a></dt>
+<dd><p>Calculates Normalized Principal Moments of Inertia (NPR).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>[npr1, npr2] where npr1 = I1/I3 and npr2 = I2/I3.</dt><dd><p>Returns (1.0, 1.0) for single atoms to avoid division by zero.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.Inscribed_circumscribed_spheres">
 <span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">Inscribed_circumscribed_spheres</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.Inscribed_circumscribed_spheres" title="Link to this definition"></a></dt>
 <dd><p>Calculates the diameters of the inscribed and circumscribed spheres for the nanoparticle (NP) based on
@@ -8392,6 +8443,29 @@ only if the sasview_dims() method exists.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>tuple, optional</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.NPR">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">NPR</span></span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.NPR" title="Link to this definition"></a></dt>
+<dd><p>normalized ratios of principal moments of inertia
+$NPR_{1}=I_{1}/I_{3}$ and $NPR_{2}=I_{2}/I_{3}$</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.Rg">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">Rg</span></span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.Rg" title="Link to this definition"></a></dt>
+<dd><p>Radius of Gyration, in nm</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>

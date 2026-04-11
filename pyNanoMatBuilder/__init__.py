@@ -3,8 +3,8 @@ pyNanoMatBuilder
 A versatile Python library designed to generate atomic-scale 3D structures of nanoparticles (NPs)
 """
 
-__version__ = "0.10.3"
-__last_update__ = "2026-04-07"
+__version__ = "0.10.4"
+__last_update__ = "2026-04-11"
 __author__ = "Sara Mokhtari, Romuald Poteau"
 
 
@@ -24,9 +24,12 @@ from .utils import (
     centerTitle, centertxt
 )
 
+from .utils.geometry import plot_npr_triangle
+
 # Define which symbols are exported when someone does 'from pyNanoMatBuilder import *'
 __all__ = [
     "fg", "hl", "bg", "color", "init", "end",
     "chrono_start", "chrono_stop", "chrono_show",
-    "centerTitle", "centertxt", "data", "pyNMBu"
+    "centerTitle", "centertxt", "data", "pyNMBu",
+    "plot_npr_triangle"
 ]

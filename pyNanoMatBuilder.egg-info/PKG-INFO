@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: pyNanoMatBuilder
-Version: 0.10.0
+Version: 0.10.3
 Summary: Build and visualize complex crystalline nanoparticle architectures, including models on substrates, for materials science, X-ray data analysis, and electron microscopy research
 Author-email: "Sara Mokhtari, LPCNO" <smokhtari@insa-toulouse.fr>, "Romuald Poteau, LPCNO" <romuald.poteau@utoulouse.fr>
 License: GPL-3.0-or-later
@@ -9,7 +9,7 @@ Project-URL: Changelog, https://github.com/rpoteau/pynanomatbuilder/blob/main/Ch
 Project-URL: Documentation, https://pynanomatbuilder.readthedocs.io/en/latest/
 Project-URL: Issues, https://github.com/rpoteau/pynanomatbuilder/issues
 Project-URL: Try on Colab, https://colab.research.google.com/github/rpoteau/pyNanoMatBuilder/blob/main/pyNMB-examples.ipynb
-Requires-Python: >=3.8
+Requires-Python: >=3.11
 Description-Content-Type: text/markdown
 License-File: LICENSE
 Requires-Dist: ase

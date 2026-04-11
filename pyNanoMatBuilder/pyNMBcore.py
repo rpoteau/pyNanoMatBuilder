@@ -39,21 +39,41 @@ class pyNMBcore:
         self.NP = None
         self.NPcs = None
         self.jMolCS = None
+        self.vertices = None
+        self.simplices = None
+        self.neighbors = None
+        self.equations = None
         self.surfaceatoms = None
+        self.surfaceAtoms = None
         self.cog = np.array([0., 0., 0.])
         self.trPlanes = None
         self.moi = None
+        self.NPR = None
+        self.Rg = None
+        self.vol_Hull = None
+        self.area_Hull = None
+        
+        self.shape = None
 
         self.NP_opt = None
         self.NPcs_opt = None
         self.jMolCS_opt = None
+        self.vertices_opt = None
+        self.simplices_opt = None
+        self.neighbors_opt = None
+        self.equations_opt = None
         self.surfaceatoms_opt = None
+        self.surfaceAtoms_opt = None
         self.cog_opt = []
         self.trPlanes_opt = None
         self.is_optimized = False
         self.is_peeled = False
         self.moi_opt = None
-
+        self.NPR_opt = None
+        self.Rg_opt = None
+        self.vol_Hull_opt = None
+        self.area_Hull_opt = None
+        
         self.ellipsoid = {} #two keys: "initial structure" or "optimized structure"
 
 
@@ -96,3 +116,20 @@ class pyNMBcore:
         if noOutput is None: noOutput = self.noOutput
         if is_optimized is None: is_optimized = self.is_optimized
         return propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput, is_optimized)
+
+    def plot_npr_triangle(self=None, is_optimized: bool = None, save_path: str = None, 
+                      external_data: dict = None, color_by: str = 'Rg', color: str = 'viridis'):
+        from .utils.geometry import plot_npr_triangle
+
+        if self is not None:
+            if is_optimized is None: is_optimized = getattr(self, 'is_optimized', False)
+
+        plot_npr_triangle(
+            self, 
+            is_optimized=is_optimized, 
+            save_path=save_path, 
+            external_data=external_data, 
+            color_by=color_by, 
+            color=color
+        )
+        

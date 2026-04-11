@@ -391,7 +391,6 @@ def moi(model: Atoms,
             f"{model.moiM[2]:.2f} amu.Å2"
         )
     return moiM
-   
 
 
 #NEW
@@ -456,6 +455,86 @@ def moi_size(model: Atoms,  # normalized moment of inertia with masses=1
         )
     return [model.moi_size[0], model.moi_size[1], model.moi_size[2]]
 
+def calculate_rg(model: Atoms,
+                 mass_weighted=True,
+                 noOutput: bool=False,
+                ):
+    """
+    Calculates the radius of gyration for an ASE Atoms object.
+    
+    Args:
+        atoms (ase.Atoms): The system to analyze.
+        mass_weighted (bool): If True, weights by atomic mass. 
+                              If False, calculates geometric Rg.
+        noOutput (bool): If False, prints a formatted summary.
+    Returns:
+        float: The radius of gyration in nm.
+    """
+    
+    calc_type = "Mass-weighted" if mass_weighted else "Geometric"
+    if not noOutput:
+        centertxt(
+            f"Radius of Gyration ({calc_type})", bgc='#007a7a', size='14', weight='bold'
+        )
+    
+    positions = model.get_positions()
+
+    if mass_weighted:
+        masses = model.get_masses()
+        com = model.get_center_of_mass()
+        sq_dist = np.sum((positions - com)**2, axis=1)
+        rg = np.sqrt(np.sum(masses * sq_dist) / np.sum(masses))
+    else:
+        # Geometric center
+        center = np.mean(positions, axis=0)
+        sq_dist = np.sum((positions - center)**2, axis=1)
+        rg = np.sqrt(np.mean(sq_dist))
+        rg /= 10 # angstrom to nm
+
+    if not noOutput:
+        print(f" Rg = {rg:.1f} nm")
+
+    return rg
+
+def calculate_npr(moi,
+                  noOutput: bool=False,
+                 ):
+    """
+    Calculates Normalized Principal Moments of Inertia (NPR).
+    
+    Returns:
+        list: [npr1, npr2] where npr1 = I1/I3 and npr2 = I2/I3.
+               Returns (1.0, 1.0) for single atoms to avoid division by zero.
+    """
+    I1, I2, I3 = np.sort(moi)
+    if not noOutput:
+        centertxt(
+            "Normalized Ratios of Principal Moments of Inertia (NPR)", bgc='#007a7a', size='14', weight='bold'
+        )
+        
+    # 2. Prevent division by zero for single atoms or points
+    if I3 > 1e-9:
+        npr1 = I1 / I3
+        npr2 = I2 / I3
+    else:
+        # Handle the case of a single atom where all MOIs are 0
+        npr1, npr2 = 1.0, 1.0
+
+    if not noOutput:
+        # Determination of the dominant shape for the printout
+        shape_desc = "Spherical/Symmetric"
+        if npr1 < 0.1 and npr2 < 0.1:
+            shape_desc = "Linear/Rod-like"
+        elif npr1 < 0.3 and npr2 > 0.4:
+            shape_desc = "Planar/Disk-like"
+
+        print(f" Principal Moments : I1={I1:.2f}, I2={I2:.2f}, I3={I3:.2f}")
+        print(f" NPR1 (I1/I3)      : {npr1:.4f}")
+        print(f" NPR2 (I2/I3)      : {npr2:.4f}")
+        print(f" Predicted Shape   : {shape_desc}")
+    
+    return [npr1, npr2]
+        
 #------------------------------------------------------------------------------------------------------------------------
     
 def Inscribed_circumscribed_spheres(self, noOutput):
@@ -657,6 +736,8 @@ def get_ellipsoid_analysis(self, noOutput=False):
             status = "initial envelope"
             key = "initial structure"
 
+        
+        
         hull_coords = target_atoms.get_positions()[hull_indices]
         pts = np.asarray(hull_coords)
     
@@ -698,15 +779,17 @@ def get_ellipsoid_analysis(self, noOutput=False):
 
         # 5. Results Dictionary
         D1, D2, D3 = 2*a, 2*b, 2*c
+
         self.ellipsoid[key] = {
             "status": status,
-            "D1": D1, # Major (Å) -> Should match 2 * max_dist
-            "D2": D2, # Intermediate (Å)
-            "D3": D3, # Minor (Å)
+            "D1": D1, # Major (A) -> Should match 2 * max_dist
+            "D2": D2, # Intermediate (A)
+            "D3": D3, # Minor (A)
             "volume": volume,
             "surface": surface_area,
             "asphericity": D1 / D3 if c > 0 else 1.0
         }
+
 
         if not noOutput:
             results = self.ellipsoid[key]
@@ -715,10 +798,10 @@ def get_ellipsoid_analysis(self, noOutput=False):
                         size='14',
                         weight='bold')
             print(f"  - Dimensions (Å): {results['D1']:.2f} x {results['D2']:.2f} x {results['D3']:.2f}")
-            print(f"  - Volume: {results['volume']:.1f} Å³")
-            print(f"  - Surface: {results['surface']:.1f} Å²")
+            print(f"  - Volume: {results['volume']/1000:.2f} nm³")
+            print(f"  - Surface: {results['surface']/100:.2f} nm²")
             print(f"  - Asphericity: {results['asphericity']:.2f}")
-            print(f"  - Max Radius found: {max_dist:.3f} Å")
+            print(f"  - Max Radius found: {max_dist/10:.3f} nm")
             # --- Jmol Command Generation ---
             # Semi-axes vectors for Jmol
             v1, v2, v3 = evecs[:,0]*a, evecs[:,1]*b, evecs[:,2]*c
@@ -770,6 +853,9 @@ def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput, is_
         NP (ase.Atoms): Original nanoparticle object.
         sasview_dims (tuple, optional): Dimensions for SasView, calculated 
             only if the sasview_dims() method exists.
+        NPR (numpy.ndarray): normalized ratios of principal moments of inertia
+            $NPR_{1}=I_{1}/I_{3}$ and $NPR_{2}=I_{2}/I_{3}$
+        Rg (float): Radius of Gyration, in nm
     """
 
     # Determine the "Target" and the "Suffix"
@@ -789,8 +875,11 @@ def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput, is_
         raise AttributeError(f"Structure Error: '{label}' is None. "
                              f"Cannot perform propPostMake() on an empty structure.")
 
-    setattr(self, f"moi{suffix}", moi(target_np, noOutput))
+    moiNP = moi(target_np, noOutput)
+    setattr(self, f"moi{suffix}", moiNP)
     setattr(self, f"moisize{suffix}", np.array(moi_size(target_np, noOutput)))
+    setattr(self, f"NPR{suffix}", np.array(calculate_npr(moiNP, noOutput)))
+    setattr(self, f"Rg{suffix}", calculate_rg(target_np, mass_weighted=True, noOutput=noOutput))
 
     # Core/surface
     if not skipSymmetryAnalyzis:
@@ -862,3 +951,4 @@ def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput, is_
                 f" {self.nAtoms_helix}"
             )
             print(f"{'=' * 60}\n")
+

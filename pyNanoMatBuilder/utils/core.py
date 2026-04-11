@@ -740,10 +740,13 @@ def _flush_stale_data(self, shape_update=None):
         'NP_opt', 'NPcs', 'NPcs_opt',
         'jMolCS', 'jMolCS_opt',
         'surfaceatoms', 'surfaceatoms_opt', 
-        'vertices', 'vertices_opt', 
-        'trPlanes', 'trPlanes_opt', 
+        'surfaceAtoms', 'surfaceAtoms_opt', 
+        'vertices', 'vertices_opt',
+        'trPlanes', 'trPlanes_opt',
         'ellipsoid', 'moi', 'moi_opt',
-
+        'NPR', 'NPR_opt', 'Rg', 'Rg_opt',
+        'vol_Hull', 'vol_Hull_opt',
+        'area_Hull', 'area_Hull_opt',
     ]
     
     for attr in attrs_to_clean:

@@ -202,6 +202,7 @@ def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1):
         dyn.run(fmax=fthreshold)
 
     self.NP_opt = model
+    self.shape += '_opt'
     self.is_optimized = True
     self.cog_opt = self.NP_opt.get_center_of_mass()
     

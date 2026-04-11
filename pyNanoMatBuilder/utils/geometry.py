@@ -18,6 +18,8 @@ from ase.visualize import view
 
 from importlib import resources
 
+import matplotlib.pyplot as plt
+
 from pyNanoMatBuilder import data
 from .core import (pyNMB_location, get_resource_path, timer, RAB, Rbetween2Points,
                    vector, vectorBetween2Points, coord2xyz, vertex, vertexScaled, RadiusSphereAfterV,
@@ -1174,15 +1176,21 @@ def coreSurface(self,
     if status == "optimized structure":
         self.trPlanes_opt = hull.equations
         current_planes = self.trPlanes_opt
+        self.vol_Hull_opt = hull.volume/1000
+        self.area_Hull_opt = hull.area/100
     else:
         self.trPlanes = hull.equations
         current_planes = self.trPlanes
+        self.vol_Hull = hull.volume/1000
+        self.area_Hull = hull.area/100
         
     if not noOutput:
         print("Found:")
         print(f"  - {len(hull.vertices)} vertices")
         print(f"  - {len(hull.simplices)} simplices")
-        
+        print(f"  - Volume: {hull.volume/1000:.2f} nm³")
+        print(f"  - Area: {hull.area/100:.2f} nm²")        
+
     if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
     if not noOutput: chrono = timer(); chrono.chrono_start()
     surfaceAtoms = returnPointsThatLieInPlanes(current_planes, coords, noOutput=noOutput, threshold=threshold_CoreSurface)
@@ -1338,3 +1346,88 @@ def peel_by_shifted_ellipsoid(self, shift_dist=2.5, noOutput=False):
                       thresholdCoreSurface=self.thresholdCoreSurface,
                       noOutput=False, is_optimized=False)
 
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+import numpy as np
+
+def plot_npr_triangle(self=None, is_optimized: bool = False, save_path: str = None, 
+                      external_data: dict = None, color_by: str = 'Rg', color: str='viridis'):
+    """
+    Hybrid Sauer Plotter for pyNanoMatBuilder with precise colorbar scaling and bold formatting.
+    """
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+    # 0. Larger figure size
+    fig, ax = plt.subplots(figsize=(14, 12))
+
+    # 1. Draw Triangle Boundaries
+    triangle_x = [0, 1, 0.5, 0]
+    triangle_y = [1, 1, 0.5, 1]
+    ax.plot(triangle_x, triangle_y, color='black', linestyle='--', linewidth=1.5, zorder=1)
+
+    # 2. Data Preparation
+    if external_data:
+        npr_list = np.array(external_data['NPR'])
+        rg_list = np.array(external_data['Rg'])
+        
+        if color_by == 'Rg':
+            sc = ax.scatter(npr_list[:,0], npr_list[:,1], c=rg_list, cmap=color,
+                            s=120, edgecolors='black', alpha=0.8, zorder=3)
+            
+            # --- FIX: Match colorbar height to axes height ---
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", size="5%", pad=0.15)
+            cbar = plt.colorbar(sc, cax=cax)
+            cbar.set_label('Radius of Gyration $R_g$ / nm', size=13, weight='bold')
+            
+            # Apply bold/size 12 to colorbar ticks as well
+            for t in cbar.ax.get_yticklabels():
+                t.set_fontsize(12)
+                t.set_fontweight('bold')
+        else:
+            for shape_type in set(external_data['shapes']):
+                mask = [s == shape_type for s in external_data['shapes']]
+                ax.scatter(npr_list[mask, 0], npr_list[mask, 1], label=shape_type,
+                           s=120, edgecolors='black', alpha=0.8, zorder=3)
+            ax.legend(prop={'weight': 'bold', 'size': 12}, loc='best')
+    else:
+        # Plotting the single instance (self)
+        npr = self.NPR_opt if is_optimized else self.NPR
+        rg = self.Rg_opt if is_optimized else self.Rg
+        
+        ax.scatter(npr[0], npr[1], color='tab:blue', s=200, edgecolors='black', 
+                   linewidth=1.5, zorder=3)
+        
+        ax.text(npr[0] + 0.03, npr[1] + 0.01, f"$R_g$: {rg:.2f} nm", 
+                fontsize=12, fontweight='bold', color='darkblue')
+
+    # 3. Vertices Labels
+    ax.text(0, 1.04, 'Rod', fontsize=14, fontweight='bold', ha='center', va='bottom')
+    ax.text(1, 1.04, 'Sphere', fontsize=14, fontweight='bold', ha='center', va='bottom')
+    ax.text(0.5, 0.45, 'Disk', fontsize=14, fontweight='bold', ha='center', va='top')
+
+    # 4. Styling
+    status = "Optimized" if is_optimized else "Unoptimized"
+    title = "NP Population Analysis" if external_data else f"{self.shape} Analysis ({status})"
+    ax.set_title(title, pad=25, fontsize=16, fontweight='bold')
+    ax.set_xlabel('NPR1 ($I_1$ / $I_3$)', fontsize=14, fontweight='bold')
+    ax.set_ylabel('NPR2 ($I_2$ / $I_3$)', fontsize=14, fontweight='bold')
+
+    # Formatting Tick Labels: Size 12 and Bold
+    for label in (ax.get_xticklabels() + ax.get_yticklabels()):
+        label.set_fontsize(12)
+        label.set_fontweight('bold')
+
+    ax.set_xlim(-0.1, 1.1)
+    ax.set_ylim(0.4, 1.1)
+    ax.set_aspect('equal')
+    ax.grid(True, linestyle=':', alpha=0.6)
+
+    # 5. Save Logic
+    if save_path:
+        if save_path.lower().endswith('.svg'):
+            import matplotlib
+            matplotlib.rcParams['svg.fonttype'] = 'none'
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"✅ Plot saved to: {save_path}")
+
+    plt.show()

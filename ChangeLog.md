@@ -5,7 +5,61 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
-## [0.10.2] - 2026-04-07 "surfaceAtoms"
+## [0.10.4] - 2026-04-09 "Hull volume, Rg & NPR"
+
+### Added
+- **Sauer Triangle Plotter**: A new visualization tool, `plot_npr_triangle`, in `utils.geometry` to classify nanoparticle shapes based on Normalized Principal Moments of Inertia (NPR), which uses the new:
+    - `prop.calculate_rg()` function, that supports both mass-weighted and geometric distributions.
+    - `prop.calculate_npr()` function
+- **Hybrid Visualization**: `plot_npr_triangle` method added to the core class, supporting both individual structure analysis and batch population studies.
+    - Automatic calculation of **Radius of Gyration ($R_g$)** and **NPR** values.
+    - Support for high-resolution exports in **SVG** (with editable text) and **PNG**.
+    - Professional layout with bold formatting, fixed-height colorbars, and vertex labeling (Rod, Sphere, Disk).
+    - Toggle between raw and optimized structural descriptors using `is_optimized`.
+    - `plot_npr_triangle` utility exposed at the top-level namespace for easier access.
+- **updated list of attributes**
+    - `self.nAtoms = 0`
+    
+    - `self.NP = None`
+    - `self.NPcs = None`
+    - `self.jMolCS = None`
+    - `self.vertices = None`
+    - `self.simplices = None`
+    - `self.neighbors = None`
+    - `self.equations = None`
+    - `self.surfaceatoms = None`
+    - `self.surfaceAtoms = None`
+    - `self.cog = np.array([0., 0., 0.])`
+    - `self.trPlanes = None`
+    - `self.moi = None`
+    - `self.NPR = None`
+    - `self.Rg = None`
+    - `self.shape = None`
+    - `self.vol_Hull = None`
+    - `self.area_Hull = None`
+    
+    - `self.NP_opt = None`
+    - `self.NPcs_opt = None`
+    - `self.jMolCS_opt = None`
+    - `self.vertices_opt = None`
+    - `self.simplices_opt = None`
+    - `self.neighbors_opt = None`
+    - `self.equations_opt = None`
+    - `self.surfaceatoms_opt = None`
+    - `self.surfaceAtoms_opt = None`
+    - `self.cog_opt = []`
+    - `self.trPlanes_opt = None`
+    - `self.is_optimized = False`
+    - `self.is_peeled = False`
+    - `self.moi_opt = None`
+    - `self.NPR_opt = None`
+    - `self.Rg_opt = None`
+    - `self.vol_Hull_opt = None`
+    - `self.area_Hull_opt = None`
+    
+    - `self.ellipsoid = {} #two keys: "initial structure" or "optimized structure"`
+
+## [0.10.1-0.10.3] - 2026-04-07 "surfaceAtoms"
 
 ### Added
 - new `surfaceAtoms` boolean array attribute created in `propPostMake()`
