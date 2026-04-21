@@ -3,7 +3,7 @@ import math
 import re
 import numpy as np
 import pandas as pd
-import os
+import os, sys
 from pathlib import Path
 
 # External dependencies (ASE)
@@ -83,7 +83,7 @@ class Crystal(pyNMBcore):
             scaleDmin2 (float, optional): Scale factor for unit cell minimum dimension.
             setSymbols2 (np.ndarray, optional): Array of chemical symbols to replace default.
             userDefCif (str, optional): Path to user-defined CIF file.
-            shape (str): Nanoparticle shape. Options: 'sphere', 'ellipsoid', 'parallelepiped',
+            shape (str): Nanoparticle shape. Options: 'sphere', 'ellipsoid', 'pppd' (parallelepiped),
                 'wire', 'cylinder', or 'Wulff: <shape>' (default: "sphere").
             size (list, optional): Size specification (format depends on shape):
                 - Sphere: [diameter]
@@ -131,7 +131,7 @@ class Crystal(pyNMBcore):
 
         self.dbFolder = dbFolder  # Database folder containing CIF files
         self.crystal = crystal
-        self.shape = shape.strip(" ")  # 'sphere', 'ellipsoid', 'parallelepiped', 'wire', 'cylinder', 'Wulff'
+        self.shape = shape.strip(" ")  # 'sphere', 'ellipsoid', 'pppd' (parallelepiped), 'wire', 'cylinder', 'Wulff'
         self.size = size
         self.directionsPPD = directionsPPD
         self.buildPPD = buildPPD
@@ -163,10 +163,21 @@ class Crystal(pyNMBcore):
         if self.userDefCif is not None:
             self.loadExternalCif()
 
+        if self.shape in data.pyNMBimg.IMGdf.index:
+            row = data.pyNMBimg.IMGdf.loc[self.shape]
+            self.imageFile = pyNMBu.imageNameWithPathway(row['png file'])
+            self.imageFigsize = row['figsize']
+            self.imageRot = row['rot']
+        else:
+            sys.exit(f"Shape '{self.shape}' is unknown")
+
         if not noOutput:
             pyNMBu.centerTitle(f"{self.crystal} {self.shape}")
 
         self.bulk(noOutput)
+        if not noOutput:
+            self.prop()
+
         if scaleDmin2 is not None:
             pyNMBu.scaleUnitCell(self, scaleDmin2, noOutput=noOutput)
         if setSymbols2 is not None:
@@ -180,10 +191,10 @@ class Crystal(pyNMBcore):
                 view(self.sc)
                 view(self.NP)
             if self.postAnalyzis:
-                self.prop(noOutput)
-                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
                 if self.aseView:
                     view(self.NPcs)
+                    
     def __str__(self):
         """Return string representation of the Crystal instance."""
         return f"Crystal = {self.crystal} {self.shape}"
@@ -335,7 +346,7 @@ class Crystal(pyNMBcore):
                     / self.cif.cell.lengths()[2]
                 )
             )
-        elif self.shape in ("ellipsoid", "supercell", "parallelepiped"):
+        elif self.shape in ("ellipsoid", "supercell", "pppd"):
             Ma = int(
                 np.round(
                     extend_size_by_factor
@@ -932,7 +943,7 @@ class Crystal(pyNMBcore):
         for i, p in enumerate(self.surfacesWulff):
             if self.symWulff:
                 # sym_p = self.ucSG.equivalent_lattice_points(p) #deprecated (ase function)
-                sym_p = pyNMBu.get_equivalent_miller_indices(self,p)
+                sym_p = pyNMBu.get_equivalent_miller_indices(self.ucSG_number,p)
                 normal = []
                 for sp in sym_p:
                     normal.append(
@@ -988,6 +999,7 @@ class Crystal(pyNMBcore):
         self.NP = self.sc.copy()
         del self.NP[atoms_above_planes]
         self.trPlanes = tr_planes
+        self.trPlanes_Wulff = tr_planes
 
         if not noOutput:
             chrono.chrono_stop(hdelay=False)
@@ -1033,7 +1045,7 @@ class Crystal(pyNMBcore):
             self.makeSuperCell(noOutput)
             self.makeEllipsoid(noOutput)
 
-        elif self.shape == "parallelepiped":
+        elif self.shape == "pppd":
             if not noOutput:
                 print(
                     f"Making a parallelepiped with target side length = {self.size} nm, "
@@ -1198,19 +1210,19 @@ class Crystal(pyNMBcore):
                 f"not found in predefined shapes.{fg.OFF}"
             )
 
-    def prop(self, noOutput):
+    def prop(self):
         """
         Display unit cell and nanoparticle properties.
 
         Args:
             noOutput (bool): If False, details are printed.
         """
-        if not noOutput:
-            pyNMBu.centertxt(
-                "Unit cell properties", bgc="#007a7a", size="14", weight="bold"
-            )
-            pyNMBu.print_ase_unitcell(self)
-            pyNMBu.centertxt("Properties", bgc="#007a7a", size="14", weight="bold")
-            print(self)
+        pyNMBu.centertxt("Properties", bgc='#007a7a', size='14', weight='bold')
+        print(self)
+        pyNMBu.plotImageInPropFunction(self.imageFile, figsize=self.imageFigsize, rot=self.imageRot)
+        pyNMBu.centertxt(
+            "Unit cell properties", bgc="#007a7a", size="14", weight="bold"
+        )
+        pyNMBu.print_ase_unitcell(self)
 
   

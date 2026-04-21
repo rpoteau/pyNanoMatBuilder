@@ -105,7 +105,7 @@ class bccrDD(CatalanNP):
             self.coords(noOutput)
             if self.aseView: view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
                 if self.aseView: view(self.NPcs)
           
     def __str__(self):
@@ -465,7 +465,7 @@ class fccdrDD(CatalanNP):
             self.coords(noOutput)
             if self.aseView: view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
                 if self.aseView: view(self.NPcs)
           
     def __str__(self):

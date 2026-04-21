@@ -16,6 +16,11 @@ from ase import io as ase_io
 from ase.spacegroup import get_spacegroup
 from ase.visualize import view
 
+from pymatgen.core.structure import Structure
+from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pymatgen.core.lattice import Lattice
+from pymatgen.symmetry.groups import SpaceGroup
+
 from importlib import resources
 
 from pyNanoMatBuilder import data
@@ -27,6 +32,16 @@ from .core import (pyNMB_location, get_resource_path, timer, RAB, Rbetween2Point
                    )
 from .core import centertxt, centerTitle, fg, bg, hl, color
 from .crystals import G, Gstar
+
+_DUMMY_LATTICES = {
+    "cubic":        Lattice.cubic(1.0),
+    "hexagonal":    Lattice.hexagonal(1.0, 1.633),
+    "trigonal":     Lattice.hexagonal(1.0, 1.633),
+    "tetragonal":   Lattice.tetragonal(1.0, 1.2),
+    "orthorhombic": Lattice(np.diag([1.0, 1.2, 1.5])),
+    "monoclinic":   Lattice.monoclinic(1.0, 1.2, 1.5, 80.0),
+    "triclinic":    Lattice.from_parameters(1.0, 1.2, 1.5, 70.0, 80.0, 85.0),
+}
 
 ######################################## ase unitcells and pymatgen symmetry analyzis
 
@@ -46,45 +61,72 @@ def print_spacegroup_info(sg_number):
     )
     return info
 
+
 def get_equivalent_miller_indices(sg_input, hkl):
     """
-    Find all unique Miller indices equivalent to the input (hkl) plane.
+    Return all lattice points equivalent to any of the lattice points
+    in `hkl` with respect to rotations only (conserving distance to origin).
 
-    This function mimics ASE's `equivalent_lattice_points`. It can accept 
-    either a full pyNanoMatBuilder Crystal system or a standard space group integer.
+    Equivalent to ASE's deprecated Spacegroup.equivalent_lattice_points().
 
-    Args:
-        sg_input (int or object): Either the space group number (e.g., 225) 
-            OR a Crystal system instance containing the SpacegroupAnalyzer (system.sga).
-        hkl (list or np.array): The Miller indices [h, k, l] of the plane.
+    Parameters
+    ----------
+    sg_input : int or SpacegroupAnalyzer or Structure
+        Space group number (int), or a pymatgen SpacegroupAnalyzer,
+        or a pymatgen Structure (from which symmetry will be analyzed).
+    hkl : array-like, shape (N, 3)
+        One or more Miller index triplets, e.g. [[0, 0, 2]].
 
-    Returns:
-        np.ndarray: A 2D array of unique, symmetrically equivalent Miller indices.
+    Returns
+    -------
+    np.ndarray, shape (M, 3)
+        Unique equivalent lattice points, sorted lexicographically.
+
+    Example
+    -------
+    >>> get_equivalent_miller_indices(225, [[0, 0, 2]])
+    array([[ 0,  0, -2],
+           [ 0, -2,  0],
+           [-2,  0,  0],
+           [ 2,  0,  0],
+           [ 0,  2,  0],
+           [ 0,  0,  2]])
+    >>> get_equivalent_miller_indices(194, [[0, 0, 2]])  # hcp P6_3/mmc
+    array([[ 0,  0, -2],
+           [ 0,  0,  2]])
     """
-    import numpy as np
-    from pymatgen.symmetry.groups import SpaceGroup
-    
-    # 1. Figure out what kind of input we received to get the rotation matrices
     if isinstance(sg_input, int):
-        # It's a raw integer from your toy script
-        sg = SpaceGroup.from_int_number(sg_input)
-        rotations = [op.rotation_matrix for op in sg.symmetry_ops]
-        
-    elif hasattr(sg_input, 'sga'):
-        # It's your Crystal object from the main library
-        rotations = [op.rotation_matrix for op in sg_input.sga.get_symmetry_operations()]
-        
+        crystal_system = SpaceGroup.from_int_number(sg_input).crystal_system
+        lattice = _DUMMY_LATTICES[crystal_system]
+        structure = Structure.from_spacegroup(
+            sg_input, lattice, ["H"], [[0, 0, 0]]
+        )
+        analyzer = SpacegroupAnalyzer(structure)
+    elif isinstance(sg_input, SpacegroupAnalyzer):
+        analyzer = sg_input
+    elif isinstance(sg_input, Structure):
+        analyzer = SpacegroupAnalyzer(sg_input)
     else:
-        raise ValueError("sg_input must be an integer space group number or a Crystal system object.")
-    
-    # 2. Apply each rotation to the vector and round to handle floating-point precision
-    all_variants = np.array([np.dot(rot, hkl) for rot in rotations])
-    all_variants = np.round(all_variants, 8)
-    
-    # 3. Filter for unique rows
-    unique_variants = np.unique(all_variants, axis=0)
-    
-    return unique_variants
+        raise TypeError(
+            f"sg_input must be an int, SpacegroupAnalyzer, or Structure, got {type(sg_input)}"
+        )
+
+    # Matrices de rotation (N_sym, 3, 3) en coordonnées fractionnaires
+    sym_ops = analyzer.get_symmetry_operations(cartesian=False)
+    rot = np.array([op.rotation_matrix for op in sym_ops])  # (N_sym, 3, 3)
+
+    # Application des rotations
+    hkl = np.array(hkl, ndmin=2)                            # (N, 3)
+    rotated = np.einsum("ni,sij->nsj", hkl, rot)            # (N, N_sym, 3)
+    directions = rotated.reshape(-1, 3)                      # (N * N_sym, 3)
+    directions = np.round(directions).astype(int)
+
+    # Dédoublonnage + tri lexicographique (même comportement qu'ASE)
+    ind = np.lexsort(directions.T)
+    directions = directions[ind]
+    diff = np.diff(directions, axis=0)
+    mask = np.any(diff, axis=1)
+    return np.vstack((directions[:-1][mask], directions[-1:]))
 
 ######################################## coupling with pymatgen in order to find the symmetry
 def MolSym(aseobject: Atoms,

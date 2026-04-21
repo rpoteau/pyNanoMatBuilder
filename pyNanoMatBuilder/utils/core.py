@@ -701,7 +701,34 @@ def planeFittingLSF(coords: np.float64,
         print(errors)
         print(f"residual: {residual}")
     return np.array([u,v,w,h]).real
+    
+def faces_to_planes(faces, coords):
+    """Converts a list of faces in planes equations [u, v, w, d].
 
+    Args:
+        faces (list of tuples): List of faces [(i, j, k)] with
+            the vertices indexes.
+        coords (np.ndarray): Atoms coordinates.
+
+    Returns:
+        planes (list of np.ndarray): List of planes equations
+            [u, v, w, d].
+    """
+    planes = []
+
+    for face in faces:
+        # Get the coordinates of the three vertices of the face
+        points = np.array([coords[face[0]],
+                           coords[face[1]],
+                           coords[face[2]]])
+
+        # Find plane equation using planeFittingLSF
+        plane = planeFittingLSF(
+            points, printEq=False, printErrors=False)
+        planes.append(plane)
+
+    return np.array(planes)
+        
 #--------------------------------------------------------------------------------------------
 
 def _flush_stale_data(self, shape_update=None):
@@ -733,6 +760,7 @@ def _flush_stale_data(self, shape_update=None):
     
     # 2. Reset optimization and analysis state
     self.is_optimized = False
+    self.is_peeled = False
     self.cog_opt = []
 
     # 3. List of attributes to delete (stale analysis)
@@ -747,6 +775,7 @@ def _flush_stale_data(self, shape_update=None):
         'NPR', 'NPR_opt', 'Rg', 'Rg_opt',
         'vol_Hull', 'vol_Hull_opt',
         'area_Hull', 'area_Hull_opt',
+        'opd_index', 'opd_index_opt',
     ]
     
     for attr in attrs_to_clean:

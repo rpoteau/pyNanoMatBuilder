@@ -230,169 +230,6 @@ def ciflist(dbFolder="resources/cif_database"):
     else:
         print(f"Folder {dbFolder} not found.")
 
-######################################## coupling with Jmol & DebyeCalculator
-def check_jmol():
-    from pyNanoMatBuilder import data
-    from pathlib import Path
-    
-    # We check the CURRENT value of the variable in RAM
-    path = Path(data.pyNMBvar.path2Jmol) / "JmolData.jar"
-    
-    if not path.exists():
-        print("---")
-        print("💡 Jmol not found. To enable image rendering, please set the path:")
-        print("from pyNanoMatBuilder import data")
-        print("data.pyNMBvar.path2Jmol = '/your/path/to/jmol'")
-        print("---")
-        return False
-    return True
-    
-def saveCoords_DrawJmol(asemol, prefix, scriptJ="", boundaries=False, noOutput=True):
-    """
-    Save coordinates and generate a Jmol visualization.
-
-    Args:
-        asemol: ASE Atoms object to visualize.
-        prefix (str): Filename prefix for output files.
-        scriptJ (str): Additional Jmol script commands.
-        boundaries (bool): If True, draws boundaries without facets script.
-        noOutput (bool): If True, suppresses command output.
-    """
-    from pyNanoMatBuilder import data
-    path2Jmol = Path(data.pyNMBvar.path2Jmol)
-    jar_file = path2Jmol / "JmolData.jar"
-    # fxyz = "./figs/" + prefix + ".xyz"
-    # writexyz(fxyz, asemol)
-
-    # Output directory for the USER (Working Directory)
-    # We save results in a local 'figs' folder so the user can see them
-    user_output_dir = Path("figs")
-    user_output_dir.mkdir(exist_ok=True)
-    fxyz = user_output_dir / f"{prefix}.xyz"
-    writexyz(str(fxyz), asemol)
-
-    if not jar_file.exists():
-        if not noOutput:
-            print(f"\n{fg.RED}⚠️ Jmol not found at: {jar_file}{fg.OFF}")
-            print("The .xyz file was saved, but the .png rendering was skipped.")
-            print(f"To fix this, set: {hl.BOLD}data.pyNMBvar.path2Jmol = 'your/path'{hl.OFF}\n")
-        return # Graceful exit
-    
-    # if not boundaries:
-    #     jmolscript = (
-    #         scriptJ + '; frank off; cpk 0; wireframe 0.05; '
-    #         'script "./figs/script-facettes-345PtLight.spt"; '
-    #         'facettes345ptlight; draw * opaque;'
-    #     )
-    # else:
-    #     jmolscript = scriptJ + '; frank off; cpk 0; wireframe 0.0; draw * opaque;'
-    # jmolscript = (
-    #     jmolscript +
-    #     'set specularPower 80; set antialiasdisplay; set background [xf1f2f3]; '
-    #     'set zShade ON;set zShadePower 1; write image pngt 1024 1024 ./figs/'
-    # )
-    # jmolcmd = (
-    #     "java -Xmx512m -jar " + path2Jmol + "/JmolData.jar " + fxyz +
-    #     " -ij '" + jmolscript + prefix + ".png'" + " >/dev/null "
-    # )
-    # if not noOutput:
-    #     print(jmolcmd)
-    # os.system(jmolcmd)
-    try:
-        internal_spt = get_resource_path("resources/figs", "script-facettes-345PtLight.spt")
-    except FileNotFoundError:
-        internal_spt = None
-
-    # Build the Jmol Script
-    if not boundaries and internal_spt:
-        jmolscript = (
-            f"{scriptJ}; frank off; cpk 0; wireframe 0.05; "
-            f"script '{internal_spt}'; "  # Points to the internal resource
-            "facettes345ptlight; draw * opaque;"
-        )
-    else:
-        jmolscript = f"{scriptJ}; frank off; cpk 0; wireframe 0.0; draw * opaque;"
-
-    # Save the PNG to the USER'S local figs folder
-    output_png = user_output_dir / f"{prefix}.png"
-    jmolscript += (
-        "set specularPower 80; set antialiasdisplay; set background [xf1f2f3]; "
-        f"set zShade ON; set zShadePower 1; write image pngt 1024 1024 '{output_png}';"
-    )
-
-    jmolcmd = (
-        f"java -Xmx512m -jar {path2Jmol}/JmolData.jar {fxyz} "
-        f"-ij \"{jmolscript}\" >/dev/null "
-    )
-
-    if not noOutput:
-        print(f"Saving to: {output_png}")
-    os.system(jmolcmd)
-
-# def DrawJmol(mol, prefix, scriptJ=""):
-#     """
-#     Generate a Jmol visualization from an existing XYZ file.
-
-#     Args:
-#         mol (str): Molecule filename (without extension).
-#         prefix (str): Output image filename prefix.
-#         scriptJ (str): Additional Jmol script commands.
-#     """
-#     path2Jmol = '/usr/local/src/jmol-14.32.50'
-#     fxyz = "./figs/" + mol + ".xyz"
-#     jmolscript = (
-#         scriptJ + '; frank off; set specularPower 80; set antialiasdisplay; '
-#         'set background [xf1f2f3]; set zShade ON;set zShadePower 1; '
-#         'write image pngt 1024 1024 ./figs/'
-#     )
-#     jmolcmd = (
-#         "java -Xmx512m -jar " + path2Jmol + "/JmolData.jar " + fxyz +
-#         " -ij '" + jmolscript + prefix + ".png'" + " >/dev/null "
-#     )
-#     if not noOutput:
-#         print(jmolcmd)
-#     os.system(jmolcmd)
-
-def DrawJmol(mol, prefix, scriptJ="", noOutput=True):
-    """
-    Generate a Jmol visualization from an existing XYZ file.
-    """
-    from pyNanoMatBuilder import data
-    path2Jmol = data.pyNMBvar.path2Jmol  # Use the user-configurable path
-    
-    # 1. Define the local working directory for the user's files
-    user_figs_dir = Path("figs")
-    user_figs_dir.mkdir(exist_ok=True)
-    
-    # 2. Locate the input XYZ (assumed to be in the local figs folder)
-    fxyz = user_figs_dir / f"{mol}.xyz"
-    if not fxyz.exists():
-        if not noOutput:
-            print(f"Error: {fxyz} not found. Cannot generate image.")
-        return
-
-    # 3. Build the Jmol script
-    # We save the .png to the local working directory 'figs/'
-    output_png = user_figs_dir / f"{prefix}.png"
-    
-    jmolscript = (
-        f"{scriptJ}; frank off; set specularPower 80; set antialiasdisplay; "
-        "set background [xf1f2f3]; set zShade ON; set zShadePower 1; "
-        f"write image pngt 1024 1024 '{output_png}';"
-    )
-
-    # 4. Assemble the command
-    jmolcmd = (
-        f"java -Xmx512m -jar {path2Jmol}/JmolData.jar {fxyz} "
-        f"-ij \"{jmolscript}\" >/dev/null "
-    )
-
-    if not noOutput:
-        print(f"Generating Jmol image: {output_png}")
-    
-    os.system(jmolcmd)
-
-#######################################################################
 ######################################## Functions that writes xyz, cif, jmol script files
 
 def write(filename: str, atoms, wa='w', **kwargs):
@@ -540,22 +377,36 @@ def imageNameWithPathway(imgName):
     """
     return get_resource_path('resources/figs', imgName)
 
-
-def plotImageInPropFunction(imageFile):
+def plotImageInPropFunction(imageFile, figsize=(2, 10), rot=0):
     """
-    Plot an image using matplotlib with no axes and a specified size.
+    Plot an image using matplotlib with optional rotation and no axes.
 
     Args:
-        imageFile: The path to the image file to be displayed.
+        imageFile (str): The path to the image file to be displayed.
+        figsize (tuple): Figure size (width, height) in inches.
+        rot (float): Rotation angle in degrees (counter-clockwise).
     """
     import matplotlib.pyplot as plt
     import matplotlib.image as mpimg
+    import numpy as np
+    from scipy.ndimage import rotate
+
+    # Load the image
     image = mpimg.imread(imageFile)
-    plt.figure(figsize=(2, 10))
+
+    # Apply rotation if rot is not 0
+    if rot != 0:
+        # reshape=True ensures the output image contains the entire rotated input
+        image = rotate(image, rot, reshape=True)
+        # Clip values to [0, 1] to remove spline interpolation overshoots 
+        # and prevent matplotlib imshow warnings
+        image = np.clip(image, 0.0, 1.0)
+
+    plt.figure(figsize=figsize)
     plt.imshow(image, interpolation='nearest')
     plt.axis('off')
     plt.show()
-
+    
 ######################################## simple file management utilities
 
 def createDir(path2, forceDel=False):
@@ -583,5 +434,4 @@ def createDir(path2, forceDel=False):
     if (os.path.isdir(path2) and forceDel) or not os.path.isdir(path2):
         print(f"{fg.BLUE}{path2} is created{fg.OFF}")
         os.mkdir(path2)
-
 

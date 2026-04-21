@@ -26,6 +26,7 @@ from .core import (pyNMB_location, get_resource_path, timer, RAB, Rbetween2Point
                    planeFittingLSF, AngleBetweenVV, signedAngleBetweenVV
                    )
 from .core import centertxt, centerTitle, fg, bg, hl, color
+from .parallel import njit, prange
 
 ######################################## coordination numbers
 def calculateCN(coords,Rmax):
@@ -824,7 +825,7 @@ from .geometry import coreSurface, setdAsNegative
 from .symmetry import MolSym
 from .external_pgm import defCrystalShapeForJMol
 
-def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput, is_optimized=False):
+def propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput, is_optimized=False):
     """
     Compute and store various post-construction
     properties of the nanoparticle.
@@ -835,6 +836,7 @@ def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput, is_
     core and surface atoms.
 
     Args:
+        skipChiralityCalculation (bool): If True, skips the calculation of the opd index
         skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
         thresholdCoreSurface (float): Threshold
             to distinguish core and surface atoms.
@@ -880,6 +882,9 @@ def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput, is_
     setattr(self, f"moisize{suffix}", np.array(moi_size(target_np, noOutput)))
     setattr(self, f"NPR{suffix}", np.array(calculate_npr(moiNP, noOutput)))
     setattr(self, f"Rg{suffix}", calculate_rg(target_np, mass_weighted=True, noOutput=noOutput))
+    if not skipChiralityCalculation:
+        current_g0s = compute_opd_index(target_np, noOutput=noOutput)
+        setattr(self, f"opd_index{suffix}", current_g0s)
 
     # Core/surface
     if not skipSymmetryAnalyzis:
@@ -913,9 +918,8 @@ def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput, is_
     # Jmol Crystal Shape
     if getattr(self, 'jmolCrystalShape', False):
         # We assume defCrystalShape... can handle the suffix or we pass use_opt
-        cs = defCrystalShapeForJMol(self, noOutput=True)
+        cs = defCrystalShapeForJMol(self, noOutput=noOutput)
         setattr(self, f"jMolCS{suffix}", cs)
-
 
     # Inscribed and circumscribed spheres
     Inscribed_circumscribed_spheres(self, noOutput)
@@ -927,8 +931,8 @@ def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput, is_
     get_ellipsoid_analysis(self, noOutput) 
         
     # Specific print for regfccTd helix
-    if (hasattr(self, 'n_tetrahedrons')
-            and self.n_tetrahedrons > 1
+    if (hasattr(self, 'n_Td')
+            and self.n_Td > 1
             and not noOutput):
         # Just checking attribute existence
         # to avoid error on other classes
@@ -939,7 +943,7 @@ def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput, is_
             print(
                 f"  Number of tetrahedrons"
                 f" in helix:"
-                f" {self.n_tetrahedrons}"
+                f" {self.n_Td}"
             )
             print(
                 f"  Atoms per single"
@@ -952,3 +956,122 @@ def propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput, is_
             )
             print(f"{'=' * 60}\n")
 
+###### chirality index ################################################
+
+@njit(parallel=True)
+def _opd_kernel(coords, neighbors_indices, neighbors_offsets):
+    """
+    JIT-compiled kernel to compute the Osipov–Pickup–Dunmur sum in parallel.
+    This function handles the core mathematical loops using machine code.
+    """
+    n = len(coords)
+    g0 = 0.0
+    
+    # Parallel loop over all atoms using all available threads
+    for i in prange(n):
+        # Access neighbor list for atom i using offsets
+        start_i = neighbors_offsets[i]
+        end_i = neighbors_offsets[i+1]
+        
+        for idx_j in range(start_i, end_i):
+            j = neighbors_indices[idx_j]
+            if i == j: continue
+            
+            # Vector and squared distance between i and j
+            vij = coords[i] - coords[j]
+            rij_sq = np.sum(vij**2)
+            
+            # Neighbors of j to find the third atom k
+            start_j = neighbors_offsets[j]
+            end_j = neighbors_offsets[j+1]
+            
+            for idx_k in range(start_j, end_j):
+                k = neighbors_indices[idx_k]
+                if k == j or k == i: continue
+                
+                vjk = coords[j] - coords[k]
+                rjk_sq = np.sum(vjk**2)
+                
+                # Neighbors of k to find the fourth atom l
+                start_k = neighbors_offsets[k]
+                end_k = neighbors_offsets[k+1]
+                
+                for idx_l in range(start_k, end_k):
+                    l = neighbors_indices[idx_l]
+                    if l == k or l == j or l == i: continue
+                    
+                    vkl = coords[k] - coords[l]
+                    rkl_sq = np.sum(vkl**2)
+                    
+                    # Distance between the first and last atom
+                    vil = coords[i] - coords[l]
+                    ril = np.sqrt(np.sum(vil**2))
+
+                    # Manual cross product implementation for maximum Numba speed
+                    vcross_x = vij[1] * vkl[2] - vij[2] * vkl[1]
+                    vcross_y = vij[2] * vkl[0] - vij[0] * vkl[2]
+                    vcross_z = vij[0] * vkl[1] - vij[1] * vkl[0]
+                    
+                    # Dot products for the Osipov-Pickup-Dunmur formula
+                    dot_triple = vcross_x * vil[0] + vcross_y * vil[1] + vcross_z * vil[2]
+                    dot_ij_jk = vij[0] * vjk[0] + vij[1] * vjk[1] + vij[2] * vjk[2]
+                    dot_jk_kl = vjk[0] * vkl[0] + vjk[1] * vkl[1] + vjk[2] * vkl[2]
+
+                    # Denominator based on distances (scaled by r^2 for rij, rjk, rkl)
+                    denominator = ril * (rij_sq * rjk_sq * rkl_sq)
+                    
+                    if denominator > 1e-12:
+                        # Thread-safe accumulation (Numba handles reduction automatically)
+                        g0 += (dot_triple * dot_ij_jk * dot_jk_kl) / denominator
+                        
+    return g0
+
+def compute_opd_index(NP:Atoms, cutoff=6.0, noOutput=False):
+    """
+    High-performance Scaled Osipov–Pickup–Dunmur chirality index computation.
+    Article: 10.1080/00268979500100831
+    Uses KDTree for neighbor searching and Numba for parallelized math.
+    
+    Args:
+        NP (ase.Atoms): ase object.
+        cutoff (float): Radius for neighbor search (in Angstroms).
+        
+    Returns:
+        float: The scaled chirality index G0s.
+    """
+    from scipy.spatial import KDTree
+    coords = NP.get_positions()
+    n = len(coords)
+    if n < 4:
+        return 0.0
+        
+    # 1. Build spatial index and find neighbors within cutoff
+    tree = KDTree(coords)
+    adj_list = tree.query_ball_point(coords, r=cutoff)
+    
+    # 2. Flatten the adjacency list for Numba-compatible array processing
+    neighbors_indices = []
+    neighbors_offsets = [0]
+    for neighbors in adj_list:
+        neighbors_indices.extend(neighbors)
+        neighbors_offsets.append(len(neighbors_indices))
+    
+    neighbors_indices = np.array(neighbors_indices, dtype=np.int32)
+    neighbors_offsets = np.array(neighbors_offsets, dtype=np.int32)
+    
+    # 3. Call the parallelized JIT kernel
+    G0 = _opd_kernel(coords, neighbors_indices, neighbors_offsets)
+    # 4. Apply final scaling factor: (8.0 / N^4) * G0
+    G0 *= (8.0 / n**4)
+    
+    if not noOutput:
+        centertxt(
+            "Osipov–Pickup–Dunmur chirality index", bgc='#007a7a', size='14', weight='bold'
+        )
+        # Determine hand for visual feedback
+        hand = "Right-Handed" if G0 > 0 else "Left-Handed"
+        if abs(G0) < 1e-12: hand = "Achiral"
+        
+        # Final display line
+        print(f" G0 = {G0:.2e} ({hand})")
+    return G0

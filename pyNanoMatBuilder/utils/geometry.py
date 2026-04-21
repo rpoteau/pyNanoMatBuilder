@@ -25,7 +25,7 @@ from .core import (pyNMB_location, get_resource_path, timer, RAB, Rbetween2Point
                    vector, vectorBetween2Points, coord2xyz, vertex, vertexScaled, RadiusSphereAfterV,
                    centerOfGravity, center2cog, normOfV, normV, centerToVertices, Rx, Ry, Rz,
                    EulerRotationMatrix, plotPalette, rgb2hex, clone, deleteElementsOfAList,
-                   planeFittingLSF, AngleBetweenVV, signedAngleBetweenVV
+                   planeFittingLSF, faces_to_planes, AngleBetweenVV, signedAngleBetweenVV
                    )
 from .core import centertxt, centerTitle, fg, bg, hl, color
 from .crystals import lattice_cart, convertuvwh2hkld
@@ -94,33 +94,44 @@ def MakeFaceCoord(Rnn,f,coord,nAtomsOnFaces,coordFaceAt):
 def reduceHullFacets(self,
                      noOutput: bool=False,
                      tolAngle: float=2.0,
+                     useWulff: bool=False,
                     ):
     """
     Reduce crystal facets based on convex hull and coplanarit of facets.
 
     Args:
-        feasible_point (np.ndarray): A feasible point for half-space intersection. Default is [0, 0, 0].
-        tolAngle (float): Tolerance angle to define coplanarity. Default is 2.0.
         noOutput (bool): If True, suppresses output to the console. Default is False.
-        
+        tolAngle (float): Tolerance angle to define coplanarity. Default is 2.0 degree.
+        useWulff (bool): If True, uses the Wulff construction planes (trPlanes_Wulff)
+                         regardless of whether the structure is optimized or not.
+                         If False, uses trPlanes_opt for optimized structures,
+                         or trPlanes for initial structures. Default is True.     
     Returns:
         tuple: The vertices and reduced faces.
 
     Note:
-        Previous hull.simplices must have been saved as Crystal.trPlanes.
+        - Previous hull.simplices must have been saved as Crystal.trPlanes.
+        - trPlanes_wWlff must have been saved during the Wulff construction.
+          The result is always saved in self.trPlanes (or self.trPlanes_opt).
     """
+
     from scipy.spatial import HalfspaceIntersection
     from scipy.spatial import ConvexHull
     import scipy as sp
 
-    if self.is_optimized:
+    # --- Select source planes ---
+    if useWulff and hasattr(self, 'trPlanes_Wulff') and self.trPlanes_Wulff is not None:
+        target_planes = np.array(self.trPlanes_Wulff)
+        status = "Wulff construction"
+    elif self.is_optimized:
         target_planes = np.array(self.trPlanes_opt)
-        target_cog = self.cog_opt
         status = "optimized structure"
     else:
         target_planes = np.array(self.trPlanes)
-        target_cog = self.cog
         status = "initial structure"
+
+    target_cog = self.cog_opt if self.is_optimized else self.cog
+        
     if target_planes is None or target_cog is None:
         raise ValueError(f"Missing data for the {status}. Please check the building process or the optimization results.")
         
@@ -134,7 +145,8 @@ def reduceHullFacets(self,
     if not noOutput:
         centertxt("Boundaries figure", bgc='#007a7a', size='14', weight='bold')
         centertxt(
-            "Half space intersection of the planes followed by a convex Hull analyzis",
+            f"Half space intersection of the planes followed by a convex Hull analysis"
+            f" -- source: {status}",
             bgc='#cbcbcb',
             size='12',
             fgc='b',
@@ -399,7 +411,7 @@ def rotation_around_axis_through_point(coords, angle_deg, axis, center):
 #             pr.append(ptmp)
 #     return np.array(pr)
 
-def reflection(plane,points,doItForAtomsThatLieInTheReflectionPlane=False):
+def reflection(plane,points,doItForAtomsThatLieInTheReflectionPlane=False,eps=1e-2):
     '''
     Apply a mirror-image symmetry operation to an array of points.
 
@@ -407,13 +419,14 @@ def reflection(plane,points,doItForAtomsThatLieInTheReflectionPlane=False):
     the general equation $ax + by + cz + d = 0$.
 
     Args:
-        points (numpy.ndarray): An (N, 3) array of Cartesian coordinates 
-            representing the points to be reflected.
         plane (list or numpy.ndarray): The four parameters $[a, b, c, d]$ 
             that define the reflection plane equation.
-        include_plane_atoms (bool, optional): If True, points located exactly 
-            on the reflection plane are processed. If False, they are 
-            skipped. Defaults to True.
+        points (numpy.ndarray): An (N, 3) array of Cartesian coordinates 
+            representing the points to be reflected.
+        doItForAtomsThatLieInTheReflectionPlane (bool, optional): If True, points located exactly 
+            on the reflection plane +- eps are processed. If False, they are 
+            skipped. Defaults to False.
+        eps (float, default: 1e-2): threshold associated to doItForAtomsThatLieInTheReflectionPlane
 
     Returns:
         numpy.ndarray: An (N, 3) array containing the coordinates of the 
@@ -421,17 +434,153 @@ def reflection(plane,points,doItForAtomsThatLieInTheReflectionPlane=False):
     '''
     import numpy as np
     pr = []
-    eps = 1.e-4
+    # print(f"inside reflection. {doItForAtomsThatLieInTheReflectionPlane}")
     for p in points:
         vp2plane, dp2plane = shortestPoint2PlaneVectorDistance(plane,p)
-        if dp2plane >= eps and not doItForAtomsThatLieInTheReflectionPlane: # otherwise the point belongs to the reflection plane
+        is_on_plane = dp2plane < eps
+        if is_on_plane and not doItForAtomsThatLieInTheReflectionPlane:
             # print(dp2plane, vp2plane, p)
-            ptmp = p+2*vp2plane
-            pr.append(ptmp)
-        else:
-            ptmp = p+2*vp2plane
-            pr.append(ptmp)
+            continue
+        ptmp = p+2*vp2plane
+        pr.append(ptmp)
     return np.array(pr)
+    
+def reflection_with_face_update(plane, points, faces, 
+                                current_indices, 
+                                eps=1e-2, debug=False):
+    """
+    Apply a reflection to a set of points across a plane while mapping indices.
+
+    This function identifies points lying on the reflection plane (shared atoms) 
+    and those to be reflected (new atoms). Instead of duplicating shared atoms, 
+    it maps their local indices to their existing global indices in the assembly. 
+    New atoms are marked with a "NEW" placeholder to be indexed in the global 
+    coordinate array later.
+
+    Args:
+        plane (np.ndarray): Plane equation [a, b, c, d] for ax + by + cz + d = 0.
+        points (np.ndarray): (N, 3) Cartesian coordinates of the current unit.
+        faces (list of tuples): Local face definitions (vertex indices).
+        current_indices (list of int): Global indices in `all_coords` for 
+            each point in `points`.
+        eps (float): Distance threshold to consider a point as lying on the 
+            plane. Defaults to 1e-2.
+        debug (bool): If True, prints mapping information. Defaults to False.
+
+    Returns:
+        tuple:
+            - reflected_points (np.ndarray): Coordinates of the truly new atoms.
+            - old_to_new (dict): Dictionary mapping local indices (0 to N-1) 
+              to either a global integer index or the string "NEW".
+    """
+    reflected_points = []
+    old_to_new = {}
+
+    for i, p in enumerate(points):
+        vp2plane, dp2plane = shortestPoint2PlaneVectorDistance(plane, p)
+        is_on_plane = dp2plane < eps
+
+        if is_on_plane:
+            # L'atome existe déjà, on récupère son index global via current_indices
+            old_to_new[i] = current_indices[i]
+        else:
+            # Nouveau sommet : on marque pour le mapping global plus tard
+            old_to_new[i] = "NEW" 
+            reflected_points.append(p + 2 * vp2plane)
+
+    return np.array(reflected_points), old_to_new
+
+def helical_assembly(seed_coords, seed_faces, n_units,
+                     face_sequence=None, eps=1e-2, debug=False):
+    """
+    Generate a helical assembly of polyhedra via successive face reflections.
+
+    This engine builds complex structures (like the Boerdijk-Coxeter helix) 
+    by reflecting a seed unit across its faces. It prevents atomic duplication 
+    by tracking global indices and only adding "new" vertices to the 
+    coordinate array at each step.
+
+    Args:
+        seed_coords (np.ndarray): (N, 3) coordinates of the initial polyhedral 
+            unit (e.g., a tetrahedron).
+        seed_faces (list of tuples): Vertex index tuples defining the faces 
+            of the seed unit.
+        n_units (int): Total number of polyhedral units to assemble.
+        face_sequence (list of int, optional): Sequence of face indices to 
+            cycle through for reflections. Defaults to range(len(seed_faces)).
+        eps (float): Precision threshold for detecting atoms on the reflection 
+            plane. Defaults to 1e-2.
+        debug (bool): If True, prints step-by-step assembly logs and updated 
+            global face indices. Defaults to False.
+
+    Returns:
+        tuple:
+            - all_coords (np.ndarray): (M, 3) array of all distinct atomic 
+              coordinates in the final helix.
+            - n_atoms (int): Total number of unique atoms (M).
+    
+    Notes:
+        The function maintains a 'current_global_indices' list to ensure 
+        topological continuity between successive units without using 
+        nearest-neighbor searches (like KDTree).
+    """
+    
+    if face_sequence is None:
+        face_sequence = list(range(len(seed_faces)))
+    n_seq = len(face_sequence)
+
+    all_coords = np.array(seed_coords)
+    current_coords = np.array(seed_coords)
+    current_faces = list(seed_faces) # Faces locales au tétraèdre courant
+
+    all_faces = [f for f in seed_faces]
+    current_global_indices = list(range(len(seed_coords)))
+
+    for i in range(1, n_units):
+        face_index = face_sequence[i % n_seq]
+
+        # Calcul du plan sur les coordonnées actuelles
+        reflection_plane = faces_to_planes(
+            [current_faces[face_index]], current_coords)[0]
+
+        # APPEL CORRIGÉ : on passe current_global_indices
+        new_coords, old_to_new = reflection_with_face_update(
+            reflection_plane,
+            current_coords,
+            current_faces,
+            current_indices=current_global_indices,
+            eps=eps, debug=debug
+        )
+        
+        # 1. Calcul du mapping global pour ce tour
+        first_new_idx = len(all_coords)
+        temp_mapping = {}
+        new_count = 0
+        for old_idx, val in old_to_new.items():
+            if val == "NEW":
+                temp_mapping[old_idx] = first_new_idx + new_count
+                new_count += 1
+            else:
+                temp_mapping[old_idx] = val
+        
+        # 2. Ajout des nouveaux atomes à l'hélice
+        if len(new_coords) > 0:
+            all_coords = np.vstack([all_coords, new_coords])
+        
+        # 3. Mise à jour pour le tour suivant
+        # On reconstruit les coordonnées du prochain tétraèdre (les 4 points)
+        current_coords = all_coords[[temp_mapping[k] for k in range(len(current_coords))]]
+        # Les faces restent les mêmes (topologie locale), mais elles pointeront 
+        # vers les bons points grâce au mapping au début du prochain tour
+        current_global_indices = [temp_mapping[k] for k in range(len(current_coords))]
+
+        if debug:
+            this_step_faces = [tuple(temp_mapping[idx] for idx in f) for f in current_faces]
+            print(f"Step {i}: face_index={face_index}, new faces {this_step_faces}")
+            print(f"Added {len(new_coords)} atoms, total so far: {len(all_coords)}")
+
+    n_atoms = len(all_coords)
+    return all_coords, n_atoms
 
 def reflection_tetra(plane,points):
     """
@@ -444,17 +593,10 @@ def reflection_tetra(plane,points):
     Returns:
         np.ndarray: (N, 3) array of reflected points.
     """
-    # pr = []
-    # for p in points:
-    #     vp2plane, dp2plane = shortestPoint2PlaneVectorDistance(plane,p)
-        
-    #     ptmp = p+2*vp2plane
-    #     pr.append(ptmp)
-    # return np.array(pr)
+
     points = np.asarray(points)
     vp2plane, dp2plane = shortestPoint2PlaneVectorDistance(plane, points)
     return points + 2 * vp2plane
-
 
 #######################################################################
 def remove_duplicate_atoms(coordinates, reference_coords, tolerance):
@@ -1244,6 +1386,7 @@ def peel_by_coordination(self, threshold_peeling=6, Rmax=2.9, noOutput=False):
     # 4. Update the structure in place
     old_count = len(target_atoms)
     self.NP = target_atoms[indices_to_keep]
+    self.nAtoms = len(self.NP)
     if not noOutput:
         print(f"Peeling the {status} (CN < {threshold_peeling}): "
               f"removed {old_count - self.nAtoms} atoms. self.NP updated.")

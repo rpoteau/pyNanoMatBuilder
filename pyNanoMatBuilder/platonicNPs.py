@@ -109,16 +109,15 @@ class regfccOh(PlatonicNP):
         noOutput = self.noOutput
         if not noOutput:
             pyNMBu.centerTitle(f"{nOrder}th order regular fcc Octahedron")
-
-        if not noOutput:
             self.prop()
+
         if not self.calcPropOnly:
             self.coords(noOutput)
             self.calc_sasview_dims(noOutput)
             if self.aseView:
                 view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
                 if self.aseView:
                     view(self.NPcs)
 
@@ -560,7 +559,7 @@ class regIco(PlatonicNP):
             if self.aseView:
                 view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
                 if self.aseView:
                     view(self.NPcs)
 
@@ -954,7 +953,7 @@ class regfccTd(PlatonicNP):
                  Rnn: float = 2.7,
                  nLayer: int = 1,
                  shape: str = 'regfccTd',
-                 n_tetrahedrons: int = 1,
+                 n_Td: int = 1,
                  **kwargs
                  ):
         """Initialize the class with all necessary parameters.
@@ -966,7 +965,7 @@ class regfccTd(PlatonicNP):
                 of atoms per edge (e.g., ``nOrder=2`` means 2 atoms
                 per edge).
             shape (str): Shape 'regfccTd'.
-            n_tetrahedrons (int): The number of tetrahedrons in the
+            n_Td (int): The number of tetrahedrons in the
                 optional helix.
             postAnalyzis (bool): If True, prints additional NP
                 information (e.g., cell parameters, moments of inertia,
@@ -1003,7 +1002,7 @@ class regfccTd(PlatonicNP):
         self.nAtomsPerLayer = []
         self.nAtomsPerEdge = self.nLayer
         self.cog = np.array([0., 0., 0.])
-        self.n_tetrahedrons = n_tetrahedrons
+        self.n_Td = n_Td
         self.nAtoms_helix = 0  # Initialize to 0, will be computed in generate_tetrahelix()
         self.imageFile = pyNMBu.imageNameWithPathway("fccTd-C.png")
         noOutput = self.noOutput
@@ -1018,7 +1017,7 @@ class regfccTd(PlatonicNP):
             if self.aseView:
                 view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput=noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput=noOutput)
                 if self.aseView:
                     view(self.NPcs)
           
@@ -1131,84 +1130,54 @@ class regfccTd(PlatonicNP):
             faces = np.array(faces)
         return CoordVertices, edges, faces
 
-    ####################################### Helice of tetrahedrons
-    def faces_to_planes(self, faces, coords):
-        """Converts a list of faces in planes equations [u, v, w, d].
+    # def generate_tetrahelix(self, c, n_Td, nAtoms,
+    #                          debug=False):
+    #     """Generates a Boerdijk-Coxeter helix made of tetrahedrons.
 
-        Args:
-            faces (list of tuples): List of faces [(i, j, k)] with
-                the vertices indexes.
-            coords (np.ndarray): Atoms coordinates.
+    #     Possibility to give the number of tetrahedrons.
+    #     The function uses reflection to create one tetrahedron
+    #     after the other one.
 
-        Returns:
-            planes (list of np.ndarray): List of planes equations
-                [u, v, w, d].
-        """
-        planes = []
+    #     Args:
+    #         c: Atoms coordinates.
+    #         n_Td (int): Number of tetrahedrons in the helix.
+    #         debug (bool): Prints debug information.
 
-        for face in faces:
-            # Get the coordinates of the three vertices of the face
-            points = np.array([coords[face[0]],
-                               coords[face[1]],
-                               coords[face[2]]])
+    #     Returns:
+    #         c (list): List of the helix coordinates.
+    #     """
+    #     faces = [(0, 2, 1), (0, 1, 3), (0, 3, 2), (1, 2, 3)] 
+    #     new_tetra = c
+    #     tetras_list = [c]
 
-            # Find plane equation using planeFittingLSF
-            plane = pyNMBu.planeFittingLSF(
-                points, printEq=False, printErrors=False)
-            planes.append(plane)
-
-        return np.array(planes)
-
-    def generate_tetrahelix(self, c, n_tetrahedrons, nAtoms,
-                             debug=False):
-        """Generates a Boerdijk-Coxeter helix made of tetrahedrons.
-
-        Possibility to give the number of tetrahedrons.
-        The function uses reflection to create one tetrahedron
-        after the other one.
-        TO DO: don't count twice the atoms of the reflected face!
-
-        Args:
-            c: Atoms coordinates.
-            n_tetrahedrons (int): Number of tetrahedrons in the helix.
-            debug (bool): Prints debug information.
-
-        Returns:
-            c (list): List of the helix coordinates.
-        """
-        faces = [(0, 2, 1), (0, 1, 3), (0, 3, 2), (1, 2, 3)] 
-        new_tetra = c
-        tetras_list = [c]
-
-        for i in range(1, n_tetrahedrons):
-            # Choisir la bonne face pour la réflexion
-            last_planes = self.faces_to_planes(faces, new_tetra)
+    #     for i in range(1, n_Td):
+    #         # Choisir la bonne face pour la réflexion
+    #         last_planes = self.faces_to_planes(faces, new_tetra)
             
-            face_index = i % 4  # Alterne entre 0, 1, 2, 3
-            last_face = last_planes[face_index]  # Récupérer la face correspondante
+    #         face_index = i % 4  # Alterne entre 0, 1, 2, 3
+    #         last_face = last_planes[face_index]  # Récupérer la face correspondante
             
-            # Appliquer une réflexion uniquement
-            new_tetra = pyNMBu.reflection_tetra(last_face, new_tetra)
-            if debug:
-                print('Coordinates of the new tetrahedron', new_tetra)
-            
-            # TO DO: don't count twice the atoms of the reflected face ! 
+    #         # Appliquer une réflexion uniquement
+    #         new_tetra = pyNMBu.reflection(last_face, new_tetra)
+    #         if debug:
+    #             print('Coordinates of the new tetrahedron', new_tetra)
 
-            # 4. Ajouter le tétraèdre à la liste
-            tetras_list.append(new_tetra)
-            self.nAtoms += len(new_tetra)
+    #         # 4. Ajouter le tétraèdre à la liste
+    #         tetras_list.append(new_tetra)
+    #         self.nAtoms += len(new_tetra)
 
-        # Vectorization: stack all tetrahedrons at once
-        c = np.vstack(tetras_list)
+    #     # Vectorization: stack all tetrahedrons at once
+    #     c = np.vstack(tetras_list)
 
-        self.nAtoms_helix = (self.nAtoms
-            - (self.nLayer * (1 + self.nLayer)
-               // 2 * (self.n_tetrahedrons - 1)))
+    #     self.nAtoms_helix = (self.nAtoms
+    #         - (self.nLayer * (1 + self.nLayer)
+    #            // 2 * (self.n_Td - 1)))
         
-        if debug:
-            print("Final shape of the coordinates", np.shape(c))
-            print("Number of atoms in the helix:", self.nAtoms_helix)
-        return c, self.nAtoms_helix
+    #     if debug:
+    #         print("Final shape of the coordinates", np.shape(c))
+    #         print("Number of atoms in the helix:", self.nAtoms_helix)
+    #     return c, self.nAtoms_helix
+    
     
     def coords(self, noOutput):
         """Generates atomic coordinates for a tetrahedral nanoparticle.
@@ -1304,18 +1273,28 @@ class regfccTd(PlatonicNP):
             print(self.nAtomsPerLayer)
         # aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
         
-        ########################### helix ########################################################
-        if self.n_tetrahedrons > 1: 
-            c, self.nAtoms_helix = self.generate_tetrahelix(
-                c, n_tetrahedrons=self.n_tetrahedrons,
-                nAtoms=self.nAtoms, debug=False)
-            # self.cog = pyNMBu.centerOfGravity(c)
-        else:
-            # Single tetrahedron: nAtoms_helix equals nAtoms
-            self.nAtoms_helix = self.nAtoms
+        # ########################### helix ########################################################
+        # if self.n_Td > 1: 
+        #     # Faces of a tetrahedron, consistent with MakeVertices convention
+        #     seed_faces = [(0, 2, 1), (0, 1, 3), (0, 3, 2), (1, 2, 3)]
+            
+        #     # BC helix cycles through all 4 faces in order
+        #     face_sequence = [0, 1, 2, 3]
+            
+        #     c, self.nAtoms_helix = pyNMBu.helical_assembly(
+        #         seed_coords=c,
+        #         seed_faces=seed_faces,
+        #         n_units=self.n_Td,
+        #         face_sequence=face_sequence,
+        #         debug=False
+        #     )
+        # else:
+        #     # Single tetrahedron: nAtoms_helix equals nAtoms
+        #     self.nAtoms_helix = self.nAtoms
              
         self.nAtoms = len(c)
-        self.cog = pyNMBu.centerOfGravity(c)
+        self.nAtoms_helix = self.nAtoms
+        # self.cog = pyNMBu.centerOfGravity(c)
        ############################################################################################
         # print("Shape de c:", np.shape(c))
         # print("self.nAtoms:", self.nAtoms)
@@ -1456,7 +1435,7 @@ class regDD(PlatonicNP):
             if self.aseView:
                 view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput=noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput=noOutput)
                 if self.aseView:
                     view(self.NPcs)
           
@@ -1841,7 +1820,7 @@ class cube(PlatonicNP):
             if self.aseView:
                 view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput=noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput=noOutput)
                 if self.aseView:
                     view(self.NPcs)
 
@@ -2170,6 +2149,7 @@ class hollow_shapes(PlatonicNP):
             # if aseView: view(self.NP)
             if self.postAnalyzis:
                 self.propPostMake(
+                    self.skipChiralityCalculation,
                     self.skipSymmetryAnalyzis,
                     self.thresholdCoreSurface,
                     noOutput=noOutput

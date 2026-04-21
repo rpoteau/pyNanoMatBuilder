@@ -5,6 +5,69 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
+## [0.11.0] - 2026-04-22 "chiralNPs module, parallel computing, graphical doc"
+
+### Added
+- **Chirality**
+    - **New Module `chiralNPs`**: Dedicated module for building right-handed or left-handed chiral nanoparticle assemblies.
+        - **New Class `bch`**: Implementation of the Boerdijk-Coxeter helix (BCH) based on tetrahedral units (moved from `platonicNPs.regfccTd`)
+          - Inherits from `regfccTd` for consistent unit generation.
+          - Features an automated assembly engine using face-to-face reflection.
+          - Supports custom helical length and unit sizes.
+          - Example given in `pyNMB-examples.ipynb`
+    - **Osipov–Pickup–Dunmur (OPD) Chirality Index**:
+      - Calculated if `skipChiralityCalculation` is `False` (default is `True`)
+      - Implemented high-performance `utils.prop._opd_kernel` using Numba JIT with multi-core parallelism.
+      - Added `utils.prop.compute_opd_index` utility utilizing `scipy.spatial.KDTree` for efficient neighbor searching (default cutoff: 6.0 Å).
+      - Mathematical implementation includes normalized scaling $(8.0 / N^4)$ for size-independent chirality comparisons.
+      - Integrated OPD results directly into `utils.prop.propPostMake()` with color-coded status reporting via `centertxt`.
+      - Added automated handedness detection (Right-Handed, Left-Handed, or Achiral) based on the OPD index sign and magnitude.
+    - **Helical Assembly Engine**: Added `helical_assembly` and `reflection_with_face_update` to `utils.geometry` for topological tracking during complex assemblies.
+- **Parallel Computing Support**:
+  - Prepared the `numba` integration for heavy geometric calculations.
+  - Added `set_threads(n)` and `get_threads()` in the top-level `__init__.py` to manage CPU resources.
+  - Added a visual status indicator in `visualID.init()` to report threading configuration (color-coded for clarity).
+  - Created `pyNanoMatBuilder/utils/parallel.py` to handle `numba` imports safely.
+    - Implemented a "pass-through" fallback for `@njit` and `prange` to ensure the package remains functional on systems without Numba installed.
+    - Added `HAS_NUMBA` boolean flag for internal feature detection across the package.
+- **Universal File Analysis**:
+    - Implemented `from_file()` method in `pyNMBcore` using `ase.io.read` (supports all ASE-compatible formats including `.xyz`, `.cif`, and `.pdb`).
+    - Exposed `pyNMB.from_file()` at the package top-level for streamlined user access.
+    - Example given in `pyNMB-examples.ipynb`
+- **new instance attributes**:
+    - self.trPlanes_Wulff = None
+    - self.WulffShape = None
+- **`data.pyNMBimg`**
+    - added `figsize` and `rot` columns to `IMGdf` to allow per-shape control of the illustration display parameters (figure size and rotation angle) in `crystalsNP.prop()`
+    - renamed parralelepiped shape key `pppd`
+    - `cylinder` entry added.
+
+### Fixed
+- **`utils.geometry.reflection`**
+    - not applied to atoms that lie in the reflection plane (option was wrong)
+    - plane membership threshold can now be given as an argument, `eps`. Defaults to 1e-2
+- **Pipeline Robustness**:
+    - Initialized missing state `is_peeled` flags during file loading to prevent `AttributeError` in downstream analysis modules.
+- **representation of Wulff planes was wrong**: `self.trPlanes`, initialized after Wulff planes, was replaced with the Hull convex planes (new behavior in `utils.prop.postPropMake()`). Created a new `self.trPlanes_Wulff` attribute (initialized in `pyNMBcore.py`)
+- **image plots in the `Crystal` class**:
+    - `Crystal.__init__`: re-introduced `self.imageFile` assignment using `pyNMBimg.IMGdf` to restore shape illustration lookup; fixed `AttributeError` on `ucUnitcell` by moving `self.prop()` call after `self.bulk()` so that unit cell attributes are initialized before being displayed.
+    - `Crystal.prop`: re-introduced `pyNMBu.plotImageInPropFunction(self.imageFile)` to restore shape illustration display in the properties output.
+- `utils/symmetry.py`: `get_equivalent_miller_indices(sg_input, hkl)` to replace the deprecated ASE `Spacegroup.equivalent_lattice_points()` method; the new function uses pymatgen's `SpacegroupAnalyzer` and symmetry rotation matrices to generate all symmetry-equivalent Miller indices, supports space group input as an integer, a `SpacegroupAnalyzer`, or a `Structure` object, and uses dummy lattices per crystal system to avoid requiring a real structure when only the space group number is known; returns unique equivalents sorted lexicographically, consistent with the former ASE behaviour.
+
+### Changed
+- **`utils.io.plotImageInPropFunction`**:
+    - Added support for image rotation (counter-clockwise) via the `rot` parameter.
+    - Added possibility to change the default size as an argument (`figsize=(2, 10)`)
+    - Implemented `np.clip` to prevent `matplotlib` warnings caused by spline interpolation overshoots during rotation.
+- **in `utils.symmetry`**:
+    - replaced `get_equivalent_miller_indices()` of Google Gemini with a new version produced with Claude AI (`get_equivalent_miller_indices()` replaces the deprecated ASE `Spacegroup.equivalent_lattice_points()`, by using pymatgen symmetry tools).
+    - it fixes a compatibility issue with non-cubic space groups (e.g. hcp P6₃/mmc, #194)
+- graphical scheme with all available structures, **./resources/figs/pnmbAvailableStructures.svg**, updated with parallelepiped, cylinder, wire, deltoidal icositetrahedron, Boerdijk–Coxeter helix
+- **`crystalsNP.prop()`**
+    - `Crystal.__init__`: shape illustration lookup now reads `figsize` and `rot` from `IMGdf` and stores them as `self.imageFigsize` and `self.imageRot`; fixed missing f-string in `sys.exit` error message for unknown shapes.
+    - `Crystal.prop`: `plotImageInPropFunction` now called with `figsize=self.imageFigsize` and `rot=self.imageRot` to use per-shape display parameters.
+- **`utils.io.plotImageInPropFunction()`**: added `figsize` and `rot` parameters (defaults: `(2, 10)` and `0`) to allow per-shape control of figure size and rotation angle when displaying shape illustrations.
+
 ## [0.10.4] - 2026-04-09 "Hull volume, Rg & NPR"
 
 ### Added

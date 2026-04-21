@@ -66,10 +66,27 @@ def init():
     """
     Initializes the notebook environment: applies CSS, 
     displays the banner, and shows hostname/time.
+    Also reports the parallel computing status
     """
     global _start_time
     _start_time = datetime.datetime.now()
-
+    
+    # 0. Retrieve threading status from the main package state
+    # pyNMB refers to the parent pyNanoMatBuilder package
+    import pyNanoMatBuilder as pyNMB
+    n_threads = pyNMB.get_threads()
+    has_numba = hasattr(pyNMB, '_HAS_NUMBA') and pyNMB._HAS_NUMBA
+    # Determine status message, color, and icon based on Numba availability
+    if has_numba and n_threads > 1:
+        # Green status for active multi-core parallelism
+        numba_status = f"<span style='color: #007a7a; font-weight: bold;'>[OK] Parallel computing ENABLED ({n_threads} threads)</span>"
+    elif has_numba and n_threads == 1:
+        # Orange status for Numba present but restricted to single-thread
+        numba_status = f"<span style='color: #d17800; font-weight: bold;'>[Info] Parallel computing ENABLED (but limited to 1 thread. Are you sure?)</span>"
+    else:
+        # Gray status for Numba not installed (single-thread by default)
+        numba_status = f"<span style='color: #7f8c8d; font-weight: bold;'>[Single-thread mode] (Numba not installed)</span>"
+        
     # 1. Call the explicit CSS function
     apply_css_style()
     
@@ -82,9 +99,13 @@ def init():
     else:
         print(f"[Warning] banner file not found at {path2banner}")
     
-    # 3. Environment Info
+    # 4. Final Environment metadata display (time, host, and Numba info)
     now = datetime.datetime.now().strftime("%A %d %B %Y, %H:%M:%S")
-    display(Markdown(f"**Environment initialized:** {now} on {platform.node()}"))
+    env_info = f"**Environment initialized:** {now} on {platform.node()}  \n"
+    # We display the colored Numba status message using Markdown (supporting HTML span)
+    env_info += f"{numba_status}"
+    
+    display(Markdown(env_info))
 
 def end():
     """

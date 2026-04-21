@@ -99,7 +99,7 @@ class fccCubo(ArchimedeanNP):
             self.coords(noOutput)
             if self.aseView: view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
                 if self.aseView: view(self.NPcs)
           
     def __str__(self):
@@ -458,7 +458,7 @@ class fccTrTd(ArchimedeanNP):
             self.coords(noOutput)
             if self.aseView: view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
                 if self.aseView: view(self.NPcs)
 
     def __str__(self):
@@ -708,7 +708,7 @@ class fccTrOh(ArchimedeanNP):
             self.coords(noOutput)
             if self.aseView: view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
                 if self.aseView: view(self.NPcs)
           
     def __str__(self):
@@ -952,274 +952,328 @@ class fccTrCube(ArchimedeanNP):
     radiusCSF = edgeLengthF * (1/2) * np.sqrt(7+4*np.sqrt(2)) # Centroid to vertex distance = Radius of circumsphere
     radiusMSF = edgeLengthF * (1/2) * (2+np.sqrt(2))             # Radius of midsphere that is tangent to edges
     radiusISF = edgeLengthF * (1/17) * (5+2*np.sqrt(2)) * np.sqrt(7+4*np.sqrt(2))# inradius
-    cutFromVertexAt = 1/3
-  
-    def __init__(self,
-                 element: str='Au',
-                 Rnn: float=2.7,
-                 nOrder: int=1,
-                 **kwargs,
-                ):
-        """
-        Initialize the class with all necessary parameters.
-
-        Args:
-            element: Chemical element of the NP (e.g., "Au", "Fe").
-            Rnn (float): Nearest neighbor interatomic distance in Å.
-            nOrder (int): Determines the level of imbrication = the number of atomic layers along an edge (e.g., `nOrder=1` means 2 atoms per edge).
-            shape (str): Shape 'cube'.
-            postAnalyzis (bool): If True, prints additional NP information (e.g., cell parameters, moments of inertia, inscribed/circumscribed sphere diameters, etc.).
-            aseView (bool): If True, enables visualization of the NP using ASE.
-            thresholdCoreSurface (float): Precision threshold for core/surface differentiation (distance threshold for retaining atoms).
-            skipSymmetryAnalyzis (bool): If False, performs an atomic structure analysis using pymatgen.
-            jmolCrystalShape (bool): If True, generates a JMOL script for visualization.
-            noOutput (bool): If False, prints details about the NP structure.
-            calcPropOnly (bool): If False, generates the atomic structure of the NP.   
-            
-        Attributes:
-            self.shape (str): Shape 'fccTrCube'.
-            self.cubeProp (class instance): Class "cube" of the module "pNP".
-            self.nAtoms (int): Number of atoms in the NP.
-            self.nAtomsPerEdge (int): Number of atoms per edge.
-            self.interLayerDistance (float): Distance between atomic layers.
-            self.jmolCrystalShape (bool): Flag for JMol visualization.
-            self.cog (np.array): Center of gravity of the NP.
-            self.imageFile (str): Path to a reference image.
-            self.trPlanes (array): Truncation plane equations.
-
-        """
+    CornersAt = 1.0 - (np.sqrt(2) / 2.0)
+    magic_angle = np.acos(1/np.sqrt(3))
+    cutFromVertexAt = CornersAt*np.cos(magic_angle)
+    
+    def __init__(self, element: str='Au', Rnn: float=2.7, nOrder: int=1, **kwargs):
         super().__init__(**kwargs)
-        self.cubeProp = pNP.cube(crystalStructure= 'fcc', element = element,
-                                 Rnn = Rnn , nOrder = nOrder, noOutput=True, calcPropOnly=True)
-        self.element = element
-        self.shape='fccTrCube'
-        self.Rnn = Rnn
-        self.nOrder = nOrder
+        # self.cubeProp = pNP.cube(crystalStructure='fcc', element=element,
+        #                          Rnn=Rnn, nOrder=nOrder, noOutput=True, calcPropOnly=True)
+        # self.element = element
+        # self.shape = 'fccTrCube'
+        # self.Rnn = Rnn
+        # self.nOrder = nOrder
+
+        import warnings        
+        warnings.warn(
+            f"\n[Lattice Constraint] Archimedean Truncated Cube requires a depth of {self.cutFromVertexAt:.4f} a_cube.\n"
+            "On a discrete FCC or BCC lattice, atoms rarely align perfectly with these ideal planes.\n"
+            "The generated structure is the closest atomic approximation.",
+            UserWarning,
+            stacklevel=2
+        )
+        
         noOutput = self.noOutput
-        if not noOutput: pyNMBu.centerTitle(f"fcc truncated cube")
-        self.imageFile = pyNMBu.imageNameWithPathway("trOh-C.png")
-        isTrCube,self.nAtomsPerEdge = self.NumberOfCubeEdgeAtomsValid4ATrCube()
-        if not isTrCube:
-            listOfPossiblenLayers = self.magicEdgeNumberOfCube2MakeATrCube(int(1.2*nOrder))
-            nearest_nL = min(listOfPossiblenLayers, key = lambda x: abs(x-(self.nOrder)))
-            sys.exit(
-                f"This order cannot yield a perfect truncated octahedron.\n"
-                f"The closest possible nOrder value is {nearest_nL}.\n"
-                "Try again. "
-                "Any doubt about the valid nOrder values? Call the "
-                "archimedeanNP.magicEdgeNumberOfCube2MakeATrCube(N) to see all "
-                "possible values between 1 and N"
-            )
-        else:
-            self.nAtomsPerEdge = int(self.nAtomsPerEdge)
+
+        if not noOutput: 
+            pyNMBu.centerTitle("fcc truncated cube")
+            print(f"\n[Geometry] Ideal truncation depth: {self.cutFromVertexAt:.6f} a_cube")
+            # print("[Lattice] Adjusting to nearest atomic planes (Wulff-like approximation)\n")
+
+        # self.imageFile = pyNMBu.imageNameWithPathway("trCube.png")
+        
+        # We take the best integer approximation for the edge atoms
+        # _, self.nAtomsPerEdge = self.NumberOfCubeEdgeAtomsValid4ATrCube()
+        # self.nAtomsPerEdge = int(round(self.nAtomsPerEdge))
           
         if not noOutput: self.prop()
-        if not self.calcPropOnly:
-            self.coords(noOutput)
-            if self.aseView: view(self.NP)
-            if self.postAnalyzis:
-                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
-                if self.aseView: view(self.NPcs)
-          
-    def __str__(self):
-        return (
-            f"Truncated cube based on a {self.nOrder}x{self.nOrder}x{self.nOrder} "
-            f"cube (i.e. {self.nOrder+1} atoms lie on an edge) and Rnn = {self.Rnn}"
-        )
-   
-    def nAtomsF(self, i):
-        """Factor for analytic number of atoms.
+        # if not self.calcPropOnly:
+        #     self.coords(noOutput)
+        #     if self.aseView: view(self.NP)
+        #     if self.postAnalyzis:
+        #         self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
 
-        Args:
-            i (int): Size/order parameter.
-
-        Returns:
-            int: Analytic factor used to compute total atom count.
-        """
-        return round(4*i**3 + 6*i**2 + 3*i - 7)
-
-    def nAtomsAnalytic(self):
-        """Compute the total number of atoms analytically.
-
-        Returns:
-            int: Total number of atoms for current `nAtomsPerEdge`.
-        """
-        return self.nAtomsF(self.nAtomsPerEdge-1)
+    def NumberOfCubeEdgeAtomsValid4ATrCube(self):
+        """Calculates the approximate number of atoms remaining on an edge."""
+        N = self.nOrder + 1 
+        nTrCube = N * (np.sqrt(2) - 1)
+        # Always return True to avoid sys.exit, but keep the exactness flag for info
+        is_exact = abs(nTrCube - round(nTrCube)) < 0.01
+        return is_exact, nTrCube
 
     def edgeLength(self):
-        """Edge length in Ångström for the truncated cube.
+        """Edge length in Ångström for the truncated cube."""
+        return self.cubeProp.edgeLength() * (np.sqrt(2) - 1)  
+    # def __init__(self,
+    #              element: str='Au',
+    #              Rnn: float=2.7,
+    #              nOrder: int=1,
+    #              **kwargs,
+    #             ):
+    #     """
+    #     Initialize the class with all necessary parameters.
 
-        The truncated cube's edge length is defined as the base cube's
-        edge length divided by 3.
-
-        Returns:
-            float: Edge length in Å.
-        """
-        # a truncated Oh is constructed by truncating all 6 vertices of a regular octahedron
-        # at one third of the original edge length, hence the remaining edge length is Oh.edgeLength/3
-        return self.cubeProp.edgeLength()/3
-
-    def radiusCircumscribedSphere(self):
-        """Radius of the circumscribed sphere (Å).
-
-        Returns:
-            float: Radius in Å.
-        """
-        return self.radiusCSF * self.edgeLength()
-
-    def radiusMidSphere(self):
-        """Radius of the midsphere (Å), tangent to edges.
-
-        Returns:
-            float: Radius in Å.
-        """
-        return self.radiusMSF * self.edgeLength()
-
-    def radiusInscribedSphere(self):
-        """Radius of the inscribed sphere (Å).
-
-        Returns:
-            float: Radius in Å.
-        """
-        return self.radiusISF * self.edgeLength()
-
-    def area(self):
-        """Surface area in Å^2.
-
-        Returns:
-            float: Surface area in square Ångström.
-        """
-        el = self.edgeLength()
-        return el**2 * 2 * (6 + 6 * np.sqrt(2) + np.sqrt(3))
-    
-    def volume(self):
-        """Volume in Å^3.
-
-        Returns:
-            float: Volume in cubic Ångström.
-        """
-        el = self.edgeLength()
-        return el**3 * (1/3) * (21 + 14 * np.sqrt(2))
-
-    def magicEdgeNumberOfCube2MakeATrCube(self, index: int):
-        """Generate candidate edge-atom counts for truncated cubes.
-
-        Args:
-            index (int): Upper limit for generation (inclusive).
-
-        Returns:
-            np.ndarray: Array of integers corresponding to valid edge-atom counts.
-        """
-        import numpy as np
-        N = []
-        for i in range(3, index + 1):
-            N.append(3 * i)
-        return np.array(N)
-    
-    def NumberOfCubeEdgeAtomsValid4ATrCube(self):
-        """Check if edge-atom count yields a perfect truncated cube.
-
-        Returns:
-            tuple: (is_integer (bool), nTrCube (float)) where ``is_integer`` flags
-                whether the computed number of atoms per edge is integer.
-        """
-        import numpy as np
-        N = self.nOrder + 1
-        nTrCube = N - 2 * (N - 1) / 3
-        return nTrCube.is_integer(), nTrCube
-
-    def coords(self, noOutput):
-        """Generate coordinates for the truncated fcc cube.
-
-        Args:
-            noOutput (bool): If True, suppress printing and progress output.
-        """
-        if not noOutput: pyNMBu.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
-        def findVertices(c):
-            """Locate corner vertices of the cube from positions array.
-
-            Args:
-                c (np.ndarray): Nx3 array of positions.
-
-            Returns:
-                tuple: (indices, coordinates) of detected corner vertices.
-            """
-            eps = 1e-4
-            cmax = np.max(c)
-            indexV = np.where(
-                (np.abs(np.abs(c[:, 0]) - cmax) < eps)
-                & (np.abs(np.abs(c[:, 1]) - cmax) < eps)
-                & (np.abs(np.abs(c[:, 2]) - cmax) < eps)
-            )
-            coordV = c[indexV]
-            return indexV, coordV
-        chrono = pyNMBu.timer()
-        chrono.chrono_start()
-        if not noOutput: pyNMBu.centertxt("Generation of the coordinates of the cube",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
-
-        # Generate a regular fcc cube using the class `cube` of the module `pNP`.
-        aseCube = pNP.cube( crystalStructure= 'fcc', element = self.element, 
-                           Rnn= self.Rnn, nOrder = self.nOrder, noOutput=True, postAnalyzis=False).NP
-        if not noOutput: pyNMBu.centertxt("Cube moved to origin",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
-        c2cog = pyNMBu.center2cog(aseCube.get_positions())
-        aseCube.set_positions(c2cog)
-        self.NP0 = aseCube.copy()
-        #  print('aseCube after moving to cog', aseCube.get_positions())
-        if not noOutput: pyNMBu.centertxt("Removing atoms ",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
-        if not noOutput: print('First searching for the coordinates of the vertices and of the cog')
-        indexV, coordVertices = findVertices(aseCube.get_positions())
-        if not noOutput: print("Vertices = coords ", coordVertices)
-        if not noOutput: print("Now calculating the coordinates of the planes orthogonal the the cog-vertex directions")
-        planesAtVertices = pyNMBu.planeAtVertices(coordVertices, self.cog)
-
-        # Generate the truncation
-        #trCube = truncation all 6 vertices of a regular octahedron at one third of the original edge length
-        trPlanes = pyNMBu.calculateTruncationPlanesFromVertices(
-            planesAtVertices,
-            self.cutFromVertexAt,
-            self.cubeProp.nAtomsPerEdge,
-            noOutput=noOutput
-        )
-        AtomsAbovePlanes = pyNMBu.truncateAboveEachPlane(
-            trPlanes, aseCube.get_positions()
-        )
-
-        aseTrCube = aseCube.copy()
-        del aseTrCube[AtomsAbovePlanes]
+    #     Args:
+    #         element: Chemical element of the NP (e.g., "Au", "Fe").
+    #         Rnn (float): Nearest neighbor interatomic distance in Å.
+    #         nOrder (int): Determines the level of imbrication = the number of atomic layers along an edge (e.g., `nOrder=1` means 2 atoms per edge).
+    #         shape (str): Shape 'cube'.
+    #         postAnalyzis (bool): If True, prints additional NP information (e.g., cell parameters, moments of inertia, inscribed/circumscribed sphere diameters, etc.).
+    #         aseView (bool): If True, enables visualization of the NP using ASE.
+    #         thresholdCoreSurface (float): Precision threshold for core/surface differentiation (distance threshold for retaining atoms).
+    #         skipSymmetryAnalyzis (bool): If False, performs an atomic structure analysis using pymatgen.
+    #         jmolCrystalShape (bool): If True, generates a JMOL script for visualization.
+    #         noOutput (bool): If False, prints details about the NP structure.
+    #         calcPropOnly (bool): If False, generates the atomic structure of the NP.   
             
-        nAtoms = aseTrCube.get_global_number_of_atoms()
-        self.nAtoms = nAtoms
-        if not noOutput:
-            print(f"Total number of atoms = {nAtoms}")
-            chrono.chrono_stop(hdelay=False)
-            chrono.chrono_show()
-        self.NP = aseTrCube
-        self.cog = self.NP.get_center_of_mass()
-        if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
+    #     Attributes:
+    #         self.shape (str): Shape 'fccTrCube'.
+    #         self.cubeProp (class instance): Class "cube" of the module "pNP".
+    #         self.nAtoms (int): Number of atoms in the NP.
+    #         self.nAtomsPerEdge (int): Number of atoms per edge.
+    #         self.interLayerDistance (float): Distance between atomic layers.
+    #         self.jmolCrystalShape (bool): Flag for JMol visualization.
+    #         self.cog (np.array): Center of gravity of the NP.
+    #         self.imageFile (str): Path to a reference image.
+    #         self.trPlanes (array): Truncation plane equations.
+
+    #     """
+    #     super().__init__(**kwargs)
+    #     self.cubeProp = pNP.cube(crystalStructure= 'fcc', element = element,
+    #                              Rnn = Rnn , nOrder = nOrder, noOutput=True, calcPropOnly=True)
+    #     self.element = element
+    #     self.shape='fccTrCube'
+    #     self.Rnn = Rnn
+    #     self.nOrder = nOrder
+    #     noOutput = self.noOutput
+    #     if not noOutput: pyNMBu.centerTitle(f"fcc truncated cube")
+    #     self.imageFile = pyNMBu.imageNameWithPathway("trOh-C.png")
+    #     isTrCube,self.nAtomsPerEdge = self.NumberOfCubeEdgeAtomsValid4ATrCube()
+    #     print(10*"toto ")
+    #     if not isTrCube:
+    #         listOfPossiblenLayers = self.magicEdgeNumberOfCube2MakeATrCube(int(1.2*nOrder))
+    #         nearest_nL = min(listOfPossiblenLayers, key = lambda x: abs(x-(self.nOrder)))
+    #         # sys.exit(
+    #         #     f"This order cannot yield a perfect truncated octahedron.\n"
+    #         #     f"The closest possible nOrder value is {nearest_nL}.\n"
+    #         #     "Try again. "
+    #         #     "Any doubt about the valid nOrder values? Call the "
+    #         #     "archimedeanNP.magicEdgeNumberOfCube2MakeATrCube(N) to see all "
+    #         #     "possible values between 1 and N"
+    #         # )
+    #     else:
+    #         self.nAtomsPerEdge = int(self.nAtomsPerEdge)
+          
+    #     if not noOutput: self.prop()
+    #     if not self.calcPropOnly:
+    #         self.coords(noOutput)
+    #         if self.aseView: view(self.NP)
+    #         if self.postAnalyzis:
+    #             self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+    #             if self.aseView: view(self.NPcs)
+          
+    # def __str__(self):
+    #     return (
+    #         f"Truncated cube based on a {self.nOrder}x{self.nOrder}x{self.nOrder} "
+    #         f"cube (i.e. {self.nOrder+1} atoms lie on an edge) and Rnn = {self.Rnn}"
+    #     )
+   
+    # def nAtomsF(self, i):
+    #     """Factor for analytic number of atoms.
+
+    #     Args:
+    #         i (int): Size/order parameter.
+
+    #     Returns:
+    #         int: Analytic factor used to compute total atom count.
+    #     """
+    #     return round(4*i**3 + 6*i**2 + 3*i - 7)
+
+    # def nAtomsAnalytic(self):
+    #     """Compute the total number of atoms analytically.
+
+    #     Returns:
+    #         int: Total number of atoms for current `nAtomsPerEdge`.
+    #     """
+    #     return self.nAtomsF(self.nAtomsPerEdge-1)
+
+    # def edgeLength(self):
+    #     """Edge length in Ångström for the truncated cube.
+
+    #     The truncated cube's edge length is defined as the base cube's
+    #     edge length divided by 3.
+
+    #     Returns:
+    #         float: Edge length in Å.
+    #     """
+    #     # a truncated Oh is constructed by truncating all 6 vertices of a regular octahedron
+    #     # at one third of the original edge length, hence the remaining edge length is Oh.edgeLength/3
+    #     return self.cubeProp.edgeLength()* (1.0 - (np.sqrt(2) / 2.0))
+
+    # def radiusCircumscribedSphere(self):
+    #     """Radius of the circumscribed sphere (Å).
+
+    #     Returns:
+    #         float: Radius in Å.
+    #     """
+    #     return self.radiusCSF * self.edgeLength()
+
+    # def radiusMidSphere(self):
+    #     """Radius of the midsphere (Å), tangent to edges.
+
+    #     Returns:
+    #         float: Radius in Å.
+    #     """
+    #     return self.radiusMSF * self.edgeLength()
+
+    # def radiusInscribedSphere(self):
+    #     """Radius of the inscribed sphere (Å).
+
+    #     Returns:
+    #         float: Radius in Å.
+    #     """
+    #     return self.radiusISF * self.edgeLength()
+
+    # def area(self):
+    #     """Surface area in Å^2.
+
+    #     Returns:
+    #         float: Surface area in square Ångström.
+    #     """
+    #     el = self.edgeLength()
+    #     return el**2 * 2 * (6 + 6 * np.sqrt(2) + np.sqrt(3))
+    
+    # def volume(self):
+    #     """Volume in Å^3.
+
+    #     Returns:
+    #         float: Volume in cubic Ångström.
+    #     """
+    #     el = self.edgeLength()
+    #     return el**3 * (1/3) * (21 + 14 * np.sqrt(2))
+
+    # def magicEdgeNumberOfCube2MakeATrCube(self, index: int):
+    #     """Generate candidate edge-atom counts for truncated cubes.
+
+    #     Args:
+    #         index (int): Upper limit for generation (inclusive).
+
+    #     Returns:
+    #         np.ndarray: Array of integers corresponding to valid edge-atom counts.
+    #     """
+    #     import numpy as np
+    #     N = []
+    #     for i in range(3, index + 1):
+    #         N.append(3 * i)
+    #     return np.array(N)
+    
+    # def NumberOfCubeEdgeAtomsValid4ATrCube(self):
+    #     """Check if edge-atom count yields a perfect truncated cube.
+
+    #     Returns:
+    #         tuple: (is_integer (bool), nTrCube (float)) where ``is_integer`` flags
+    #             whether the computed number of atoms per edge is integer.
+    #     """
+    #     import numpy as np
+    #     N = self.nOrder + 1
+    #     nTrCube = N - 2 * (N - 1) / 3
+    #     return nTrCube.is_integer(), nTrCube
+
+    # def coords(self, noOutput):
+    #     """Generate coordinates for the truncated fcc cube.
+
+    #     Args:
+    #         noOutput (bool): If True, suppress printing and progress output.
+    #     """
+    #     if not noOutput: pyNMBu.centertxt("Generation of coordinates",bgc='#007a7a',size='14',weight='bold')
+    #     def findVertices(c):
+    #         """Locate corner vertices of the cube from positions array.
+
+    #         Args:
+    #             c (np.ndarray): Nx3 array of positions.
+
+    #         Returns:
+    #             tuple: (indices, coordinates) of detected corner vertices.
+    #         """
+    #         eps = 1e-4
+    #         cmax = np.max(c)
+    #         indexV = np.where(
+    #             (np.abs(np.abs(c[:, 0]) - cmax) < eps)
+    #             & (np.abs(np.abs(c[:, 1]) - cmax) < eps)
+    #             & (np.abs(np.abs(c[:, 2]) - cmax) < eps)
+    #         )
+    #         coordV = c[indexV]
+    #         return indexV, coordV
+    #     chrono = pyNMBu.timer()
+    #     chrono.chrono_start()
+    #     if not noOutput: pyNMBu.centertxt("xxxxxxxxGeneration of the coordinates of the cube",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+
+    #     # Generate a regular fcc cube using the class `cube` of the module `pNP`.
+    #     aseCube = pNP.cube(crystalStructure= 'fcc', element = self.element, 
+    #                        Rnn= self.Rnn, nOrder = self.nOrder, noOutput=True, postAnalyzis=False).NP
+    #     if not noOutput: pyNMBu.centertxt("Cube moved to origin",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+    #     c2cog = pyNMBu.center2cog(aseCube.get_positions())
+    #     aseCube.set_positions(c2cog)
+    #     self.NP0 = aseCube.copy()
+    #     #  print('aseCube after moving to cog', aseCube.get_positions())
+    #     if not noOutput: pyNMBu.centertxt("Removing atoms ",bgc='#cbcbcb',size='12',fgc='b',weight='bold')
+    #     if not noOutput: print('First searching for the coordinates of the vertices and of the cog')
+    #     indexV, coordVertices = findVertices(aseCube.get_positions())
+    #     if not noOutput: print("Vertices = coords ", coordVertices)
+    #     if not noOutput: print("Now calculating the coordinates of the planes orthogonal the the cog-vertex directions")
+    #     planesAtVertices = pyNMBu.planeAtVertices(coordVertices, self.cog)
+
+    #     # Generate the truncation
+    #     #trCube = truncation all 6 vertices of a regular octahedron at one third of the original edge length
+    #     trPlanes = pyNMBu.calculateTruncationPlanesFromVertices(
+    #         planesAtVertices,
+    #         self.cutFromVertexAt,
+    #         self.cubeProp.nAtomsPerEdge,
+    #         noOutput=noOutput
+    #     )
+    #     print(10*"titi ")
+    #     AtomsAbovePlanes = pyNMBu.truncateAboveEachPlane(
+    #         trPlanes, aseCube.get_positions()
+    #     )
+
+    #     aseTrCube = aseCube.copy()
+    #     del aseTrCube[AtomsAbovePlanes]
+            
+    #     nAtoms = aseTrCube.get_global_number_of_atoms()
+    #     self.nAtoms = nAtoms
+    #     if not noOutput:
+    #         print(f"Total number of atoms = {nAtoms}")
+    #         chrono.chrono_stop(hdelay=False)
+    #         chrono.chrono_show()
+    #     self.NP = aseTrCube
+    #     self.cog = self.NP.get_center_of_mass()
+    #     if self.trPlanes is not None: self.trPlanes = pyNMBu.setdAsNegative(self.trPlanes)
         
 
     def prop(self):
         """
         Display unit cell and nanoparticle properties.
         """
-        pyNMBu.centertxt("Properties",bgc='#007a7a',size='14',weight='bold')
-        print(self)
-        # pyNMBu.plotImageInPropFunction(self.imageFile)
-        print("element = ",self.element)
-        print("number of vertices = ",self.nVertices)
-        print("number of edges = ",self.nEdges)
-        print("number of trigonal faces = ",self.nFaces3)
-        print("number of octogonal faces = ",self.nFaces8)
-        print(f"truncation all 6 vertices of a regular octahedron at {self.cutFromVertexAt:.3f}a_cube from the vertices of the cube")
-        print(f"nearest neighbour distance = {self.Rnn:.2f} Å")
-        print(f"edge length = {self.edgeLength()*0.1:.2f} nm")
-        print(f"radius of the circumscribed sphere = {self.radiusCircumscribedSphere()*0.1:.2f} nm")
-        print(f"radius of the medium sphere = {self.radiusMidSphere()*0.1:.2f} nm")
-        print(f"radius of the inscribed sphere = {self.radiusInscribedSphere()*0.1:.2f} nm")
-        print(f"number of atoms per edge = {self.nAtomsPerEdge}")
-        print(f"area = {self.area()*1e-2:.1f} nm2")
-        print(f"volume = {self.volume()*1e-3:.1f} nm3")
-        # print("total number of atoms = ",self.nAtomsAnalytic())
-        print("dual polyhedron: Triakis octahedron")
-        print(f"coordinates of the center of gravity = {self.cog}")
 
+        pyNMBu.centertxt("Properties", bgc='#007a7a', size='14', weight='bold')
+
+        
+        # print("element = ", self.element)
+        print("number of vertices = ", self.nVertices)
+        print("number of edges = ", self.nEdges)
+        print("number of trigonal faces = ", self.nFaces3)
+        print("number of octogonal faces = ", self.nFaces8)
+        
+        print(f"truncation of all 8 vertices of a regular CUBE at {self.cutFromVertexAt:.3f} a_cube (orthogonal depth)")
+        
+        # print(f"nearest neighbour distance = {self.Rnn:.2f} Å")
+        # print(f"edge length = {self.edgeLength()*0.1:.2f} nm")
+        # print(f"radius of the circumscribed sphere = {self.radiusCircumscribedSphere()*0.1:.2f} nm")
+        # print(f"radius of the medium sphere = {self.radiusMidSphere()*0.1:.2f} nm")
+        # print(f"radius of the inscribed sphere = {self.radiusInscribedSphere()*0.1:.2f} nm")
+        # print(f"number of atoms per edge = {self.nAtomsPerEdge}")
+        # print(f"area = {self.area()*1e-2:.1f} nm2")
+        # print(f"volume = {self.volume()*1e-3:.1f} nm3")
+        print("dual polyhedron: Triakis octahedron")
+        # print(f"coordinates of the center of gravity = {self.cog}")

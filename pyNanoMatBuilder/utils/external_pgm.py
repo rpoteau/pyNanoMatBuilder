@@ -28,6 +28,89 @@ from .core import (pyNMB_location, get_resource_path, timer, RAB, Rbetween2Point
 from .core import centertxt, centerTitle, fg, bg, hl, color
 from .geometry import reduceHullFacets
 from .prop import kDTreeCN
+from .io import writexyz
+
+######################################## coupling with Jmol 
+
+def check_jmol():
+    from pyNanoMatBuilder import data
+    from pathlib import Path
+    
+    # We check the CURRENT value of the variable in RAM
+    path = Path(data.pyNMBvar.path2Jmol) / "JmolData.jar"
+    
+    if not path.exists():
+        print("---")
+        print("💡 Jmol not found. To enable image rendering, please set the path:")
+        print("from pyNanoMatBuilder import data")
+        print("data.pyNMBvar.path2Jmol = '/your/path/to/jmol'")
+        print("---")
+        return False
+    return True
+    
+def saveCoords_DrawJmol(asemol, prefix, scriptJ="", boundaries=False, noOutput=True):
+    """
+    Save coordinates and generate a Jmol visualization.
+
+    Args:
+        asemol: ASE Atoms object to visualize.
+        prefix (str): Filename prefix for output files.
+        scriptJ (str): Additional Jmol script commands.
+        boundaries (bool): If True, draws boundaries without facets script.
+        noOutput (bool): If True, suppresses command output.
+    """
+    from pyNanoMatBuilder import data
+    path2Jmol = Path(data.pyNMBvar.path2Jmol)
+    jar_file = path2Jmol / "JmolData.jar"
+    # fxyz = "./figs/" + prefix + ".xyz"
+    # writexyz(fxyz, asemol)
+
+    # Output directory for the USER (Working Directory)
+    # We save results in a local 'figs' folder so the user can see them
+    user_output_dir = Path("figs")
+    user_output_dir.mkdir(exist_ok=True)
+    fxyz = user_output_dir / f"{prefix}.xyz"
+    writexyz(str(fxyz), asemol)
+
+    if not jar_file.exists():
+        if not noOutput:
+            print(f"\n{fg.RED}⚠️ Jmol not found at: {jar_file}{fg.OFF}")
+            print("The .xyz file was saved, but the .png rendering was skipped.")
+            print(f"To fix this, set: {hl.BOLD}data.pyNMBvar.path2Jmol = 'your/path'{hl.OFF}\n")
+        return # Graceful exit
+    
+    try:
+        internal_spt = get_resource_path("resources/figs", "script-facettes-345PtLight.spt")
+    except FileNotFoundError:
+        internal_spt = None
+
+    # Build the Jmol Script
+    if not boundaries and internal_spt:
+        jmolscript = scriptJ + (
+            f"; frank off; cpk 0; wireframe 0.05; "
+            f"script '{internal_spt}'; "  # Points to the internal resource
+            "facettes345ptlight; draw * opaque;"
+        )
+    else:
+        jmolscript = scriptJ + "; frank off; cpk 0; wireframe 0.0; draw * opaque;"
+
+    # Save the PNG to the USER'S local figs folder
+    output_png = user_output_dir / f"{prefix}.png"
+    jmolscript += (
+        "set specularPower 80; set antialiasdisplay; set background [xf1f2f3]; "
+        f"set zShade ON; set zShadePower 1; write image pngt 1024 1024 '{output_png}';"
+    )
+
+    jmolcmd = (
+        f"java -Xmx512m -jar {path2Jmol}/JmolData.jar {fxyz} "
+        f"-ij '{jmolscript}' >/dev/null "  
+    )
+    if not noOutput:
+        print(f"Saving to: {output_png}")
+        print(jmolcmd)
+    os.system(jmolcmd)
+
+#######################################################################
 
 def defCrystalShapeForJMol(self,
                            noOutput: bool=True,
@@ -41,13 +124,15 @@ def defCrystalShapeForJMol(self,
     Returns:
         str: The Jmol command string for visualizing the crystal shape.
     """
-    if self.is_optimized and hasattr(self, 'equations_opt'):
-        target_planes = self.equations_opt
-        status = "optimized geometry"
-    else:
-        target_planes = getattr(self, 'trPlanes', None)
-        status = "initial geometry"
-        
+    useWulff = hasattr(self, 'trPlanes_Wulff') and self.trPlanes_Wulff is not None
+
+    target_planes = getattr(self, 'trPlanes_Wulff', None) if useWulff else None
+    if target_planes is None:
+        target_planes = getattr(self, 'trPlanes_opt', None) if self.is_optimized else getattr(self, 'trPlanes', None)
+
+    if target_planes is not None:
+        vertices, redFacets = reduceHullFacets(self, noOutput=noOutput, useWulff=useWulff)
+
     if target_planes is not None:
         vertices, redFacets = reduceHullFacets(self, noOutput=noOutput)
         if not noOutput:
@@ -154,3 +239,43 @@ def saveCN4JMol(Crystal: Atoms,
         )
         print(f"color 'colorCN = {colorScheme}';")
         print(command)
+
+def DrawJmol(mol, prefix, scriptJ="", noOutput=True):
+    """
+    Generate a Jmol visualization from an existing XYZ file.
+    """
+    from pyNanoMatBuilder import data
+    path2Jmol = data.pyNMBvar.path2Jmol  # Use the user-configurable path
+    
+    # 1. Define the local working directory for the user's files
+    user_figs_dir = Path("figs")
+    user_figs_dir.mkdir(exist_ok=True)
+    
+    # 2. Locate the input XYZ (assumed to be in the local figs folder)
+    fxyz = user_figs_dir / f"{mol}.xyz"
+    if not fxyz.exists():
+        if not noOutput:
+            print(f"Error: {fxyz} not found. Cannot generate image.")
+        return
+
+    # 3. Build the Jmol script
+    # We save the .png to the local working directory 'figs/'
+    output_png = user_figs_dir / f"{prefix}.png"
+    
+    jmolscript = (
+        f"{scriptJ}; frank off; set specularPower 80; set antialiasdisplay; "
+        "set background [xf1f2f3]; set zShade ON; set zShadePower 1; "
+        f"write image pngt 1024 1024 '{output_png}';"
+    )
+
+    # 4. Assemble the command
+    jmolcmd = (
+        f"java -Xmx512m -jar {path2Jmol}/JmolData.jar {fxyz} "
+        f"-ij \"{jmolscript}\" >/dev/null "
+    )
+
+    if not noOutput:
+        print(f"Generating Jmol image: {output_png}")
+        print(jmolcmd)
+    
+    os.system(jmolcmd)

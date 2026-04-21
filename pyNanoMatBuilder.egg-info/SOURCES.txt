@@ -116,6 +116,7 @@ pyNanoMatBuilder/README
 pyNanoMatBuilder/__init__.py
 pyNanoMatBuilder/archimedeanNPs.py
 pyNanoMatBuilder/catalanNPs.py
+pyNanoMatBuilder/chiralNPs.py
 pyNanoMatBuilder/crystalNPs.py
 pyNanoMatBuilder/data.py
 pyNanoMatBuilder/johnsonNPs.py
@@ -132,6 +133,7 @@ pyNanoMatBuilder/.ipynb_checkpoints/TEM_creator-checkpoint.py
 pyNanoMatBuilder/.ipynb_checkpoints/__init__-checkpoint.py
 pyNanoMatBuilder/.ipynb_checkpoints/archimedeanNPs-checkpoint.py
 pyNanoMatBuilder/.ipynb_checkpoints/catalanNPs-checkpoint.py
+pyNanoMatBuilder/.ipynb_checkpoints/chiralNPs-checkpoint.py
 pyNanoMatBuilder/.ipynb_checkpoints/crystalNPs-checkpoint.py
 pyNanoMatBuilder/.ipynb_checkpoints/data-checkpoint.py
 pyNanoMatBuilder/.ipynb_checkpoints/johnsonNPs-checkpoint.py
@@ -142,6 +144,7 @@ pyNanoMatBuilder/.ipynb_checkpoints/pyNMBcore-checkpoint.py
 pyNanoMatBuilder/.ipynb_checkpoints/utils-checkpoint.py
 pyNanoMatBuilder/.ipynb_checkpoints/visualID-checkpoint.py
 pyNanoMatBuilder/resources/__init__.py
+pyNanoMatBuilder/resources/figs.zip
 pyNanoMatBuilder/resources/.ipynb_checkpoints/tools4pyPC-checkpoint.py
 pyNanoMatBuilder/resources/.ipynb_checkpoints/visualID-checkpoint.py
 pyNanoMatBuilder/resources/.ipynb_checkpoints/visualID_Eng-checkpoint.py
@@ -203,6 +206,9 @@ pyNanoMatBuilder/resources/figs/bccrdd.xyz
 pyNanoMatBuilder/resources/figs/bccrddWS.png
 pyNanoMatBuilder/resources/figs/bccrddWS.script
 pyNanoMatBuilder/resources/figs/bccrddWS.xyz
+pyNanoMatBuilder/resources/figs/bch-C.png
+pyNanoMatBuilder/resources/figs/bch.png
+pyNanoMatBuilder/resources/figs/bch.xyz
 pyNanoMatBuilder/resources/figs/cube-C.png
 pyNanoMatBuilder/resources/figs/cube.base64
 pyNanoMatBuilder/resources/figs/cube.png
@@ -337,6 +343,7 @@ pyNanoMatBuilder/utils/energy.py
 pyNanoMatBuilder/utils/external_pgm.py
 pyNanoMatBuilder/utils/geometry.py
 pyNanoMatBuilder/utils/io.py
+pyNanoMatBuilder/utils/parallel.py
 pyNanoMatBuilder/utils/polydispersity.py
 pyNanoMatBuilder/utils/prop.py
 pyNanoMatBuilder/utils/symmetry.py
@@ -349,6 +356,7 @@ pyNanoMatBuilder/utils/.ipynb_checkpoints/energy-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/external_pgm-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/geometry-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/io-checkpoint.py
+pyNanoMatBuilder/utils/.ipynb_checkpoints/parallel-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/polydispersity-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/prop-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/symmetry-checkpoint.py

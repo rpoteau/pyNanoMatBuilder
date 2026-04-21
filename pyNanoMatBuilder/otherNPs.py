@@ -106,7 +106,7 @@ class fcctpt(pyNMBcore):
             if self.aseView:
                 view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
                 if self.aseView:
                     view(self.NPcs)
 
@@ -193,6 +193,7 @@ class fcctpt(pyNMBcore):
         """
         Display unit cell and nanoparticle properties.
         """
+        pyNMBu.centertxt("Properties", bgc='#007a7a', size='14', weight='bold')
         print(self)
         pyNMBu.plotImageInPropFunction(self.imageFile)
         print("element = ",self.element)
@@ -212,7 +213,7 @@ class fcctpt(pyNMBcore):
         print(f"vertex-center-vertex (tetrahedral bond) angle in Td = {self.tbpprop.vcvAngle:.1f}°")
         print(f"coordinates of the center of gravity = {self.cog}")
 
-    # def propPostMake(self, skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput):
+    # def propPostMake(self, self.skipChiralityCalculation, skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput):
     #     """
     #     Compute and store post-construction nanoparticle properties.
 

@@ -7,6 +7,7 @@ from .energy import *
 from .external_pgm import *
 from .geometry import *
 from .io import *
+from .parallel import *
 from .polydispersity import *
 
 __all__ = ['fg', 'bg', 'hl', 'color']
