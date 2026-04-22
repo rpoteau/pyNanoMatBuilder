@@ -1,3 +1,4 @@
+CLAUDE.md
 ChangeLog.md
 LICENSE
 MANIFEST.in
@@ -225,6 +226,8 @@ pyNanoMatBuilder/resources/figs/cuboWS-C.png
 pyNanoMatBuilder/resources/figs/cuboWS.png
 pyNanoMatBuilder/resources/figs/cuboWS.script
 pyNanoMatBuilder/resources/figs/cuboWS.xyz
+pyNanoMatBuilder/resources/figs/cylinder-C.png
+pyNanoMatBuilder/resources/figs/cylinder.xyz
 pyNanoMatBuilder/resources/figs/dicoTdWS-C.png
 pyNanoMatBuilder/resources/figs/dicoTdWS.png
 pyNanoMatBuilder/resources/figs/dicoTdWS.script
@@ -264,6 +267,9 @@ pyNanoMatBuilder/resources/figs/pbpy.png
 pyNanoMatBuilder/resources/figs/pbpy.xyz
 pyNanoMatBuilder/resources/figs/pnmbAvailableStructures.png
 pyNanoMatBuilder/resources/figs/pnmbAvailableStructures.svg
+pyNanoMatBuilder/resources/figs/pppd-C.png
+pyNanoMatBuilder/resources/figs/pppd.png
+pyNanoMatBuilder/resources/figs/pppd.xyz
 pyNanoMatBuilder/resources/figs/rDD-C.png
 pyNanoMatBuilder/resources/figs/rDD.base64
 pyNanoMatBuilder/resources/figs/rDD.png
@@ -317,6 +323,8 @@ pyNanoMatBuilder/resources/figs/ttrbccrddWS.xyz
 pyNanoMatBuilder/resources/figs/underConstruction-C.png
 pyNanoMatBuilder/resources/figs/underConstruction.png
 pyNanoMatBuilder/resources/figs/underConstruction.svg
+pyNanoMatBuilder/resources/figs/wire-C.png
+pyNanoMatBuilder/resources/figs/wire.xyz
 pyNanoMatBuilder/resources/figs/.ipynb_checkpoints/bccrdd-C-checkpoint.png
 pyNanoMatBuilder/resources/svg/Logo-Universite-Toulouse-n-2023.png
 pyNanoMatBuilder/resources/svg/Logo-institutionnel-couleur-Uonly.svg

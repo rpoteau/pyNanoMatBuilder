@@ -5,6 +5,22 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
+## [0.11.1] - 2026-04-23 "chirality torsion tools"
+
+### Added
+
+- **chirality builder**
+    - `utils/geometry.py`: added `_applyRotationRodrigues(positions, axis_cart, angles_deg)`, a fully vectorized implementation of Rodrigues' rotation formula applying a different rotation angle to each atom simultaneously with no Python loop, for maximum performance; added `applyTorsion(axis, axis_def, rate, profile, custom_profile, pitch, helix_radius, chirality, noOutput)` to apply a torsion to a NP along a given crystallographic axis (converted to Cartesian internally), supporting five profiles: `linear` (angle proportional to position along axis), `sinusoidal`, `gaussian`, `helical` (linear torsion plus translation along axis, producing a helix-like deformation, requires `pitch`), and `custom` (user-defined function `f(z, L)`); each atomic slice perpendicular to the axis rotates as a rigid body with no intra-slice distortion; an inter-slice bond stretching estimate is printed when `noOutput=False`; the function updates `self.NP.positions`, `self.cog`, and calls `_flush_stale_data` and `propPostMake` to keep the object consistent.
+    - `utils/external_pgm.py`: added `defHelixShapeForJMol(n_rings, n_sides, noOutput)` to generate a Jmol command visualizing the helical envelope as a triangulated tube built from successive cross-section rings connected by triangles; the tube is aligned with the NP using `proj_min` stored in `self._helix_params` to ensure the same starting point as the atomic structure.
+    - `pyNMBcore.py`:
+        - added `applyTorsion(axis, axis_def, rate, profile, custom_profile, pitch, helix_radius, chirality, noOutput)` as a lightweight interface calling `utils/geometry.applyTorsion`.
+        - added `defHelixShapeForJMol(n_rings, n_sides, noOutput)` as a lightweight interface calling `utils/external_pgm.defHelixShapeForJMol`.
+
+### Fixed
+
+- **`pyNMBcore.propPostMake`**: fixed missing `skipChiralityCalculation` argument to the call to `utils/prop.propPostMake` in `pyNMBcore.py`, causing all subsequent positional arguments to be shifted by one and producing cascading errors (wrong `skipSymmetryAnalyzis` type, incorrect `thresholdCoreSurface`, and missing hull equations).
+- **`crystalNPs.makeCylinder`**: added inverse rotation at the end of the construction to restore the cylinder to its original crystallographic direction after the internal z-alignment used for atom selection.
+
 ## [0.11.0] - 2026-04-22 "chiralNPs module, parallel computing, graphical doc"
 
 ### Added

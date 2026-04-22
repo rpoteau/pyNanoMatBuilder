@@ -127,14 +127,15 @@ def defCrystalShapeForJMol(self,
     useWulff = hasattr(self, 'trPlanes_Wulff') and self.trPlanes_Wulff is not None
 
     target_planes = getattr(self, 'trPlanes_Wulff', None) if useWulff else None
+
     if target_planes is None:
         target_planes = getattr(self, 'trPlanes_opt', None) if self.is_optimized else getattr(self, 'trPlanes', None)
 
-    if target_planes is not None:
-        vertices, redFacets = reduceHullFacets(self, noOutput=noOutput, useWulff=useWulff)
+    # if target_planes is not None:
+    #     vertices, redFacets = reduceHullFacets(self, noOutput=noOutput, useWulff=useWulff)
 
     if target_planes is not None:
-        vertices, redFacets = reduceHullFacets(self, noOutput=noOutput)
+        vertices, redFacets = reduceHullFacets(self, noOutput=noOutput, useWulff=useWulff)
         if not noOutput:
             centertxt(
                 "generating the jmol command line to view the crystal shape",
@@ -279,3 +280,223 @@ def DrawJmol(mol, prefix, scriptJ="", noOutput=True):
         print(jmolcmd)
     
     os.system(jmolcmd)
+
+# def defHelixShapeForJMol(self, n_rings=50, n_sides=12, noOutput=True):
+#     """
+#     Generate a Jmol command to visualize the helical envelope as a triangulated tube.
+
+#     The tube is built by connecting successive rings of n_sides points each,
+#     placed perpendicular to the helix tangent at each sample point.
+#     Each pair of adjacent rings generates 2*n_sides triangles.
+
+#     Args:
+#         n_rings (int): Number of rings along the helix (default: 50).
+#         n_sides (int): Number of vertices per ring (default: 12).
+#         noOutput (bool): If True, suppresses output. Default is True.
+
+#     Returns:
+#         str: Jmol command string for the helical tube.
+#     """
+#     from .geometry import normV
+#     import numpy as np
+
+#     if not hasattr(self, '_helix_params'):
+#         print(f"{bg.DARKREDB}Warning: no helix parameters found. "
+#               f"Call applyTorsion with profile='helix' first.{bg.OFF}")
+#         return ""
+
+#     p = self._helix_params
+#     helix_radius = p['helix_radius']
+#     pitch        = p['pitch']
+#     axis_cart    = p['axis_cart']
+#     L            = p['L']
+#     e1           = p['e1']
+#     e2           = p['e2']
+#     wire_radius  = p['wire_radius']
+
+#     pitch_factor = pitch / (2 * np.pi)
+#     stretch = np.sqrt(1 + (helix_radius / pitch_factor)**2)
+
+#     # Sample t values along the helix
+#     t_values = np.linspace(0, L / pitch_factor / stretch, n_rings)
+
+#     # --- Build all rings ---
+#     # Each ring is a list of n_sides 3D points
+#     rings = []
+#     for t in t_values:
+#         # Center of ring on the helix
+#         center = (helix_radius * np.cos(t) * e1 +
+#                   helix_radius * np.sin(t) * e2 +
+#                   pitch_factor * t * axis_cart)
+#         center += self.cog
+
+#         # Frenet-Serret frame
+#         tangent  = normV(-helix_radius * np.sin(t) * e1 +
+#                           helix_radius * np.cos(t) * e2 +
+#                           pitch_factor * axis_cart)
+#         normal   = -np.cos(t) * e1 - np.sin(t) * e2
+#         binormal = np.cross(tangent, normal)
+
+#         # Ring points
+#         angles = np.linspace(0, 2 * np.pi, n_sides, endpoint=False)
+#         ring = [center + wire_radius * (np.cos(a) * normal +
+#                                         np.sin(a) * binormal)
+#                 for a in angles]
+#         rings.append(ring)
+
+#     # --- Center the tube on self.cog ---
+#     # Compute center of gravity of all ring centers
+#     all_centers = np.array([
+#         helix_radius * np.cos(t) * e1 +
+#         helix_radius * np.sin(t) * e2 +
+#         pitch_factor * t * axis_cart
+#         for t in t_values
+#     ])
+#     tube_cog = all_centers.mean(axis=0)
+#     shift = self.cog - tube_cog
+#     # Apply shift to all rings
+#     rings = [[pt + shift for pt in ring] for ring in rings]
+
+#     # --- Build triangulated surface between adjacent rings ---
+#     cmd = ""
+#     face_idx = 0
+#     for i in range(len(rings) - 1):
+#         r0 = rings[i]
+#         r1 = rings[i + 1]
+#         for j in range(n_sides):
+#             j1 = (j + 1) % n_sides
+
+#             # Two triangles per quad between rings
+#             # Triangle 1: r0[j], r0[j1], r1[j]
+#             p0 = r0[j]
+#             p1 = r0[j1]
+#             p2 = r1[j]
+#             cmd += f"draw htube{face_idx} polygon ["
+#             cmd += f"{{{p0[0]:.4f},{p0[1]:.4f},{p0[2]:.4f}}},"
+#             cmd += f"{{{p1[0]:.4f},{p1[1]:.4f},{p1[2]:.4f}}},"
+#             cmd += f"{{{p2[0]:.4f},{p2[1]:.4f},{p2[2]:.4f}}},"
+#             cmd += "]; "
+#             face_idx += 1
+
+#             # Triangle 2: r1[j], r0[j1], r1[j1]
+#             p0 = r1[j]
+#             p1 = r0[j1]
+#             p2 = r1[j1]
+#             cmd += f"draw htube{face_idx} polygon ["
+#             cmd += f"{{{p0[0]:.4f},{p0[1]:.4f},{p0[2]:.4f}}},"
+#             cmd += f"{{{p1[0]:.4f},{p1[1]:.4f},{p1[2]:.4f}}},"
+#             cmd += f"{{{p2[0]:.4f},{p2[1]:.4f},{p2[2]:.4f}}},"
+#             cmd += "]; "
+#             face_idx += 1
+
+#     cmd += "color $htube* translucent 70 [x828282]; "
+
+#     if not noOutput:
+#         print(f"Helix tube: {face_idx} triangles, "
+#               f"{n_rings} rings x {n_sides} sides")
+#         print("Jmol command: ", cmd)
+#     return cmd
+
+def defHelixShapeForJMol(self, n_rings=50, n_sides=12, noOutput=True):
+    """
+    Generate a Jmol command to visualize the helical envelope as a triangulated tube.
+
+    The tube is built by connecting successive rings of n_sides points each,
+    placed perpendicular to the helix tangent at each sample point.
+    Each pair of adjacent rings generates 2*n_sides triangles.
+    The tube is automatically centered on the NP center of mass.
+
+    Args:
+        n_rings (int): Number of rings along the helix (default: 50).
+        n_sides (int): Number of vertices per ring (default: 12).
+        noOutput (bool): If True, suppresses output. Default is True.
+
+    Returns:
+        str: Jmol command string for the helical tube.
+    """
+    from .geometry import normV
+
+    if not hasattr(self, '_helix_params'):
+        print(f"{bg.DARKREDB}Warning: no helix parameters found. "
+              f"Call applyTorsion with profile='helix' first.{bg.OFF}")
+        return ""
+
+    p            = self._helix_params
+    helix_radius = p['helix_radius']
+    pitch        = p['pitch']
+    axis_cart    = p['axis_cart']
+    L            = p['L']
+    e1           = p['e1']
+    e2           = p['e2']
+    wire_radius  = p['wire_radius']
+    cog_helix    = p['cog_helix']
+    proj_min     = p['proj_min']
+
+    pitch_factor = pitch / (2 * np.pi)
+    stretch      = np.sqrt(1 + (helix_radius / pitch_factor)**2)
+
+    # Sample t values along the helix
+    t_start  = proj_min * 2 * np.pi / pitch / stretch
+    t_end    = t_start + L * 2 * np.pi / pitch / stretch
+    t_values = np.linspace(t_start, t_end, n_rings)
+
+    # --- Build all rings ---
+    rings = []
+    for t in t_values:
+        # Center of ring on the helix (unshifted)
+        center = (helix_radius * np.cos(t) * e1 +
+                  helix_radius * np.sin(t) * e2 +
+                  pitch_factor * t * axis_cart)
+
+        # Frenet-Serret frame
+        tangent  = normV(-helix_radius * np.sin(t) * e1 +
+                          helix_radius * np.cos(t) * e2 +
+                          pitch_factor * axis_cart)
+        normal   = -np.cos(t) * e1 - np.sin(t) * e2
+        binormal = np.cross(tangent, normal)
+
+        # Ring points
+        angles = np.linspace(0, 2 * np.pi, n_sides, endpoint=False)
+        ring   = [center + wire_radius * (np.cos(a) * normal +
+                                          np.sin(a) * binormal)
+                  for a in angles]
+        rings.append(ring)
+
+    # --- Center the tube on self.cog ---
+    # shift = self.cog - cog_helix
+    # rings = [[pt + shift for pt in ring] for ring in rings]
+
+    # --- Build triangulated surface between adjacent rings ---
+    cmd      = ""
+    face_idx = 0
+    for i in range(len(rings) - 1):
+        r0 = rings[i]
+        r1 = rings[i + 1]
+        for j in range(n_sides):
+            j1 = (j + 1) % n_sides
+
+            # Triangle 1: r0[j], r0[j1], r1[j]
+            p0, p1, p2 = r0[j], r0[j1], r1[j]
+            cmd += f"draw htube{face_idx} polygon ["
+            cmd += f"{{{p0[0]:.4f},{p0[1]:.4f},{p0[2]:.4f}}},"
+            cmd += f"{{{p1[0]:.4f},{p1[1]:.4f},{p1[2]:.4f}}},"
+            cmd += f"{{{p2[0]:.4f},{p2[1]:.4f},{p2[2]:.4f}}},"
+            cmd += "]; "
+            face_idx += 1
+
+            # Triangle 2: r1[j], r0[j1], r1[j1]
+            p0, p1, p2 = r1[j], r0[j1], r1[j1]
+            cmd += f"draw htube{face_idx} polygon ["
+            cmd += f"{{{p0[0]:.4f},{p0[1]:.4f},{p0[2]:.4f}}},"
+            cmd += f"{{{p1[0]:.4f},{p1[1]:.4f},{p1[2]:.4f}}},"
+            cmd += f"{{{p2[0]:.4f},{p2[1]:.4f},{p2[2]:.4f}}},"
+            cmd += "]; "
+            face_idx += 1
+
+    cmd += "color $htube* translucent 70 [x828282]; "
+
+    if not noOutput:
+        print(f"Helix tube: {face_idx} triangles, "
+              f"{n_rings} rings x {n_sides} sides")
+        print("Jmol command: ", cmd)
+    return cmd

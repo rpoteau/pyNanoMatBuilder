@@ -769,8 +769,15 @@ class Crystal(pyNMBcore):
 
         # 5) Recenter NP at its center of mass
         self.NP.positions -= self.NP.get_center_of_mass()
-
-        # 6) Measure length and radius
+        
+        # 6) Rotate back to original crystallographic direction
+        self.NP.positions = pyNMBu.rotateMoltoAlignItWithAxis(
+            self.NP.positions,
+            axis=np.array([0, 0, 1]),
+            targetAxis=np.array(self.directionCylinder, dtype=float)
+        )
+        
+        # 7) Measure length and radius
         def measure_cylinder_dimensions(atoms):
             """
             Measure cylinder length and radius from atom positions.

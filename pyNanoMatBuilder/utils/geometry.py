@@ -19,6 +19,7 @@ from ase.visualize import view
 from importlib import resources
 
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from pyNanoMatBuilder import data
 from .core import (pyNMB_location, get_resource_path, timer, RAB, Rbetween2Points,
@@ -1489,9 +1490,6 @@ def peel_by_shifted_ellipsoid(self, shift_dist=2.5, noOutput=False):
                       thresholdCoreSurface=self.thresholdCoreSurface,
                       noOutput=False, is_optimized=False)
 
-import matplotlib.pyplot as plt
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-import numpy as np
 
 def plot_npr_triangle(self=None, is_optimized: bool = False, save_path: str = None, 
                       external_data: dict = None, color_by: str = 'Rg', color: str='viridis'):
@@ -1574,3 +1572,604 @@ def plot_npr_triangle(self=None, is_optimized: bool = False, save_path: str = No
         print(f"✅ Plot saved to: {save_path}")
 
     plt.show()
+
+###################################### chirality
+def _applyRotationRodrigues(positions, axis_cart, angles_deg):
+    """
+    Vectorized rotation of N positions around a single axis, each by its own
+    angle, using Rodrigues' rotation formula. No Python loop — all operations
+    are performed in numpy/C for maximum performance.
+
+    Args:
+        positions (np.ndarray): (N, 3) centered atomic positions.
+        axis_cart (np.ndarray): (3,) unit vector of the rotation axis.
+        angles_deg (np.ndarray): (N,) rotation angles in degrees, one per atom.
+
+    Returns:
+        np.ndarray: (N, 3) rotated positions.
+
+    Note:
+        Rodrigues' formula: v' = v·cos(θ) + (k × v)·sin(θ) + k·(k·v)·(1 - cos(θ))
+        where k is the unit rotation axis and θ is the rotation angle.
+    """
+    angles_rad = np.deg2rad(angles_deg)               # (N,)
+    cos_a = np.cos(angles_rad)[:, np.newaxis]         # (N, 1)
+    sin_a = np.sin(angles_rad)[:, np.newaxis]         # (N, 1)
+
+    k = axis_cart                                     # (3,)
+    kdotv = positions @ k                             # (N,)   k·v per atom
+    kcrossv = np.cross(positions, k)                  # (N, 3) v × k per atom
+
+    rotated = (positions * cos_a
+               - kcrossv * sin_a                      # sign: cross(v,k) = -cross(k,v)
+               + k * (kdotv * (1 - cos_a.squeeze()))[:, np.newaxis])
+    return rotated
+
+
+# def applyTorsion(self,
+#                  axis: [0,0,1],
+#                  axis_def: str = 'hkl',   # 'hkl' or 'cart'
+#                  rate: float = 1.0,
+#                  profile: str = 'linear',
+#                  custom_profile=None,
+#                  pitch: float = None,
+#                  helix_radius: float = None,
+#                  noOutput: bool = False,
+#                 ):
+#     """
+#     Apply a torsion to the atomic positions of a NP along a given crystallographic axis.
+
+#     Each atomic plane perpendicular to the torsion axis is rotated by an angle
+#     that depends on its position along the axis, according to the chosen profile.
+#     The 'helical' profile additionally translates atoms along the axis proportionally
+#     to their rotation angle, producing a helix-like deformation.
+#     Rotations are computed using a fully vectorized implementation of Rodrigues'
+#     formula — no Python loop over atoms.
+
+#     Args:
+#         self: A pyNMBcore instance (Crystal, or any object with self.NP and self.cog).
+#         axis (array-like): Torsion axis in crystallographic coordinates [h, k, l].
+#                            Converted to Cartesian internally.
+#         axis_def (str): Defines the coordinate system of the axis argument. Options:
+#                         'hkl' — axis is given as Miller indices in the crystallographic
+#                                  basis; requires a crystal object with a reciprocal metric
+#                                  tensor (Gstar). Use for Crystal NPs built by pyNanoMatBuilder.
+#                         'cart' — axis is given as a Cartesian direction [x, y, z]; works
+#                                  for any NP, including those loaded from file via from_file().
+#                         Default is 'hkl'.
+#         rate (float): Torsion rate. For 'linear'    : degrees per Å.
+#                                     For 'sinusoidal': peak amplitude in degrees.
+#                                     For 'gaussian'  : peak amplitude in degrees.
+#                                     For 'helical'   : degrees per Å.
+#                                     For 'custom'    : scaling factor applied to
+#                                                       custom_profile(z, L).
+#                                     Default is 1.0.
+#         profile (str): Torsion profile along the axis. Options:
+#                        'linear'     — angle(z) = rate * z
+#                        'sinusoidal' — angle(z) = rate * sin(2π * z / L)
+#                        'gaussian'   — angle(z) = rate * exp(-z² / 2σ²), σ = L/4
+#                        'helical'    — angle(z) = rate * z, plus a translation along
+#                                       the axis of pitch * angle / (2π) per atom,
+#                                       producing a helix-like deformation.
+#                        'helix'      — bending to a helical path: each slice is displaced and reoriented
+#                                      to follow a circular helix of radius helix_radius and pitch pitch.
+#                                      The wire becomes a spring-like structure. Requires helix_radius.
+#                        'custom'     — angle(z) = rate * custom_profile(z, L)
+#                        Default is 'linear'.
+#         custom_profile (callable, optional): A user-defined function f(z, L) -> float
+#                        where z is the signed distance along the axis in Å, and L is
+#                        the total length of the NP along the axis in Å.
+#                        Required when profile='custom'. Example:
+#                            custom_profile = lambda z, L: np.sin(4 * np.pi * z / L)
+#         pitch (float, optional): Helix pitch in Å per turn (Å/360°).
+#                        Required when profile='helical'. Defines how much an atom
+#                        is translated along the axis per full rotation.
+#         noOutput (bool): If True, suppresses output. Default is False.
+
+#     Returns:
+#         np.ndarray: New atomic positions after torsion (N, 3).
+
+#     Raises:
+#         ValueError: If profile is unknown.
+#         ValueError: If custom_profile is None when profile='custom'.
+#         ValueError: If custom_profile is not callable.
+#         ValueError: If pitch is None when profile='helical'.
+
+#     Note:
+#         The torsion is applied around the center of mass of the NP.
+#         The axis is normalized internally.
+#         Rotation is performed using a vectorized Rodrigues formula for
+#         maximum performance (no Python loop over atoms).
+#         Each atomic slice perpendicular to the axis rotates as a rigid body —
+#         no intra-slice distortion. Inter-slice bond stretching increases with
+#         radial distance from the axis.
+
+#     Examples:
+#         # Linear torsion along [0, 0, 1], 2°/Å
+#         NP.applyTorsion(axis=[0, 0, 1], rate=2.0, profile='linear')
+
+#         # Sinusoidal torsion with 45° peak amplitude
+#         NP.applyTorsion(axis=[0, 0, 1], rate=45.0, profile='sinusoidal')
+
+#         # Helical deformation, 5°/Å, 20 Å/turn
+#         NP.applyTorsion(axis=[0, 0, 1], rate=5.0, profile='helical', pitch=20.0)
+
+#         # Custom double-period sinusoidal torsion
+#         NP.applyTorsion(axis=[0, 0, 1], rate=45.0, profile='custom',
+#                         custom_profile=lambda z, L: np.sin(4 * np.pi * z / L))
+#     """
+#     from .crystals import lattice_cart, normV
+
+#     # --- Input validation ---
+#     valid_profiles = ('linear', 'sinusoidal', 'gaussian', 'helical', 'helix', 'custom')
+#     if profile not in valid_profiles:
+#         raise ValueError(f"Unknown torsion profile '{profile}'. "
+#                          f"Choose from {valid_profiles}.")
+#     if profile == 'helix' and helix_radius is None:
+#         raise ValueError("profile='helix' requires a helix_radius value in Å.")
+#     if profile == 'helix' and pitch is None:
+#         raise ValueError("profile='helix' requires a pitch value in Å/turn.")
+#     if profile == 'custom' and custom_profile is None:
+#         raise ValueError("profile='custom' requires a callable custom_profile(z, L).")
+#     if custom_profile is not None and not callable(custom_profile):
+#         raise ValueError("custom_profile must be a callable function f(z, L).")
+#     if profile == 'helical' and pitch is None:
+#         raise ValueError("profile='helical' requires a pitch value in Å/turn.")
+
+#     # --- Convert crystallographic axis to Cartesian and normalize ---
+#     valid_axis_def = ('hkl', 'cart')
+#     if axis_def not in valid_axis_def:
+#         raise ValueError(f"Unknown axis definition '{axis_def}'. "
+#                          f"Choose from {valid_axis_def}.")
+#     if axis_def == 'hkl' and not hasattr(self, 'Gstar'):
+#         raise ValueError("axis_def='hkl' requires a crystal object with a reciprocal "
+#                          "metric tensor (Gstar). Use axis_def='cart' for non-crystal objects.")
+
+#     # --- Convert axis to Cartesian and normalize ---
+#     if axis_def == 'cart':
+#         axis_cart = normV(np.array(axis, dtype=float))
+#     elif axis_def == 'hkl':
+#         axis_cart = lattice_cart(self, [axis], Bravais2cart=True, printV=not noOutput)[0]
+#         axis_cart = normV(axis_cart)
+
+#     # Determine which structure to peel
+#     if self.is_optimized and hasattr(self, 'NP_opt'):
+#         target_attr = 'NP_opt'
+#         status = "optimized structure"
+#     else:
+#         target_attr = 'NP'
+#         status = "initial structure"
+
+#     target_atoms = getattr(self, target_attr)
+#     print(target_atoms)
+#     # --- Center positions on cog ---
+#     positions = target_atoms.get_positions() - self.cog
+
+#     # --- Project each atom onto the torsion axis (signed distance in Å) ---
+#     proj = positions @ axis_cart                      # (N,)
+
+#     # --- Total length of NP along axis ---
+#     L = proj.max() - proj.min()
+
+#     # --- Compute torsion angle for each atom (degrees) ---
+#     if profile == 'linear':
+#         angles = rate * proj
+#     elif profile == 'sinusoidal':
+#         angles = rate * np.sin(2 * np.pi * proj / L)
+#     elif profile == 'gaussian':
+#         sigma = L / 4
+#         angles = rate * np.exp(-proj**2 / (2 * sigma**2))
+#     elif profile == 'helical':
+#         angles = rate * proj
+#     elif profile == 'custom':
+#         angles = rate * np.array([custom_profile(z, L) for z in proj])
+
+#     # --- Inter-slice bond stretching check ---
+#     # For each atom, estimate the maximum tangential displacement between
+#     # adjacent slices at its radial distance from the axis.
+#     # Radial distance of each atom from the torsion axis
+#     radial = np.linalg.norm(
+#         positions - proj[:, np.newaxis] * axis_cart, axis=1
+#     )                                                 # (N,)
+#     R_max = radial.max()                              # maximum radial distance (surface)
+#     R_mean = radial.mean()                            # mean radial distance (core)
+
+#     # Angular increment between adjacent slices (degrees)
+#     # Estimated as rate * mean inter-slice spacing
+#     # Using mean nearest-neighbor distance along axis as slice thickness
+#     proj_sorted = np.sort(proj)
+#     dz_mean = np.mean(np.diff(proj_sorted[::max(1, len(proj_sorted)//200)]))
+#     delta_theta_rad = np.deg2rad(rate * dz_mean)
+
+#     # Tangential displacement at surface and core
+#     delta_tang_surface = R_max * delta_theta_rad      # Å
+#     delta_tang_core = R_mean * delta_theta_rad        # Å
+
+#     if not noOutput:
+#         centertxt("Torsion analysis", bgc='#007a7a', size='14', weight='bold')
+#         centertxt(
+#             f"Applying '{profile}' torsion along crystallographic axis {axis} on the {status}",
+#             bgc='#cbcbcb', size='12', fgc='b', weight='bold',
+#         )
+#         print(f"  Cartesian axis          : {axis_cart}")
+#         print(f"  NP length along axis    : {L:.2f} Å")
+#         print(f"  Max radial distance     : {R_max:.2f} Å")
+#         print(f"  rate                    : {rate} °/Å")
+#         print(f"  max angle               : {np.max(np.abs(angles)):.2f}°")
+#         if profile == 'helical':
+#             print(f"  pitch                   : {pitch:.2f} Å/turn")
+#         print(f"  --- Inter-slice bond stretching estimate ---")
+#         print(f"  Mean slice thickness    : {dz_mean:.2f} Å")
+#         print(f"  Angular increment Δθ    : {np.rad2deg(delta_theta_rad):.4f}°/slice")
+#         print(f"  Tangential displacement : {delta_tang_surface:.4f} Å (surface, r={R_max:.1f} Å)")
+#         print(f"                           {delta_tang_core:.4f} Å (mean core, r={R_mean:.1f} Å)")
+
+#     # --- Apply vectorized Rodrigues rotation ---
+#     if profile == 'helical':
+#         translations = pitch * np.deg2rad(angles) / (2 * np.pi)  # (N,) Å
+#         new_positions = (_applyRotationRodrigues(positions, axis_cart, angles)
+#                          + translations[:, np.newaxis] * axis_cart)
+#     else:
+#         new_positions = _applyRotationRodrigues(positions, axis_cart, angles)
+
+#     # --- Restore cog offset ---
+#     self.NP.set_positions(new_positions)
+        
+#     # Update center of mass after torsion
+#     self.cog = self.NP.get_center_of_mass()
+    
+#     # Sync Metadata and Clean Stale Data !!!
+#     self._flush_stale_data(shape_update="_torsion")
+#     self.is_optimized = False
+#     self.propPostMake(skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
+#                       thresholdCoreSurface=self.thresholdCoreSurface,
+#                       noOutput=noOutput, is_optimized=False)
+
+def applyTorsion(self,
+                 axis: [0,0,1],
+                 axis_def: str = 'hkl',
+                 rate: float = 1.0,
+                 profile: str = 'linear',
+                 custom_profile=None,
+                 pitch: float = None,
+                 helix_radius: float = None,
+                 chirality = 'RH',
+                 noOutput: bool = False,
+                ):
+    """
+    Apply a torsion to the atomic positions of a NP along a given crystallographic axis.
+
+    Each atomic plane perpendicular to the torsion axis is rotated by an angle
+    that depends on its position along the axis, according to the chosen profile.
+    The 'helical' profile additionally translates atoms along the axis proportionally
+    to their rotation angle, producing a helix-like deformation.
+    The 'helix' profile bends the entire wire to follow a circular helical path,
+    like a spring.
+    Rotations are computed using a fully vectorized implementation of Rodrigues'
+    formula — no Python loop over atoms.
+
+    Args:
+        self: A pyNMBcore instance (Crystal, or any object with self.NP and self.cog).
+        axis (array-like): Torsion axis in crystallographic coordinates [h, k, l]
+                           or Cartesian [x, y, z] depending on axis_def.
+        axis_def (str): Defines the coordinate system of the axis argument. Options:
+                        'hkl' — axis is given as Miller indices in the crystallographic
+                                 basis; requires a crystal object with a reciprocal metric
+                                 tensor (Gstar). Use for Crystal NPs built by pyNanoMatBuilder.
+                        'cart' — axis is given as a Cartesian direction [x, y, z]; works
+                                 for any NP, including those loaded from file via from_file().
+                        Default is 'hkl'.
+        rate (float): Torsion rate. For 'linear'    : degrees per Å.
+                                    For 'sinusoidal': peak amplitude in degrees.
+                                    For 'gaussian'  : peak amplitude in degrees.
+                                    For 'helical'   : degrees per Å.
+                                    For 'helix'     : not used.
+                                    For 'custom'    : scaling factor applied to
+                                                      custom_profile(z, L).
+                                    Default is 1.0.
+        profile (str): Torsion profile along the axis. Options:
+                       'linear'     — angle(z) = rate * z
+                       'sinusoidal' — angle(z) = rate * sin(2π * z / L)
+                       'gaussian'   — angle(z) = rate * exp(-z² / 2σ²), σ = L/4
+                       'helical'    — angle(z) = rate * z, plus a translation along
+                                      the axis of pitch * angle / (2π) per atom,
+                                      producing a wire twisted on itself.
+                       'helix'      — bends the wire to follow a circular helical path
+                                      of radius helix_radius and pitch pitch, using the
+                                      Frenet-Serret local frame. The wire becomes a
+                                      spring-like structure. Requires helix_radius and pitch.
+                                      rate is not used for this profile.
+                       'custom'     — angle(z) = rate * custom_profile(z, L)
+                       Default is 'linear'.
+        custom_profile (callable, optional): A user-defined function f(z, L) -> float
+                       where z is the signed distance along the axis in Å, and L is
+                       the total length of the NP along the axis in Å.
+                       Required when profile='custom'. Example:
+                           custom_profile = lambda z, L: np.sin(4 * np.pi * z / L)
+        pitch (float, optional): Helix pitch in Å per turn (Å/360°).
+                       Required when profile='helical' or 'helix'.
+        helix_radius (float, optional): Radius of the helical path in Å.
+                       Required when profile='helix'.
+        chirality (str): Handedness of the torsion or helix. Options:
+                         'RH' — Right-Handed (default): standard mathematical
+                                 positive rotation (counter-clockwise when viewed
+                                 from the positive axis direction).
+                         'LH' — Left-Handed: mirror image of the Right-Handed
+                                 version, obtained by flipping the rotation
+                                 direction (rotation-based profiles) or the
+                                 helix winding direction (profile='helix').
+                         Default is 'RH'.
+        noOutput (bool): If True, suppresses output. Default is False.
+
+    Returns:
+        None. Updates self.NP.positions, self.cog, and calls propPostMake.
+
+    Raises:
+        ValueError: If profile is unknown.
+        ValueError: If custom_profile is None when profile='custom'.
+        ValueError: If custom_profile is not callable.
+        ValueError: If pitch is None when profile='helical' or 'helix'.
+        ValueError: If helix_radius is None when profile='helix'.
+        ValueError: If axis_def is unknown.
+        ValueError: If axis_def='hkl' and Gstar is not available.
+
+    Note:
+        The torsion is applied around the center of mass of the NP.
+        The axis is normalized internally.
+        For profiles other than 'helix', rotation is performed using a vectorized
+        Rodrigues formula for maximum performance (no Python loop over atoms).
+        Each atomic slice perpendicular to the axis rotates as a rigid body —
+        no intra-slice distortion. Inter-slice bond stretching increases with
+        radial distance from the axis.
+        For profile='helix', each slice is displaced and reoriented using the
+        Frenet-Serret frame of the helix — no internal distortion of each slice.
+
+    Examples:
+        # Linear torsion along [0, 0, 1], 2°/Å
+        NP.applyTorsion(axis=[0, 0, 1], rate=2.0, profile='linear')
+
+        # Sinusoidal torsion with 45° peak amplitude
+        NP.applyTorsion(axis=[0, 0, 1], rate=45.0, profile='sinusoidal')
+
+        # Wire twisted on itself, 5°/Å, 200 Å/turn
+        NP.applyTorsion(axis=[0, 0, 1], rate=5.0, profile='helical', pitch=200.0)
+
+        # Wire bent to a helical path, radius 50 Å, pitch 100 Å/turn
+        NP.applyTorsion(axis=[0, 0, 1], rate=1.0, profile='helix',
+                        helix_radius=50.0, pitch=100.0, axis_def='cart')
+
+        # Custom double-period sinusoidal torsion
+        NP.applyTorsion(axis=[0, 0, 1], rate=45.0, profile='custom',
+                        custom_profile=lambda z, L: np.sin(4 * np.pi * z / L))
+    """
+    from .crystals import lattice_cart, normV
+
+    if chirality not in ["RH", "LH"]:
+        raise ValueError(
+            f"Invalid chirality '{chirality}'. "
+            "Must be either 'RH' (Right-Handed) or 'LH' (Left-Handed)."
+        )
+    self.chirality = chirality
+
+    chiral_str = "Right-Handed"
+    if chirality == "LH":
+        chiral_str = "Left-Handed"
+
+    # --- Input validation ---
+    valid_profiles = ('linear', 'sinusoidal', 'gaussian', 'helical', 'helix', 'custom')
+    if profile not in valid_profiles:
+        raise ValueError(f"Unknown torsion profile '{profile}'. "
+                         f"Choose from {valid_profiles}.")
+    if profile == 'helix' and helix_radius is None:
+        raise ValueError("profile='helix' requires a helix_radius value in Å.")
+    if profile in ('helix', 'helical') and pitch is None:
+        raise ValueError(f"profile='{profile}' requires a pitch value in Å/turn.")
+    if profile == 'custom' and custom_profile is None:
+        raise ValueError("profile='custom' requires a callable custom_profile(z, L).")
+    if custom_profile is not None and not callable(custom_profile):
+        raise ValueError("custom_profile must be a callable function f(z, L).")
+    if profile == 'helix' and rate != 1.0 and not noOutput:
+        print("  Warning: rate is not used for profile='helix' and will be ignored.")
+
+    valid_axis_def = ('hkl', 'cart')
+    if axis_def not in valid_axis_def:
+        raise ValueError(f"Unknown axis definition '{axis_def}'. "
+                         f"Choose from {valid_axis_def}.")
+    if axis_def == 'hkl' and not hasattr(self, 'Gstar'):
+        raise ValueError("axis_def='hkl' requires a crystal object with a reciprocal "
+                         "metric tensor (Gstar). Use axis_def='cart' for non-crystal objects.")
+
+    # --- Convert axis to Cartesian and normalize ---
+    if axis_def == 'cart':
+        axis_cart = normV(np.array(axis, dtype=float))
+    else:  # 'hkl'
+        axis_cart = lattice_cart(self, [axis], Bravais2cart=True, printV=not noOutput)[0]
+        axis_cart = normV(axis_cart)
+
+    # --- Determine which structure to use ---
+    if self.is_optimized and hasattr(self, 'NP_opt'):
+        target_attr = 'NP_opt'
+        status = "optimized structure"
+    else:
+        target_attr = 'NP'
+        status = "initial structure"
+
+    target_atoms = getattr(self, target_attr)
+
+    # --- Center positions on cog ---
+    positions = target_atoms.get_positions() - self.cog
+
+    # --- Project each atom onto the torsion axis (signed distance in Å) ---
+    proj = positions @ axis_cart                          # (N,)
+
+    # --- Total length of NP along axis ---
+    L = proj.max() - proj.min()
+    
+    # Inter-slice bond stretching check
+    radial = np.linalg.norm(
+        positions - proj[:, np.newaxis] * axis_cart, axis=1
+    )
+
+    # =========================================================
+    # --- Profile 'helix' : bend wire to a helical path ---
+    # =========================================================
+    if profile == 'helix':
+        # Build local orthonormal frame (e1, e2, e3)
+        e3 = axis_cart
+        arbitrary = np.array([1, 0, 0]) if abs(axis_cart[0]) < 0.9 else np.array([0, 1, 0])
+        e1 = normV(arbitrary - np.dot(arbitrary, e3) * e3)
+        e2 = np.cross(e3, e1)
+
+        # Apply chirality — flipping e2 mirrors the helix
+        if chirality == 'LH':
+            e2 = -e2
+
+        # Arc length correction factor
+        # ds/dz = sqrt(1 + (2πR/pitch)²)
+        # Without correction, inter-plane distances are stretched by this factor
+        pitch_factor = pitch / (2 * np.pi)
+        stretch = np.sqrt(1 + (helix_radius / pitch_factor)**2)
+
+        # Corrected parameter t along the helix (radians)
+        # Dividing by stretch ensures equal arc-length spacing between slices
+        t = proj * 2 * np.pi / pitch / stretch                # (N,)
+
+        # Helix center positions for each atom's slice
+        # proj is also corrected to match the compressed z-spacing
+        helix_centers = (helix_radius * np.cos(t)[:, np.newaxis] * e1 +
+                         helix_radius * np.sin(t)[:, np.newaxis] * e2 +
+                         (proj / stretch)[:, np.newaxis] * e3)  # (N, 3)
+
+        # Frenet-Serret local frame
+        tangent = (-helix_radius * np.sin(t)[:, np.newaxis] * e1 +
+                    helix_radius * np.cos(t)[:, np.newaxis] * e2 +
+                    pitch_factor * e3)
+        tangent = tangent / np.linalg.norm(tangent, axis=1, keepdims=True)
+
+        normal = (-np.cos(t)[:, np.newaxis] * e1 -
+                   np.sin(t)[:, np.newaxis] * e2)
+
+        binormal = np.cross(tangent, normal)
+
+        # Transverse displacement in original frame
+        transverse = positions - proj[:, np.newaxis] * e3
+        tr_e1 = transverse @ e1
+        tr_e2 = transverse @ e2
+
+        # Re-express in Frenet-Serret frame
+        new_positions = (helix_centers +
+                         tr_e1[:, np.newaxis] * normal +
+                         tr_e2[:, np.newaxis] * binormal)
+
+        if not noOutput:
+            centertxt("Helix bending analysis", bgc='#007a7a', size='14', weight='bold')
+            centertxt(
+                f"{chiral_str} Bending wire to helical path on the {status}",
+                bgc='#cbcbcb', size='12', fgc='b', weight='bold',
+            )
+            print(f"  Cartesian axis          : {axis_cart}")
+            print(f"  Wire length             : {L:.2f} Å")
+            print(f"  Helix radius            : {helix_radius:.2f} Å")
+            print(f"  Pitch                   : {pitch:.2f} Å/turn")
+            print(f"  Arc stretch factor      : {stretch:.3f}  "
+                  f"({'warning: significant distortion !' if stretch > 1.5 else 'ok'})")
+            print(f"  Inter-plane distortion  : {(stretch-1)*100:.1f} %")
+            print(f"  Number of turns         : {L / pitch / stretch:.2f}")
+            print(f"  Effective helix length  : {L / stretch:.2f} Å  "
+                  f"(compressed from {L:.2f} Å)")
+
+    # =========================================================
+    # --- Other profiles : rotation-based torsion ---
+    # =========================================================
+    else:
+        # Compute torsion angle for each atom (degrees)
+        if profile == 'linear':
+            angles = rate * proj
+        elif profile == 'sinusoidal':
+            angles = rate * np.sin(2 * np.pi * proj / L)
+        elif profile == 'gaussian':
+            sigma = L / 4
+            angles = rate * np.exp(-proj**2 / (2 * sigma**2))
+        elif profile == 'helical':
+            angles = rate * proj
+        elif profile == 'custom':
+            angles = rate * np.array([custom_profile(z, L) for z in proj])
+
+        # Apply chirality — LH flips the rotation direction
+        if chirality == 'LH':
+            angles = -angles
+
+        R_max = radial.max()
+        R_mean = radial.mean()
+        proj_sorted = np.sort(proj)
+        dz_mean = np.mean(np.diff(proj_sorted[::max(1, len(proj_sorted)//200)]))
+        delta_theta_rad = np.deg2rad(rate * dz_mean)
+        delta_tang_surface = R_max * delta_theta_rad
+        delta_tang_core = R_mean * delta_theta_rad
+
+        if not noOutput:
+            centertxt("Torsion analysis", bgc='#007a7a', size='14', weight='bold')
+            centertxt(
+                f"Applying {chiral_str} '{profile}' torsion along axis {axis} on the {status}",
+                bgc='#cbcbcb', size='12', fgc='b', weight='bold',
+            )
+            print(f"  Cartesian axis          : {axis_cart}")
+            print(f"  NP length along axis    : {L:.2f} Å")
+            print(f"  Max radial distance     : {R_max:.2f} Å")
+            print(f"  rate                    : {rate} °/Å")
+            print(f"  max angle               : {np.max(np.abs(angles)):.2f}°")
+            if profile == 'helical':
+                print(f"  pitch                   : {pitch:.2f} Å/turn")
+            print(f"  --- Inter-slice bond stretching estimate ---")
+            print(f"  Mean slice thickness    : {dz_mean:.2f} Å")
+            print(f"  Angular increment Δθ    : {np.rad2deg(delta_theta_rad):.4f}°/slice")
+            print(f"  Tangential displacement : {delta_tang_surface:.4f} Å (surface, r={R_max:.1f} Å)")
+            print(f"                           {delta_tang_core:.4f} Å (mean core, r={R_mean:.1f} Å)")
+
+        # Apply vectorized Rodrigues rotation
+        if profile == 'helical':
+            translations = pitch * np.deg2rad(angles) / (2 * np.pi)
+            new_positions = (_applyRotationRodrigues(positions, axis_cart, angles)
+                             + translations[:, np.newaxis] * axis_cart)
+        else:
+            new_positions = _applyRotationRodrigues(positions, axis_cart, angles)
+
+    # --- Restore cog offset and update ASE object ---
+    new_positions = new_positions + self.cog
+    self.NP.set_positions(new_positions)
+
+    # Update center of mass after torsion
+    self.cog = self.NP.get_center_of_mass()
+
+    # Invalidate trPlanes — geometry has changed, old planes are no longer valid
+    self.trPlanes = None
+    self.trPlanes_Wulff = None
+    self.trPlanes_opt = None
+
+    # Sync Metadata and Clean Stale Data
+    self._flush_stale_data(shape_update="_torsion")
+    self.is_optimized = False
+    if profile == 'helix':
+        # Store helix parameters for later visualization
+        self._helix_params = {
+            'helix_radius': helix_radius,
+            'pitch':        pitch,
+            'axis_cart':    axis_cart,
+            'L':            L,
+            'e1':           e1,
+            'e2':           e2,
+            'wire_radius':  np.max(radial),
+            'cog_helix':    helix_centers.mean(axis=0) + self.cog,
+            'proj_min':     proj.min()
+        }
+
+        self.jmolCrystalShape = False
+        if not noOutput:
+            print(f"{bg.DARKREDB}Warning: jmolCrystalShape disabled for profile='helix' — "
+                  f"crystal shape analysis is not meaningful for a bent wire. "
+                  f"jMolCS and jMolCS_opt will not be available.{bg.OFF}")
+            print(f"{bg.LIGHTGREENB}To visualize the helical envelope, use: "
+                  f"script = NP.defHelixShapeForJMol(){bg.OFF}")
+    self.propPostMake(skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
+                      thresholdCoreSurface=self.thresholdCoreSurface,
+                      noOutput=noOutput, is_optimized=False)

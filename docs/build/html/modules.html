@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.11.0 documentation</title>
+  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.11.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="canonical" href="https://pynanomatbuilder.readthedocs.io/modules.html" />
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=f3b36f1a"></script>
+      <script src="_static/documentation_options.js?v=57cbeb03"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -674,6 +674,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.peel_by_coordination"><code class="docutils literal notranslate"><span class="pre">peel_by_coordination()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.peel_by_shifted_ellipsoid"><code class="docutils literal notranslate"><span class="pre">peel_by_shifted_ellipsoid()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.plot_npr_triangle"><code class="docutils literal notranslate"><span class="pre">plot_npr_triangle()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.applyTorsion"><code class="docutils literal notranslate"><span class="pre">applyTorsion()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyNanoMatBuilder.utils.crystals">Crystal &amp; Wulff Utilities (crystals.py)</a><ul>
@@ -747,6 +748,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defCrystalShapeForJMol"><code class="docutils literal notranslate"><span class="pre">defCrystalShapeForJMol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.saveCN4JMol"><code class="docutils literal notranslate"><span class="pre">saveCN4JMol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.DrawJmol"><code class="docutils literal notranslate"><span class="pre">DrawJmol()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defHelixShapeForJMol"><code class="docutils literal notranslate"><span class="pre">defHelixShapeForJMol()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -7323,6 +7325,141 @@ self.is_optimized is reset to False.</p>
 <dd><p>Hybrid Sauer Plotter for pyNanoMatBuilder with precise colorbar scaling and bold formatting.</p>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.applyTorsion">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">applyTorsion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_def</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'hkl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pitch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">helix_radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chirality</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RH'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.applyTorsion" title="Link to this definition"></a></dt>
+<dd><p>Apply a torsion to the atomic positions of a NP along a given crystallographic axis.</p>
+<p>Each atomic plane perpendicular to the torsion axis is rotated by an angle
+that depends on its position along the axis, according to the chosen profile.
+The ‘helical’ profile additionally translates atoms along the axis proportionally
+to their rotation angle, producing a helix-like deformation.
+The ‘helix’ profile bends the entire wire to follow a circular helical path,
+like a spring.
+Rotations are computed using a fully vectorized implementation of Rodrigues’
+formula — no Python loop over atoms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – A pyNMBcore instance (Crystal, or any object with self.NP and self.cog).</p></li>
+<li><p><strong>axis</strong> (<em>array-like</em>) – Torsion axis in crystallographic coordinates [h, k, l]
+or Cartesian [x, y, z] depending on axis_def.</p></li>
+<li><p><strong>axis_def</strong> (<em>str</em>) – <p>Defines the coordinate system of the axis argument. Options:
+‘hkl’ — axis is given as Miller indices in the crystallographic</p>
+<blockquote>
+<div><p>basis; requires a crystal object with a reciprocal metric
+tensor (Gstar). Use for Crystal NPs built by pyNanoMatBuilder.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>’cart’ — axis is given as a Cartesian direction [x, y, z]; works</dt><dd><p>for any NP, including those loaded from file via from_file().</p>
+</dd>
+</dl>
+<p>Default is ‘hkl’.</p>
+</p></li>
+<li><p><strong>rate</strong> (<em>float</em>) – <p>Torsion rate. For ‘linear’    : degrees per Å.
+For ‘sinusoidal’: peak amplitude in degrees.
+For ‘gaussian’  : peak amplitude in degrees.
+For ‘helical’   : degrees per Å.
+For ‘helix’     : not used.
+For ‘custom’    : scaling factor applied to</p>
+<blockquote>
+<div><p>custom_profile(z, L).</p>
+</div></blockquote>
+<p>Default is 1.0.</p>
+</p></li>
+<li><p><strong>profile</strong> (<em>str</em>) – <p>Torsion profile along the axis. Options:
+‘linear’     — angle(z) = rate * z
+‘sinusoidal’ — angle(z) = rate * sin(2π * z / L)
+‘gaussian’   — angle(z) = rate * exp(-z² / 2σ²), σ = L/4
+‘helical’    — angle(z) = rate * z, plus a translation along</p>
+<blockquote>
+<div><p>the axis of pitch * angle / (2π) per atom,
+producing a wire twisted on itself.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>’helix’      — bends the wire to follow a circular helical path</dt><dd><p>of radius helix_radius and pitch pitch, using the
+Frenet-Serret local frame. The wire becomes a
+spring-like structure. Requires helix_radius and pitch.
+rate is not used for this profile.</p>
+</dd>
+</dl>
+<p>’custom’     — angle(z) = rate * custom_profile(z, L)
+Default is ‘linear’.</p>
+</p></li>
+<li><p><strong>custom_profile</strong> (<em>callable</em><em>, </em><em>optional</em>) – <p>A user-defined function f(z, L) -&gt; float
+where z is the signed distance along the axis in Å, and L is
+the total length of the NP along the axis in Å.
+Required when profile=’custom’. Example:</p>
+<blockquote>
+<div><p>custom_profile = lambda z, L: np.sin(4 * np.pi * z / L)</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>pitch</strong> (<em>float</em><em>, </em><em>optional</em>) – Helix pitch in Å per turn (Å/360°).
+Required when profile=’helical’ or ‘helix’.</p></li>
+<li><p><strong>helix_radius</strong> (<em>float</em><em>, </em><em>optional</em>) – Radius of the helical path in Å.
+Required when profile=’helix’.</p></li>
+<li><p><strong>chirality</strong> (<em>str</em>) – <p>Handedness of the torsion or helix. Options:
+‘RH’ — Right-Handed (default): standard mathematical</p>
+<blockquote>
+<div><p>positive rotation (counter-clockwise when viewed
+from the positive axis direction).</p>
+</div></blockquote>
+<dl class="simple">
+<dt>’LH’ — Left-Handed: mirror image of the Right-Handed</dt><dd><p>version, obtained by flipping the rotation
+direction (rotation-based profiles) or the
+helix winding direction (profile=’helix’).</p>
+</dd>
+</dl>
+<p>Default is ‘RH’.</p>
+</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None. Updates self.NP.positions, self.cog, and calls propPostMake.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong> – If profile is unknown.</p></li>
+<li><p><strong>ValueError</strong> – If custom_profile is None when profile=’custom’.</p></li>
+<li><p><strong>ValueError</strong> – If custom_profile is not callable.</p></li>
+<li><p><strong>ValueError</strong> – If pitch is None when profile=’helical’ or ‘helix’.</p></li>
+<li><p><strong>ValueError</strong> – If helix_radius is None when profile=’helix’.</p></li>
+<li><p><strong>ValueError</strong> – If axis_def is unknown.</p></li>
+<li><p><strong>ValueError</strong> – If axis_def=’hkl’ and Gstar is not available.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The torsion is applied around the center of mass of the NP.
+The axis is normalized internally.
+For profiles other than ‘helix’, rotation is performed using a vectorized
+Rodrigues formula for maximum performance (no Python loop over atoms).
+Each atomic slice perpendicular to the axis rotates as a rigid body —
+no intra-slice distortion. Inter-slice bond stretching increases with
+radial distance from the axis.
+For profile=’helix’, each slice is displaced and reoriented using the
+Frenet-Serret frame of the helix — no internal distortion of each slice.</p>
+</div>
+<p class="rubric">Examples</p>
+<p># Linear torsion along [0, 0, 1], 2°/Å
+NP.applyTorsion(axis=[0, 0, 1], rate=2.0, profile=’linear’)</p>
+<p># Sinusoidal torsion with 45° peak amplitude
+NP.applyTorsion(axis=[0, 0, 1], rate=45.0, profile=’sinusoidal’)</p>
+<p># Wire twisted on itself, 5°/Å, 200 Å/turn
+NP.applyTorsion(axis=[0, 0, 1], rate=5.0, profile=’helical’, pitch=200.0)</p>
+<p># Wire bent to a helical path, radius 50 Å, pitch 100 Å/turn
+NP.applyTorsion(axis=[0, 0, 1], rate=1.0, profile=’helix’,</p>
+<blockquote>
+<div><p>helix_radius=50.0, pitch=100.0, axis_def=’cart’)</p>
+</div></blockquote>
+<p># Custom double-period sinusoidal torsion
+NP.applyTorsion(axis=[0, 0, 1], rate=45.0, profile=’custom’,</p>
+<blockquote>
+<div><p>custom_profile=lambda z, L: np.sin(4 * np.pi * z / L))</p>
+</div></blockquote>
+</dd></dl>
+
 </section>
 <section id="module-pyNanoMatBuilder.utils.crystals">
 <span id="crystal-wulff-utilities-crystals-py"></span><h2>Crystal &amp; Wulff Utilities (crystals.py)<a class="headerlink" href="#module-pyNanoMatBuilder.utils.crystals" title="Link to this heading"></a></h2>
@@ -8345,6 +8482,31 @@ Uses KDTree for neighbor searching and Numba for parallelized math.</p>
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.external_pgm.DrawJmol">
 <span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">DrawJmol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scriptJ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.DrawJmol" title="Link to this definition"></a></dt>
 <dd><p>Generate a Jmol visualization from an existing XYZ file.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.external_pgm.defHelixShapeForJMol">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">defHelixShapeForJMol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_rings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_sides</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.defHelixShapeForJMol" title="Link to this definition"></a></dt>
+<dd><p>Generate a Jmol command to visualize the helical envelope as a triangulated tube.</p>
+<p>The tube is built by connecting successive rings of n_sides points each,
+placed perpendicular to the helix tangent at each sample point.
+Each pair of adjacent rings generates 2*n_sides triangles.
+The tube is automatically centered on the NP center of mass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_rings</strong> (<em>int</em>) – Number of rings along the helix (default: 50).</p></li>
+<li><p><strong>n_sides</strong> (<em>int</em>) – Number of vertices per ring (default: 12).</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Jmol command string for the helical tube.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>

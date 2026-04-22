@@ -21,7 +21,7 @@ class PlatonicNP(pyNMBcore):
         super().__init__(**kwargs)
 
 ###############################################################################
-class regfccOh(PlatonicNP):
+class regfccOh(PlatonicNP):    
     """A class for generating XYZ and CIF files
     of regular fcc octahedral nanoparticles (NPs).
 

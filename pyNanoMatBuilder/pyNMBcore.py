@@ -86,47 +86,136 @@ class pyNMBcore:
         self.WulffShape = None
 
     def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1):
+        """
+        Optimize the NP geometry using an ASE calculator.
+        See utils/energy.optimize for full documentation.
+
+        Args:
+            calculator (str): ASE calculator to use (default: 'EMT').
+            optimizer (str): ASE optimizer to use (default: 'QN').
+            fthreshold (float): Force convergence threshold in eV/Å (default: 0.1).
+        """
         from .utils.energy import optimize
         return optimize(self, calculator, optimizer, fthreshold)
     
     def _update_sasview_dims_from_spheres(self, noOutput = None):
+        """
+        Update SasView dimensions from inscribed/circumscribed sphere radii.
+        See utils/prop._update_sasview_dims_from_spheres for full documentation.
+
+        Args:
+            noOutput (bool): If True, suppresses output. Default is self.noOutput.
+        """
         from .utils.prop import _update_sasview_dims_from_spheres
         return _update_sasview_dims_from_spheres(self, noOutput)
 
     def Inscribed_circumscribed_spheres(self, noOutput=None):
+        """
+        Compute the inscribed and circumscribed sphere diameters of the NP.
+        See utils/prop.Inscribed_circumscribed_spheres for full documentation.
+
+        Args:
+            noOutput (bool): If True, suppresses output. Default is self.noOutput.
+        """
         from .utils.prop import Inscribed_circumscribed_spheres
         if noOutput is None: noOutput = self.noOutput    
         return Inscribed_circumscribed_spheres(self, noOutput)
 
     def get_ellipsoid_analysis(self, noOutput=None):
+        """
+        Fit an ellipsoid to the NP and compute its principal axes and dimensions.
+        See utils/prop.get_ellipsoid_analysis for full documentation.
+
+        Args:
+            noOutput (bool): If True, suppresses output. Default is self.noOutput.
+        """
         from .utils.prop import get_ellipsoid_analysis
         if noOutput is None: noOutput = self.noOutput    
         return get_ellipsoid_analysis(self, noOutput)
 
     def peel_by_coordination(self, threshold_peeling=6, Rmax=2.9, noOutput=None):
+        """
+        Remove surface atoms with coordination number below threshold_peeling.
+        See utils/geometry.peel_by_coordination for full documentation.
+
+        Args:
+            threshold_peeling (int): Minimum coordination number to keep an atom
+                                     (default: 6).
+            Rmax (float): Cutoff distance in Å for neighbor search (default: 2.9).
+            noOutput (bool): If True, suppresses output. Default is self.noOutput.
+        """
         from .utils.geometry import peel_by_coordination
         if noOutput is None: noOutput = self.noOutput            
         return peel_by_coordination(self, threshold_peeling, Rmax, noOutput)
 
     def peel_by_shifted_ellipsoid(self, shift_dist=2.5, noOutput=None):
+        """
+        Truncate the NP using a shape-adaptive ellipsoidal envelope shifted
+        in a random direction, simulating asymmetric growth or dissolution.
+        See utils/geometry.peel_by_shifted_ellipsoid for full documentation.
+
+        Args:
+            shift_dist (float): Shift distance in Å, approximately one atomic
+                                 layer (default: 2.5).
+            noOutput (bool): If True, suppresses output. Default is self.noOutput.
+        """
         from .utils.geometry import peel_by_shifted_ellipsoid
         if noOutput is None: noOutput = self.noOutput            
         return peel_by_shifted_ellipsoid(self, shift_dist, noOutput)
 
     def _flush_stale_data(self, shape_update=None):
+        """
+        Reset all stale derived attributes after a geometry modification.
+        See utils/core._flush_stale_data for full documentation.
+
+        Args:
+            shape_update (str, optional): Tag appended to self.shape to record
+                                          the modification (e.g. '_torsion').
+        """
         from .utils.core import _flush_stale_data
         return _flush_stale_data(self, shape_update)
 
-    def propPostMake(self, skipSymmetryAnalyzis=None, thresholdCoreSurface=None, noOutput=None, is_optimized=None):
+    def propPostMake(self, skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
+                     thresholdCoreSurface=None, noOutput=None, is_optimized=None):
+        """
+        Compute post-construction properties: MOI, NPR, Rg, core/surface,
+        convex hull, inscribed/circumscribed spheres, ellipsoid, and JMol script.
+        See utils/prop.propPostMake for full documentation.
+
+        Args:
+            skipChiralityCalculation (bool): If True, skips OPD chirality index
+                                             (default: self.skipChiralityCalculation).
+            skipSymmetryAnalyzis (bool): If True, skips pymatgen symmetry analysis
+                                         (default: self.skipSymmetryAnalyzis).
+            thresholdCoreSurface (float): Distance threshold for core/surface
+                                          differentiation (default: self.thresholdCoreSurface).
+            noOutput (bool): If True, suppresses output (default: self.noOutput).
+            is_optimized (bool): If True, targets NP_opt (default: self.is_optimized).
+        """
         from .utils.prop import propPostMake
+        if skipChiralityCalculation is None: skipChiralityCalculation = self.skipChiralityCalculation
         if skipSymmetryAnalyzis is None: skipSymmetryAnalyzis = self.skipSymmetryAnalyzis
         if thresholdCoreSurface is None: thresholdCoreSurface = self.thresholdCoreSurface
         if noOutput is None: noOutput = self.noOutput
         if is_optimized is None: is_optimized = self.is_optimized
-        return propPostMake(self, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput, is_optimized)
+        return propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis,
+                            thresholdCoreSurface, noOutput, is_optimized)
 
     def plot_npr_triangle(self=None, is_optimized: bool = None, save_path: str = None, 
                       external_data: dict = None, color_by: str = 'Rg', color: str = 'viridis'):
+        """
+        Plot the NPR triangle (Rod/Sphere/Disk) for shape classification.
+        See utils/geometry.plot_npr_triangle for full documentation.
+
+        Args:
+            is_optimized (bool): If True, uses optimized structure data
+                                  (default: self.is_optimized).
+            save_path (str, optional): Path to save the figure (SVG or PNG).
+            external_data (dict, optional): Population data for multi-NP plots,
+                                            with keys 'NPR', 'Rg', and 'shapes'.
+            color_by (str): Coloring scheme: 'Rg' or 'shapes' (default: 'Rg').
+            color (str): Matplotlib colormap name (default: 'viridis').
+        """
         from .utils.geometry import plot_npr_triangle
 
         if self is not None:
@@ -141,6 +230,52 @@ class pyNMBcore:
             color=color
         )
 
+    def applyTorsion(self, axis=[0,0,1], axis_def='hkl', rate: float = 1.0, 
+                 profile: str = 'linear', custom_profile=None,
+                 pitch: float = None, helix_radius: float = None,
+                 chirality: str = 'RH',
+                 noOutput: bool = None):
+        """
+        Apply a torsion to the NP along a given axis.
+        See utils/geometry.applyTorsion for full documentation.
+    
+        Args:
+            axis (array-like): Torsion axis in crystallographic [h, k, l] or
+                               Cartesian [x, y, z] coordinates depending on axis_def.
+            axis_def (str): Coordinate system of axis: 'hkl' (default) or 'cart'.
+            rate (float): Torsion rate in degrees per Å (linear, helical), peak
+                          amplitude in degrees (sinusoidal, gaussian), or scaling
+                          factor (custom). Not used for 'helix'. Default is 1.0.
+            profile (str): Torsion profile: 'linear', 'sinusoidal', 'gaussian',
+                           'helical', 'helix', or 'custom'. Default is 'linear'.
+            custom_profile (callable, optional): User-defined function f(z, L) -> float,
+                           required when profile='custom'.
+            pitch (float, optional): Helix pitch in Å/turn, required when
+                           profile='helical' or 'helix'.
+            helix_radius (float, optional): Radius of the helical path in Å,
+                           required when profile='helix'.
+            chirality (str): Handedness of the torsion or helix: 'RH' (Right-Handed,
+                         default) or 'LH' (Left-Handed, mirror image).
+            noOutput (bool): If True, suppresses output. Default is self.noOutput.
+        """
+        from .utils.geometry import applyTorsion
+        if noOutput is None:
+            noOutput = self.noOutput
+        applyTorsion(self, axis, axis_def, rate, profile, custom_profile, pitch, helix_radius, chirality, noOutput)
+
+    def defHelixShapeForJMol(self, n_rings=50, n_sides=12, noOutput=True):
+        """
+        Generate a Jmol command to visualize the helical envelope as a triangulated tube.
+        See utils/external_pgm.defHelixShapeForJMol for full documentation.
+    
+        Args:
+            n_rings (int): Number of rings along the helix (default: 50).
+            n_sides (int): Number of vertices per ring (default: 12).
+            noOutput (bool): If True, suppresses output. Default is True.
+        """
+        from .utils.external_pgm import defHelixShapeForJMol
+        return defHelixShapeForJMol(self, n_rings, n_sides, noOutput)
+        
 ######################################### load external file
     @classmethod
     def from_file(cls, file_path, **kwargs):

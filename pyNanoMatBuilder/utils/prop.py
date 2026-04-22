@@ -889,7 +889,6 @@ def propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis, threshold
     # Core/surface
     if not skipSymmetryAnalyzis:
         MolSym(target_np, noOutput=noOutput)
-
     (
         [v, s, n, e], 
         surfaceAtoms
@@ -918,7 +917,7 @@ def propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis, threshold
     # Jmol Crystal Shape
     if getattr(self, 'jmolCrystalShape', False):
         # We assume defCrystalShape... can handle the suffix or we pass use_opt
-        cs = defCrystalShapeForJMol(self, noOutput=noOutput)
+        cs = defCrystalShapeForJMol(self, noOutput=True)
         setattr(self, f"jMolCS{suffix}", cs)
 
     # Inscribed and circumscribed spheres

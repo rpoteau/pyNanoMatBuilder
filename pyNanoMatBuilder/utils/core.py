@@ -770,7 +770,7 @@ def _flush_stale_data(self, shape_update=None):
         'surfaceatoms', 'surfaceatoms_opt', 
         'surfaceAtoms', 'surfaceAtoms_opt', 
         'vertices', 'vertices_opt',
-        'trPlanes', 'trPlanes_opt',
+        'trPlanes', 'trPlanes_opt', 'trPlanes_Wulff',
         'ellipsoid', 'moi', 'moi_opt',
         'NPR', 'NPR_opt', 'Rg', 'Rg_opt',
         'vol_Hull', 'vol_Hull_opt',
