@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.11.2 documentation</title>
+  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.11.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="canonical" href="https://pynanomatbuilder.readthedocs.io/modules.html" />
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=60336169"></script>
+      <script src="_static/documentation_options.js?v=c44be570"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -726,7 +726,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.kDTreeCN"><code class="docutils literal notranslate"><span class="pre">kDTreeCN()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.magicNumbers"><code class="docutils literal notranslate"><span class="pre">magicNumbers()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.rdf"><code class="docutils literal notranslate"><span class="pre">rdf()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.moi"><code class="docutils literal notranslate"><span class="pre">moi()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.compute_moi"><code class="docutils literal notranslate"><span class="pre">compute_moi()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.get_moments_of_inertia_for_size"><code class="docutils literal notranslate"><span class="pre">get_moments_of_inertia_for_size()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.moi_size"><code class="docutils literal notranslate"><span class="pre">moi_size()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.calculate_rg"><code class="docutils literal notranslate"><span class="pre">calculate_rg()</span></code></a></li>
@@ -734,7 +734,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.Inscribed_circumscribed_spheres"><code class="docutils literal notranslate"><span class="pre">Inscribed_circumscribed_spheres()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.get_ellipsoid_analysis"><code class="docutils literal notranslate"><span class="pre">get_ellipsoid_analysis()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.propPostMake"><code class="docutils literal notranslate"><span class="pre">propPostMake()</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">moi</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.moi"><code class="docutils literal notranslate"><span class="pre">moi</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.moisize"><code class="docutils literal notranslate"><span class="pre">moisize</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.vertices"><code class="docutils literal notranslate"><span class="pre">vertices</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.simplices"><code class="docutils literal notranslate"><span class="pre">simplices</span></code></a></li>
@@ -7434,28 +7434,22 @@ tensor (Gstar). Use for Crystal NPs built by pyNanoMatBuilder.</p>
 </dl>
 <p>Default is ‘hkl’.</p>
 </p></li>
-<li><p><strong>rate</strong> (<em>float</em>) – <p>Twist rate in degrees, interpretation depends on profile:</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">linear</span></code>    : degrees per Å.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">sinusoidal</span></code>: peak amplitude in degrees.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">gaussian</span></code>  : peak amplitude in degrees.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">helical</span></code>   : degrees per Å.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">helix</span></code>     : not used.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">custom</span></code>    : scaling factor applied to custom_profile(z, L).</p></li>
-</ul>
-<p>Default is 1.0.</p>
-</p></li>
-<li><p><strong>profile</strong> (<em>str</em>) – <p>Twist profile along the axis:</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">linear</span></code>   : angle(z) = rate * z</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">sinusoidal</span></code>: angle(z) = rate * sin(2π * z / L)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">gaussian</span></code> : angle(z) = rate * exp(-z² / 2σ²), σ = L/4</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">helical</span></code>  : angle(z) = rate * z, plus translation along axis.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">helix</span></code>    : bends wire to helical path, requires helix_radius and pitch.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">custom</span></code>   : angle(z) = rate * custom_profile(z, L)</p></li>
-</ul>
-<p>Default is <code class="docutils literal notranslate"><span class="pre">'linear'</span></code>.</p>
-</p></li>
+<li><p><strong>rate</strong> (<em>float</em>) – Twist rate in degrees. Interpretation depends on profile:
+<code class="docutils literal notranslate"><span class="pre">linear</span></code> — degrees per Å.
+<code class="docutils literal notranslate"><span class="pre">sinusoidal</span></code> — peak amplitude in degrees.
+<code class="docutils literal notranslate"><span class="pre">gaussian</span></code> — peak amplitude in degrees.
+<code class="docutils literal notranslate"><span class="pre">helical</span></code> — degrees per Å.
+<code class="docutils literal notranslate"><span class="pre">helix</span></code> — not used.
+<code class="docutils literal notranslate"><span class="pre">custom</span></code> — scaling factor applied to custom_profile(z, L).
+Default is 1.0.</p></li>
+<li><p><strong>profile</strong> (<em>str</em>) – Twist profile along the axis. Options:
+<code class="docutils literal notranslate"><span class="pre">linear</span></code> — angle(z) = rate * z.
+<code class="docutils literal notranslate"><span class="pre">sinusoidal</span></code> — angle(z) = rate * sin(2π * z / L).
+<code class="docutils literal notranslate"><span class="pre">gaussian</span></code> — angle(z) = rate * exp(-z² / 2σ²), σ = L/4.
+<code class="docutils literal notranslate"><span class="pre">helical</span></code> — angle(z) = rate * z, plus translation along axis.
+<code class="docutils literal notranslate"><span class="pre">helix</span></code> — bends wire to helical path, requires helix_radius and pitch.
+<code class="docutils literal notranslate"><span class="pre">custom</span></code> — angle(z) = rate * custom_profile(z, L).
+Default is <code class="docutils literal notranslate"><span class="pre">'linear'</span></code>.</p></li>
 <li><p><strong>custom_profile</strong> (<em>callable</em><em>, </em><em>optional</em>) – <p>A user-defined function f(z, L) -&gt; float
 where z is the signed distance along the axis in Å, and L is
 the total length of the NP along the axis in Å.
@@ -7468,16 +7462,12 @@ Required when profile=’custom’. Example:</p>
 Required when profile=’helical’ or ‘helix’.</p></li>
 <li><p><strong>helix_radius</strong> (<em>float</em><em>, </em><em>optional</em>) – Radius of the helical path in Å.
 Required when profile=’helix’.</p></li>
-<li><p><strong>chirality</strong> (<em>str</em>) – <p>Handedness of the Twist or helix:</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">'RH'</span></code> — Right-Handed (default): standard mathematical positive
-rotation (counter-clockwise when viewed from the positive axis direction).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">'LH'</span></code> — Left-Handed: mirror image of the Right-Handed version,
-obtained by flipping the rotation direction (rotation-based profiles)
-or the helix winding direction (<code class="docutils literal notranslate"><span class="pre">profile='helix'</span></code>).</p></li>
-</ul>
-<p>Default is <code class="docutils literal notranslate"><span class="pre">'RH'</span></code>.</p>
-</p></li>
+<li><p><strong>chirality</strong> (<em>str</em>) – Handedness of the Twist or helix.
+<code class="docutils literal notranslate"><span class="pre">'RH'</span></code> — Right-Handed (default): counter-clockwise when viewed
+from the positive axis direction.
+<code class="docutils literal notranslate"><span class="pre">'LH'</span></code> — Left-Handed: mirror image of RH, obtained by flipping
+the rotation direction or the helix winding direction.
+Default is <code class="docutils literal notranslate"><span class="pre">'RH'</span></code>.</p></li>
 <li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is False.</p></li>
 </ul>
 </dd>
@@ -7802,20 +7792,6 @@ Default is ‘direction’.</p></li>
 <dd class="field-even"><p><strong>ValueError</strong> – If type1 or type2 is not ‘direction’ or ‘plane’.</p>
 </dd>
 </dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<ul class="simple">
-<li><p>angle between two directions [u1v1w1] and [u2v2w2]:
-uses the direct metric tensor G</p></li>
-<li><p>angle between two planes (h1k1l1) and (h2k2l2):
-uses the reciprocal metric tensor G*</p></li>
-<li><p>angle between a direction [uvw] and a plane (hkl):
-the plane normal in direct space is computed via G*,
-then the angle between the direction and the normal is
-computed, and 90° is subtracted to get the angle between
-the direction and the plane itself.</p></li>
-</ul>
-</div>
 <p class="rubric">Examples</p>
 <p># Angle between two directions in hcp
 NP.crystallographic_angle([0,0,1], [1,0,0],</p>
@@ -7837,16 +7813,14 @@ NP.crystallographic_angle([1,1,0], [1,1,5],</p>
 <p>All vectors are converted to Cartesian coordinates via lattice_cart
 before angle computation, ensuring correctness for all crystal systems
 including non-orthogonal lattices (hexagonal, trigonal, monoclinic,
-triclinic).
-- angle between two directions [u1v1w1] and [u2v2w2]:</p>
-<blockquote>
-<div><p>both converted to Cartesian, angle computed directly.</p>
-</div></blockquote>
+triclinic).</p>
 <ul class="simple">
-<li><p>angle between two planes (h1k1l1) and (h2k2l2):
+<li><p>Direction-direction angle [u1v1w1] vs [u2v2w2]:
+both converted to Cartesian, angle computed directly.</p></li>
+<li><p>Plane-plane angle (h1k1l1) vs (h2k2l2):
 plane normals computed via G* then converted to Cartesian.</p></li>
-<li><p>angle between a direction [uvw] and a plane (hkl):
-90° - angle between direction and plane normal.</p></li>
+<li><p>Direction-plane angle [uvw] vs (hkl):
+90° minus the angle between the direction and the plane normal.</p></li>
 </ul>
 </div>
 </dd></dl>
@@ -8330,8 +8304,8 @@ integer greater than zero.</p></li>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.moi">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">moi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.moi" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.compute_moi">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">compute_moi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.compute_moi" title="Link to this definition"></a></dt>
 <dd><p>Get the moments of inertia along the principal axes.</p>
 <p class="rubric">Notes</p>
 <p>Units of the moments of inertia are amu.angstrom**2.
@@ -8510,8 +8484,8 @@ output messages.</p></li>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="id4">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">moi</span></span><a class="headerlink" href="#id4" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.moi">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">moi</span></span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.moi" title="Link to this definition"></a></dt>
 <dd><p>Moment of inertia tensor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>

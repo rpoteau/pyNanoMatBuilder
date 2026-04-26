@@ -362,7 +362,7 @@ def rdf(NP: Atoms,
 
 
 ######################################## Momenta of inertia
-def moi(model: Atoms,
+def compute_moi(model: Atoms,
         noOutput: bool=False,
        ):
     """
@@ -877,7 +877,7 @@ def propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis, threshold
         raise AttributeError(f"Structure Error: '{label}' is None. "
                              f"Cannot perform propPostMake() on an empty structure.")
 
-    moiNP = moi(target_np, noOutput)
+    moiNP = compute_moi(target_np, noOutput)
     setattr(self, f"moi{suffix}", moiNP)
     setattr(self, f"moisize{suffix}", np.array(moi_size(target_np, noOutput)))
     setattr(self, f"NPR{suffix}", np.array(calculate_npr(moiNP, noOutput)))

@@ -485,17 +485,6 @@ def crystallographic_angle(self,
     Raises:
         ValueError: If type1 or type2 is not 'direction' or 'plane'.
 
-    Note:
-        - angle between two directions [u1v1w1] and [u2v2w2]:
-          uses the direct metric tensor G
-        - angle between two planes (h1k1l1) and (h2k2l2):
-          uses the reciprocal metric tensor G*
-        - angle between a direction [uvw] and a plane (hkl):
-          the plane normal in direct space is computed via G*,
-          then the angle between the direction and the normal is
-          computed, and 90° is subtracted to get the angle between
-          the direction and the plane itself.
-
     Examples:
         # Angle between two directions in hcp
         NP.crystallographic_angle([0,0,1], [1,0,0],
@@ -514,12 +503,13 @@ def crystallographic_angle(self,
         before angle computation, ensuring correctness for all crystal systems
         including non-orthogonal lattices (hexagonal, trigonal, monoclinic,
         triclinic).
-        - angle between two directions [u1v1w1] and [u2v2w2]:
+
+        - Direction-direction angle [u1v1w1] vs [u2v2w2]:
           both converted to Cartesian, angle computed directly.
-        - angle between two planes (h1k1l1) and (h2k2l2):
+        - Plane-plane angle (h1k1l1) vs (h2k2l2):
           plane normals computed via G* then converted to Cartesian.
-        - angle between a direction [uvw] and a plane (hkl):
-          90° - angle between direction and plane normal.
+        - Direction-plane angle [uvw] vs (hkl):
+          90° minus the angle between the direction and the plane normal.
     """
     from .crystals import lattice_cart, normV
     import numpy as np
