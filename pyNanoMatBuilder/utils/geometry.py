@@ -1494,7 +1494,7 @@ def peel_by_shifted_ellipsoid(self, shift_dist=2.5, noOutput=False):
 def plot_npr_triangle(self=None, is_optimized: bool = False, save_path: str = None, 
                       external_data: dict = None, color_by: str = 'Rg', color: str='viridis'):
     """
-    Hybrid Sauer Plotter for pyNanoMatBuilder with precise colorbar scaling and bold formatting.
+    Hybrid Sauer Plot for pyNanoMatBuilder with precise colorbar scaling and bold formatting.
     """
     from mpl_toolkits.axes_grid1 import make_axes_locatable
     # 0. Larger figure size
@@ -1606,7 +1606,7 @@ def _applyRotationRodrigues(positions, axis_cart, angles_deg):
     return rotated
 
 
-# def applyTorsion(self,
+# def applyTwist(self,
 #                  axis: [0,0,1],
 #                  axis_def: str = 'hkl',   # 'hkl' or 'cart'
 #                  rate: float = 1.0,
@@ -1617,9 +1617,9 @@ def _applyRotationRodrigues(positions, axis_cart, angles_deg):
 #                  noOutput: bool = False,
 #                 ):
 #     """
-#     Apply a torsion to the atomic positions of a NP along a given crystallographic axis.
+#     Apply a Twist to the atomic positions of a NP along a given crystallographic axis.
 
-#     Each atomic plane perpendicular to the torsion axis is rotated by an angle
+#     Each atomic plane perpendicular to the Twist axis is rotated by an angle
 #     that depends on its position along the axis, according to the chosen profile.
 #     The 'helical' profile additionally translates atoms along the axis proportionally
 #     to their rotation angle, producing a helix-like deformation.
@@ -1628,7 +1628,7 @@ def _applyRotationRodrigues(positions, axis_cart, angles_deg):
 
 #     Args:
 #         self: A pyNMBcore instance (Crystal, or any object with self.NP and self.cog).
-#         axis (array-like): Torsion axis in crystallographic coordinates [h, k, l].
+#         axis (array-like): Twist axis in crystallographic coordinates [h, k, l].
 #                            Converted to Cartesian internally.
 #         axis_def (str): Defines the coordinate system of the axis argument. Options:
 #                         'hkl' — axis is given as Miller indices in the crystallographic
@@ -1637,14 +1637,14 @@ def _applyRotationRodrigues(positions, axis_cart, angles_deg):
 #                         'cart' — axis is given as a Cartesian direction [x, y, z]; works
 #                                  for any NP, including those loaded from file via from_file().
 #                         Default is 'hkl'.
-#         rate (float): Torsion rate. For 'linear'    : degrees per Å.
+#         rate (float): Twist rate. For 'linear'    : degrees per Å.
 #                                     For 'sinusoidal': peak amplitude in degrees.
 #                                     For 'gaussian'  : peak amplitude in degrees.
 #                                     For 'helical'   : degrees per Å.
 #                                     For 'custom'    : scaling factor applied to
 #                                                       custom_profile(z, L).
 #                                     Default is 1.0.
-#         profile (str): Torsion profile along the axis. Options:
+#         profile (str): Twist profile along the axis. Options:
 #                        'linear'     — angle(z) = rate * z
 #                        'sinusoidal' — angle(z) = rate * sin(2π * z / L)
 #                        'gaussian'   — angle(z) = rate * exp(-z² / 2σ²), σ = L/4
@@ -1667,7 +1667,7 @@ def _applyRotationRodrigues(positions, axis_cart, angles_deg):
 #         noOutput (bool): If True, suppresses output. Default is False.
 
 #     Returns:
-#         np.ndarray: New atomic positions after torsion (N, 3).
+#         np.ndarray: New atomic positions after Twist (N, 3).
 
 #     Raises:
 #         ValueError: If profile is unknown.
@@ -1676,7 +1676,7 @@ def _applyRotationRodrigues(positions, axis_cart, angles_deg):
 #         ValueError: If pitch is None when profile='helical'.
 
 #     Note:
-#         The torsion is applied around the center of mass of the NP.
+#         The Twist is applied around the center of mass of the NP.
 #         The axis is normalized internally.
 #         Rotation is performed using a vectorized Rodrigues formula for
 #         maximum performance (no Python loop over atoms).
@@ -1685,17 +1685,17 @@ def _applyRotationRodrigues(positions, axis_cart, angles_deg):
 #         radial distance from the axis.
 
 #     Examples:
-#         # Linear torsion along [0, 0, 1], 2°/Å
-#         NP.applyTorsion(axis=[0, 0, 1], rate=2.0, profile='linear')
+#         # Linear Twist along [0, 0, 1], 2°/Å
+#         NP.applyTwist(axis=[0, 0, 1], rate=2.0, profile='linear')
 
-#         # Sinusoidal torsion with 45° peak amplitude
-#         NP.applyTorsion(axis=[0, 0, 1], rate=45.0, profile='sinusoidal')
+#         # Sinusoidal Twist with 45° peak amplitude
+#         NP.applyTwist(axis=[0, 0, 1], rate=45.0, profile='sinusoidal')
 
 #         # Helical deformation, 5°/Å, 20 Å/turn
-#         NP.applyTorsion(axis=[0, 0, 1], rate=5.0, profile='helical', pitch=20.0)
+#         NP.applyTwist(axis=[0, 0, 1], rate=5.0, profile='helical', pitch=20.0)
 
-#         # Custom double-period sinusoidal torsion
-#         NP.applyTorsion(axis=[0, 0, 1], rate=45.0, profile='custom',
+#         # Custom double-period sinusoidal Twist
+#         NP.applyTwist(axis=[0, 0, 1], rate=45.0, profile='custom',
 #                         custom_profile=lambda z, L: np.sin(4 * np.pi * z / L))
 #     """
 #     from .crystals import lattice_cart, normV
@@ -1703,7 +1703,7 @@ def _applyRotationRodrigues(positions, axis_cart, angles_deg):
 #     # --- Input validation ---
 #     valid_profiles = ('linear', 'sinusoidal', 'gaussian', 'helical', 'helix', 'custom')
 #     if profile not in valid_profiles:
-#         raise ValueError(f"Unknown torsion profile '{profile}'. "
+#         raise ValueError(f"Unknown Twist profile '{profile}'. "
 #                          f"Choose from {valid_profiles}.")
 #     if profile == 'helix' and helix_radius is None:
 #         raise ValueError("profile='helix' requires a helix_radius value in Å.")
@@ -1745,13 +1745,13 @@ def _applyRotationRodrigues(positions, axis_cart, angles_deg):
 #     # --- Center positions on cog ---
 #     positions = target_atoms.get_positions() - self.cog
 
-#     # --- Project each atom onto the torsion axis (signed distance in Å) ---
+#     # --- Project each atom onto the Twist axis (signed distance in Å) ---
 #     proj = positions @ axis_cart                      # (N,)
 
 #     # --- Total length of NP along axis ---
 #     L = proj.max() - proj.min()
 
-#     # --- Compute torsion angle for each atom (degrees) ---
+#     # --- Compute Twist angle for each atom (degrees) ---
 #     if profile == 'linear':
 #         angles = rate * proj
 #     elif profile == 'sinusoidal':
@@ -1767,7 +1767,7 @@ def _applyRotationRodrigues(positions, axis_cart, angles_deg):
 #     # --- Inter-slice bond stretching check ---
 #     # For each atom, estimate the maximum tangential displacement between
 #     # adjacent slices at its radial distance from the axis.
-#     # Radial distance of each atom from the torsion axis
+#     # Radial distance of each atom from the Twist axis
 #     radial = np.linalg.norm(
 #         positions - proj[:, np.newaxis] * axis_cart, axis=1
 #     )                                                 # (N,)
@@ -1786,9 +1786,9 @@ def _applyRotationRodrigues(positions, axis_cart, angles_deg):
 #     delta_tang_core = R_mean * delta_theta_rad        # Å
 
 #     if not noOutput:
-#         centertxt("Torsion analysis", bgc='#007a7a', size='14', weight='bold')
+#         centertxt("Twist analysis", bgc='#007a7a', size='14', weight='bold')
 #         centertxt(
-#             f"Applying '{profile}' torsion along crystallographic axis {axis} on the {status}",
+#             f"Applying '{profile}' Twist along crystallographic axis {axis} on the {status}",
 #             bgc='#cbcbcb', size='12', fgc='b', weight='bold',
 #         )
 #         print(f"  Cartesian axis          : {axis_cart}")
@@ -1815,17 +1815,17 @@ def _applyRotationRodrigues(positions, axis_cart, angles_deg):
 #     # --- Restore cog offset ---
 #     self.NP.set_positions(new_positions)
         
-#     # Update center of mass after torsion
+#     # Update center of mass after Twist
 #     self.cog = self.NP.get_center_of_mass()
     
 #     # Sync Metadata and Clean Stale Data !!!
-#     self._flush_stale_data(shape_update="_torsion")
+#     self._flush_stale_data(shape_update="_Twist")
 #     self.is_optimized = False
 #     self.propPostMake(skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
 #                       thresholdCoreSurface=self.thresholdCoreSurface,
 #                       noOutput=noOutput, is_optimized=False)
 
-def applyTorsion(self,
+def applyTwist(self,
                  axis: [0,0,1],
                  axis_def: str = 'hkl',
                  rate: float = 1.0,
@@ -1837,9 +1837,9 @@ def applyTorsion(self,
                  noOutput: bool = False,
                 ):
     """
-    Apply a torsion to the atomic positions of a NP along a given crystallographic axis.
+    Apply a Twist to the atomic positions of a NP along a given crystallographic axis.
 
-    Each atomic plane perpendicular to the torsion axis is rotated by an angle
+    Each atomic plane perpendicular to the Twist axis is rotated by an angle
     that depends on its position along the axis, according to the chosen profile.
     The 'helical' profile additionally translates atoms along the axis proportionally
     to their rotation angle, producing a helix-like deformation.
@@ -1850,7 +1850,7 @@ def applyTorsion(self,
 
     Args:
         self: A pyNMBcore instance (Crystal, or any object with self.NP and self.cog).
-        axis (array-like): Torsion axis in crystallographic coordinates [h, k, l]
+        axis (array-like): Twist axis in crystallographic coordinates [h, k, l]
                            or Cartesian [x, y, z] depending on axis_def.
         axis_def (str): Defines the coordinate system of the axis argument. Options:
                         'hkl' — axis is given as Miller indices in the crystallographic
@@ -1859,28 +1859,26 @@ def applyTorsion(self,
                         'cart' — axis is given as a Cartesian direction [x, y, z]; works
                                  for any NP, including those loaded from file via from_file().
                         Default is 'hkl'.
-        rate (float): Torsion rate. For 'linear'    : degrees per Å.
-                                    For 'sinusoidal': peak amplitude in degrees.
-                                    For 'gaussian'  : peak amplitude in degrees.
-                                    For 'helical'   : degrees per Å.
-                                    For 'helix'     : not used.
-                                    For 'custom'    : scaling factor applied to
-                                                      custom_profile(z, L).
-                                    Default is 1.0.
-        profile (str): Torsion profile along the axis. Options:
-                       'linear'     — angle(z) = rate * z
-                       'sinusoidal' — angle(z) = rate * sin(2π * z / L)
-                       'gaussian'   — angle(z) = rate * exp(-z² / 2σ²), σ = L/4
-                       'helical'    — angle(z) = rate * z, plus a translation along
-                                      the axis of pitch * angle / (2π) per atom,
-                                      producing a wire twisted on itself.
-                       'helix'      — bends the wire to follow a circular helical path
-                                      of radius helix_radius and pitch pitch, using the
-                                      Frenet-Serret local frame. The wire becomes a
-                                      spring-like structure. Requires helix_radius and pitch.
-                                      rate is not used for this profile.
-                       'custom'     — angle(z) = rate * custom_profile(z, L)
-                       Default is 'linear'.
+        rate (float): Twist rate in degrees, interpretation depends on profile:
+
+            - ``linear``    : degrees per Å.
+            - ``sinusoidal``: peak amplitude in degrees.
+            - ``gaussian``  : peak amplitude in degrees.
+            - ``helical``   : degrees per Å.
+            - ``helix``     : not used.
+            - ``custom``    : scaling factor applied to custom_profile(z, L).
+
+            Default is 1.0.
+        profile (str): Twist profile along the axis:
+
+            - ``linear``   : angle(z) = rate * z
+            - ``sinusoidal``: angle(z) = rate * sin(2π * z / L)
+            - ``gaussian`` : angle(z) = rate * exp(-z² / 2σ²), σ = L/4
+            - ``helical``  : angle(z) = rate * z, plus translation along axis.
+            - ``helix``    : bends wire to helical path, requires helix_radius and pitch.
+            - ``custom``   : angle(z) = rate * custom_profile(z, L)
+
+            Default is ``'linear'``.
         custom_profile (callable, optional): A user-defined function f(z, L) -> float
                        where z is the signed distance along the axis in Å, and L is
                        the total length of the NP along the axis in Å.
@@ -1890,15 +1888,15 @@ def applyTorsion(self,
                        Required when profile='helical' or 'helix'.
         helix_radius (float, optional): Radius of the helical path in Å.
                        Required when profile='helix'.
-        chirality (str): Handedness of the torsion or helix. Options:
-                         'RH' — Right-Handed (default): standard mathematical
-                                 positive rotation (counter-clockwise when viewed
-                                 from the positive axis direction).
-                         'LH' — Left-Handed: mirror image of the Right-Handed
-                                 version, obtained by flipping the rotation
-                                 direction (rotation-based profiles) or the
-                                 helix winding direction (profile='helix').
-                         Default is 'RH'.
+        chirality (str): Handedness of the Twist or helix:
+
+            - ``'RH'`` — Right-Handed (default): standard mathematical positive
+              rotation (counter-clockwise when viewed from the positive axis direction).
+            - ``'LH'`` — Left-Handed: mirror image of the Right-Handed version,
+              obtained by flipping the rotation direction (rotation-based profiles)
+              or the helix winding direction (``profile='helix'``).
+
+            Default is ``'RH'``.
         noOutput (bool): If True, suppresses output. Default is False.
 
     Returns:
@@ -1914,7 +1912,7 @@ def applyTorsion(self,
         ValueError: If axis_def='hkl' and Gstar is not available.
 
     Note:
-        The torsion is applied around the center of mass of the NP.
+        The Twist is applied around the center of mass of the NP.
         The axis is normalized internally.
         For profiles other than 'helix', rotation is performed using a vectorized
         Rodrigues formula for maximum performance (no Python loop over atoms).
@@ -1925,21 +1923,21 @@ def applyTorsion(self,
         Frenet-Serret frame of the helix — no internal distortion of each slice.
 
     Examples:
-        # Linear torsion along [0, 0, 1], 2°/Å
-        NP.applyTorsion(axis=[0, 0, 1], rate=2.0, profile='linear')
+        # Linear Twist along [0, 0, 1], 2°/Å
+        NP.applyTwist(axis=[0, 0, 1], rate=2.0, profile='linear')
 
-        # Sinusoidal torsion with 45° peak amplitude
-        NP.applyTorsion(axis=[0, 0, 1], rate=45.0, profile='sinusoidal')
+        # Sinusoidal Twist with 45° peak amplitude
+        NP.applyTwist(axis=[0, 0, 1], rate=45.0, profile='sinusoidal')
 
         # Wire twisted on itself, 5°/Å, 200 Å/turn
-        NP.applyTorsion(axis=[0, 0, 1], rate=5.0, profile='helical', pitch=200.0)
+        NP.applyTwist(axis=[0, 0, 1], rate=5.0, profile='helical', pitch=200.0)
 
         # Wire bent to a helical path, radius 50 Å, pitch 100 Å/turn
-        NP.applyTorsion(axis=[0, 0, 1], rate=1.0, profile='helix',
+        NP.applyTwist(axis=[0, 0, 1], rate=1.0, profile='helix',
                         helix_radius=50.0, pitch=100.0, axis_def='cart')
 
-        # Custom double-period sinusoidal torsion
-        NP.applyTorsion(axis=[0, 0, 1], rate=45.0, profile='custom',
+        # Custom double-period sinusoidal Twist
+        NP.applyTwist(axis=[0, 0, 1], rate=45.0, profile='custom',
                         custom_profile=lambda z, L: np.sin(4 * np.pi * z / L))
     """
     from .crystals import lattice_cart, normV
@@ -1958,7 +1956,7 @@ def applyTorsion(self,
     # --- Input validation ---
     valid_profiles = ('linear', 'sinusoidal', 'gaussian', 'helical', 'helix', 'custom')
     if profile not in valid_profiles:
-        raise ValueError(f"Unknown torsion profile '{profile}'. "
+        raise ValueError(f"Unknown Twist profile '{profile}'. "
                          f"Choose from {valid_profiles}.")
     if profile == 'helix' and helix_radius is None:
         raise ValueError("profile='helix' requires a helix_radius value in Å.")
@@ -1999,7 +1997,7 @@ def applyTorsion(self,
     # --- Center positions on cog ---
     positions = target_atoms.get_positions() - self.cog
 
-    # --- Project each atom onto the torsion axis (signed distance in Å) ---
+    # --- Project each atom onto the Twist axis (signed distance in Å) ---
     proj = positions @ axis_cart                          # (N,)
 
     # --- Total length of NP along axis ---
@@ -2079,10 +2077,10 @@ def applyTorsion(self,
                   f"(compressed from {L:.2f} Å)")
 
     # =========================================================
-    # --- Other profiles : rotation-based torsion ---
+    # --- Other profiles : rotation-based Twist ---
     # =========================================================
     else:
-        # Compute torsion angle for each atom (degrees)
+        # Compute Twist angle for each atom (degrees)
         if profile == 'linear':
             angles = rate * proj
         elif profile == 'sinusoidal':
@@ -2108,9 +2106,9 @@ def applyTorsion(self,
         delta_tang_core = R_mean * delta_theta_rad
 
         if not noOutput:
-            centertxt("Torsion analysis", bgc='#007a7a', size='14', weight='bold')
+            centertxt("Twist analysis", bgc='#007a7a', size='14', weight='bold')
             centertxt(
-                f"Applying {chiral_str} '{profile}' torsion along axis {axis} on the {status}",
+                f"Applying {chiral_str} '{profile}' Twist along axis {axis} on the {status}",
                 bgc='#cbcbcb', size='12', fgc='b', weight='bold',
             )
             print(f"  Cartesian axis          : {axis_cart}")
@@ -2138,7 +2136,7 @@ def applyTorsion(self,
     new_positions = new_positions + self.cog
     self.NP.set_positions(new_positions)
 
-    # Update center of mass after torsion
+    # Update center of mass after Twist
     self.cog = self.NP.get_center_of_mass()
 
     # Invalidate trPlanes — geometry has changed, old planes are no longer valid
@@ -2147,7 +2145,7 @@ def applyTorsion(self,
     self.trPlanes_opt = None
 
     # Sync Metadata and Clean Stale Data
-    self._flush_stale_data(shape_update="_torsion")
+    self._flush_stale_data(shape_update="_Twist")
     self.is_optimized = False
     if profile == 'helix':
         # Store helix parameters for later visualization

@@ -524,9 +524,9 @@ def calculate_npr(moi,
     if not noOutput:
         # Determination of the dominant shape for the printout
         shape_desc = "Spherical/Symmetric"
-        if npr1 < 0.1 and npr2 < 0.1:
+        if npr1 < 0.2 and npr2 > 0.8:
             shape_desc = "Linear/Rod-like"
-        elif npr1 < 0.3 and npr2 > 0.4:
+        elif 0.35 < npr1 < 0.65 and 0.35 < npr2 < 0.65:
             shape_desc = "Planar/Disk-like"
 
         print(f" Principal Moments : I1={I1:.2f}, I2={I2:.2f}, I3={I3:.2f}")

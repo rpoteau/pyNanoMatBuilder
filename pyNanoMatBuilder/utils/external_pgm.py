@@ -281,121 +281,6 @@ def DrawJmol(mol, prefix, scriptJ="", noOutput=True):
     
     os.system(jmolcmd)
 
-# def defHelixShapeForJMol(self, n_rings=50, n_sides=12, noOutput=True):
-#     """
-#     Generate a Jmol command to visualize the helical envelope as a triangulated tube.
-
-#     The tube is built by connecting successive rings of n_sides points each,
-#     placed perpendicular to the helix tangent at each sample point.
-#     Each pair of adjacent rings generates 2*n_sides triangles.
-
-#     Args:
-#         n_rings (int): Number of rings along the helix (default: 50).
-#         n_sides (int): Number of vertices per ring (default: 12).
-#         noOutput (bool): If True, suppresses output. Default is True.
-
-#     Returns:
-#         str: Jmol command string for the helical tube.
-#     """
-#     from .geometry import normV
-#     import numpy as np
-
-#     if not hasattr(self, '_helix_params'):
-#         print(f"{bg.DARKREDB}Warning: no helix parameters found. "
-#               f"Call applyTorsion with profile='helix' first.{bg.OFF}")
-#         return ""
-
-#     p = self._helix_params
-#     helix_radius = p['helix_radius']
-#     pitch        = p['pitch']
-#     axis_cart    = p['axis_cart']
-#     L            = p['L']
-#     e1           = p['e1']
-#     e2           = p['e2']
-#     wire_radius  = p['wire_radius']
-
-#     pitch_factor = pitch / (2 * np.pi)
-#     stretch = np.sqrt(1 + (helix_radius / pitch_factor)**2)
-
-#     # Sample t values along the helix
-#     t_values = np.linspace(0, L / pitch_factor / stretch, n_rings)
-
-#     # --- Build all rings ---
-#     # Each ring is a list of n_sides 3D points
-#     rings = []
-#     for t in t_values:
-#         # Center of ring on the helix
-#         center = (helix_radius * np.cos(t) * e1 +
-#                   helix_radius * np.sin(t) * e2 +
-#                   pitch_factor * t * axis_cart)
-#         center += self.cog
-
-#         # Frenet-Serret frame
-#         tangent  = normV(-helix_radius * np.sin(t) * e1 +
-#                           helix_radius * np.cos(t) * e2 +
-#                           pitch_factor * axis_cart)
-#         normal   = -np.cos(t) * e1 - np.sin(t) * e2
-#         binormal = np.cross(tangent, normal)
-
-#         # Ring points
-#         angles = np.linspace(0, 2 * np.pi, n_sides, endpoint=False)
-#         ring = [center + wire_radius * (np.cos(a) * normal +
-#                                         np.sin(a) * binormal)
-#                 for a in angles]
-#         rings.append(ring)
-
-#     # --- Center the tube on self.cog ---
-#     # Compute center of gravity of all ring centers
-#     all_centers = np.array([
-#         helix_radius * np.cos(t) * e1 +
-#         helix_radius * np.sin(t) * e2 +
-#         pitch_factor * t * axis_cart
-#         for t in t_values
-#     ])
-#     tube_cog = all_centers.mean(axis=0)
-#     shift = self.cog - tube_cog
-#     # Apply shift to all rings
-#     rings = [[pt + shift for pt in ring] for ring in rings]
-
-#     # --- Build triangulated surface between adjacent rings ---
-#     cmd = ""
-#     face_idx = 0
-#     for i in range(len(rings) - 1):
-#         r0 = rings[i]
-#         r1 = rings[i + 1]
-#         for j in range(n_sides):
-#             j1 = (j + 1) % n_sides
-
-#             # Two triangles per quad between rings
-#             # Triangle 1: r0[j], r0[j1], r1[j]
-#             p0 = r0[j]
-#             p1 = r0[j1]
-#             p2 = r1[j]
-#             cmd += f"draw htube{face_idx} polygon ["
-#             cmd += f"{{{p0[0]:.4f},{p0[1]:.4f},{p0[2]:.4f}}},"
-#             cmd += f"{{{p1[0]:.4f},{p1[1]:.4f},{p1[2]:.4f}}},"
-#             cmd += f"{{{p2[0]:.4f},{p2[1]:.4f},{p2[2]:.4f}}},"
-#             cmd += "]; "
-#             face_idx += 1
-
-#             # Triangle 2: r1[j], r0[j1], r1[j1]
-#             p0 = r1[j]
-#             p1 = r0[j1]
-#             p2 = r1[j1]
-#             cmd += f"draw htube{face_idx} polygon ["
-#             cmd += f"{{{p0[0]:.4f},{p0[1]:.4f},{p0[2]:.4f}}},"
-#             cmd += f"{{{p1[0]:.4f},{p1[1]:.4f},{p1[2]:.4f}}},"
-#             cmd += f"{{{p2[0]:.4f},{p2[1]:.4f},{p2[2]:.4f}}},"
-#             cmd += "]; "
-#             face_idx += 1
-
-#     cmd += "color $htube* translucent 70 [x828282]; "
-
-#     if not noOutput:
-#         print(f"Helix tube: {face_idx} triangles, "
-#               f"{n_rings} rings x {n_sides} sides")
-#         print("Jmol command: ", cmd)
-#     return cmd
 
 def defHelixShapeForJMol(self, n_rings=50, n_sides=12, noOutput=True):
     """
@@ -418,7 +303,7 @@ def defHelixShapeForJMol(self, n_rings=50, n_sides=12, noOutput=True):
 
     if not hasattr(self, '_helix_params'):
         print(f"{bg.DARKREDB}Warning: no helix parameters found. "
-              f"Call applyTorsion with profile='helix' first.{bg.OFF}")
+              f"Call applyTwist with profile='helix' first.{bg.OFF}")
         return ""
 
     p            = self._helix_params
@@ -499,4 +384,93 @@ def defHelixShapeForJMol(self, n_rings=50, n_sides=12, noOutput=True):
         print(f"Helix tube: {face_idx} triangles, "
               f"{n_rings} rings x {n_sides} sides")
         print("Jmol command: ", cmd)
+    return cmd
+
+def defSlabShapeForJMol(self, hkl, offset: float = 1.5, noOutput: bool = True):
+    """
+    Generate a Jmol command to visualize the slab surface plane as a
+    translucent polygon, positioned just above the topmost atomic layer.
+
+    The polygon is defined by the four corners of the slab surface cell
+    (spanned by cell vectors a and b), centered on the slab center of mass,
+    and placed at z_max + offset to aflush with the top atomic layer.
+    Edges are drawn as thin lines and the plane is labeled with its
+    Miller indices.
+
+    Args:
+        hkl (array-like): Miller indices [h, k, l] of the surface plane,
+                          used for labeling only.
+        offset (float): Vertical offset in Å above the topmost atomic layer
+                        at which the surface polygon is placed. Should be
+                        approximately half the atomic radius of the surface
+                        element (default: 1.5 Å, suitable for Au, Ag, Pt).
+        noOutput (bool): If True, suppresses printing of the Jmol command.
+                         Default is True.
+
+    Returns:
+        str: Jmol command string defining the surface polygon, its edges,
+             and its Miller index label.
+
+    Note:
+        This function is intended for use on objects returned by generateSlab().
+        The polygon approximates the surface as a flat quadrilateral — it is
+        exact only if the slab cell vectors a and b lie in the surface plane,
+        which is the case for slabs generated by ASE or pymatgen surface builders.
+
+    Example:
+        slab = AuNP.generateSlab([1, 1, 5], size_a=2.0, size_b=2.0,
+                                  min_thickness=10.0, backend='ase')
+        script = slab.defSlabShapeForJMol([1, 1, 5], offset=1.7)
+        pyNMBu.write('coords/Au_115.script', script)
+    """
+    pos = self.NP.get_positions()
+    cell = self.NP.cell
+    z_surface = pos[:, 2].max() + offset
+
+    a = np.array(cell[0])
+    b = np.array(cell[1])
+
+    # Project onto xy plane
+    a_xy = np.array([a[0], a[1], 0.0])
+    b_xy = np.array([b[0], b[1], 0.0])
+
+    # Center of the polygon = center of atomic positions in xy
+    # NOT the cell origin
+    xy_atoms_center = np.array([pos[:, 0].mean(), pos[:, 1].mean(), 0.0])
+    xy_polygon_center = (a_xy + b_xy) / 2.0   # center of parallelogram
+
+    # Shift origin so polygon center matches atomic center
+    origin = xy_atoms_center - xy_polygon_center
+    origin[2] = z_surface
+
+    corners = np.array([
+        origin,
+        origin + a_xy,
+        origin + a_xy + b_xy,
+        origin + b_xy,
+    ])
+
+    h, k, l = hkl
+    cmd = f"draw slab_face polygon ["
+    for pt in corners:
+        cmd += f"{{{pt[0]:.4f},{pt[1]:.4f},{pt[2]:.4f}}},"
+    cmd += "]; "
+    cmd += "color $slab_face translucent 60 [x828282]; "
+
+    # Edges
+    corners_cycle = np.vstack([corners, corners[0]])
+    for i in range(len(corners)):
+        p0 = corners_cycle[i]
+        p1 = corners_cycle[i+1]
+        cmd += f"draw slab_edge{i} [{{{p0[0]:.4f},{p0[1]:.4f},{p0[2]:.4f}}},"
+        cmd += f"{{{p1[0]:.4f},{p1[1]:.4f},{p1[2]:.4f}}}] width 0.2; "
+    cmd += "color $slab_edge* [xd6d6d6]; "
+
+    # Label via JMol echo
+    center = corners.mean(axis=0)
+    cmd += (f"set echo slab_label {{{center[0]:.4f},{center[1]:.4f},{center[2]+2:.4f}}}; "
+            f"echo ({h}{k}{l}); color echo yellow; font echo 24")
+
+    if not noOutput:
+        print(f"Jmol command for plane ({h}{k}{l}): ", cmd)
     return cmd

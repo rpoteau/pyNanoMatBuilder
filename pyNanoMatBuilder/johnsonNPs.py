@@ -14,6 +14,7 @@ from . import utils as pyNMBu
 from . import platonicNPs as pNP
 from .utils import hl, fg, bg
 from .pyNMBcore import pyNMBcore
+from .platonicNPs import regfccOh
 
 ###########################################################
 class JohnsonNP(pyNMBcore):
@@ -268,8 +269,6 @@ class fcctbp(JohnsonNP):
         print("Dual polyhedron: triangular prism")
         print("Indexes of vertex atoms = [0,1,2,3] by construction")
         print(f"coordinates of the center of gravity = {self.cog}")
-
-
 
 ###########################################################
 class epbpyM(JohnsonNP):
@@ -833,5 +832,142 @@ class epbpyM(JohnsonNP):
         elif self.sizeE != 0 and self.Marks == 0:
             print("Dual polyhedron: pentagonal bifrustum")
         print(f"coordinates of the center of gravity = {self.cog}")
-
     
+###########################################################
+class eOhM(regfccOh):
+    """
+    A class for generating elongated fcc octahedral (eOhM) nanoparticles
+    with optional Marks-like truncation of the vertical edges.
+
+    Inherits from regfccOh and extends it with:
+    - Elongation along [001] (Ino-like) via sizeE parameter
+    - Marks truncation of vertical <110> edges via Marks parameter
+
+    The octahedron has 8 {111} faces. Elongation adds 4 {100} square faces
+    between the two equatorial crowns. Marks truncation adds {110} facets
+    on the vertical edges.
+
+    Args:
+        element (str): Chemical element (default: 'Au').
+        Rnn (float): Nearest-neighbor distance in Å (default: 2.88).
+        nOrder (int): Number of atomic layers along an edge (default: 1).
+        sizeE (int): Number of elongation layers along [001]. Default is 0.
+        Marks (int): Number of truncated atoms on vertical <110> edges.
+                     Default is 0.
+    """
+
+    # Additional geometric factors for elongation
+    interCompactPlanesF_100 = 1.0 / np.sqrt(2)  # d{100}/Rnn
+
+    def __init__(self,
+                 element: str = 'Au',
+                 Rnn: float = 2.88,
+                 nOrder: int = 1,
+                 sizeE: int = 0,
+                 Marks: int = 0,
+                 **kwargs):
+        """
+        Initialize the eOhM nanoparticle.
+
+        Args:
+            element (str): Chemical element. Default is 'Au'.
+            Rnn (float): Nearest-neighbor distance in Å. Default is 2.88.
+            nOrder (int): Number of atomic layers along an edge. Default is 1.
+            sizeE (int): Number of elongation layers along [001]. Default is 0.
+            Marks (int): Number of truncated atoms on vertical <110> edges.
+                         Default is 0.
+        """
+        # Call parent __init__ with calcPropOnly=True to avoid
+        # calling regfccOh.coords() — we override it
+        self.shape = 'eOhM'
+        self.sizeE = sizeE
+        self.Marks = Marks
+        super().__init__(element=element, Rnn=Rnn, nOrder=nOrder,
+                         calcPropOnly=True, **kwargs)
+
+        self.shape = 'eOhM'
+        self.sizeE = sizeE
+        self.Marks = Marks
+        self.interCompactPlanesDistance_100 = self.interCompactPlanesF_100 * Rnn
+
+        noOutput = self.noOutput
+
+        # Now run eOhM-specific pipeline
+        # (ignoring parent calcPropOnly=True we forced above)
+        if not noOutput:
+            pyNMBu.centerTitle(
+                f"Elongated fcc Octahedron — nOrder={nOrder}, "
+                f"sizeE={sizeE}, Marks={Marks}")
+            self.prop()
+
+        if not kwargs.get('calcPropOnly', False):  # ← lire le kwargs original
+            self.coords(noOutput)
+            if self.aseView:
+                view(self.NP)
+            if self.postAnalyzis:
+                self.propPostMake(
+                    self.skipChiralityCalculation,
+                    self.skipSymmetryAnalyzis,
+                    self.thresholdCoreSurface,
+                    noOutput)
+                if self.aseView:
+                    view(self.NPcs)
+
+    def __str__(self):
+        if self.Marks == 0 and self.sizeE == 0:
+            return (f"Regular fcc Octahedron — {self.nOrder+1} atoms/edge, "
+                    f"Rnn = {self.Rnn} Å")
+        elif self.Marks == 0 and self.sizeE != 0:
+            return (f"Elongated fcc Octahedron (Ino-like) — "
+                    f"{self.nOrder+1} atoms/edge, "
+                    f"{self.sizeE} elongation layer(s), "
+                    f"Rnn = {self.Rnn} Å")
+        else:
+            return (f"Elongated fcc Octahedron (Marks) — "
+                    f"{self.nOrder+1} atoms/edge, "
+                    f"{self.sizeE} elongation layer(s), "
+                    f"{self.Marks} Marks truncation, "
+                    f"Rnn = {self.Rnn} Å")
+
+    def coords(self, noOutput):
+        # --- Build full octahedron using parent ---
+        regfccOh.coords(self, noOutput=True)   # self.NP contient l'octaèdre complet
+        
+        all_pos = self.NP.get_positions()
+        
+        # --- Keep only top half (z >= 0) ---
+        top_half = all_pos[all_pos[:, 2] >= -1e-6]
+        
+        # --- Shift top half upward by e ---
+        e = self.sizeE * self.Rnn / np.sqrt(2)   # a/2
+        top_half = top_half + [0, 0, e]
+        
+        c = top_half.tolist()
+        
+        # --- Reflect top half → bottom half ---
+        symPlane = np.array([0, 0, 1, 0])
+        bottom_half = pyNMBu.reflection(symPlane, c, True)
+        c.extend(bottom_half.tolist())
+        
+        # --- Fill space between the two crowns by interpolation ---
+        # Each atom in top crown paired with its mirror in bottom crown
+        nTop = len(top_half)
+        coordCoreAt = []
+        for i in range(nTop):
+            Rvv = pyNMBu.RAB(c, i, i + nTop)
+            nAtomsInCore = int((Rvv + 1e-6) / self.Rnn) - 1
+            nIntervals = nAtomsInCore + 1
+            for n in range(nAtomsInCore):
+                tmp = (c[i]
+                       + pyNMBu.vector(c, i, i + nTop)
+                       * (n + 1) / nIntervals)
+                coordCoreAt.append(tmp)
+        c.extend(coordCoreAt)
+        
+        # Remove duplicates
+        c = np.unique(np.array(c), axis=0)
+        self.nAtoms = len(c)
+        
+        aseObject = ase.Atoms(self.element * self.nAtoms, positions=c)
+        self.NP  = aseObject
+        self.cog = self.NP.get_center_of_mass()

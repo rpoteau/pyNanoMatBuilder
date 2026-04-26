@@ -257,6 +257,8 @@ pyNanoMatBuilder/resources/figs/hcpsph2WS-C.png
 pyNanoMatBuilder/resources/figs/hcpsph2WS.png
 pyNanoMatBuilder/resources/figs/hcpsph2WS.script
 pyNanoMatBuilder/resources/figs/hcpsph2WS.xyz
+pyNanoMatBuilder/resources/figs/helix-C.png
+pyNanoMatBuilder/resources/figs/helix.xyz
 pyNanoMatBuilder/resources/figs/ico-C.png
 pyNanoMatBuilder/resources/figs/ico.base64
 pyNanoMatBuilder/resources/figs/ico.png

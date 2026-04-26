@@ -170,7 +170,7 @@ class pyNMBcore:
 
         Args:
             shape_update (str, optional): Tag appended to self.shape to record
-                                          the modification (e.g. '_torsion').
+                                          the modification (e.g. '_Twist').
         """
         from .utils.core import _flush_stale_data
         return _flush_stale_data(self, shape_update)
@@ -230,23 +230,23 @@ class pyNMBcore:
             color=color
         )
 
-    def applyTorsion(self, axis=[0,0,1], axis_def='hkl', rate: float = 1.0, 
+    def applyTwist(self, axis=[0,0,1], axis_def='hkl', rate: float = 1.0, 
                  profile: str = 'linear', custom_profile=None,
                  pitch: float = None, helix_radius: float = None,
                  chirality: str = 'RH',
                  noOutput: bool = None):
         """
-        Apply a torsion to the NP along a given axis.
-        See utils/geometry.applyTorsion for full documentation.
+        Apply a Twist to the NP along a given axis.
+        See utils/geometry.applyTwist for full documentation.
     
         Args:
-            axis (array-like): Torsion axis in crystallographic [h, k, l] or
+            axis (array-like): Twist axis in crystallographic [h, k, l] or
                                Cartesian [x, y, z] coordinates depending on axis_def.
             axis_def (str): Coordinate system of axis: 'hkl' (default) or 'cart'.
-            rate (float): Torsion rate in degrees per Å (linear, helical), peak
+            rate (float): Twist rate in degrees per Å (linear, helical), peak
                           amplitude in degrees (sinusoidal, gaussian), or scaling
                           factor (custom). Not used for 'helix'. Default is 1.0.
-            profile (str): Torsion profile: 'linear', 'sinusoidal', 'gaussian',
+            profile (str): Twist profile: 'linear', 'sinusoidal', 'gaussian',
                            'helical', 'helix', or 'custom'. Default is 'linear'.
             custom_profile (callable, optional): User-defined function f(z, L) -> float,
                            required when profile='custom'.
@@ -254,14 +254,14 @@ class pyNMBcore:
                            profile='helical' or 'helix'.
             helix_radius (float, optional): Radius of the helical path in Å,
                            required when profile='helix'.
-            chirality (str): Handedness of the torsion or helix: 'RH' (Right-Handed,
+            chirality (str): Handedness of the Twist or helix: 'RH' (Right-Handed,
                          default) or 'LH' (Left-Handed, mirror image).
             noOutput (bool): If True, suppresses output. Default is self.noOutput.
         """
-        from .utils.geometry import applyTorsion
+        from .utils.geometry import applyTwist
         if noOutput is None:
             noOutput = self.noOutput
-        applyTorsion(self, axis, axis_def, rate, profile, custom_profile, pitch, helix_radius, chirality, noOutput)
+        applyTwist(self, axis, axis_def, rate, profile, custom_profile, pitch, helix_radius, chirality, noOutput)
 
     def defHelixShapeForJMol(self, n_rings=50, n_sides=12, noOutput=True):
         """
@@ -275,6 +275,107 @@ class pyNMBcore:
         """
         from .utils.external_pgm import defHelixShapeForJMol
         return defHelixShapeForJMol(self, n_rings, n_sides, noOutput)
+
+    def crystallographic_angle(self, v1, v2,
+                            type1: str = 'direction',
+                            type2: str = 'direction',
+                            noOutput: bool = None):
+        """
+        Compute the angle between two crystallographic objects
+        (directions or planes) in any crystal system.
+    
+        Args:
+            v1 (array-like): First vector [h, k, l] or [u, v, w].
+            v2 (array-like): Second vector [h, k, l] or [u, v, w].
+            type1 (str): 'direction' or 'plane'. Default is 'direction'.
+            type2 (str): 'direction' or 'plane'. Default is 'direction'.
+            noOutput (bool): If True, suppresses output. Default is self.noOutput.
+    
+        Returns:
+            float: Angle in degrees.
+        """
+        from .utils.crystals import crystallographic_angle
+        if noOutput is None:
+            noOutput = self.noOutput
+        return crystallographic_angle(self, v1, v2, type1, type2, noOutput)
+
+    def generateSlab(self, hkl,
+                     size_a: float = 2.0,
+                     size_b: float = 2.0,
+                     min_thickness: float = 5.0,
+                     vacuum: float = 10.0,
+                     backend: str = 'ase',
+                     noOutput: bool = None):
+        """
+        Generate a crystallographic slab from Miller indices (hkl).
+        See utils/crystals.generateSlab for full documentation.
+    
+        Args:
+            hkl (array-like): Miller indices [h, k, l].
+            size_a (float): Slab dimension along a in nm. Default is 2.0.
+            size_b (float): Slab dimension along b in nm. Default is 2.0.
+            min_thickness (float): Minimum slab thickness in Å. Default is 5.0.
+            vacuum (float): Vacuum thickness in Å. Default is 10.0.
+            backend (str): 'ase' or 'pymatgen'. Default is 'ase'.
+            noOutput (bool): If True, suppresses output. Default is self.noOutput.
+    
+        Returns:
+            pyNMBcore: A pyNMBcore instance wrapping the generated slab.
+        """
+        from .utils.crystals import generateSlab
+        if noOutput is None:
+            noOutput = self.noOutput
+        return generateSlab(self, hkl, size_a, size_b,
+                            min_thickness, vacuum, backend, noOutput)
+    
+    def defSlabShapeForJMol(self, hkl, offset: float = 1.5, noOutput: bool = None):
+        """
+        Generate a Jmol command to visualize the slab surface as a polygon.
+        See utils/external_pgm.defSlabShapeForJMol for full documentation.
+
+        Args:
+            hkl (array-like): Miller indices [h, k, l] of the plane, used for labeling.
+            offset (float): Vertical offset in Å above the topmost atomic layer.
+                            Default is 1.5 Å.
+            noOutput (bool): If True, suppresses output. Default is self.noOutput.
+
+        Returns:
+            str: Jmol command string.
+        """
+        from .utils.external_pgm import defSlabShapeForJMol
+        if noOutput is None:
+            noOutput = self.noOutput
+        return defSlabShapeForJMol(self, hkl, offset, noOutput)
+
+    def interPlanarSpacing(self, hkl, noOutput=None):
+        """
+        Compute the interplanar spacing d(hkl) for this crystal.
+        Only available for Crystal instances loaded from a CIF file.
+    
+        Args:
+            hkl (array-like): Miller indices [h, k, l].
+            noOutput (bool): If True, suppresses output. Default is self.noOutput.
+    
+        Returns:
+            float: Interplanar spacing in Å, or None if crystallographic
+                   metadata is not available (e.g. geometric NP classes).
+        """
+        from .utils.crystals import interPlanarSpacing, spacegroup_to_bravais
+        if noOutput is None:
+            noOutput = self.noOutput
+    
+        if not hasattr(self, 'ucSG_number') or not hasattr(self, 'ucUnitcell'):
+            if not noOutput:
+                print(f"interPlanarSpacing: crystallographic metadata not available "
+                      f"for {self.__class__.__name__} — method only supported for "
+                      f"Crystal instances loaded from a CIF file.")
+            return None
+    
+        crystal_system, bravais_lattice = spacegroup_to_bravais(self.ucSG_number, self.ucSG_symbol)
+        d = interPlanarSpacing(np.array(hkl), self.ucUnitcell, crystal_system)
+        if not noOutput:
+            print(f"d({hkl}) = {d:.4f} Å  [{crystal_system}]")
+        return d
         
 ######################################### load external file
     @classmethod
@@ -325,4 +426,30 @@ class pyNMBcore:
             is_optimized=False,
         )
         
+        return instance
+
+    @classmethod
+    def from_slab(cls, slab, crystal_name="unknown", **kwargs):
+        """
+        Create a pyNMBcore instance from an ASE slab object.
+        """
+        instance = cls.__new__(cls)
+        instance.NP = slab.copy()
+        instance.element = slab.get_chemical_symbols()[0]
+        instance.crystal = crystal_name
+        instance.shape = 'slab'
+        # standard kwargs
+        instance.skipChiralityCalculation = kwargs.get('skipChiralityCalculation', True)
+        instance.skipSymmetryAnalyzis = kwargs.get('skipSymmetryAnalyzis', True)
+        instance.thresholdCoreSurface = kwargs.get('thresholdCoreSurface', 1.0)
+        instance.aseView = kwargs.get('aseView', False)
+        instance.noOutput = kwargs.get('noOutput', False)
+        instance.jmolCrystalShape = False  # no trPlanes for a slab. Jmol plane will be calculated separately with defSlabShapeForJMol
+        instance._flush_stale_data(shape_update='_slab')
+        instance.propPostMake(
+            skipSymmetryAnalyzis=instance.skipSymmetryAnalyzis,
+            thresholdCoreSurface=instance.thresholdCoreSurface,
+            noOutput=instance.noOutput,
+            is_optimized=False,
+        )
         return instance

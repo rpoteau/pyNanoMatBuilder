@@ -22,4 +22,4 @@ Thumbs.db
 *.orig*
 *.swp
 .git/objects/pack/pack-204a142f51740aff87f074dc5cc2dd14ae92c8ca.pack
-dist/pynanomatbuilder-0.11.0.tar.gz
+dist/pynanomatbuilder-0.11.1.tar.gz

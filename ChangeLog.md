@@ -5,6 +5,44 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
+## [0.11.2] - 2026-04-26 "slabs and crystallographic tools"
+
+### Changed
+
+- all torsion functions and tools renamed twist
+
+### Added
+
+- **slab generation and visualization**
+    - `utils/crystals.py`: added `generateSlab(hkl, size_a, size_b, min_thickness, 
+      vacuum, backend, noOutput)` to generate a crystallographic slab from Miller 
+      indices using either ASE or pymatgen backend, returned as a pyNMBcore instance 
+      preserving all crystallographic metadata
+    - `utils/external_pgm.py`: added `defSlabShapeForJMol(hkl, offset, noOutput)` 
+      to generate a Jmol command visualizing the slab surface as a translucent polygon 
+      placed just above the topmost atomic layer; works correctly for orthogonal cells 
+      (ASE backend), known limitation for oblique cells (pymatgen backend).
+    - see an example in `pyNMB-examples.ipynb`, section **Miscellaneous** (end of notebook)
+- **angle calculation**:
+    - added `crystallographic_angle(v1, v2, type1, type2, noOutput)` in `utils/crystals.py`
+      to compute angles between crystallographic directions and/or planes in any crystal system.
+- **`pyNMBcore.py`**: added `generateSlab`, `crystallographic_angle`, and 
+      `defSlabShapeForJMol` as lightweight interfaces.
+- **`utils/crystals.py/spacegroup_to_bravais(sg_number, hm_symbol)`**: returns a tuple
+  `crystal_system, bravais_lattice` from the international space group number
+  and Hermann-Mauguin symbol. `crystal_system` is one of 7 acronyms compatible
+  with `interPlanarSpacing()` ('TRI', 'MCL', 'ORC', 'TET', 'TRH', 'HEX', 'CUB').
+  `bravais_lattice` is an extended acronym that further distinguishes centering
+  types (FCC, BCC, ORCF, ORCI, ORCC, BCT, MCLC). The Hermann-Mauguin symbol is
+  only strictly required to disambiguate trigonal space groups (143-167) between
+  rhombohedral (TRH) and hexagonal (HEX) axes.
+- **`pyNMBcore.py`**:
+    - added `interPlanarSpacing(hkl, noOutput)`: lightweight interface to
+  `utils/crystals.interPlanarSpacing()`. Only available for Crystal instances
+  loaded from a CIF file — returns None with a warning for geometric NP classes
+  (regfccOh, eOhM, epbpyM, etc.) which do not carry crystallographic metadata.
+    - see an example in `pyNMB-examples.ipynb`, section **Miscellaneous** (end of notebook)
+
 ## [0.11.1] - 2026-04-23 "chirality torsion tools"
 
 ### Added

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.11.1 documentation</title>
+  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.11.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="canonical" href="https://pynanomatbuilder.readthedocs.io/modules.html" />
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=57cbeb03"></script>
+      <script src="_static/documentation_options.js?v=60336169"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -507,6 +507,11 @@
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.johnsonNPs.epbpyM.prop"><code class="docutils literal notranslate"><span class="pre">epbpyM.prop()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.johnsonNPs.eOhM"><code class="docutils literal notranslate"><span class="pre">eOhM</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.johnsonNPs.eOhM.interCompactPlanesF_100"><code class="docutils literal notranslate"><span class="pre">eOhM.interCompactPlanesF_100</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.johnsonNPs.eOhM.coords"><code class="docutils literal notranslate"><span class="pre">eOhM.coords()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyNanoMatBuilder.otherNPs">otherNPs.py</a><ul>
@@ -674,7 +679,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.peel_by_coordination"><code class="docutils literal notranslate"><span class="pre">peel_by_coordination()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.peel_by_shifted_ellipsoid"><code class="docutils literal notranslate"><span class="pre">peel_by_shifted_ellipsoid()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.plot_npr_triangle"><code class="docutils literal notranslate"><span class="pre">plot_npr_triangle()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.applyTorsion"><code class="docutils literal notranslate"><span class="pre">applyTorsion()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.applyTwist"><code class="docutils literal notranslate"><span class="pre">applyTwist()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyNanoMatBuilder.utils.crystals">Crystal &amp; Wulff Utilities (crystals.py)</a><ul>
@@ -687,6 +692,9 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.crystals.lattice_cart"><code class="docutils literal notranslate"><span class="pre">lattice_cart()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.crystals.G"><code class="docutils literal notranslate"><span class="pre">G()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.crystals.Gstar"><code class="docutils literal notranslate"><span class="pre">Gstar()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.crystals.spacegroup_to_bravais"><code class="docutils literal notranslate"><span class="pre">spacegroup_to_bravais()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.crystals.crystallographic_angle"><code class="docutils literal notranslate"><span class="pre">crystallographic_angle()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.crystals.generateSlab"><code class="docutils literal notranslate"><span class="pre">generateSlab()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyNanoMatBuilder.utils.io">I/O (io.py)</a><ul>
@@ -749,6 +757,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.saveCN4JMol"><code class="docutils literal notranslate"><span class="pre">saveCN4JMol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.DrawJmol"><code class="docutils literal notranslate"><span class="pre">DrawJmol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defHelixShapeForJMol"><code class="docutils literal notranslate"><span class="pre">defHelixShapeForJMol()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defSlabShapeForJMol"><code class="docutils literal notranslate"><span class="pre">defSlabShapeForJMol()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -5454,6 +5463,76 @@ messages during execution.</p>
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.johnsonNPs.eOhM">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.johnsonNPs.</span></span><span class="sig-name descname"><span class="pre">eOhM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">element</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Au'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rnn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.88</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nOrder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sizeE</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Marks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.johnsonNPs.eOhM" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pyNanoMatBuilder.platonicNPs.regfccOh" title="pyNanoMatBuilder.platonicNPs.regfccOh"><code class="xref py py-class docutils literal notranslate"><span class="pre">regfccOh</span></code></a></p>
+<p>A class for generating elongated fcc octahedral (eOhM) nanoparticles
+with optional Marks-like truncation of the vertical edges.</p>
+<p>Inherits from regfccOh and extends it with:
+- Elongation along [001] (Ino-like) via sizeE parameter
+- Marks truncation of vertical &lt;110&gt; edges via Marks parameter</p>
+<p>The octahedron has 8 {111} faces. Elongation adds 4 {100} square faces
+between the two equatorial crowns. Marks truncation adds {110} facets
+on the vertical edges.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>element</strong> (<em>str</em>) – Chemical element (default: ‘Au’).</p></li>
+<li><p><strong>Rnn</strong> (<em>float</em>) – Nearest-neighbor distance in Å (default: 2.88).</p></li>
+<li><p><strong>nOrder</strong> (<em>int</em>) – Number of atomic layers along an edge (default: 1).</p></li>
+<li><p><strong>sizeE</strong> (<em>int</em>) – Number of elongation layers along [001]. Default is 0.</p></li>
+<li><p><strong>Marks</strong> (<em>int</em>) – Number of truncated atoms on vertical &lt;110&gt; edges.
+Default is 0.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Initialize the eOhM nanoparticle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>element</strong> (<em>str</em>) – Chemical element. Default is ‘Au’.</p></li>
+<li><p><strong>Rnn</strong> (<em>float</em>) – Nearest-neighbor distance in Å. Default is 2.88.</p></li>
+<li><p><strong>nOrder</strong> (<em>int</em>) – Number of atomic layers along an edge. Default is 1.</p></li>
+<li><p><strong>sizeE</strong> (<em>int</em>) – Number of elongation layers along [001]. Default is 0.</p></li>
+<li><p><strong>Marks</strong> (<em>int</em>) – Number of truncated atoms on vertical &lt;110&gt; edges.
+Default is 0.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.johnsonNPs.eOhM.interCompactPlanesF_100">
+<span class="sig-name descname"><span class="pre">interCompactPlanesF_100</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">np.float64(0.7071067811865475)</span></span><a class="headerlink" href="#pyNanoMatBuilder.johnsonNPs.eOhM.interCompactPlanesF_100" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.johnsonNPs.eOhM.coords">
+<span class="sig-name descname"><span class="pre">coords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">noOutput</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.johnsonNPs.eOhM.coords" title="Link to this definition"></a></dt>
+<dd><p>Generates atomic coordinates for an octahedral nanoparticle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>noOutput</strong> (<em>bool</em>) – If False, displays progress and timing information.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Steps:</dt><dd><ul class="simple">
+<li><p>Generates vertex atoms.</p></li>
+<li><p>Calculates and places edge atoms along the edges.</p></li>
+<li><p>Generates facet atoms to fill in faces.</p></li>
+<li><p>Adds core atoms layer by layer.</p></li>
+<li><p>Stores final atomic positions in an ASE Atoms object.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None (updates class attributes).</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="module-pyNanoMatBuilder.otherNPs">
 <span id="othernps-py"></span><h2>otherNPs.py<a class="headerlink" href="#module-pyNanoMatBuilder.otherNPs" title="Link to this heading"></a></h2>
@@ -7322,14 +7401,14 @@ self.is_optimized is reset to False.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.plot_npr_triangle">
 <span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">plot_npr_triangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_optimized</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">external_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Rg'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'viridis'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.plot_npr_triangle" title="Link to this definition"></a></dt>
-<dd><p>Hybrid Sauer Plotter for pyNanoMatBuilder with precise colorbar scaling and bold formatting.</p>
+<dd><p>Hybrid Sauer Plot for pyNanoMatBuilder with precise colorbar scaling and bold formatting.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.applyTorsion">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">applyTorsion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_def</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'hkl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pitch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">helix_radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chirality</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RH'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.applyTorsion" title="Link to this definition"></a></dt>
-<dd><p>Apply a torsion to the atomic positions of a NP along a given crystallographic axis.</p>
-<p>Each atomic plane perpendicular to the torsion axis is rotated by an angle
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.applyTwist">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">applyTwist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_def</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'hkl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pitch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">helix_radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chirality</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RH'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.applyTwist" title="Link to this definition"></a></dt>
+<dd><p>Apply a Twist to the atomic positions of a NP along a given crystallographic axis.</p>
+<p>Each atomic plane perpendicular to the Twist axis is rotated by an angle
 that depends on its position along the axis, according to the chosen profile.
 The ‘helical’ profile additionally translates atoms along the axis proportionally
 to their rotation angle, producing a helix-like deformation.
@@ -7341,7 +7420,7 @@ formula — no Python loop over atoms.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>self</strong> – A pyNMBcore instance (Crystal, or any object with self.NP and self.cog).</p></li>
-<li><p><strong>axis</strong> (<em>array-like</em>) – Torsion axis in crystallographic coordinates [h, k, l]
+<li><p><strong>axis</strong> (<em>array-like</em>) – Twist axis in crystallographic coordinates [h, k, l]
 or Cartesian [x, y, z] depending on axis_def.</p></li>
 <li><p><strong>axis_def</strong> (<em>str</em>) – <p>Defines the coordinate system of the axis argument. Options:
 ‘hkl’ — axis is given as Miller indices in the crystallographic</p>
@@ -7355,35 +7434,27 @@ tensor (Gstar). Use for Crystal NPs built by pyNanoMatBuilder.</p>
 </dl>
 <p>Default is ‘hkl’.</p>
 </p></li>
-<li><p><strong>rate</strong> (<em>float</em>) – <p>Torsion rate. For ‘linear’    : degrees per Å.
-For ‘sinusoidal’: peak amplitude in degrees.
-For ‘gaussian’  : peak amplitude in degrees.
-For ‘helical’   : degrees per Å.
-For ‘helix’     : not used.
-For ‘custom’    : scaling factor applied to</p>
-<blockquote>
-<div><p>custom_profile(z, L).</p>
-</div></blockquote>
+<li><p><strong>rate</strong> (<em>float</em>) – <p>Twist rate in degrees, interpretation depends on profile:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">linear</span></code>    : degrees per Å.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sinusoidal</span></code>: peak amplitude in degrees.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gaussian</span></code>  : peak amplitude in degrees.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">helical</span></code>   : degrees per Å.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">helix</span></code>     : not used.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">custom</span></code>    : scaling factor applied to custom_profile(z, L).</p></li>
+</ul>
 <p>Default is 1.0.</p>
 </p></li>
-<li><p><strong>profile</strong> (<em>str</em>) – <p>Torsion profile along the axis. Options:
-‘linear’     — angle(z) = rate * z
-‘sinusoidal’ — angle(z) = rate * sin(2π * z / L)
-‘gaussian’   — angle(z) = rate * exp(-z² / 2σ²), σ = L/4
-‘helical’    — angle(z) = rate * z, plus a translation along</p>
-<blockquote>
-<div><p>the axis of pitch * angle / (2π) per atom,
-producing a wire twisted on itself.</p>
-</div></blockquote>
-<dl class="simple">
-<dt>’helix’      — bends the wire to follow a circular helical path</dt><dd><p>of radius helix_radius and pitch pitch, using the
-Frenet-Serret local frame. The wire becomes a
-spring-like structure. Requires helix_radius and pitch.
-rate is not used for this profile.</p>
-</dd>
-</dl>
-<p>’custom’     — angle(z) = rate * custom_profile(z, L)
-Default is ‘linear’.</p>
+<li><p><strong>profile</strong> (<em>str</em>) – <p>Twist profile along the axis:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">linear</span></code>   : angle(z) = rate * z</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sinusoidal</span></code>: angle(z) = rate * sin(2π * z / L)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gaussian</span></code> : angle(z) = rate * exp(-z² / 2σ²), σ = L/4</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">helical</span></code>  : angle(z) = rate * z, plus translation along axis.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">helix</span></code>    : bends wire to helical path, requires helix_radius and pitch.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">custom</span></code>   : angle(z) = rate * custom_profile(z, L)</p></li>
+</ul>
+<p>Default is <code class="docutils literal notranslate"><span class="pre">'linear'</span></code>.</p>
 </p></li>
 <li><p><strong>custom_profile</strong> (<em>callable</em><em>, </em><em>optional</em>) – <p>A user-defined function f(z, L) -&gt; float
 where z is the signed distance along the axis in Å, and L is
@@ -7397,19 +7468,15 @@ Required when profile=’custom’. Example:</p>
 Required when profile=’helical’ or ‘helix’.</p></li>
 <li><p><strong>helix_radius</strong> (<em>float</em><em>, </em><em>optional</em>) – Radius of the helical path in Å.
 Required when profile=’helix’.</p></li>
-<li><p><strong>chirality</strong> (<em>str</em>) – <p>Handedness of the torsion or helix. Options:
-‘RH’ — Right-Handed (default): standard mathematical</p>
-<blockquote>
-<div><p>positive rotation (counter-clockwise when viewed
-from the positive axis direction).</p>
-</div></blockquote>
-<dl class="simple">
-<dt>’LH’ — Left-Handed: mirror image of the Right-Handed</dt><dd><p>version, obtained by flipping the rotation
-direction (rotation-based profiles) or the
-helix winding direction (profile=’helix’).</p>
-</dd>
-</dl>
-<p>Default is ‘RH’.</p>
+<li><p><strong>chirality</strong> (<em>str</em>) – <p>Handedness of the Twist or helix:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">'RH'</span></code> — Right-Handed (default): standard mathematical positive
+rotation (counter-clockwise when viewed from the positive axis direction).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'LH'</span></code> — Left-Handed: mirror image of the Right-Handed version,
+obtained by flipping the rotation direction (rotation-based profiles)
+or the helix winding direction (<code class="docutils literal notranslate"><span class="pre">profile='helix'</span></code>).</p></li>
+</ul>
+<p>Default is <code class="docutils literal notranslate"><span class="pre">'RH'</span></code>.</p>
 </p></li>
 <li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is False.</p></li>
 </ul>
@@ -7431,7 +7498,7 @@ helix winding direction (profile=’helix’).</p>
 </dl>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The torsion is applied around the center of mass of the NP.
+<p>The Twist is applied around the center of mass of the NP.
 The axis is normalized internally.
 For profiles other than ‘helix’, rotation is performed using a vectorized
 Rodrigues formula for maximum performance (no Python loop over atoms).
@@ -7442,19 +7509,19 @@ For profile=’helix’, each slice is displaced and reoriented using the
 Frenet-Serret frame of the helix — no internal distortion of each slice.</p>
 </div>
 <p class="rubric">Examples</p>
-<p># Linear torsion along [0, 0, 1], 2°/Å
-NP.applyTorsion(axis=[0, 0, 1], rate=2.0, profile=’linear’)</p>
-<p># Sinusoidal torsion with 45° peak amplitude
-NP.applyTorsion(axis=[0, 0, 1], rate=45.0, profile=’sinusoidal’)</p>
+<p># Linear Twist along [0, 0, 1], 2°/Å
+NP.applyTwist(axis=[0, 0, 1], rate=2.0, profile=’linear’)</p>
+<p># Sinusoidal Twist with 45° peak amplitude
+NP.applyTwist(axis=[0, 0, 1], rate=45.0, profile=’sinusoidal’)</p>
 <p># Wire twisted on itself, 5°/Å, 200 Å/turn
-NP.applyTorsion(axis=[0, 0, 1], rate=5.0, profile=’helical’, pitch=200.0)</p>
+NP.applyTwist(axis=[0, 0, 1], rate=5.0, profile=’helical’, pitch=200.0)</p>
 <p># Wire bent to a helical path, radius 50 Å, pitch 100 Å/turn
-NP.applyTorsion(axis=[0, 0, 1], rate=1.0, profile=’helix’,</p>
+NP.applyTwist(axis=[0, 0, 1], rate=1.0, profile=’helix’,</p>
 <blockquote>
 <div><p>helix_radius=50.0, pitch=100.0, axis_def=’cart’)</p>
 </div></blockquote>
-<p># Custom double-period sinusoidal torsion
-NP.applyTorsion(axis=[0, 0, 1], rate=45.0, profile=’custom’,</p>
+<p># Custom double-period sinusoidal Twist
+NP.applyTwist(axis=[0, 0, 1], rate=45.0, profile=’custom’,</p>
 <blockquote>
 <div><p>custom_profile=lambda z, L: np.sin(4 * np.pi * z / L))</p>
 </div></blockquote>
@@ -7642,6 +7709,179 @@ Outils_math%C3%A9matiques_pour_l%27%C3%A9tude_du_r%C3%A9seau_cristallin</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.crystals.spacegroup_to_bravais">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.crystals.</span></span><span class="sig-name descname"><span class="pre">spacegroup_to_bravais</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sg_number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hm_symbol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#pyNanoMatBuilder.utils.crystals.spacegroup_to_bravais" title="Link to this definition"></a></dt>
+<dd><p>Return the crystal system acronyms compatible with interPlanarSpacing()
+from the international space group number and Hermann-Mauguin symbol.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sg_number</strong> (<em>int</em>) – International space group number (1-230).</p></li>
+<li><p><strong>hm_symbol</strong> (<em>str</em>) – Hermann-Mauguin symbol (e.g. ‘F m -3 m’,
+‘R -3 m’, ‘P 63/m m c’). Only the first
+character is used. Default is ‘’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>crystal_system (str): Crystal system acronym compatible with
+interPlanarSpacing(), among:
+‘TRI’, ‘MCL’, ‘ORC’, ‘TET’, ‘TRH’, ‘HEX’, ‘CUB’</p></li>
+<li><p>bravais_lattice (str): Extended Bravais lattice acronym, among:
+‘TRI’           : triclinic
+‘MCL’           : simple monoclinic
+‘MCLC’          : base-centered monoclinic
+‘ORC’           : simple orthorhombic
+‘ORCF’          : face-centered orthorhombic
+‘ORCI’          : body-centered orthorhombic
+‘ORCC’          : base-centered orthorhombic
+‘TET’           : simple tetragonal
+‘BCT’           : body-centered tetragonal
+‘TRH’           : trigonal rhombohedral
+‘HEX’           : hexagonal / trigonal hexagonal axes
+‘CUB’           : simple cubic
+‘FCC’           : face-centered cubic
+‘BCC’           : body-centered cubic</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[str, str]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If sg_number is not in range 1-230.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spacegroup_to_bravais</span><span class="p">(</span><span class="mi">225</span><span class="p">,</span> <span class="s1">&#39;F m -3 m&#39;</span><span class="p">)</span>
+<span class="go">(&#39;CUB&#39;, &#39;FCC&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spacegroup_to_bravais</span><span class="p">(</span><span class="mi">229</span><span class="p">,</span> <span class="s1">&#39;I m -3 m&#39;</span><span class="p">)</span>
+<span class="go">(&#39;CUB&#39;, &#39;BCC&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spacegroup_to_bravais</span><span class="p">(</span><span class="mi">194</span><span class="p">,</span> <span class="s1">&#39;P 63/m m c&#39;</span><span class="p">)</span>
+<span class="go">(&#39;HEX&#39;, &#39;HEX&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spacegroup_to_bravais</span><span class="p">(</span><span class="mi">146</span><span class="p">,</span> <span class="s1">&#39;R -3 m&#39;</span><span class="p">)</span>
+<span class="go">(&#39;TRH&#39;, &#39;TRH&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spacegroup_to_bravais</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="s1">&#39;C 1 2/m 1&#39;</span><span class="p">)</span>
+<span class="go">(&#39;MCL&#39;, &#39;MCLC&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spacegroup_to_bravais</span><span class="p">(</span><span class="mi">69</span><span class="p">,</span> <span class="s1">&#39;F m m m&#39;</span><span class="p">)</span>
+<span class="go">(&#39;ORC&#39;, &#39;ORCF&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.crystals.crystallographic_angle">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.crystals.</span></span><span class="sig-name descname"><span class="pre">crystallographic_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'direction'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'direction'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.crystals.crystallographic_angle" title="Link to this definition"></a></dt>
+<dd><p>Compute the angle between two crystallographic objects
+(directions or planes) in any crystal system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – A pyNMBcore instance with Gstar and G metric tensors.</p></li>
+<li><p><strong>v1</strong> (<em>array-like</em>) – First vector [h, k, l] or [u, v, w].</p></li>
+<li><p><strong>v2</strong> (<em>array-like</em>) – Second vector [h, k, l] or [u, v, w].</p></li>
+<li><p><strong>type1</strong> (<em>str</em>) – Nature of v1: ‘direction’ [uvw] or ‘plane’ (hkl).
+Default is ‘direction’.</p></li>
+<li><p><strong>type2</strong> (<em>str</em>) – Nature of v2: ‘direction’ [uvw] or ‘plane’ (hkl).
+Default is ‘direction’.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Angle in degrees between the two objects.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If type1 or type2 is not ‘direction’ or ‘plane’.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>angle between two directions [u1v1w1] and [u2v2w2]:
+uses the direct metric tensor G</p></li>
+<li><p>angle between two planes (h1k1l1) and (h2k2l2):
+uses the reciprocal metric tensor G*</p></li>
+<li><p>angle between a direction [uvw] and a plane (hkl):
+the plane normal in direct space is computed via G*,
+then the angle between the direction and the normal is
+computed, and 90° is subtracted to get the angle between
+the direction and the plane itself.</p></li>
+</ul>
+</div>
+<p class="rubric">Examples</p>
+<p># Angle between two directions in hcp
+NP.crystallographic_angle([0,0,1], [1,0,0],</p>
+<blockquote>
+<div><p>type1=’direction’, type2=’direction’)</p>
+</div></blockquote>
+<p># Angle between two planes in fcc
+NP.crystallographic_angle([1,1,1], [1,0,0],</p>
+<blockquote>
+<div><p>type1=’plane’, type2=’plane’)</p>
+</div></blockquote>
+<p># Angle between direction [110] and plane (115) in fcc
+NP.crystallographic_angle([1,1,0], [1,1,5],</p>
+<blockquote>
+<div><p>type1=’direction’, type2=’plane’)</p>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>All vectors are converted to Cartesian coordinates via lattice_cart
+before angle computation, ensuring correctness for all crystal systems
+including non-orthogonal lattices (hexagonal, trigonal, monoclinic,
+triclinic).
+- angle between two directions [u1v1w1] and [u2v2w2]:</p>
+<blockquote>
+<div><p>both converted to Cartesian, angle computed directly.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>angle between two planes (h1k1l1) and (h2k2l2):
+plane normals computed via G* then converted to Cartesian.</p></li>
+<li><p>angle between a direction [uvw] and a plane (hkl):
+90° - angle between direction and plane normal.</p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.crystals.generateSlab">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.crystals.</span></span><span class="sig-name descname"><span class="pre">generateSlab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hkl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_thickness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vacuum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backend</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'ase'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.crystals.generateSlab" title="Link to this definition"></a></dt>
+<dd><p>Generate a crystallographic slab from Miller indices (hkl).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – A Crystal instance with self.cif and self.crystal defined.</p></li>
+<li><p><strong>hkl</strong> (<em>array-like</em>) – Miller indices [h, k, l] of the surface plane.</p></li>
+<li><p><strong>size_a</strong> (<em>float</em>) – Target slab dimension along a in nm. Default is 2.0.</p></li>
+<li><p><strong>size_b</strong> (<em>float</em>) – Target slab dimension along b in nm. Default is 2.0.</p></li>
+<li><p><strong>min_thickness</strong> (<em>float</em>) – Minimum slab thickness in Å. Default is 5.0.
+For backend=’ase’, converted to an estimated
+number of layers. For backend=’pymatgen’,
+passed directly as min_slab_size.</p></li>
+<li><p><strong>vacuum</strong> (<em>float</em>) – Vacuum thickness in Å on each side. Default is 10.0.</p></li>
+<li><p><strong>backend</strong> (<em>str</em>) – Slab generation backend: ‘ase’ or ‘pymatgen’.
+‘pymatgen’ gives better control over slab thickness
+via min_thickness in Å. Default is ‘ase’.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is self.noOutput.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A shallow copy of the parent Crystal instance with</dt><dd><p>self.NP replaced by the generated slab.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pyNMBcore</p>
 </dd>
 </dl>
 </dd></dl>
@@ -8507,6 +8747,56 @@ The tube is automatically centered on the NP center of mass.</p>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.external_pgm.defSlabShapeForJMol">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">defSlabShapeForJMol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hkl</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.defSlabShapeForJMol" title="Link to this definition"></a></dt>
+<dd><p>Generate a Jmol command to visualize the slab surface plane as a
+translucent polygon, positioned just above the topmost atomic layer.</p>
+<p>The polygon is defined by the four corners of the slab surface cell
+(spanned by cell vectors a and b), centered on the slab center of mass,
+and placed at z_max + offset to aflush with the top atomic layer.
+Edges are drawn as thin lines and the plane is labeled with its
+Miller indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hkl</strong> (<em>array-like</em>) – Miller indices [h, k, l] of the surface plane,
+used for labeling only.</p></li>
+<li><p><strong>offset</strong> (<em>float</em>) – Vertical offset in Å above the topmost atomic layer
+at which the surface polygon is placed. Should be
+approximately half the atomic radius of the surface
+element (default: 1.5 Å, suitable for Au, Ag, Pt).</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses printing of the Jmol command.
+Default is True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Jmol command string defining the surface polygon, its edges,</dt><dd><p>and its Miller index label.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function is intended for use on objects returned by generateSlab().
+The polygon approximates the surface as a flat quadrilateral — it is
+exact only if the slab cell vectors a and b lie in the surface plane,
+which is the case for slabs generated by ASE or pymatgen surface builders.</p>
+</div>
+<p class="rubric">Example</p>
+<dl class="simple">
+<dt>slab = AuNP.generateSlab([1, 1, 5], size_a=2.0, size_b=2.0,</dt><dd><p>min_thickness=10.0, backend=’ase’)</p>
+</dd>
+</dl>
+<p>script = slab.defSlabShapeForJMol([1, 1, 5], offset=1.7)
+pyNMBu.write(‘coords/Au_115.script’, script)</p>
 </dd></dl>
 
 </section>
