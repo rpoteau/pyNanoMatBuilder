@@ -27,7 +27,7 @@ from .core import (pyNMB_location, get_resource_path, timer, RAB, Rbetween2Point
                    )
 from .core import centertxt, centerTitle, fg, bg, hl, color
 from .geometry import reduceHullFacets
-from .prop import kDTreeCN
+from .core import kDTreeCN
 from .io import writexyz
 
 ######################################## coupling with Jmol 

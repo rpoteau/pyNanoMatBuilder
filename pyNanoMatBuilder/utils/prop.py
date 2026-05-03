@@ -27,6 +27,9 @@ from .core import (pyNMB_location, get_resource_path, timer, RAB, Rbetween2Point
                    )
 from .core import centertxt, centerTitle, fg, bg, hl, color
 from .parallel import njit, prange
+from .geometry import coreSurface, setdAsNegative
+from .symmetry import MolSym
+from .external_pgm import defCrystalShapeForJMol
 
 ######################################## coordination numbers
 def calculateCN(coords,Rmax):
@@ -156,63 +159,6 @@ def printNeighbours(nn):
     """
     for i, nni in enumerate(nn):
         print(f"Atom {i:6} has {len(nni):2} NN: {nni}")
-
-def kDTreeCN(crystal: Atoms,
-             Rmax: float=2.9,
-             returnD: bool=False,
-             noOutput: bool=False
-            ):
-    """
-    Return the nearest neighbour (nn) table and number of NN per atom.
-
-    Args:
-        crystal (Atoms): Crystal structure object.
-        Rmax (float): The NN threshold.
-        returnD (bool): If True, distances between NN are returned as well.
-        noOutput (bool): If True, suppresses output messages.
-
-    Returns:
-        tuple: (nn, CN) or (nn, CN, dNN) if returnD is True.
-    """
-    from sklearn.neighbors import KDTree
-    if noOutput:
-        centertxt(
-            "Building a table of nearest neighbours",
-            bgc='#cbcbcb',
-            size='12',
-            fgc='b',
-            weight='bold',
-        )
-    if noOutput:
-        chrono = timer()
-        chrono.chrono_start()
-    coords = crystal.get_positions()
-    tree = KDTree(coords)
-    nn = []
-    CN = []
-    dNN = []
-    for i, c in enumerate(coords):
-        if returnD:
-            l, d = tree.query_radius([c], r=3.0, return_distance=returnD)
-            l = list(l[0])
-            d = list(d[0])
-        else:
-            l = list(tree.query_radius([c], r=3.0, return_distance=returnD)[0])
-        if returnD:
-            dNN.append(d)
-        ipos = l.index(i)
-        l.remove(i)
-        if returnD:
-            del(d[ipos])
-        nn.append(l)
-        CN.append(len(l))
-    if noOutput:
-        chrono.chrono_stop(hdelay=False)
-        chrono.chrono_show()
-    if returnD:
-        return nn, CN, dNN
-    else:
-        return nn, CN
 
 ######################################## magic numbers
 def magicNumbers(cluster, i):
@@ -737,8 +683,6 @@ def get_ellipsoid_analysis(self, noOutput=False):
             status = "initial envelope"
             key = "initial structure"
 
-        
-        
         hull_coords = target_atoms.get_positions()[hull_indices]
         pts = np.asarray(hull_coords)
     
@@ -818,12 +762,224 @@ def get_ellipsoid_analysis(self, noOutput=False):
             
             print("\n  [Jmol Command to visualize the ellipsoid]:")
             print(f"  {jmol_cmd}")
+            
+def external_facets_info(self, mode='auto', noOutput=False):
+    """
+    Compute and display geometric properties of each facet of the NP,
+    based on either the Wulff construction planes or the convex hull planes.
 
+    Two labeling modes depending on the selected planes:
+    - Wulff mode (trPlanes_Wulff): facets are labeled by Miller indices from
+      self.surfacesWulff. Relative surface energies are computed from
+      the Wulff distances via the Wulff theorem (e_i ∝ d_i).
+    - Hull mode (trPlanes or trPlanes_opt): facets are labeled by their
+      Miller indices (if convertible) or Cartesian normal direction.
+      Relative energies are computed from distances.
+
+    In all modes, facet areas are computed from the reduced convex hull
+    facets (same as used in defCrystalShapeForJMol), and each hull facet
+    is matched to its corresponding plane by maximizing the dot product
+    between the facet normal and the plane normals. Facets absent from
+    the reduced hull are reported as warnings.
+
+    Args:
+        mode (str): Which truncation planes to use. Options:
+            - 'auto'        : automatically selects trPlanes_Wulff if
+                              available, then trPlanes_opt, then trPlanes.
+            - 'Wulff'       : use trPlanes_Wulff with Miller index labeling
+                              and relative energy computation.
+            - 'crystal'     : use trPlanes (initial structure).
+            - 'crystal_opt' : use trPlanes_opt (optimized structure).
+            Default is 'auto'.
+        noOutput (bool): If True, suppresses all printed output.
+            Default is False.
+
+    Returns:
+        tuple or None:
+            - distances (np.ndarray): orthogonal distance from origin to
+              each plane in Å.
+            - e_relative (np.ndarray): relative surface energies normalized
+              to 1 for the most stable face.
+            - facet_areas_per_plane (list of float): area in Å² of each
+              facet. 0.0 if absent from the reduced hull.
+            Returns None if no truncation planes are available.
+    """
+    from .geometry import reduceHullFacets
+
+    # --- Select target planes and mode ---
+    if mode == 'auto':
+        useWulff = hasattr(self, 'trPlanes_Wulff') and self.trPlanes_Wulff is not None
+        if useWulff:
+            target_planes = self.trPlanes_Wulff
+        elif getattr(self, 'is_optimized', False) and getattr(self, 'trPlanes_opt', None) is not None:
+            target_planes = self.trPlanes_opt
+            useWulff = False
+        else:
+            target_planes = getattr(self, 'trPlanes', None)
+            useWulff = False
+    elif mode == 'Wulff':
+        target_planes = getattr(self, 'trPlanes_Wulff', None)
+        useWulff = True
+    elif mode == 'crystal':
+        target_planes = getattr(self, 'trPlanes', None)
+        useWulff = False
+    elif mode == 'crystal_opt':
+        target_planes = getattr(self, 'trPlanes_opt', None)
+        useWulff = False
+
+    if target_planes is None:
+        if not noOutput:
+            print(f"{bg.LIGHTYELLOWB}Warning: no truncation planes available "
+                  f"(trPlanes_Wulff, trPlanes_opt, trPlanes are all None). "
+                  f"Run the NP construction first.{bg.OFF}")
+        return None
+
+    planes    = np.array(target_planes)
+    distances = np.abs(planes[:, 3])   # |d|, since ||n||=1
+
+    # --- Relative energies (always computed from distances) ---
+    d_min      = distances.min()
+    e_relative = distances / d_min
+
+    # --- Facet areas from reduceHullFacets ---
+    vertices, redFacets = reduceHullFacets(self, noOutput=True,
+                                           useWulff=useWulff)
+
+    # --- One-to-one matching via greedy assignment ---
+    facet_normals    = []
+    facet_area_list  = []
+    facet_areas_per_plane = [0.0] * len(planes)
+    matched_planes   = set()
+
+    for fi, nf in enumerate(redFacets):
+        pts = np.array([vertices[i] for i in nf])
+        area = 0.0
+        for i in range(1, len(pts) - 1):
+            v1 = pts[i]     - pts[0]
+            v2 = pts[i + 1] - pts[0]
+            area += 0.5 * np.linalg.norm(np.cross(v1, v2))
+        if len(pts) >= 3:
+            v1 = pts[1] - pts[0]
+            v2 = pts[2] - pts[0]
+            fn = np.cross(v1, v2)
+            norm = np.linalg.norm(fn)
+            if norm > 1e-10:
+                facet_normals.append(fn / norm)
+                facet_area_list.append(area)
+
+    if len(facet_normals) == 0:
+        if not noOutput:
+            print(f"{bg.LIGHTYELLOWB}Warning: no valid facet normals found.{bg.OFF}")
+        return distances, e_relative, facet_areas_per_plane
+
+    facet_normals = np.array(facet_normals)
+    dot_matrix    = np.abs(facet_normals @ planes[:, :3].T)
+
+    # Greedy one-to-one assignment
+    assigned_facets = set()
+    assigned_planes = set()
+    while True:
+        mask = np.ones_like(dot_matrix)
+        for fi in assigned_facets:
+            mask[fi, :] = 0
+        for pi in assigned_planes:
+            mask[:, pi] = 0
+        if mask.sum() == 0:
+            break
+        best = np.argmax(dot_matrix * mask)
+        fi, pi = np.unravel_index(best, dot_matrix.shape)
+        if dot_matrix[fi, pi] < 0.9:
+            break
+        facet_areas_per_plane[pi] += facet_area_list[fi]
+        matched_planes.add(pi)
+        assigned_facets.add(fi)
+        assigned_planes.add(pi)
+
+    # --- Warn about absent facets ---
+    absent_planes = [i for i in range(len(planes)) if i not in matched_planes]
+    if absent_planes and not noOutput:
+        for i in absent_planes:
+            if useWulff:
+                p = self.surfacesWulff[i]
+                label = f"({p[0]:2d} {p[1]:2d} {p[2]:2d})"
+            else:
+                nn = planes[i, :3]
+                label = f"[{nn[0]:+.2f} {nn[1]:+.2f} {nn[2]:+.2f}]"
+            print(f"  {bg.LIGHTYELLOWB}Warning: plane {label} has no matching "
+                  f"facet in the reduced hull — it may be too small or absent "
+                  f"from this NP.{bg.OFF}")
+    n_absent = len(absent_planes)
+
+    # --- Sort by distance (descending) ---
+    sort_idx = np.argsort(distances)[::-1]
+
+    # --- Display ---
+    if not noOutput:
+        mode_label = ('Wulff' if useWulff else
+                      'optimized crystal' if mode == 'crystal_opt' else 'crystal')
+        centertxt(f"Surface area and relative energies analysis — {mode_label}",
+                  bgc='#007a7a', size='14', weight='bold')
+
+        # Convert Cartesian normals to Miller indices for hull mode
+        if not useWulff:
+            from .core import round_to_Miller
+            miller_indexes = []
+            for p in planes[:, :3]:
+                try:
+                    m, ok = round_to_Miller(p.reshape(1, 3), tol=0.15)
+                    miller_indexes.append(m[0] if ok else None)
+                except Exception:
+                    miller_indexes.append(None)
+
+        # Build header
+        if useWulff:
+            has_energies = (hasattr(self, 'eSurfacesWulff') and
+                            self.eSurfacesWulff is not None)
+            if has_energies:
+                header = (f"{'Plane (hkl)':<22} {'d / nm':>8} {'e_input':>9} "
+                          f"{'e_rel':>10} {'Area (nm²)':>15}")
+            else:
+                header = (f"{'Plane (hkl)':<22} {'d / nm':>8} {'D_input / nm':>9} "
+                          f"{'e_rel':>10} {'Area (nm²)':>15}")
+        else:
+            header = (f"{'Plane (hkl)':<22} {'d / nm':>8} "
+                      f"{'e_rel':>10} {'Area (nm²)':>15}")
+
+        print(f"\n{'─'*len(header)}")
+        print(header)
+        print(f"{'─'*len(header)}")
+
+        for i in sort_idx:
+            area_str = (f"{facet_areas_per_plane[i] / 100:.2f}"
+                        if facet_areas_per_plane[i] > 0 else "  absent")
+
+            if useWulff:
+                p = self.surfacesWulff[i]
+                label = f"({p[0]:2d} {p[1]:2d} {p[2]:2d})"
+                if has_energies:
+                    input_str = f"{self.eSurfacesWulff[i]:9.3f}"
+                else:
+                    input_str = f"{self.sizesWulff[i]:9.3f}"
+                print(f"  {label:<18} {distances[i]/10:8.2f}   {input_str}   "
+                      f"{e_relative[i]:8.3f}   {area_str:>12}")
+            else:
+                m = miller_indexes[i]
+                if m is not None:
+                    label = f"({int(m[0]):2d} {int(m[1]):2d} {int(m[2]):2d})"
+                else:
+                    nn = planes[i, :3]
+                    label = f"[{nn[0]:+.2f} {nn[1]:+.2f} {nn[2]:+.2f}]"
+                print(f"  {label:<18} {distances[i]/10:8.2f}   "
+                      f"{e_relative[i]:8.3f}   {area_str:>12}")
+
+        print(f"{'─'*len(header)}")
+        if n_absent > 0:
+            print(f"  {bg.LIGHTYELLOWB}{n_absent} plane(s) absent from "
+                  f"the reduced hull.{bg.OFF}")
+        print()
+
+    return distances, e_relative, facet_areas_per_plane
 #------------------------------------------------------------------------------------------------------------------------
-
-from .geometry import coreSurface, setdAsNegative
-from .symmetry import MolSym
-from .external_pgm import defCrystalShapeForJMol
 
 def propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput, is_optimized=False):
     """
@@ -928,7 +1084,17 @@ def propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis, threshold
 
     # Ellipsoid analysis (also calculates inscribed/circumscribed sphere radii
     get_ellipsoid_analysis(self, noOutput) 
-        
+
+    # External facets info
+    if hasattr(self, 'trPlanes_Wulff') and self.trPlanes_Wulff is not None:
+        self.external_facets_info(mode='Wulff', noOutput=noOutput)
+    if (hasattr(self, 'trPlanes') and self.trPlanes is not None
+            and not (hasattr(self, 'trPlanes_Wulff') 
+                     and self.trPlanes_Wulff is not None)):
+        self.external_facets_info(mode='crystal', noOutput=noOutput)
+    if (hasattr(self, 'trPlanes_opt') and self.trPlanes_opt is not None):
+        self.external_facets_info(mode='crystal_opt', noOutput=noOutput)
+
     # Specific print for regfccTd helix
     if (hasattr(self, 'n_Td')
             and self.n_Td > 1

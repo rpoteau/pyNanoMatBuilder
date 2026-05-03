@@ -30,7 +30,8 @@ from .core import (pyNMB_location, get_resource_path, timer, RAB, Rbetween2Point
                    )
 from .core import centertxt, centerTitle, fg, bg, hl, color
 from .crystals import lattice_cart, convertuvwh2hkld
-
+from .core import round_to_Miller
+from .core import kDTreeCN
 ######################################## Fill edges and facets
 
 def MakeFaceCoord(Rnn,f,coord,nAtomsOnFaces,coordFaceAt):
@@ -657,27 +658,40 @@ def remove_duplicate_atoms(coordinates, reference_coords, tolerance):
     n_removed = np.sum(~mask_unique)
     
     return unique_coords, n_removed
-
-def planeRotation(Crystal: Atoms,
+    
+def planeRotation(Crystal,
                   refPlane,
                   rotAxis,
                   nRot=6,
+                  returnMiller: bool=False,
                   debug: bool=False,
                   noOutput: bool=False
                  ):
     """
-    Return planes obtained by rotating a reference plane around an axis.
+    Return planes obtained by rotating a reference plane around an axis,
+    expressed in Cartesian coordinates.
 
     Args:
-        Crystal: Crystal object.
-        refPlane: Plane to rotate.
-        rotAxis: Rotation axis.
-        nRot (int): Rotation count, angle is 360°/nRot.
-        debug (bool): If True, prints normalized planes.
-        noOutput (bool): If True, suppresses output.
+        Crystal: pyNanoMatBuilder object.
+        refPlane (array-like): Reference plane in Miller indices [h, k, l]
+            to be rotated.
+        rotAxis (array-like): Rotation axis in crystallographic coordinates
+            [u, v, w].
+        nRot (int): Number of rotations. The rotation angle is 360°/nRot.
+            Default is 6.
+        returnMiller (bool): If True, also returns the rotated planes
+            expressed as Miller indices in the crystallographic basis.
+            Default is False.
+        debug (bool): If True, prints normalized plane normals in both
+            Cartesian and Miller index representations. Default is False.
+        noOutput (bool): If True, suppresses all output. Default is False.
 
     Returns:
-        np.ndarray: Rotated planes in cartesian coordinates.
+        np.ndarray: Array of shape (nRot, 3) containing the rotated plane
+            normals in Cartesian coordinates.
+        np.ndarray (optional): Array of shape (nRot, 3) containing the
+            rotated plane normals as Miller indices in the crystallographic
+            basis. Only returned if returnMiller=True.
     """
     pRef = np.array([refPlane])
     aRot = np.array([rotAxis])
@@ -716,16 +730,26 @@ def planeRotation(Crystal: Atoms,
             fgc='b',
             weight='bold',
         )
-    planesHCP = lattice_cart(Crystal, np.array(planesCart), False, printV=not noOutput)
+    Miller_indexes = lattice_cart(Crystal, np.array(planesCart), False, printV=not noOutput)
+    Miller_indexes, is_integer = round_to_Miller(Miller_indexes)
+    
+    if not noOutput:
+        centertxt("Miller indices of rotated planes",
+                  bgc='#cbcbcb', size='12', fgc='b', weight='bold')
+        for i, p in enumerate(Miller_indexes):
+            print(f"  plane {i}: ({p[0]} {p[1]} {p[2]})")
     if debug:
-        centertxt("Normalized HCP planes", bgc='#cbcbcb', size='12', fgc='b', weight='bold')
-        for i, p in enumerate(planesHCP):
+        centertxt("Normalized Miller indexes", bgc='#cbcbcb', size='12', fgc='b', weight='bold')
+        for i, p in enumerate(Miller_indexes):
             print(i, normV(p))
         print()
         centertxt(
             "Normalized cartesian planes", bgc='#cbcbcb', size='12', fgc='b', weight='bold'
         )
-    return np.array(planesCart)
+    if returnMiller:
+        return np.array(planesCart), Miller_indexes
+    else:
+        return np.array(planesCart)
 
 def alignV1WithV2_returnR(v1,v2=np.array([0, 0, 1])):
     """
@@ -1342,7 +1366,6 @@ def coreSurface(self,
 
 ################################################################
 
-from .prop import kDTreeCN
 def peel_by_coordination(self, threshold_peeling=6, Rmax=2.9, noOutput=False):
     """
     Remove surface atoms with low coordination numbers to simulate truncation or 

@@ -26,7 +26,7 @@ from .core import (pyNMB_location, get_resource_path, timer, RAB, Rbetween2Point
                    planeFittingLSF, AngleBetweenVV, signedAngleBetweenVV
                    )
 from .core import centertxt, centerTitle, fg, bg, hl, color
-from .prop import kDTreeCN
+from .core import kDTreeCN
 
 def print_ase_unitcell(system: Atoms):
     """
@@ -457,7 +457,7 @@ def spacegroup_to_bravais(sg_number: int, hm_symbol: str = '') -> tuple[str, str
         else:                  bravais_lattice = 'CUB'
 
     return crystal_system, bravais_lattice
-
+    
 def crystallographic_angle(self,
                            v1,
                            v2,
@@ -560,14 +560,16 @@ def crystallographic_angle(self,
         print(f"Angle between {type1} {t1} and {type2} {t2} : {angle:.4f}°")
 
     return angle
-
+    
 def generateSlab(self,
                  hkl,
                  size_a: float = 2.0,
                  size_b: float = 2.0,
                  min_thickness: float = 5.0,
+                 n_layers: int = None,
                  vacuum: float = 10.0,
                  backend: str = 'ase',
+                 primitive: bool=False,
                  noOutput: bool = None,
                 ):
     """
@@ -582,10 +584,22 @@ def generateSlab(self,
                                 For backend='ase', converted to an estimated
                                 number of layers. For backend='pymatgen',
                                 passed directly as min_slab_size.
+        n_layers (int): If provided, overrides min_thickness and directly
+                        specifies the number of layers passed to the backend.
+                        For ASE: number of repetitions of the surface unit cell
+                        (not necessarily equal to atomic layers).
+                        For pymatgen: number of unit planes (in_unit_planes=True).
+                        Default is None (use min_thickness instead).
         vacuum (float): Vacuum thickness in Å on each side. Default is 10.0.
         backend (str): Slab generation backend: 'ase' or 'pymatgen'.
                        'pymatgen' gives better control over slab thickness
                        via min_thickness in Å. Default is 'ase'.
+        primitive (bool): pymatgen backend only. If True, uses the primitive
+                          surface cell (smaller, with diagonal <110> vectors
+                          for (100) fcc). If False, uses the conventional
+                          surface cell aligned with principal crystallographic
+                          axes, which is consistent with ASE orientation.
+                          Default is False.
         noOutput (bool): If True, suppresses output. Default is self.noOutput.
 
     Returns:
@@ -599,6 +613,11 @@ def generateSlab(self,
     if noOutput is None:
         noOutput = self.noOutput
 
+    if primitive and backend == 'ase':
+        if not noOutput:
+            print(f"  {bg.LIGHTYELLOWB}Warning: primitive=True is only supported "
+                  f"with backend='pymatgen'. Ignored for backend='ase'.{bg.OFF}")
+
     # =========================================================
     # --- Backend: ASE ---
     # =========================================================
@@ -606,10 +625,13 @@ def generateSlab(self,
         # Estimate number of layers from min_thickness
         h, k, l = hkl
         hkl_arr = np.array([h, k, l], dtype=float)
-        d_hkl = 1.0 / np.sqrt(hkl_arr @ self.Gstar @ hkl_arr)
-        n_layers = max(3, int(np.ceil(min_thickness / d_hkl)))
-
-        slab_atoms = ase_surface(self.cif, tuple(hkl), n_layers, vacuum=vacuum)
+        if n_layers is not None:
+            # User-specified number of layers — bypasses min_thickness
+            _n_layers = max(1, n_layers)
+        else:
+            d_hkl = 1.0 / np.sqrt(hkl_arr @ self.Gstar @ hkl_arr)
+            _n_layers = max(3, int(np.ceil(min_thickness / d_hkl)))
+        slab_atoms = ase_surface(self.cif, tuple(hkl), _n_layers, vacuum=vacuum)
 
         # --- Check for oblique cell ---
         cellpar = slab_atoms.cell.cellpar()
@@ -651,15 +673,28 @@ def generateSlab(self,
         # Convert ASE cif to pymatgen Structure
         structure = AseAtomsAdaptor.get_structure(self.cif)
 
-        gen = SlabGenerator(
-            structure,
-            miller_index=hkl,
-            min_slab_size=min_thickness,
-            min_vacuum_size=vacuum,
-            center_slab=True,
-            in_unit_planes=False,
-            primitive=True,
-        )
+        if n_layers is not None:
+            # User-specified: use n_layers as min_slab_size in unit planes
+            gen = SlabGenerator(
+                structure,
+                miller_index=hkl,
+                min_slab_size=n_layers,
+                min_vacuum_size=vacuum/2,
+                center_slab=True,
+                in_unit_planes=True,
+                primitive=primitive,
+            )
+        else:
+            # User-specified: use min_thickness
+            gen = SlabGenerator(
+                structure,
+                miller_index=hkl,
+                min_slab_size=min_thickness,
+                min_vacuum_size=vacuum/2,
+                center_slab=True,
+                in_unit_planes=False,
+                primitive=primitive,
+            )
         slabs = gen.get_slabs()
         if not slabs:
             raise ValueError(f"pymatgen could not generate a slab for {hkl}.")
@@ -754,3 +789,68 @@ def generateSlab(self,
         from ase.visualize import view
         view(slab_obj.NP)
     return slab_obj
+
+def direction_to_plane(self, uvw, cartesian=False):
+    """
+    Return the Miller indices (hkl) of the plane perpendicular
+    to the crystallographic direction [uvw].
+    In a cubic system: (hkl) = (uvw).
+    In general: uses the metric tensor G to convert.
+
+    Args:
+        uvw (array-like): Direction [u, v, w] in crystallographic coordinates.
+        cartesian (bool): If True, returns the plane normal as a Cartesian
+                          vector instead of Miller indices. Default is False.
+
+    Returns:
+        np.ndarray: Miller indices [h, k, l] as smallest integers,
+                    or Cartesian normal vector if cartesian=True.
+    """
+    uvw = np.array(uvw, dtype=float)
+    hkl = self.G @ uvw
+
+    if cartesian:
+        # Convert plane normal to Cartesian via reciprocal lattice
+        hkl_cart = lattice_cart(self, [hkl], Bravais2cart=True)[0]
+        return hkl_cart
+
+    # Normalize to smallest integers
+    hkl_nonzero = hkl[np.abs(hkl) > 1e-10]
+    if len(hkl_nonzero) > 0:
+        hkl = hkl / np.min(np.abs(hkl_nonzero))
+    hkl = np.round(hkl).astype(int)
+    return hkl
+
+
+def plane_to_direction(self, hkl, cartesian=False):
+    """
+    Return the crystallographic direction [uvw] perpendicular
+    to the plane (hkl).
+    In a cubic system: [uvw] = [hkl].
+    In general: uses the reciprocal metric tensor G* to convert.
+
+    Args:
+        hkl (array-like): Miller indices [h, k, l].
+        cartesian (bool): If True, returns the direction as a Cartesian
+                          vector instead of crystallographic indices.
+                          Default is False.
+
+    Returns:
+        np.ndarray: Direction [u, v, w] as smallest integers in
+                    crystallographic coordinates, or Cartesian vector
+                    if cartesian=True.
+    """
+    hkl = np.array(hkl, dtype=float)
+    uvw = self.Gstar @ hkl
+
+    if cartesian:
+        # Convert direction to Cartesian via lattice vectors
+        uvw_cart = lattice_cart(self, [uvw], Bravais2cart=True)[0]
+        return uvw_cart
+
+    # Normalize to smallest integers
+    uvw_nonzero = uvw[np.abs(uvw) > 1e-10]
+    if len(uvw_nonzero) > 0:
+        uvw = uvw / np.min(np.abs(uvw_nonzero))
+    uvw = np.round(uvw).astype(int)
+    return uvw

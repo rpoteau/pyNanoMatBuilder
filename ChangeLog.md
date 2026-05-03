@@ -5,6 +5,137 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
+## [0.11.4] - 2025-05-04 "Oh wires and arrows, Wulff surface analyzis"
+
+### Added 
+- **new `round_to_Miller` function in `utils/core.py`**
+    - Added `round_to_Miller(planes_float, tol)`: converts float plane normals
+      to nearest integer Miller indices, finding a single common multiplicative
+      factor across all planes in the family (consistent with rotation-generated
+      plane families). Prints a warning if the rounding error exceeds `tol`
+      regardless of `noOutput`, since non-integer Miller indices always indicate
+      a potential issue with the plane definition.
+- **`utils/crystals.py`**
+    - Added **`direction_to_plane(uvw, cartesian)`**: returns the Miller indices (hkl)
+      of the plane perpendicular to the crystallographic direction [uvw], normalized
+      to smallest integers. If cartesian=True, returns the plane normal as a Cartesian
+      vector instead. Uses the metric tensor G for correctness in all crystal systems.
+    - Added **`plane_to_direction(hkl, cartesian)`**: returns the crystallographic
+      direction [uvw] perpendicular to the plane (hkl), normalized to smallest
+      integers. If cartesian=True, returns the direction as a Cartesian vector
+      instead. Uses the reciprocal metric tensor G* for correctness in all crystal
+      systems.
+- **new `external_facets_info(mode, noOutput)` in utils/prop.py`**
+    - computes and displays geometric
+      properties of each external facet of the NP — orthogonal distance from origin,
+      relative surface energy, and facet area. Two modes are available:
+    - Wulff mode (`trPlanes_Wulff`): facets are labeled by Miller indices from
+      `surfacesWulff`. In energy mode (`eSurfacesWulff` provided), the user input
+      energies are displayed alongside the computed relative energies. In distance
+      mode (`sizesWulff` provided), the user input distances are displayed. Relative
+      energies are derived from the Wulff distances via the Wulff theorem (e_i ∝ d_i).
+    - Hull mode (`trPlanes` or `trPlanes_opt`): facets are labeled by Miller indices
+      (converted from Cartesian normals via `round_to_miller`) or by Cartesian normal
+      if conversion fails. Relative energies are computed from distances.
+    - In all modes, facet areas are computed from the reduced convex hull facets
+      (consistent with `defCrystalShapeForJMol`), matched to planes via greedy
+      one-to-one dot product assignment. Planes absent from the reduced hull are
+      reported as warnings. Results are sorted by distance (descending).
+    - Automatically called in `propPostMake` for Wulff NPs (mode='Wulff') and
+      for crystal NPs with truncation planes (mode='crystal' or 'crystal_opt').
+    - Added in `pyNMBcore.py` a lightweight interface `external_facets_info(mode, noOutput)` calling
+      `prop.external_facets_info`.
+  
+- **`eOhM` class in `johnsonNPs.py`**: elongated fcc octahedral nanoparticle
+  built from scratch, without inheriting from `regfccOh`. The construction is
+  based on a square pyramid as the fundamental building block:
+
+  1. A square pyramid is generated geometrically (vertices, edges, triangular
+     faces, square base, and core atoms layer by layer using MakeFaceCoord).
+  2. The pyramid is shifted upward along [001] by `wire_length * d{001}`.
+  3. The elongated region between the pyramid base and z=0 is filled by
+     alternating inner (`wire_width-1`) and outer (`wire_width`) square layers,
+     spaced by `d{001} = Rnn/√2`. The starting layer type (inner/outer) is
+     determined by the parity of `wire_width` vs `nOrder` to ensure correct
+     fcc stacking.
+  4. Marks-like fluting truncation is optionally applied before the mirror step.
+  5. Mirror reflection across z=0 generates the bottom half.
+
+  <u>Parameters</u>:
+  - `nOrder` (int): number of atoms per octahedral edge.
+  - `wire_length` (int): number of {001} layers in the elongated part.
+    Default is 0 (regular octahedron).
+  - `wire_width` (int): width of the wire in atoms. If None, defaults to
+    nOrder. When `wire_width < nOrder`, produces a double-arrow morphology
+    with a narrower wire section between the two pyramidal caps — a shape
+    recently observed experimentally in Au nanoparticle synthesis.
+  - `Marks_110` (int): depth of fluting truncation on the 4 vertical `<110>`
+    corners of the wire, creating re-entrant `{110}` facets (cannelures).
+    Default is 0.
+  - `Marks_100` (int): depth of truncation on the 4 vertical `{100}` faces
+    of the wire, creating additional `{100}` facets between the `{110}`
+    cannelures. Default is 0.
+  - `Marks_on_wire_only` (bool): if True, fluting truncation is applied only
+    to the wire section (between the two pyramidal caps), not to the caps
+    themselves. Default is False.
+
+  <u>Helper methods</u>: `edge_atom_index`, `MakeVertices_SquarePyramid`, `Fwire`,
+  `truncationPlanes4MarksOctahedron`.
+  
+  <u>Geometric properties</u>: `edgeLength`, `halfHeightPyramid`, `elongationLength`,
+  `totalHeight`, `area`, `volume`.
+
+- in **`pyNMB-examples.ipynb` (*Wulff construction* section)**, added a comprehensive example of Wulff construction in both energy-based
+  and distance-based modes, including anisotropic shapes (nanorods) driven
+  by `symWulff=False` and differentiated surface energies. Covers the
+  `sizesWulff` dual behavior and the `symWulff` symmetry option.
+  
+### Changed
+
+- **`generateSlab()` in `utils/crystals.py`**
+    - Added `n_layers` parameter: if provided, overrides `min_thickness` and directly
+      specifies the number of layers passed to the backend. For ASE: number of
+      repetitions of the surface unit cell (not necessarily equal to atomic layers —
+      known limitation for planes like (100) fcc where one ASE layer contains two
+      atomic planes). For pymatgen: number of unit planes (`in_unit_planes=True`).
+      Default is None (use `min_thickness` instead).
+    - Added `primitive` parameter (pymatgen backend only): if True, uses the
+      primitive surface cell — smaller, with diagonal <110> vectors for the (100)
+      fcc surface. If False (default), uses the conventional surface cell aligned
+      with the principal crystallographic axes, consistent with ASE orientation.
+      A warning is printed if primitive=True is passed with backend='ase', where
+      it has no effect.
+- **`planeRotation` in `utils/crystals.py`**
+    - Added `returnMiller` parameter (bool, default False): if True, the function
+      additionally returns the rotated planes expressed as Miller indices in the
+      crystallographic basis, alongside the Cartesian planes. Useful for identifying
+      the crystallographic nature of truncation planes generated by rotation.
+    - Renamed internal variable `planesHCP` to `Miller_indexes` for clarity.
+      The variable is not specific to hcp and holds Miller indices for any
+      crystal system.
+- **`utils/core.py`**
+    - Moved **`kDTreeCN`** from `utils/prop.py` to `utils/core.py` to resolve a
+      circular import chain (`prop.py` → `geometry.py` → `crystals.py` → `prop.py`).
+      All imports of `kDTreeCN` in `geometry.py`, `crystals.py`, and
+      `external_pgm.py` have been updated accordingly.
+    - Moved **`round_to_miller`** from `utils/crystals.py` to `utils/core.py` for
+      the same reason — `geometry.py` now imports `round_to_miller` directly
+      from `core.py` without going through `crystals.py`.
+    - **`round_to_miller`** renamed **`round_to_Miller`**
+
+### Fixed
+
+- **`makeSuperCell` in `crystalNPs.py`**
+    - Fixed supercell size calculation for anisotropic Wulff nanoparticles
+      (nanorods, elongated shapes). Previously, the supercell was computed
+      isotropically from `max(sizesWulff)`, which caused the supercell to be
+      too small along the elongation axis, leaving atoms missing at the tips.
+      The supercell dimensions along each cartesian axis (a, b, c) are now
+      computed by projecting all Wulff plane normals onto each axis and taking
+      the maximum extent, weighted by the corresponding Wulff distance
+      (energy-based or size-based). This correctly handles nanorods oriented
+      along any crystallographic direction, not just [001].
+
 ## [0.11.3] - 2026-04-26 "slabs and crystallographic tools. Fixed docstrings"
 
 ### Fixed
@@ -50,7 +181,7 @@
     - added `interPlanarSpacing(hkl, noOutput)`: lightweight interface to
   `utils/crystals.interPlanarSpacing()`. Only available for Crystal instances
   loaded from a CIF file — returns None with a warning for geometric NP classes
-  (regfccOh, eOhM, epbpyM, etc.) which do not carry crystallographic metadata.
+  (regfccOh,epbpyM, etc.) which do not carry crystallographic metadata.
     - see an example in `pyNMB-examples.ipynb`, section **Miscellaneous** (end of notebook)
 
 ## [0.11.1] - 2026-04-23 "chirality torsion tools"

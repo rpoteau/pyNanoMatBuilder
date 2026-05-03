@@ -728,7 +728,100 @@ def faces_to_planes(faces, coords):
         planes.append(plane)
 
     return np.array(planes)
-        
+    
+def round_to_Miller(planes_float, tol=0.1):
+    """
+    Convert float plane normals to nearest integer Miller indices.
+    Normalizes by the minimum non-zero absolute value across all planes,
+    ensuring a consistent common factor for rotation-generated families.
+    Warns if rounding error exceeds tolerance — always, regardless of noOutput.
+
+    Args:
+        planes_float (array-like): Float plane normals, shape (N, 3).
+        tol (float): Maximum allowed rounding error per index.
+                     Default is 0.1.
+
+    Returns:
+        np.ndarray: Integer Miller indices, shape (N, 3).
+        bool: True if all indices are within tolerance for all planes.
+    """
+    planes = np.array(planes_float, dtype=float)
+
+    # Normalize by the minimum non-zero absolute value across all planes
+    all_nonzero = np.abs(planes[np.abs(planes) > 1e-10])
+    if len(all_nonzero) == 0:
+        return np.zeros_like(planes).astype(int), True
+    factor = all_nonzero.min()
+
+    miller = np.round(planes / factor).astype(int)
+    error  = np.max(np.abs(planes / factor - miller))
+    is_integer = error < tol
+
+    if not is_integer:
+        print(f"{bg.LIGHTYELLOWB}Warning: planes cannot be expressed as "
+              f"simple Miller indices with a common factor "
+              f"(max rounding error = {error:.4f}). "
+              f"Raw values: {planes_float}{fg.OFF}")
+
+    return miller, is_integer
+
+def kDTreeCN(crystal: Atoms,
+             Rmax: float=2.9,
+             returnD: bool=False,
+             noOutput: bool=False
+            ):
+    """
+    Return the nearest neighbour (nn) table and number of NN per atom.
+
+    Args:
+        crystal (Atoms): Crystal structure object.
+        Rmax (float): The NN threshold.
+        returnD (bool): If True, distances between NN are returned as well.
+        noOutput (bool): If True, suppresses output messages.
+
+    Returns:
+        tuple: (nn, CN) or (nn, CN, dNN) if returnD is True.
+    """
+    from sklearn.neighbors import KDTree
+    if noOutput:
+        centertxt(
+            "Building a table of nearest neighbours",
+            bgc='#cbcbcb',
+            size='12',
+            fgc='b',
+            weight='bold',
+        )
+    if noOutput:
+        chrono = timer()
+        chrono.chrono_start()
+    coords = crystal.get_positions()
+    tree = KDTree(coords)
+    nn = []
+    CN = []
+    dNN = []
+    for i, c in enumerate(coords):
+        if returnD:
+            l, d = tree.query_radius([c], r=3.0, return_distance=returnD)
+            l = list(l[0])
+            d = list(d[0])
+        else:
+            l = list(tree.query_radius([c], r=3.0, return_distance=returnD)[0])
+        if returnD:
+            dNN.append(d)
+        ipos = l.index(i)
+        l.remove(i)
+        if returnD:
+            del(d[ipos])
+        nn.append(l)
+        CN.append(len(l))
+    if noOutput:
+        chrono.chrono_stop(hdelay=False)
+        chrono.chrono_show()
+    if returnD:
+        return nn, CN, dNN
+    else:
+        return nn, CN
+
 #--------------------------------------------------------------------------------------------
 
 def _flush_stale_data(self, shape_update=None):

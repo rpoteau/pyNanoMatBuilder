@@ -299,12 +299,15 @@ class pyNMBcore:
             noOutput = self.noOutput
         return crystallographic_angle(self, v1, v2, type1, type2, noOutput)
 
-    def generateSlab(self, hkl,
+    def generateSlab(self,
+                     hkl,
                      size_a: float = 2.0,
                      size_b: float = 2.0,
                      min_thickness: float = 5.0,
+                     n_layers: int = None,
                      vacuum: float = 10.0,
                      backend: str = 'ase',
+                     primitive: bool=False,
                      noOutput: bool = None):
         """
         Generate a crystallographic slab from Miller indices (hkl).
@@ -315,8 +318,10 @@ class pyNMBcore:
             size_a (float): Slab dimension along a in nm. Default is 2.0.
             size_b (float): Slab dimension along b in nm. Default is 2.0.
             min_thickness (float): Minimum slab thickness in Å. Default is 5.0.
+            n_layers (integer): Directly specifies the number of layers. Default is None.
             vacuum (float): Vacuum thickness in Å. Default is 10.0.
             backend (str): 'ase' or 'pymatgen'. Default is 'ase'.
+            primitive (bool): pymatgen backend only. If True, uses the primitive surface cell. Default is False.
             noOutput (bool): If True, suppresses output. Default is self.noOutput.
     
         Returns:
@@ -325,8 +330,8 @@ class pyNMBcore:
         from .utils.crystals import generateSlab
         if noOutput is None:
             noOutput = self.noOutput
-        return generateSlab(self, hkl, size_a, size_b,
-                            min_thickness, vacuum, backend, noOutput)
+        return generateSlab(self, hkl, size_a, size_b, min_thickness,
+                            n_layers, vacuum, backend, primitive, noOutput)
     
     def defSlabShapeForJMol(self, hkl, offset: float = 1.5, noOutput: bool = None):
         """
@@ -376,6 +381,36 @@ class pyNMBcore:
         if not noOutput:
             print(f"d({hkl}) = {d:.4f} Å  [{crystal_system}]")
         return d
+        
+    def external_facets_info(self, mode='auto', noOutput=None):
+        """
+        Compute and display geometric properties of each facet.
+    
+        Args:
+            mode (str): Which planes to use. Options:
+                - 'auto'        : automatically selects Wulff if available,
+                                  then trPlanes_opt, then trPlanes.
+                - 'Wulff'       : use trPlanes_Wulff + Miller indices labeling.
+                - 'crystal'     : use trPlanes (initial structure).
+                - 'crystal_opt' : use trPlanes_opt (optimized structure).
+                Default is 'auto'.
+            noOutput (bool): If True, suppresses output. Default is self.noOutput.
+    
+        Returns:
+            tuple: (distances, e_relative, facet_areas_per_plane) or None.
+        """
+        from .utils.prop import external_facets_info
+        if noOutput is None:
+            noOutput = self.noOutput
+    
+        valid_modes = ('auto', 'Wulff', 'crystal', 'crystal_opt')
+        if mode not in valid_modes:
+            print(f"{bg.LIGHTYELLOWB}Warning: unknown mode '{mode}'. "
+                  f"Valid options are: {valid_modes}. "
+                  f"Falling back to 'auto'.{bg.OFF}")
+            mode = 'auto'
+    
+        return external_facets_info(self, mode=mode, noOutput=noOutput)
         
 ######################################### load external file
     @classmethod

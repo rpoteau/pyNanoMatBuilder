@@ -423,27 +423,58 @@ class Crystal(pyNMBcore):
                     / self.cif.cell.lengths()[2]
                 )
             )
-        elif "Wulff" in self.shape:
-            if np.argmax(self.sizesWulff) == 1:
-                max_dim = self.sizesWulff[0] * 10 * 1.5
-            else:
-                max_dim = np.max(self.sizesWulff) * 10 * 1.5
-            Ma = int(
-                np.round(
-                    extend_size_by_factor * max_dim / self.cif.cell.lengths()[0]
-                )
-            )
-            Mb = int(
-                np.round(
-                    extend_size_by_factor * max_dim / self.cif.cell.lengths()[1]
-                )
-            )
-            Mc = int(
-                np.round(
-                    extend_size_by_factor * max_dim / self.cif.cell.lengths()[2]
-                )
-            )
+        # elif "Wulff" in self.shape:
+        #     if np.argmax(self.sizesWulff) == 1:
+        #         max_dim = self.sizesWulff[0] * 10 * 1.5
+        #     else:
+        #         max_dim = np.max(self.sizesWulff) * 10 * 1.5
+        #     Ma = int(
+        #         np.round(
+        #             extend_size_by_factor * max_dim / self.cif.cell.lengths()[0]
+        #         )
+        #     )
+        #     Mb = int(
+        #         np.round(
+        #             extend_size_by_factor * max_dim / self.cif.cell.lengths()[1]
+        #         )
+        #     )
+        #     Mc = int(
+        #         np.round(
+        #             extend_size_by_factor * max_dim / self.cif.cell.lengths()[2]
+        #         )
+        #     )
 
+        elif "Wulff" in self.shape:
+            if self.eSurfacesWulff is not None:
+                most_stable_e = min(self.eSurfacesWulff)
+                max_distances = np.array([
+                    self.sizesWulff[0] * 10 * e / 2 / most_stable_e
+                    for e in self.eSurfacesWulff
+                ])
+            else:
+                max_distances = np.array(self.sizesWulff, dtype=float) * 10
+        
+            # For each cartesian axis, find the maximum extent
+            # by projecting each plane normal onto that axis
+            max_dim_a = 0.0
+            max_dim_b = 0.0
+            max_dim_c = 0.0
+            for i, p in enumerate(self.surfacesWulff):
+                n = pyNMBu.normV(np.array(p, dtype=float))
+                # Projection of plane normal onto each cartesian axis
+                max_dim_a = max(max_dim_a, abs(n[0]) * max_distances[i] * 2)
+                max_dim_b = max(max_dim_b, abs(n[1]) * max_distances[i] * 2)
+                max_dim_c = max(max_dim_c, abs(n[2]) * max_distances[i] * 2)
+        
+            # Ensure minimum size
+            max_dim_a = max(max_dim_a, np.max(max_distances) * 1.5)
+            max_dim_b = max(max_dim_b, np.max(max_distances) * 1.5)
+            max_dim_c = max(max_dim_c, np.max(max_distances) * 1.5)
+        
+            Ma = int(np.round(extend_size_by_factor * max_dim_a / self.cif.cell.lengths()[0]))
+            Mb = int(np.round(extend_size_by_factor * max_dim_b / self.cif.cell.lengths()[1]))
+            Mc = int(np.round(extend_size_by_factor * max_dim_c / self.cif.cell.lengths()[2]))
+            
         # Define minimum supercell size (at least 20 Å per direction)
         ma1nm = int(np.round(20 / self.cif.cell.lengths()[0]))
         mb1nm = int(np.round(20 / self.cif.cell.lengths()[1]))
@@ -678,6 +709,7 @@ class Crystal(pyNMBcore):
             normal,
             self.directionWire,
             self.nRotWire,
+            returnMiller=False,
             debug=False,
             noOutput=noOutput,
         )
@@ -1125,14 +1157,27 @@ class Crystal(pyNMBcore):
                 sys.exit(
                     "Either 'eSurfacesWulff' or 'sizesWulff' must be set"
                 )
-            if (
-                len(self.surfacesWulff) != len(self.eSurfacesWulff)
-                and len(self.surfacesWulff) != len(self.sizesWulff)
-            ):
-                sys.exit(
-                    "'surfacesWulff' and energy/size lists "
-                    "have different dimensions"
-                )
+            if self.surfacesWulff is not None and self.eSurfacesWulff is None:
+                # Distance mode: sizesWulff must match surfacesWulff 1-to-1
+                if len(self.surfacesWulff) != len(self.sizesWulff):
+                    sys.exit(
+                        f"'surfacesWulff' and 'sizesWulff' have different "
+                        f"dimensions ({len(self.surfacesWulff)} vs "
+                        f"{len(self.sizesWulff)}). In distance mode, one "
+                        f"size value is required per surface plane."
+                    )
+            if self.eSurfacesWulff is not None:
+                if self.sizesWulff is None:
+                    sys.exit(
+                        "In energy mode, 'sizesWulff' must contain exactly "
+                        "one value — the target size in nm in the most stable direction."
+                    )
+                if len(self.sizesWulff) > 1:
+                    print(
+                        f"{bg.LIGHTYELLOWB}Warning: in energy mode, only "
+                        f"sizesWulff[0]={self.sizesWulff[0]} is used. "
+                        f"Extra values are ignored.{bg.OFF}"
+                    )
             self.makeSuperCell(noOutput)
             self.makeWulff(noOutput)
 
