@@ -83,6 +83,7 @@ class pyNMBcore:
         self.chirality = "achiral"
 
         self.trPlanes_Wulff = None
+        self.trPlanes_Slices = None
         self.WulffShape = None
 
     def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1):
@@ -391,6 +392,7 @@ class pyNMBcore:
                 - 'auto'        : automatically selects Wulff if available,
                                   then trPlanes_opt, then trPlanes.
                 - 'Wulff'       : use trPlanes_Wulff + Miller indices labeling.
+                - 'Slices'      : use trPlanes_Slices
                 - 'crystal'     : use trPlanes (initial structure).
                 - 'crystal_opt' : use trPlanes_opt (optimized structure).
                 Default is 'auto'.
@@ -403,7 +405,7 @@ class pyNMBcore:
         if noOutput is None:
             noOutput = self.noOutput
     
-        valid_modes = ('auto', 'Wulff', 'crystal', 'crystal_opt')
+        valid_modes = ('auto', 'Wulff', 'Slices', 'crystal', 'crystal_opt')
         if mode not in valid_modes:
             print(f"{bg.LIGHTYELLOWB}Warning: unknown mode '{mode}'. "
                   f"Valid options are: {valid_modes}. "
@@ -411,6 +413,25 @@ class pyNMBcore:
             mode = 'auto'
     
         return external_facets_info(self, mode=mode, noOutput=noOutput)
+
+    def applyTruncation(self, planes, distance_unit='nm', noOutput=None):
+        """
+        Apply one or more truncation planes to self.NP.
+        See utils.geometry.applyTruncation for full documentation.
+    
+        Args:
+            planes (list of dict): List of plane definitions.
+            distance_unit (str): 'nm' (default) or 'Angstrom'.
+            noOutput (bool): If True, suppresses output. Default is self.noOutput.
+    
+        Returns:
+            None. Updates self.NP, self.nAtoms, self.cog, self.trPlanes in place.
+        """
+        from .utils.csg import applyTruncation
+        if noOutput is None:
+            noOutput = self.noOutput
+        return applyTruncation(self, planes, distance_unit=distance_unit,
+                               noOutput=noOutput)
         
 ######################################### load external file
     @classmethod

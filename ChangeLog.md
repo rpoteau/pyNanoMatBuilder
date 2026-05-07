@@ -5,6 +5,25 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
+## [0.11.5] - 2025-05-04 "Polydispersity"
+
+### Added
+- new **polydispersity** section in **`pyNMB-examples.ipynb`**
+
+### Fixed/Added
+
+- **`utils/polydispersity`**
+    - `get_proportions()`
+        - **Fix:** `norms` (Norm. dist) now correctly represents the weight of each target within the global distribution
+        - **Add:** New `norms_relative` key in the returned dict — normalized values that always sum to 1 across the provided targets
+    - `print_specific_proportions(target_sizes, labels=None)`
+        - **Add:** Optional `labels` parameter — when provided, adds a label column to the printed table
+        - **Add:** New `Norm. (dist)` and `Norm. (1)` columns in the output table
+    - `plot(highlight_sizes=None)`
+        - **Add:** `highlight_sizes` now accepts either a flat list `[s1, s2, ...]` or a paired list `[sizes, labels]`
+        - **Add:** When labels are provided, the annotation displays the label on the first line, followed by size and normalized value
+        - **Fix:** Y-axis upper limit is expanded by 15% when highlights are present to prevent annotations from overlapping the title
+
 ## [0.11.4] - 2025-05-04 "Oh wires and arrows, Wulff surface analyzis"
 
 ### Added 

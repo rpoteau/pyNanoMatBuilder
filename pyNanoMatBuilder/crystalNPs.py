@@ -948,10 +948,9 @@ class Crystal(pyNMBcore):
 
     def makeWulff(self, noOutput):
         """
-        Calculate truncation distances for Wulff nanoparticles.
-
-        Determines truncation planes based on provided surfaces and surface energies.
-        Removes atoms above these planes to create the final shape.
+        Creation of Wulff nanoparticles by removing atoms above Wulff planes, to create the final shape.
+        Determines the truncation planes and truncation distances based on provided surfaces and surface energies.
+        Calculate  for .
 
         Args:
             noOutput (bool): If False, details are printed.

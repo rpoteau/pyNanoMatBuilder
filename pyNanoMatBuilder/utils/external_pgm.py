@@ -124,13 +124,17 @@ def defCrystalShapeForJMol(self,
     Returns:
         str: The Jmol command string for visualizing the crystal shape.
     """
-    useWulff = hasattr(self, 'trPlanes_Wulff') and self.trPlanes_Wulff is not None
+    useWulff   = hasattr(self, 'trPlanes_Wulff')   and self.trPlanes_Wulff   is not None
+    useSlices  = hasattr(self, 'trPlanes_Slices')  and self.trPlanes_Slices  is not None
 
-    target_planes = getattr(self, 'trPlanes_Wulff', None) if useWulff else None
-
-    if target_planes is None:
-        target_planes = getattr(self, 'trPlanes_opt', None) if self.is_optimized else getattr(self, 'trPlanes', None)
-
+    if useWulff:
+        target_planes = self.trPlanes_Wulff
+    elif useSlices:
+        target_planes = self.trPlanes_Slices
+    elif self.is_optimized:
+        target_planes = getattr(self, 'trPlanes_opt', None)
+    else:
+        target_planes = getattr(self, 'trPlanes', None)
     # if target_planes is not None:
     #     vertices, redFacets = reduceHullFacets(self, noOutput=noOutput, useWulff=useWulff)
 

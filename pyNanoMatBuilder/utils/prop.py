@@ -788,6 +788,7 @@ def external_facets_info(self, mode='auto', noOutput=False):
                               available, then trPlanes_opt, then trPlanes.
             - 'Wulff'       : use trPlanes_Wulff with Miller index labeling
                               and relative energy computation.
+            - 'Slices'      : used trPlanes_Slices
             - 'crystal'     : use trPlanes (initial structure).
             - 'crystal_opt' : use trPlanes_opt (optimized structure).
             Default is 'auto'.
@@ -820,6 +821,9 @@ def external_facets_info(self, mode='auto', noOutput=False):
     elif mode == 'Wulff':
         target_planes = getattr(self, 'trPlanes_Wulff', None)
         useWulff = True
+    elif mode == 'Slices':
+        target_planes = getattr(self, 'trPlanes_Slices', None)
+        useWulff = False
     elif mode == 'crystal':
         target_planes = getattr(self, 'trPlanes', None)
         useWulff = False
@@ -1086,11 +1090,14 @@ def propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis, threshold
     get_ellipsoid_analysis(self, noOutput) 
 
     # External facets info
+    print(self.trPlanes_Slices)
     if hasattr(self, 'trPlanes_Wulff') and self.trPlanes_Wulff is not None:
         self.external_facets_info(mode='Wulff', noOutput=noOutput)
+    if hasattr(self, 'trPlanes_Slices') and self.trPlanes_Slices is not None:
+        self.external_facets_info(mode='Slices', noOutput=noOutput)
     if (hasattr(self, 'trPlanes') and self.trPlanes is not None
-            and not (hasattr(self, 'trPlanes_Wulff') 
-                     and self.trPlanes_Wulff is not None)):
+            and not (hasattr(self, 'trPlanes_Wulff') and self.trPlanes_Wulff is not None)
+            and not (hasattr(self, 'trPlanes_Slices') and self.trPlanes_Slices is not None)):
         self.external_facets_info(mode='crystal', noOutput=noOutput)
     if (hasattr(self, 'trPlanes_opt') and self.trPlanes_opt is not None):
         self.external_facets_info(mode='crystal_opt', noOutput=noOutput)

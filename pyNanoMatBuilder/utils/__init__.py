@@ -2,6 +2,7 @@
 from .core import *
 from .prop import *
 from .symmetry import *
+from .csg import *
 from .crystals import *
 from .energy import *
 from .external_pgm import *

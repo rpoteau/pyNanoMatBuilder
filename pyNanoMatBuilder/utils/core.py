@@ -729,17 +729,18 @@ def faces_to_planes(faces, coords):
 
     return np.array(planes)
     
-def round_to_Miller(planes_float, tol=0.1):
+def round_to_Miller(planes_float, tol=0.1, debug=False):
     """
     Convert float plane normals to nearest integer Miller indices.
     Normalizes by the minimum non-zero absolute value across all planes,
     ensuring a consistent common factor for rotation-generated families.
-    Warns if rounding error exceeds tolerance — always, regardless of noOutput.
 
     Args:
         planes_float (array-like): Float plane normals, shape (N, 3).
         tol (float): Maximum allowed rounding error per index.
                      Default is 0.1.
+        debug (bool): print warning messages if rounding error exceeds tolerance
+                      Default is False
 
     Returns:
         np.ndarray: Integer Miller indices, shape (N, 3).
@@ -757,7 +758,7 @@ def round_to_Miller(planes_float, tol=0.1):
     error  = np.max(np.abs(planes / factor - miller))
     is_integer = error < tol
 
-    if not is_integer:
+    if not is_integer and debug:
         print(f"{bg.LIGHTYELLOWB}Warning: planes cannot be expressed as "
               f"simple Miller indices with a common factor "
               f"(max rounding error = {error:.4f}). "

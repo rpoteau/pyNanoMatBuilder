@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.11.4 documentation</title>
+  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.11.5 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="canonical" href="https://pynanomatbuilder.readthedocs.io/modules.html" />
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=0fc275bd"></script>
+      <script src="_static/documentation_options.js?v=abbaf1a4"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -1036,9 +1036,9 @@ transformation is applied.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.crystalNPs.Crystal.makeWulff">
 <span class="sig-name descname"><span class="pre">makeWulff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">noOutput</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.crystalNPs.Crystal.makeWulff" title="Link to this definition"></a></dt>
-<dd><p>Calculate truncation distances for Wulff nanoparticles.</p>
-<p>Determines truncation planes based on provided surfaces and surface energies.
-Removes atoms above these planes to create the final shape.</p>
+<dd><p>Creation of Wulff nanoparticles by removing atoms above Wulff planes, to create the final shape.
+Determines the truncation planes and truncation distances based on provided surfaces and surface energies.
+Calculate  for .</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>noOutput</strong> (<em>bool</em>) – If False, details are printed.</p>
@@ -7024,17 +7024,18 @@ the vertices indexes.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.core.round_to_Miller">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.core.</span></span><span class="sig-name descname"><span class="pre">round_to_Miller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">planes_float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.core.round_to_Miller" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.core.</span></span><span class="sig-name descname"><span class="pre">round_to_Miller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">planes_float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.core.round_to_Miller" title="Link to this definition"></a></dt>
 <dd><p>Convert float plane normals to nearest integer Miller indices.
 Normalizes by the minimum non-zero absolute value across all planes,
-ensuring a consistent common factor for rotation-generated families.
-Warns if rounding error exceeds tolerance — always, regardless of noOutput.</p>
+ensuring a consistent common factor for rotation-generated families.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>planes_float</strong> (<em>array-like</em>) – Float plane normals, shape (N, 3).</p></li>
 <li><p><strong>tol</strong> (<em>float</em>) – Maximum allowed rounding error per index.
 Default is 0.1.</p></li>
+<li><p><strong>debug</strong> (<em>bool</em>) – print warning messages if rounding error exceeds tolerance
+Default is False</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -9081,6 +9082,7 @@ the reduced hull are reported as warnings.</p>
 </dd>
 </dl>
 </li>
+<li><p>’Slices’      : used trPlanes_Slices</p></li>
 <li><p>’crystal’     : use trPlanes (initial structure).</p></li>
 <li><p>’crystal_opt’ : use trPlanes_opt (optimized structure).</p></li>
 </ul>

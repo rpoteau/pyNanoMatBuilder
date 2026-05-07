@@ -672,16 +672,19 @@ class NanoparticleDistribution:
 
         # 3. Normalize based on the distribution sum
         norm_values = ratios / total_ratio_sum if total_ratio_sum > 0 else 0
+        norm_sum = ratios.sum()
+        norm_relative = ratios / norm_sum if norm_sum > 0 else np.zeros_like(ratios)
         counts = ratios * (stats['amplitude'] if self.params is not None else 1000)
         
         return {
             "sizes": targets,
             "ratios": ratios,
             "counts": counts,
-            "norms": norm_values
+            "norms": norm_values,
+            "norms_relative": norm_relative   #
         }
         
-    def print_specific_proportions(self, target_sizes):
+    def print_specific_proportions(self, target_sizes, labels=None):
         """
         Prints a formatted summary including the normalized distribution value.
         """
@@ -689,15 +692,21 @@ class NanoparticleDistribution:
         
         centerTitle("Specific Diameter Proportions")
         # Added Norm. (1) column
-        header = f"{'Diameter (nm)':<15} | {'Ratio/Peak':<12} | {'Est. Count':<12} | {'Norm. (1)':<12}"
+        has_labels = labels is not None and len(labels) == len(data['sizes'])
+    
+        label_col = f"{'Label':<8} | " if has_labels else ""
+        header = f"{label_col}{'Diameter (nm)':<15} | {'Ratio/Peak':<12} | {'Est. Count':<12} | {'Norm. (dist)':<14} | {'Norm. (1)':<12}"
         print(header)
         print("-" * len(header))
         
         for i in range(len(data['sizes'])):
-            print(f"{data['sizes'][i]:>12.2f} nm | "
+            label_str = f"{labels[i]:<8} | " if has_labels else ""
+            print(f"{label_str}"
+                  f"{data['sizes'][i]:>12.2f} nm | "
                   f"{data['ratios'][i]:>10.3f}   | "
                   f"{data['counts'][i]:>10.0f}   | "
-                  f"{data['norms'][i]:>10.3f}")
+                  f"{data['norms'][i]:>12.4f}   | "
+                  f"{data['norms_relative'][i]:>10.4f}")
         print("-" * len(header))
         
     def plot(self, title='Nanoparticle Size Distribution', color_histo="skyblue",
@@ -788,29 +797,47 @@ class NanoparticleDistribution:
         plt.axvline(x=mu + 2*sigma, color='#3f8188', linestyle=':', lw=1.5)
 
         # --- 6. Specific Point Highlighting ---
+        # Parse highlight_sizes: either a flat list or [sizes, labels]
+        h_sizes, h_labels = None, None
         if highlight_sizes is not None:
-            props = self.get_proportions(highlight_sizes)
+            if (isinstance(highlight_sizes, (list, tuple)) and len(highlight_sizes) == 2
+                    and isinstance(highlight_sizes[0], (list, np.ndarray))
+                    and isinstance(highlight_sizes[1], (list, np.ndarray))):
+                h_sizes = list(highlight_sizes[0])
+                h_labels = list(highlight_sizes[1])
+            else:
+                h_sizes = list(highlight_sizes)
+                h_labels = None
+    
+        if h_sizes is not None:
+            props = self.get_proportions(h_sizes)
             
-            for i, size in enumerate(highlight_sizes):
-                # Access the specific ratio for this size
-                current_norm = props['norms'][i]
+            for i, size in enumerate(h_sizes):
+                current_norm = props['norms_relative'][i]
+                y_pos = (self._gaussian_model(size, *self.params) * scaling_w if self.model_type == 'gaussian'
+                         else self._lognormal_model(size, *self.params) * scaling_w)
                 
-                # Calculate Y position on the curve
-                y_pos = self._gaussian_model(size, *self.params) * scaling_w if self.model_type == 'gaussian' \
-                        else self._lognormal_model(size, *self.params) * scaling_w
+                # Build annotation text
+                label_prefix = f"{h_labels[i]}: " if h_labels is not None else ""
+                label_line = f"{h_labels[i]}\n" if h_labels is not None else ""
+                annotation = f"{label_line}{size:.2f}nm\n({current_norm:.3f})"
                 
                 plt.scatter(size, y_pos, color='black', zorder=5)
-                plt.annotate(f"{size:.2f}nm\n({current_norm:.3f})", 
-                             (size, y_pos), textcoords="offset points", 
-                             xytext=(0,10), ha='center', fontsize=9, fontweight='bold',
+                plt.annotate(annotation,
+                             (size, y_pos), textcoords="offset points",
+                             xytext=(0, 10), ha='center', fontsize=9, fontweight='bold',
                              bbox=dict(boxstyle='round,pad=0.3', fc='white', alpha=0.7))
-
+                
         # --- 7. Final Formatting ---
         plt.title(title)
         plt.xlabel('Size (nm)')
         plt.ylabel('Count')
         plt.legend()
         plt.grid(axis='y', alpha=0.3)
+        # Add headroom if highlight annotations are present
+        if highlight_sizes is not None:
+            y_min, y_max = plt.ylim()
+            plt.ylim(y_min, y_max * 1.1)
         plt.tight_layout()
                         
         # --- 8. Enhanced Save Logic ---
