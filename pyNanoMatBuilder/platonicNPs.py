@@ -1830,6 +1830,15 @@ class cube(PlatonicNP):
             f"{self.nOrder}x{self.nOrder}x{self.nOrder}"
             f" {self.crystalStructure} cube with Rnn = {self.Rnn}"
         )
+    # def __str__(self):
+    #     """Return a string representation of the object."""
+    #     return (
+    #         f"Cube with order of "
+    #         f"{self.full_cube.nOrder}, with hollow "
+    #         f"thickness of order "
+    #         f"{self.nOrder_hollow} and with "
+    #         f"Rnn = {self.full_cube.Rnn}"
+    #     )
 
     def nAtomsfccF(self, i):
         """Returns the number of atoms of an fcc cube of size i x i x i.
@@ -2068,168 +2077,159 @@ class cube(PlatonicNP):
         print("Dual polyhedron: octahedron")
 
 
-class hollow_shapes(PlatonicNP):
-    """A class for generating XYZ and CIF files
-    of hollow cubic nanoparticles (NPs).
+# class hollow_shapes(PlatonicNP):
+#     """A class for generating XYZ and CIF files
+#     of hollow cubic nanoparticles (NPs).
 
-    Creates NPs with customizable sizes and
-    compositions. Users can define the composition
-    by specifying element names (e.g., "Fe", "Au")
-    and provide a "cube" class instance from this
-    module to construct the nanoparticle structure.
+#     Creates NPs with customizable sizes and
+#     compositions. Users can define the composition
+#     by specifying element names (e.g., "Fe", "Au")
+#     and provide a "cube" class instance from this
+#     module to construct the nanoparticle structure.
 
-    Key Features:
-        - Allows to choose the cube size and the
-            size of its hollow.
-        - Can analyze the structure in detail,
-            including symmetry and properties.
-        - Offers options for core/surface
-            differentiation based on a threshold.
-        - Generates outputs in XYZ and CIF formats
-            for visualization and simulations.
-        - Provides compatibility with jMol for 3D
-            visualization.
+#     Key Features:
+#         - Allows to choose the cube size and the
+#             size of its hollow.
+#         - Can analyze the structure in detail,
+#             including symmetry and properties.
+#         - Offers options for core/surface
+#             differentiation based on a threshold.
+#         - Generates outputs in XYZ and CIF formats
+#             for visualization and simulations.
+#         - Provides compatibility with jMol for 3D
+#             visualization.
 
-    Additional Notes:
-        - The symmetry analysis can be skipped to speed up computations.
-        - Customizable precision thresholds for structural analysis.
-    """
+#     Additional Notes:
+#         - The symmetry analysis can be skipped to speed up computations.
+#         - Customizable precision thresholds for structural analysis.
+#     """
 
-    def __init__(self,
-                 full_cube,
-                 nOrder_hollow: int = 0,  # Angs?
-                 **kwargs
-                 ):
-        """Initialize the class with all necessary parameters.
+#     def __init__(self,
+#                  full_cube,
+#                  nOrder_hollow: int = 0,  # Angs?
+#                  **kwargs
+#                  ):
+#         """Initialize the class with all necessary parameters.
 
-        Args:
-            full_cube (cube): Instance of the
-                class "cube" of the module "pNP".
-            nOrder_hollow (int): Size of the hollow
-                in nOrder (number of atomic layers
-                along an edge).
-            postAnalyzis (bool): If True, prints
-                additional NP information (e.g.,
-                cell parameters, moments of inertia,
-                inscribed/circumscribed sphere
-                diameters, etc.).
-            aseView (bool): If True, enables
-                visualization of the NP using ASE.
-            thresholdCoreSurface (float): Precision
-                threshold for core/surface
-                differentiation (distance threshold
-                for retaining atoms).
-            skipSymmetryAnalyzis (bool): If False,
-                performs an atomic structure analysis
-                using pymatgen.
-            jmolCrystalShape (bool): If True,
-                generates a JMOL script for
-                visualization.
-            noOutput (bool): If False, prints
-                details about the NP structure.
-            calcPropOnly (bool): If False, generates
-                the atomic structure of the NP.
+#         Args:
+#             full_cube (cube): Instance of the
+#                 class "cube" of the module "pNP".
+#             nOrder_hollow (int): Size of the hollow
+#                 in nOrder (number of atomic layers
+#                 along an edge).
+#             postAnalyzis (bool): If True, prints
+#                 additional NP information (e.g.,
+#                 cell parameters, moments of inertia,
+#                 inscribed/circumscribed sphere
+#                 diameters, etc.).
+#             aseView (bool): If True, enables
+#                 visualization of the NP using ASE.
+#             thresholdCoreSurface (float): Precision
+#                 threshold for core/surface
+#                 differentiation (distance threshold
+#                 for retaining atoms).
+#             skipSymmetryAnalyzis (bool): If False,
+#                 performs an atomic structure analysis
+#                 using pymatgen.
+#             jmolCrystalShape (bool): If True,
+#                 generates a JMOL script for
+#                 visualization.
+#             noOutput (bool): If False, prints
+#                 details about the NP structure.
+#             calcPropOnly (bool): If False, generates
+#                 the atomic structure of the NP.
 
-        Attributes:
-            nAtoms (int): Number of atoms in the NP.
-            cog (np.array): Center of gravity of
-                the NP.
-        """
-        super().__init__(**kwargs)
-        if not isinstance(full_cube, cube):
-            raise TypeError("full_cube must be an instance of the Class Cube")
-        self.full_cube = full_cube
-        self.nOrder_hollow = nOrder_hollow
-        self.edgeLength = self.full_cube.edgeLength()
-        self.nAtomsPerEdge = self.full_cube.nAtomsPerEdge
-        noOutput = self.noOutput
-        if not calcPropOnly:
-            self.create_hollow(noOutput)
+#         Attributes:
+#             nAtoms (int): Number of atoms in the NP.
+#             cog (np.array): Center of gravity of
+#                 the NP.
+#         """
+#         super().__init__(**kwargs)
+#         if not isinstance(full_cube, cube):
+#             raise TypeError("full_cube must be an instance of the Class Cube")
+#         self.full_cube = full_cube
+#         self.nOrder_hollow = nOrder_hollow
+#         self.edgeLength = self.full_cube.edgeLength()
+#         self.nAtomsPerEdge = self.full_cube.nAtomsPerEdge
+#         noOutput = self.noOutput
+#         if not calcPropOnly:
+#             self.create_hollow(noOutput)
 
-            # if aseView: view(self.NP)
-            if self.postAnalyzis:
-                self.propPostMake(
-                    self.skipChiralityCalculation,
-                    self.skipSymmetryAnalyzis,
-                    self.thresholdCoreSurface,
-                    noOutput=noOutput
-                )
-            # #     if aseView: view(self.NPcs)
+#             # if aseView: view(self.NP)
+#             if self.postAnalyzis:
+#                 self.propPostMake(
+#                     self.skipChiralityCalculation,
+#                     self.skipSymmetryAnalyzis,
+#                     self.thresholdCoreSurface,
+#                     noOutput=noOutput
+#                 )
+#             # #     if aseView: view(self.NPcs)
 
-    def __str__(self):
-        """Return a string representation of the object."""
-        return (
-            f"Cube with order of "
-            f"{self.full_cube.nOrder}, with hollow "
-            f"thickness of order "
-            f"{self.nOrder_hollow} and with "
-            f"Rnn = {self.full_cube.Rnn}"
-        )
 
-    def create_hollow(self, noOutput):
-        """Function that creates the cube hollow.
+    # def create_hollow(self, noOutput):
+    #     """Function that creates the cube hollow.
 
-        The hollow is created using planes that
-        defines the hollow [h k l d] with
-        d= +/- size of the hollow/2.
-        Update: the hollow size is given in nOrder
-        of atomic layers.
+    #     The hollow is created using planes that
+    #     defines the hollow [h k l d] with
+    #     d= +/- size of the hollow/2.
+    #     Update: the hollow size is given in nOrder
+    #     of atomic layers.
 
-        Args:
-            noOutput (bool): If False, prints details about the NP structure.
-        """
-        if not noOutput:
-            print(f"Number of atoms on an edge = {self.nAtomsPerEdge}")
-            print(f"Edge length = {round(self.edgeLength * 0.1, 3)} nm")
-            print(f"Creating a hollow of nOrder = "
-                  f"{self.nOrder_hollow}.")
+    #     Args:
+    #         noOutput (bool): If False, prints details about the NP structure.
+    #     """
+    #     if not noOutput:
+    #         print(f"Number of atoms on an edge = {self.nAtomsPerEdge}")
+    #         print(f"Edge length = {round(self.edgeLength * 0.1, 3)} nm")
+    #         print(f"Creating a hollow of nOrder = "
+    #               f"{self.nOrder_hollow}.")
 
-        # Find half_inner_cube_size in Angs based
-        # on the number of atomic layers (nOrder)
+    #     # Find half_inner_cube_size in Angs based
+    #     # on the number of atomic layers (nOrder)
 
-        # Length of one cell (one order)
-        order_length = (
-            self.edgeLength / self.full_cube.nOrder
-        )
-        inner_cube_size = self.nOrder_hollow * order_length
+    #     # Length of one cell (one order)
+    #     order_length = (
+    #         self.edgeLength / self.full_cube.nOrder
+    #     )
+    #     inner_cube_size = self.nOrder_hollow * order_length
 
-        # Add a tolerance of order_length/4 so the cut planes lie
-        # halfway between atomic layers (spaced a/2 in fcc/bcc).
-        # Without this, boundary atoms sit exactly ON the planes
-        # and are excluded by eps, giving 0 removed atoms for
-        # small hollow sizes.
-        half_inner_cube_size = inner_cube_size / 2 + order_length / 4
-        self.NP = self.full_cube.NP.copy()
-        print("Number of atoms in the cube before "
-              "creating the hollow =",
-              len(self.NP))
-        full_positions = self.full_cube.NP.get_positions()
+    #     # Add a tolerance of order_length/4 so the cut planes lie
+    #     # halfway between atomic layers (spaced a/2 in fcc/bcc).
+    #     # Without this, boundary atoms sit exactly ON the planes
+    #     # and are excluded by eps, giving 0 removed atoms for
+    #     # small hollow sizes.
+    #     half_inner_cube_size = inner_cube_size / 2 + order_length / 4
+    #     self.NP = self.full_cube.NP.copy()
+    #     print("Number of atoms in the cube before "
+    #           "creating the hollow =",
+    #           len(self.NP))
+    #     full_positions = self.full_cube.NP.get_positions()
 
-        # Generate the 6 planes that define the hollow (cube)
-        planes_with_dist = np.array([
-            [0, 0, 1, -half_inner_cube_size],
-            [0, 0, -1, -half_inner_cube_size],
-            [0, 1, 0, -half_inner_cube_size],
-            [0, -1, 0, -half_inner_cube_size],
-            [1, 0, 0, -half_inner_cube_size],
-            [-1, 0, 0, -half_inner_cube_size]
-        ])
+    #     # Generate the 6 planes that define the hollow (cube)
+    #     planes_with_dist = np.array([
+    #         [0, 0, 1, -half_inner_cube_size],
+    #         [0, 0, -1, -half_inner_cube_size],
+    #         [0, 1, 0, -half_inner_cube_size],
+    #         [0, -1, 0, -half_inner_cube_size],
+    #         [1, 0, 0, -half_inner_cube_size],
+    #         [-1, 0, 0, -half_inner_cube_size]
+    #     ])
 
-        delAbove = False  # delete atoms above/under the 6 planes
-        current_positions = self.NP.get_positions()
-        #     print(f"Plan used: {plane}, delAbove={delAbove}")
+    #     delAbove = False  # delete atoms above/under the 6 planes
+    #     current_positions = self.NP.get_positions()
+    #     #     print(f"Plan used: {plane}, delAbove={delAbove}")
 
-        # Generate the truncation
-        AtomsUnderPlanes = pyNMBu.truncateAbovePlanes(
-            planes=planes_with_dist,
-            coords=current_positions,
-            allP=True,
-            delAbove=delAbove,
-            debug=False,
-            noOutput=False,
-            eps=0.001,  # threshold distance
-        )
-        del self.NP[AtomsUnderPlanes]
-        self.nAtoms = len(self.NP)
-        if not noOutput:
-            print(f"Number of atoms in the final hollow cube : {self.nAtoms}")
+    #     # Generate the truncation
+    #     AtomsUnderPlanes = pyNMBu.truncateAbovePlanes(
+    #         planes=planes_with_dist,
+    #         coords=current_positions,
+    #         allP=True,
+    #         delAbove=delAbove,
+    #         debug=False,
+    #         noOutput=False,
+    #         eps=0.001,  # threshold distance
+    #     )
+    #     del self.NP[AtomsUnderPlanes]
+    #     self.nAtoms = len(self.NP)
+    #     if not noOutput:
+    #         print(f"Number of atoms in the final hollow cube : {self.nAtoms}")

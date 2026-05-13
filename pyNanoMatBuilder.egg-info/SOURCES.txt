@@ -349,6 +349,7 @@ pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_logo.svg
 pyNanoMatBuilder/utils/__init__.py
 pyNanoMatBuilder/utils/core.py
 pyNanoMatBuilder/utils/crystals.py
+pyNanoMatBuilder/utils/csg.py
 pyNanoMatBuilder/utils/energy.py
 pyNanoMatBuilder/utils/external_pgm.py
 pyNanoMatBuilder/utils/geometry.py
@@ -362,6 +363,7 @@ pyNanoMatBuilder/utils/utils.py.tmp
 pyNanoMatBuilder/utils/.ipynb_checkpoints/__init__-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/core-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/crystals-checkpoint.py
+pyNanoMatBuilder/utils/.ipynb_checkpoints/csg-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/energy-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/external_pgm-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/geometry-checkpoint.py

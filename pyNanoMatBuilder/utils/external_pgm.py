@@ -118,6 +118,11 @@ def defCrystalShapeForJMol(self,
     """
     Generate a Jmol command to visualize the crystal shape based on the facets of the NP.
 
+    For Wulff constructions and crystal shapes, uses HalfspaceIntersection to
+    compute the reduced convex hull facets. For slicing planes (applySlicing),
+    redirects to defSlicingPlanesForJMol since the resulting shape may be
+    non-convex and cannot be represented by HalfspaceIntersection.
+
     Args:
         noOutput (bool): If True, suppresses the output of the command.
 
@@ -127,10 +132,12 @@ def defCrystalShapeForJMol(self,
     useWulff   = hasattr(self, 'trPlanes_Wulff')   and self.trPlanes_Wulff   is not None
     useSlices  = hasattr(self, 'trPlanes_Slices')  and self.trPlanes_Slices  is not None
 
+    # --- Slicing planes: non-convex possible → individual plane visualization ---
+    if useSlices and not useWulff:
+        self.jMolSlices = defSlicingPlanesForJMol(self, noOutput=noOutput)
+
     if useWulff:
         target_planes = self.trPlanes_Wulff
-    elif useSlices:
-        target_planes = self.trPlanes_Slices
     elif self.is_optimized:
         target_planes = getattr(self, 'trPlanes_opt', None)
     else:
@@ -478,4 +485,121 @@ def defSlabShapeForJMol(self, hkl, offset: float = 1.5, noOutput: bool = True):
 
     if not noOutput:
         print(f"Jmol command for plane ({h}{k}{l}): ", cmd)
+    return cmd
+
+def defSlicingPlanesForJMol(self,
+                             size: float = 30.0,
+                             colors: list = None,
+                             translucency: int = 70,
+                             noOutput: bool = True):
+    """
+    Generate a Jmol command to visualize all slicing planes stored in
+    self.trPlanes_Slicing as translucent square polygons.
+
+    For each plane [nx, ny, nz, d], a square polygon is built centered
+    on the closest point of the plane to the origin, in the plane itself.
+    Planes from the same group share the same color.
+
+    Args:
+        self: pyNMBcore object with self.trPlanes_Slicing defined.
+        size (float): Half-size of each plane polygon in Å. Default is 30.0.
+        colors (list of str): List of hex colors (e.g. ['x0055ff', 'xff5500'])
+            one per plane. If None, a default palette is used.
+        translucency (int): Translucency of the planes in percent (0=opaque,
+            100=translucent). Default is 70.
+        noOutput (bool): If True, suppresses output. Default is True.
+
+    Returns:
+        str: Jmol command string.
+    """
+    from .geometry import normV, rotationMolAroundAxis
+
+    if not hasattr(self, 'trPlanes_Slices') or self.trPlanes_Slices is None:
+        print(f"{bg.LIGHTYELLOWB}Warning: no slicing planes found. "
+              f"Run applySlicing() first.{bg.OFF}")
+        return ""
+
+    planes = np.array(self.trPlanes_Slices)
+
+    # --- Compute NP extent for arrow length ---
+    pos = self.NP.get_positions()
+    extent = np.max(pos.max(axis=0) - pos.min(axis=0))  # max dimension in Å
+    arrow_length = extent * 0.4  # 40% of NP size
+
+    # Retrieve family index for each plane (saved by applySlicing)
+    # Fallback: one family per plane if not available
+    family = getattr(self, 'trPlanes_Slicing_groups',
+                     list(range(len(planes))))
+
+    # Map each family index to a color
+    default_colors = [
+        'x0055ff',  # blue
+        'xff5500',  # orange
+        'x00aa44',  # green
+        'xcc0000',  # red
+        'xaa00cc',  # purple
+        'x00aacc',  # cyan
+        'xffcc00',  # yellow
+        'xff0088',  # pink
+    ]
+    color_by_family = [default_colors[f % len(default_colors)] for f in family]
+
+    cmd = ""
+
+    for i, plane in enumerate(planes):
+        n = plane[:3]
+        d = plane[3]
+        color = colors[i] if colors else color_by_family[i]
+
+        # --- Center of the polygon: closest point of the plane to origin ---
+        # P = -d * n  (since n is normalized)
+        center = -d * n
+
+        # --- Build two orthonormal vectors in the plane ---
+        arbitrary = np.array([1, 0, 0]) if abs(n[0]) < 0.9 \
+                    else np.array([0, 1, 0])
+        u = np.cross(n, arbitrary)
+        u = u / np.linalg.norm(u)
+        v = np.cross(n, u)
+        v = v / np.linalg.norm(v)
+
+        # --- 4 corners of the square polygon ---
+        corners = np.array([
+            center + size * ( u + v),
+            center + size * (-u + v),
+            center + size * (-u - v),
+            center + size * ( u - v),
+        ])
+
+        # --- Polygon ---
+        cmd += f"draw slplane{i} polygon ["
+        for pt in corners:
+            cmd += f"{{{pt[0]:.4f},{pt[1]:.4f},{pt[2]:.4f}}},"
+        cmd += "]; "
+        cmd += f"color $slplane{i} translucent {translucency} [{color}]; "
+
+        # --- Edges ---
+        corners_cycle = np.vstack([corners, corners[0]])
+        for j in range(4):
+            p0 = corners_cycle[j]
+            p1 = corners_cycle[j+1]
+            cmd += f"draw slpedge{i}_{j} ["
+            cmd += f"{{{p0[0]:.4f},{p0[1]:.4f},{p0[2]:.4f}}},"
+            cmd += f"{{{p1[0]:.4f},{p1[1]:.4f},{p1[2]:.4f}}},"
+            cmd += "] width 0.15; "
+        cmd += f"color $slpedge{i}_* [{color}]; "
+
+        # --- Normal arrow (optional — shows orientation) ---
+        p_start = center
+        p_end = center + arrow_length * n
+        cmd += f"draw slparrow{i} arrow "
+        cmd += f"{{{p_start[0]:.4f},{p_start[1]:.4f},{p_start[2]:.4f}}} "
+        cmd += f"{{{p_end[0]:.4f},{p_end[1]:.4f},{p_end[2]:.4f}}} "
+        cmd += f"width 0.3; "
+        cmd += f"color $slparrow{i} [{color}]; "
+
+    if not noOutput:
+        print(f"Jmol command for {len(planes)} slicing planes:")
+        print(cmd)
+
     return cmd

@@ -85,6 +85,8 @@ class pyNMBcore:
         self.trPlanes_Wulff = None
         self.trPlanes_Slices = None
         self.WulffShape = None
+        self.jMolSlices = None
+
 
     def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1):
         """
@@ -414,25 +416,158 @@ class pyNMBcore:
     
         return external_facets_info(self, mode=mode, noOutput=noOutput)
 
-    def applyTruncation(self, planes, distance_unit='nm', noOutput=None):
+    def applySlicing(self, planes, distance_unit='nm', mode='OR', recenter: bool = True, noOutput=None):
         """
-        Apply one or more truncation planes to self.NP.
-        See utils.geometry.applyTruncation for full documentation.
-    
+        Apply one or more truncation plane groups to self.NP, with optional
+        rotational symmetry generation and logical combination of groups.
+        Works on any pyNMBcore object.
+
+        See utils.csg.applySlicing for full documentation.
+
         Args:
-            planes (list of dict): List of plane definitions.
-            distance_unit (str): 'nm' (default) or 'Angstrom'.
+            planes (list of dict): List of plane group definitions. Each dict
+                must contain either 'normal' or 'angle', plus 'distance' and
+                'side'. Optional keys: 'normal_def', 'nRot', 'rotAxis', 'modeP'.
+            distance_unit (str): Unit for all distances. 'nm' (default) or
+                'Angstrom'.
+            mode (str): Logical combination of plane groups.
+                'OR'  — atom removed if condemned by ANY group (default).
+                'AND' — atom removed only if condemned by ALL groups.
+            recenter (bool): If True, recenters self.NP on its center of mass
+                after slicing (default).
             noOutput (bool): If True, suppresses output. Default is self.noOutput.
-    
+
         Returns:
-            None. Updates self.NP, self.nAtoms, self.cog, self.trPlanes in place.
+            None. Updates self.NP, self.nAtoms, self.cog,
+            self.trPlanes_Slices in place. self.trPlanes_Wulff is set to None.
         """
-        from .utils.csg import applyTruncation
+        from .utils.csg import applySlicing
         if noOutput is None:
             noOutput = self.noOutput
-        return applyTruncation(self, planes, distance_unit=distance_unit,
-                               noOutput=noOutput)
+        return applySlicing(self, planes,
+                            distance_unit=distance_unit,
+                            mode=mode,
+                            recenter=recenter,
+                            noOutput=noOutput)
+
+    def cut_by(self, NP_B, cogB=None, rotB=None, mode='hull',
+              threshold=1.0, skipSymmetryAnalyzis=None,
+              thresholdCoreSurface=None, noOutput=None):
+        """
+        Remove from self.NP the atoms inside NP_B (hollow cavity).
+        See utils.csg.minus for full documentation.
+    
+        Args:
+            NP_B: pyNMBcore object defining the cavity shape.
+            cogB (list): Center of mass position for B in nm.
+            rotB: rotation operation applied to B (axis+angle or list of rotations).
+                (see detailed docstring of utils.csg.minus())
+            mode (str): 'hull' (convex hull) or 'atoms' (distance-based).
+            threshold (float): Distance threshold in units of Rnn (mode='atoms').
+            noOutput (bool): If True, suppresses output. Default is self.noOutput.
+        """
+        from .utils.csg import cut_by
+        # --- Use defaults from self if not provided ---
+        if noOutput is None:
+            noOutput = self.noOutput
+        if skipSymmetryAnalyzis is None:
+            skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+        if thresholdCoreSurface is None:
+            thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 1.0)
+        return cut_by(self, NP_B, cogB=cogB, rotB=rotB, mode=mode,
+                     threshold=threshold,
+                     skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                     thresholdCoreSurface=thresholdCoreSurface,
+                     noOutput=noOutput)
         
+    def union_with(self, NP_B, cogB=None, rotB=None, mode='hull',
+              threshold=1.0, skipSymmetryAnalyzis=None,
+              thresholdCoreSurface=None, noOutput=None):
+        """
+        Add NP_B to self.NP, removing overlapping atoms.
+        See utils.csg.plus for full documentation.
+    
+        Args:
+            NP_B: pyNMBcore object to add.
+            cogB (list): Center of mass position for B in nm.
+            rotB: Rotation for B (axis+angle or list of rotations).
+                (see detailed docstring of utils.csg.plus())
+            mode (str): 'hull' (convex hull) or 'atoms' (distance-based).
+            threshold (float): Overlap threshold in units of Rnn.
+            noOutput (bool): If True, suppresses output. Default is self.noOutput.
+        """
+        from .utils.csg import union_with
+        # --- Use defaults from self if not provided ---
+        if noOutput is None:
+            noOutput = self.noOutput
+        if skipSymmetryAnalyzis is None:
+            skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+        if thresholdCoreSurface is None:
+            thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 1.0)
+        return union_with(self, NP_B, cogB=cogB, rotB=rotB, mode=mode,
+                     threshold=threshold,
+                     skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                     thresholdCoreSurface=thresholdCoreSurface,
+                     noOutput=noOutput)
+
+    def intersect_with(self, NP_B, cogB=None, rotB=None,mode='hull',
+              threshold=1.0, skipSymmetryAnalyzis=None,
+              thresholdCoreSurface=None, noOutput=None):
+        """
+        Keep in self.NP only the atoms inside NP_B.
+        See utils.csg.intersect for full documentation.
+    
+        Args:
+            NP_B: pyNMBcore object defining the intersection region.
+            cogB (list): Center of mass position for B in nm.
+            rotB: Rotation for B (axis+angle or list of rotations).
+            mode (str): 'hull' (convex hull) or 'atoms' (distance-based).
+            threshold (float): Distance threshold in units of Rnn (mode='atoms').
+            noOutput (bool): If True, suppresses output. Default is self.noOutput.
+        """
+        from .utils.csg import intersect_with
+        # --- Use defaults from self if not provided ---
+        if noOutput is None:
+            noOutput = self.noOutput
+        if skipSymmetryAnalyzis is None:
+            skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+        if thresholdCoreSurface is None:
+            thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 1.0)
+        return intersect_with(self, NP_B, cogB=cogB, rotB=rotB, mode=mode,
+                     threshold=threshold,
+                     skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                     thresholdCoreSurface=thresholdCoreSurface,
+                     noOutput=noOutput)
+
+    def embed_in(self, NP_B, cogB=None, rotB=None, mode='hull',
+              threshold=1.0, skipSymmetryAnalyzis=None,
+              thresholdCoreSurface=None, noOutput=None):
+        """
+        Add to self.NP the part of NP_B that overlaps with self.NP.
+        See utils.csg.union for full documentation.
+    
+        Args:
+            NP_B: pyNMBcore object to partially merge.
+            cogB (list): Center of mass position for B in nm.
+            rotB: Rotation for B (axis+angle or list of rotations).
+            mode (str): 'hull' (convex hull) or 'atoms' (distance-based).
+            threshold (float): Distance threshold in units of Rnn.
+            noOutput (bool): If True, suppresses output. Default is self.noOutput.
+        """
+        from .utils.csg import embed_in
+        # --- Use defaults from self if not provided ---
+        if noOutput is None:
+            noOutput = self.noOutput
+        if skipSymmetryAnalyzis is None:
+            skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+        if thresholdCoreSurface is None:
+            thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 1.0)
+        return embed_in(self, NP_B, cogB=cogB, rotB=rotB, mode=mode,
+                     threshold=threshold,
+                     skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                     thresholdCoreSurface=thresholdCoreSurface,
+                     noOutput=noOutput)
+            
 ######################################### load external file
     @classmethod
     def from_file(cls, file_path, **kwargs):

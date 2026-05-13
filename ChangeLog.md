@@ -5,7 +5,132 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
-## [0.11.5] - 2025-05-04 "Polydispersity"
+## [0.12.0] - 2025-05-13 "csg version beta"
+
+### Added
+- Added **new module `utils/csg.py`** for **Constructive Solid Geometry** (CSG)
+  operations on pyNMB objects. So far, it only contains:
+    - **`applySlicing(planes, distance_unit, mode, recenter, noOutput)`**:
+      applies one or more truncation plane groups to `self.NP`, with optional
+      rotational symmetry generation and logical combination of groups.
+      - Each plane group is defined by a dictionary with keys `normal` (or
+        `angle`), `distance`, `side`, `nRot`, `rotAxis`, `modeP`.
+      - `modeP` ('OR'/'AND'): logical combination of planes within a group.
+        'OR' for faceting (default when side='above'), 'AND' for concave
+        cavities (default when side='below').
+      - `mode` ('OR'/'AND'): logical combination of groups. 'OR' applies each
+        group independently (default); 'AND' removes atoms condemned by all
+        groups simultaneously.
+      - `recenter` (bool): if False, skips recentering after slicing — useful
+        when calling applySlicing multiple times in sequence (e.g. applying
+        the same pattern on all 6 faces of a cube) to avoid shifting the
+        reference frame between calls.
+      - Safety check: if all atoms would be deleted, the operation is cancelled
+        and a detailed diagnostic summary is printed (group normals, distances,
+        sides, modeP, number of condemned atoms per group).
+      - Saves applied planes to `self.trPlanes_Slices` and family indices to
+        `self.trPlanes_Slicing_groups` for use in JMol visualization.
+      - Generates `self.jMolSlices` via `defSlicingPlanesForJMol` after each
+        call.
+    - **`cut_by(NP_B, cogB, rotB, mode, threshold, skipSymmetryAnalyzis,
+      thresholdCoreSurface, noOutput)`**:
+      removes from `self.NP` (object A) the atoms that lie inside object B,
+      creating a hollow cavity in the shape of B. Equivalent to the CSG
+      **Cut** (A − B) operation in FreeCAD terminology.
+      - `mode='hull'`: atoms inside the convex hull of B are removed (fast,
+        exact for convex shapes).
+      - `mode='atoms'`: atoms of A closer than `threshold * Rnn` to any atom
+        of B are removed (works for any shape).
+      - `cogB` (list, nm): position where the center of mass of B is placed.
+      - `rotB`: rotation applied to B around its own center of mass before
+        the operation. Accepts `[ux, uy, uz, angle]`, a dict
+        `{'axis': [...], 'angle': ...}`, or a list of such dicts for
+        sequential rotations.
+      - Safety checks: cancelled if all atoms would be deleted, or warned
+        if no atoms are removed.
+
+    - **`union_with(NP_B, cogB, rotB, mode, threshold, skipSymmetryAnalyzis,
+      thresholdCoreSurface, noOutput)`**:
+      adds all atoms of B to A, removing overlapping atoms closer than
+      `threshold * Rnn` to avoid unphysical interatomic distances. Equivalent
+      to the CSG **Union** (A ∪ B) operation. The chemical species of B atoms
+      are preserved in the merged structure.
+
+    - **`intersect_with(NP_B, cogB, rotB, mode, threshold, skipSymmetryAnalyzis,
+      thresholdCoreSurface, noOutput)`**:
+      keeps in `self.NP` only the atoms that lie inside object B, discarding
+      everything outside. Equivalent to the CSG **Common** (A ∩ B) operation
+      in FreeCAD terminology.
+      - Safety checks: cancelled if no atoms would remain, or warned if all
+        atoms are already inside B.
+
+    - **`embed_in(NP_B, cogB, rotB, mode, threshold, skipSymmetryAnalyzis,
+      thresholdCoreSurface, noOutput)`**:
+      non-standard CSG operation — adds to `self.NP` only the part of B that
+      overlaps with A, discarding atoms of B outside A. Useful for embedding
+      a seed crystal (B) inside a host matrix (A): the part of B that fits
+      inside A is merged in, with overlap atoms of A removed to avoid
+      unphysical distances. Equivalent to calling `intersect_with` on B
+      followed by `union_with`.
+
+    - **Helper `_apply_rotB(pos_B, rotB)`**: internal function applying one
+      or more rotations to a set of positions. Used by all four CSG functions
+      above to rotate B around its own center of mass before placement.
+
+        **All four CSG functions share the same conventions:**
+        - `cogB` in nm (converted internally to Å).
+        - `rotB`: `[ux, uy, uz, angle]`, dict, or list of dicts.
+        - After the operation: truncation planes (`trPlanes`, `trPlanes_Wulff`,
+          `trPlanes_opt`) are invalidated, `self.NP` is recentered at the origin,
+          and `propPostMake` is called automatically.
+        - `skipSymmetryAnalyzis` and `thresholdCoreSurface` can be passed
+          explicitly or default to `self.skipSymmetryAnalyzis` and
+          `self.thresholdCoreSurface`.
+      
+- **new `defSlicingPlanesForJMol` function in `utils/external_pgm.py`**:
+generates a Jmol command to visualize all slicing planes stored in
+`self.trPlanes_Slices` as translucent square polygons.
+  - Each plane is represented as a square polygon centered on the closest
+    point of the plane to the origin, with edges and a normal arrow.
+  - Planes from the same rotational family share the same color (8-color
+    default palette, cycling if more families).
+  - Arrow length scales automatically with NP size (40% of max dimension).
+  - `translucency` (int, 0–100): 0 = opaque, 100 = fully transparent.
+  - Redirected from `defCrystalShapeForJMol` when `trPlanes_Slices` is
+    available and `trPlanes_Wulff` is None, since sliced shapes may be
+    non-convex and cannot be represented by HalfspaceIntersection.
+
+- **`pyNMBcore.py`**:
+  Added interfaces calling the corresponding `utils.csg` functions:
+  - `applySlicing(planes, distance_unit, mode, recenter, noOutput)`
+  - `cut_by(NP_B, cogB, rotB, mode, threshold, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput)`
+  - `union_with(NP_B, cogB, rotB, mode, threshold, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput)`
+  - `intersect_with(NP_B, cogB, rotB, mode, threshold, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput)`
+  - `embed_in(NP_B, cogB, rotB, mode, threshold, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput)`
+
+- **Added examples of CSG operations using `applySlicing` in `pyNMB-examples.ipynb`**:
+  - Cross-shaped groove on a single cube face.
+  - Cross-shaped groove applied to all 6 faces of a cube using
+    `make_cross_pattern()` helper and `recenter=False` between calls.
+  - Pyramidal concave cavity using `modeP='AND'` and `side='below'`.
+
+- **Schulz distribution added to the `NanoparticleDistribution` class in `utils.polydispersity.py`**
+    - New `model='schulz'` option in `from_polydispersity()`.
+    - New internal methods: `from_schulz_params()`, `_schulz_model()`, `_schulz_cdf_bin()`, `_compute_fwhm()`.
+    - All existing methods (`print_results`, `get_binned_statistics`, `get_proportions`, `plot`) updated to support both Gaussian and Schulz models.
+
+### Changed
+
+- **`defCrystalShapeForJMol` in `utils/external_pgm.py`**. 
+Added redirect to `defSlicingPlanesForJMol` when `trPlanes_Slices` is
+set and `trPlanes_Wulff` is None, to correctly handle non-convex shapes
+produced by `applySlicing`.
+
+### Removed
+
+**hollow** routines in `crystalNPs.py` and `platonicNPs.py`. Will be replaced with the CSG tools
+
+## [0.11.5] - 2025-05-04 "Polydispersity II"
 
 ### Added
 - new **polydispersity** section in **`pyNMB-examples.ipynb`**

@@ -1090,7 +1090,6 @@ def propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis, threshold
     get_ellipsoid_analysis(self, noOutput) 
 
     # External facets info
-    print(self.trPlanes_Slices)
     if hasattr(self, 'trPlanes_Wulff') and self.trPlanes_Wulff is not None:
         self.external_facets_info(mode='Wulff', noOutput=noOutput)
     if hasattr(self, 'trPlanes_Slices') and self.trPlanes_Slices is not None:

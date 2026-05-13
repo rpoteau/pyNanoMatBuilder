@@ -243,12 +243,6 @@
 <li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.cube.prop"><code class="docutils literal notranslate"><span class="pre">cube.prop()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.hollow_shapes"><code class="docutils literal notranslate"><span class="pre">hollow_shapes</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.hollow_shapes.nAtoms"><code class="docutils literal notranslate"><span class="pre">hollow_shapes.nAtoms</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.hollow_shapes.cog"><code class="docutils literal notranslate"><span class="pre">hollow_shapes.cog</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="modules.html#pyNanoMatBuilder.platonicNPs.hollow_shapes.create_hollow"><code class="docutils literal notranslate"><span class="pre">hollow_shapes.create_hollow()</span></code></a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="modules.html#module-pyNanoMatBuilder.archimedeanNPs">archimedeanNPs.py</a><ul>
@@ -799,6 +793,7 @@
 <li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.external_pgm.DrawJmol"><code class="docutils literal notranslate"><span class="pre">DrawJmol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.external_pgm.defHelixShapeForJMol"><code class="docutils literal notranslate"><span class="pre">defHelixShapeForJMol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.external_pgm.defSlabShapeForJMol"><code class="docutils literal notranslate"><span class="pre">defSlabShapeForJMol()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="modules.html#pyNanoMatBuilder.utils.external_pgm.defSlicingPlanesForJMol"><code class="docutils literal notranslate"><span class="pre">defSlicingPlanesForJMol()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -1012,8 +1007,6 @@
 </li>
         <li><a href="modules.html#pyNanoMatBuilder.platonicNPs.cube.cog">(pyNanoMatBuilder.platonicNPs.cube attribute)</a>
 </li>
-        <li><a href="modules.html#pyNanoMatBuilder.platonicNPs.hollow_shapes.cog">(pyNanoMatBuilder.platonicNPs.hollow_shapes attribute)</a>
-</li>
         <li><a href="modules.html#pyNanoMatBuilder.platonicNPs.regfccOh.cog">(pyNanoMatBuilder.platonicNPs.regfccOh attribute)</a>
 </li>
         <li><a href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.cog">(pyNanoMatBuilder.platonicNPs.regfccTd attribute)</a>
@@ -1066,8 +1059,6 @@
       <li><a href="modules.html#pyNanoMatBuilder.archimedeanNPs.fccTrCube.CornersAt">CornersAt (pyNanoMatBuilder.archimedeanNPs.fccTrCube attribute)</a>
 </li>
       <li><a href="modules.html#pyNanoMatBuilder.utils.io.create_data_csv">create_data_csv() (in module pyNanoMatBuilder.utils.io)</a>
-</li>
-      <li><a href="modules.html#pyNanoMatBuilder.platonicNPs.hollow_shapes.create_hollow">create_hollow() (pyNanoMatBuilder.platonicNPs.hollow_shapes method)</a>
 </li>
       <li><a href="modules.html#pyNanoMatBuilder.utils.io.createDir">createDir() (in module pyNanoMatBuilder.utils.io)</a>
 </li>
@@ -1122,6 +1113,8 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modules.html#pyNanoMatBuilder.utils.external_pgm.defSlabShapeForJMol">defSlabShapeForJMol() (in module pyNanoMatBuilder.utils.external_pgm)</a>
+</li>
+      <li><a href="modules.html#pyNanoMatBuilder.utils.external_pgm.defSlicingPlanesForJMol">defSlicingPlanesForJMol() (in module pyNanoMatBuilder.utils.external_pgm)</a>
 </li>
       <li><a href="modules.html#pyNanoMatBuilder.utils.prop.delAtomsWithCN">delAtomsWithCN() (in module pyNanoMatBuilder.utils.prop)</a>
 </li>
@@ -1339,14 +1332,14 @@
 </li>
       <li><a href="modules.html#pyNanoMatBuilder.johnsonNPs.fcctbp.heightOfBiPyramidF">heightOfBiPyramidF (pyNanoMatBuilder.johnsonNPs.fcctbp attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.heightOfPyramid">heightOfPyramid() (pyNanoMatBuilder.johnsonNPs.epbpyM method)</a>
 
       <ul>
         <li><a href="modules.html#pyNanoMatBuilder.platonicNPs.regfccTd.heightOfPyramid">(pyNanoMatBuilder.platonicNPs.regfccTd method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="modules.html#pyNanoMatBuilder.johnsonNPs.epbpyM.heightOfPyramidF">heightOfPyramidF (pyNanoMatBuilder.johnsonNPs.epbpyM attribute)</a>
 
       <ul>
@@ -1360,8 +1353,6 @@
       <li><a href="modules.html#pyNanoMatBuilder.utils.crystals.hklPlaneFitting">hklPlaneFitting() (in module pyNanoMatBuilder.utils.crystals)</a>
 </li>
       <li><a href="modules.html#pyNanoMatBuilder.utils.core.hl">hl (class in pyNanoMatBuilder.utils.core)</a>
-</li>
-      <li><a href="modules.html#pyNanoMatBuilder.platonicNPs.hollow_shapes">hollow_shapes (class in pyNanoMatBuilder.platonicNPs)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1700,8 +1691,6 @@
         <li><a href="modules.html#pyNanoMatBuilder.otherNPs.fcctpt.nAtoms">(pyNanoMatBuilder.otherNPs.fcctpt attribute)</a>
 </li>
         <li><a href="modules.html#pyNanoMatBuilder.platonicNPs.cube.nAtoms">(pyNanoMatBuilder.platonicNPs.cube attribute)</a>
-</li>
-        <li><a href="modules.html#pyNanoMatBuilder.platonicNPs.hollow_shapes.nAtoms">(pyNanoMatBuilder.platonicNPs.hollow_shapes attribute)</a>
 </li>
         <li><a href="modules.html#pyNanoMatBuilder.platonicNPs.regDD.nAtoms">(pyNanoMatBuilder.platonicNPs.regDD attribute)</a>
 </li>

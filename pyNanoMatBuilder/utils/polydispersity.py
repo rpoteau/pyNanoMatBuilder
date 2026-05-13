@@ -4,7 +4,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit, fsolve
-from scipy.stats import norm, lognorm
+from scipy.stats import norm
 import os, io
 from pathlib import Path
 
@@ -104,7 +104,49 @@ class NanoparticleDistribution:
         return instance
 
     @classmethod
-    def from_polydispersity(cls, mu, pd_pct, amplitude=1000):
+    def from_schulz_params(cls, mu, pd_pct, total_n=1000):
+        """
+        Instantiate the class using the Schulz distribution.
+    
+        The Schulz distribution is skewed towards larger values, making it
+        well-suited for nanoparticle size distributions from SAXS/SANS experiments.
+    
+        Args:
+            mu (float): Mean diameter of the particles (nm).
+            pd_pct (float): Polydispersity percentage (sigma/mu * 100).
+            total_n (int/float, optional): Total number of particles. Defaults to 1000.
+    
+        Returns:
+            NanoparticleDistribution: An instance with model_type='schulz'.
+        """
+        instance = cls()
+        p = pd_pct / 100.0
+        z = (1.0 - p**2) / p**2      # Schulz width parameter
+        sigma = p * mu                # RMS deviation
+    
+        # params stores (mu, z) — no separate amplitude, total_n drives scaling
+        instance.params = np.array([mu, z])
+        instance.model_type = 'schulz'
+        instance.total_n_expected = total_n
+    
+        # Generate initial bin centers for display (±4σ, clipped at 0)
+        w = cls.bin_width_nm if cls.bin_width_nm is not None else sigma
+        instance.bin_width_nm = w
+        half_range = 4.0 * sigma
+        num_steps = int(half_range / w)
+        instance.sizes = np.clip(
+            mu + np.arange(-num_steps, num_steps + 1) * w,
+            1e-6, None
+        )
+        instance.counts = (
+            instance._schulz_model(instance.sizes, mu, z) * total_n * w
+        )
+    
+        instance.cov = np.zeros((2, 2))
+        return instance
+    
+    @classmethod
+    def from_polydispersity(cls, mu, pd_pct, amplitude=1000, model='gaussian'):
         """
         Instantiate the class using mean diameter and Polydispersity Index (CV%).
 
@@ -120,135 +162,23 @@ class NanoparticleDistribution:
             pd_pct (float): Polydispersity percentage (Coefficient of Variation %).
             amplitude (int/float, optional): Total number of nanoparticles 
                 to be simulated (Total N). Defaults to 1000.
+            model (str): 'gaussian' or 'schulz'. Defaults to 'gaussian'.
 
         Returns:
             NanoparticleDistribution: An instance initialized with the derived 
                 Gaussian parameters.
         """
         sigma = (pd_pct / 100) * mu
-        return cls.from_gaussian_params(mu, sigma, amplitude)
+        
+        if model == 'gaussian':
+            return cls.from_gaussian_params(mu, sigma, amplitude)
+    
+        elif model == 'schulz':
+            return cls.from_schulz_params(mu, pd_pct, amplitude)
+    
+        else:
+            raise ValueError(f"Unknown model '{model}'. Choose 'gaussian' or 'schulz'.")
 
-    @classmethod
-    def from_saxs_data(cls, mu_vol, pd_vol_pct, amplitude=1000):
-        """
-        Instantiate the class by converting SAXS (volume-weighted) parameters 
-        into Number-weighted parameters using numerical cube-weighting.
-        
-        This method uses a robust iterative solver to find the number-weighted 
-        mean (mu_n) that corresponds to the observed SAXS volume-weighted mean.
-        """
-        
-        cv = pd_vol_pct / 100
-
-        # --- 1. Hatch-Choate Approximation (for comparison) ---
-        mu_n_hc = mu_vol / (1 + 3 * (cv**2))
-        sigma_n_hc = mu_n_hc * cv
-
-        # --- 2. Numerical Integration Approach ---
-        def objective(mu_n_guess):
-            # fsolve can pass an array, we need the scalar value
-            m = float(mu_n_guess[0]) if isinstance(mu_n_guess, np.ndarray) else float(mu_n_guess)
-            s = m * cv
-            
-            # Use a fixed number of points and a range based on the target mu_vol 
-            # to keep the array size and limits stable for fsolve
-            x = np.linspace(mu_vol * 0.1, mu_vol * 2.0, 1000)
-            
-            # Calculate Gaussian
-            y_num = np.exp(-0.5 * ((x - m) / s)**2)
-            y_vol = y_num * (x**3)
-            
-            # Avoid division by zero
-            denom = np.trapezoid(y_vol, x)
-            if denom == 0:
-                return 1e6 # Penalty for invalid mu_n
-                
-            calc_mu_vol = np.trapezoid(y_vol * x, x) / denom
-            return calc_mu_vol - mu_vol
-
-        # Solve for the true mu_n
-        # We use mu_n_hc as a much better starting guess than mu_vol
-        solution = fsolve(objective, x0=mu_n_hc)
-        mu_n_num = float(solution[0])
-        sigma_n_num = mu_n_num * cv
-        
-        # --- Output Comparison ---
-        print(f"\n{' SAXS to Number Conversion ':-^60}")
-        print(f"Input (SAXS)       : μ={mu_vol:.3f} nm, PD={pd_vol_pct:.1f}%")
-        print("-" * 60)
-        print(f"{'Method':<20} | {'Mean (nm)':<15} | {'Sigma (nm)':<15}")
-        print(f"{'Hatch-Choate':<20} | {mu_n_hc:>14.3f} | {sigma_n_hc:>14.3f}")
-        print(f"{'Numerical (Full)':<20} | {mu_n_num:>14.3f} | {sigma_n_num:>14.3f}")
-        print("-" * 60)
-        
-        return cls.from_gaussian_params(mu_n_num, sigma_n_num, amplitude)
-
-    @classmethod
-    def from_lognormal_params(cls, median, sigma_g, amplitude=1000):
-        """
-        Instantiates the class using Log-Normal parameters.
-        
-        Args:
-            median (float): The median diameter (nm).
-            sigma_g (float): The geometric standard deviation.
-            amplitude (float): Total number of particles.
-        """
-        instance = cls()
-        instance.model_type = 'lognormal'
-        
-        # Calculate arithmetic equivalents for summary reporting
-        ln_sig_g = np.log(sigma_g)
-        arith_mean = median * np.exp((ln_sig_g**2) / 2)
-        arith_sigma = arith_mean * np.sqrt(np.exp(ln_sig_g**2) - 1)
-        
-        instance._results_dict = {
-            'mean': arith_mean,
-            'median': median,
-            'sigma': arith_sigma,
-            'sigma_g': sigma_g,
-            'amplitude': amplitude,
-            'cv_percentage': (arith_sigma / arith_mean) * 100,
-            'fwhm': 0 # FWHM is less standard for lognormal, can be calculated if needed
-        }
-        
-        # Generate representative data for plotting
-        x = np.linspace(median / (sigma_g**2), median * (sigma_g**2), 500)
-        instance.sizes = x
-        instance.counts = instance._lognormal_model(x, amplitude, median, sigma_g)
-        instance.params = [amplitude, median, sigma_g]
-        instance.total_n_expected = amplitude
-        return instance
-
-    @classmethod
-    def from_saxs_lognormal(cls, mu_vol, pd_vol_pct, total_n=1000):
-        """
-        Converts SAXS Volume-weighted Mean to Number-weighted Log-normal parameters
-        using exact Hatch-Choate identities.
-        """
-        import math
-        cv = pd_vol_pct / 100
-        ln_sig_g_sq = math.log(1 + cv**2)
-        sigma_g = math.exp(math.sqrt(ln_sig_g_sq))
-        
-        # Exact Hatch-Choate: median_n = mu_vol / exp(3.5 * ln(sigma_g)^2)
-        median_n = mu_vol / math.exp(3.5 * ln_sig_g_sq)
-        
-        print(f"\n{' SAXS to Log-Normal Conversion (Exact) ':-^60}")
-        print(f"Input (SAXS Vol): μ={mu_vol:.3f} nm, PD={pd_vol_pct:.1f}%")
-        print(f"Result (Num)    : Median={median_n:.3f} nm, σg={sigma_g:.3f}")
-        print("-" * 60)
-        
-        return cls.from_lognormal_params(median=median_n, sigma_g=sigma_g, amplitude=total_n)
-
-    @staticmethod
-    def _lognormal_model(x, amplitude, median, sigma_g):
-        """Probability Density Function for Log-normal."""
-        x = np.where(x <= 0, 1e-9, x)
-        ln_sig_g = np.log(sigma_g)
-        term1 = amplitude / (x * ln_sig_g * np.sqrt(2 * np.pi))
-        term2 = np.exp(- (np.log(x / median))**2 / (2 * ln_sig_g**2))
-        return term1 * term2
-        
     @staticmethod
     def _gaussian_model(x, A, mu, sigma):
         """
@@ -265,6 +195,89 @@ class NanoparticleDistribution:
         """
         return A * np.exp(-0.5 * ((x - mu) / sigma)**2)
 
+    @staticmethod
+    def _schulz_model(x, mu, z):
+        """
+        Normalized Schulz probability density function.
+    
+        The distribution is parameterized by its mean (mu) and width
+        parameter z = (1 - p^2) / p^2, where p = sigma / mu.
+    
+        Args:
+            x (float or np.ndarray): Size values (must be > 0).
+            mu (float): Mean of the distribution.
+            z (float): Width parameter (large z → narrow distribution).
+    
+        Returns:
+            np.ndarray: Probability density values (normalized, area = 1).
+        """
+        from scipy.special import gamma
+        x = np.asarray(x, dtype=float)
+        coeff = (z + 1)**(z + 1) / (mu * gamma(z + 1))
+        return coeff * (x / mu)**z * np.exp(-(z + 1) * x / mu)
+    
+    @staticmethod
+    def _schulz_cdf_bin(s1, s2, mu, z):
+        """
+        Probability mass of the Schulz distribution over the interval [s1, s2].
+    
+        Uses the regularized incomplete gamma function (scipy.special.gammainc)
+        for numerical accuracy on any bin width.
+    
+        Args:
+            s1 (float): Lower bin edge (nm).
+            s2 (float): Upper bin edge (nm).
+            mu (float): Mean of the distribution.
+            z (float): Width parameter.
+    
+        Returns:
+            float: Probability P(s1 ≤ X < s2).
+        """
+        from scipy.special import gammainc
+        # CDF(x) = gammainc(z+1, (z+1)*x/mu)  [regularized lower incomplete gamma]
+        a = z + 1.0
+        cdf = lambda x: gammainc(a, a * x / mu)   # noqa: E731
+        return float(np.clip(cdf(s2) - cdf(s1), 0, 1))
+
+    def _compute_fwhm(self, mu, sigma):
+        """
+        Compute the Full Width at Half Maximum (FWHM) of the distribution.
+    
+        For Gaussian, the result is exact and analytical.
+        For Schulz, the distribution is asymmetric so the half-maximum
+        points are found numerically via Brent's method, using the mode
+        (x_mode = z/(z+1) * mu) as the pivot between left and right searches.
+    
+        Args:
+            mu (float): Mean of the distribution (nm).
+            sigma (float): Standard deviation (nm). Used directly for Gaussian;
+                for Schulz, z is retrieved from self.params instead.
+    
+        Returns:
+            tuple: (fwhm, x_left, x_right) where:
+                - fwhm (float): Full width at half maximum (nm).
+                - x_left (float): Left half-maximum position (nm).
+                - x_right (float): Right half-maximum position (nm).
+    
+        Raises:
+            NotImplementedError: If model_type is not supported.
+        """
+        if self.model_type == 'gaussian':
+            fwhm = 2 * np.sqrt(2 * np.log(2)) * sigma
+            return fwhm, mu - fwhm / 2, mu + fwhm / 2
+    
+        elif self.model_type == 'schulz':
+            from scipy.optimize import brentq
+            z = self.params[1]
+            x_mode   = z / (z + 1) * mu
+            half_max = self._schulz_model(x_mode, mu, z) / 2
+            x_left   = brentq(lambda x: self._schulz_model(x, mu, z) - half_max, 1e-6, x_mode)
+            x_right  = brentq(lambda x: self._schulz_model(x, mu, z) - half_max, x_mode, mu * 10)
+            return x_right - x_left, x_left, x_right
+    
+        else:
+            raise NotImplementedError(f"_compute_fwhm() not implemented for model_type='{self.model_type}'.")
+        
     def fit(self, p0=None):
         """
         Perform a non-linear least squares Gaussian fit on the data.
@@ -361,29 +374,47 @@ class NanoparticleDistribution:
         Calculate physical parameters from the fitted model.
         
         Returns:
-            dict: Dictionary containing amplitude, mean, sigma, FWHM, and CV (%).
-            
+            dict: Keys depend on model_type:
+                - Gaussian: amplitude, mean, sigma, fwhm, cv_percentage
+                - Schulz:   amplitude (=total_n), mean, sigma, z, fwhm, cv_percentage
+    
         Raises:
-            ValueError: If called before running the .fit() method.
+            ValueError: If called before parameters are set.
         """
-        if self.model_type == 'lognormal' and self._results_dict:
-            return self._results_dict
-        
+
         if self.params is None:
             raise ValueError("Fit has not been performed yet.")
         
-        # Handle Gaussian logic (as per your original code)
-        A, mu, sigma = self.params
-        fwhm = 2 * np.sqrt(2 * np.log(2)) * sigma
-        cv = (sigma / mu) * 100
-        return {
-            "amplitude": A,
-            "mean": mu,
-            "sigma": sigma,
-            "fwhm": fwhm,
-            "cv_percentage": cv
-        }
-
+        # Handle Gaussian logic
+        if self.model_type == 'gaussian':
+            A, mu, sigma = self.params
+            fwhm, _, _  = self._compute_fwhm(mu, sigma)
+            cv = (sigma / mu) * 100
+            return {
+                "amplitude": A,
+                "mean": mu,
+                "sigma": sigma,
+                "fwhm": fwhm,
+                "cv_percentage": cv
+            }
+        elif self.model_type == 'schulz':
+            mu, z   = self.params
+            p       = 1.0 / np.sqrt(z + 1.0)
+            sigma   = p * mu
+            fwhm, _, _ = self._compute_fwhm(mu, sigma)
+            cv = p * 100.0
+            amplitude = getattr(self, 'total_n_expected', 1000)
+            return {
+                "amplitude": amplitude,
+                "mean": mu,
+                "sigma": sigma,
+                "z": z,
+                "fwhm": fwhm,
+                "cv_percentage": cv,
+            }
+        else:
+            raise NotImplementedError(f"results() not implemented for model_type='{self.model_type}'.")
+    
     def print_results(self):
         """
         Display a formatted summary of the distribution's statistical properties.
@@ -405,7 +436,7 @@ class NanoparticleDistribution:
             multiples of the geometric standard deviation (sigma_g) around 
             the median.
         """
-        from scipy.stats import norm, lognorm
+        from scipy.stats import norm
         
         centerTitle("Summary of the distribution statistics")
         stats = self.results
@@ -417,29 +448,7 @@ class NanoparticleDistribution:
         print(f"Average Size (Mean) : {stats['mean']:.3f} nm")
         print(f"Polydispersity (CV) : {stats['cv_percentage']:.2f}%")
 
-        if model == 'lognormal':
-            med, sg = stats['median'], stats['sigma_g']
-            s_param = np.log(sg)
-            
-            # Dynamic calculation function for Lognormal
-            def get_prob(low, high):
-                return (lognorm.cdf(high, s=s_param, scale=med) - 
-                        lognorm.cdf(low, s=s_param, scale=med)) * 100
-
-            # Ranges
-            r1 = (med/sg, med*sg)
-            r2 = (med/(sg**2), med*(sg**2))
-            r3 = (med/(sg**3), med*(sg**3))
-            
-            print(f"Geometric SD (σg)   : {sg:.3f}")
-            print(f"Median Size         : {med:.3f} nm")
-            print("-" * 40)
-            print(f"Theoretical Population Coverage (Dynamic):")
-            print(f"  Med */ 1σg ({r1[0]:>5.2f}-{r1[1]:<5.2f} nm) : {get_prob(*r1):.1f}%")
-            print(f"  Med */ 2σg ({r2[0]:>5.2f}-{r2[1]:<5.2f} nm) : {get_prob(*r2):.1f}%")
-            print(f"  Med */ 3σg ({r3[0]:>5.2f}-{r3[1]:<5.2f} nm) : {get_prob(*r3):.1f}%")
-        
-        else:
+        if model == 'gaussian':
             mu, sigma = stats['mean'], stats['sigma']
             
             # Dynamic calculation function for Gaussian
@@ -454,11 +463,33 @@ class NanoparticleDistribution:
             print(f"  μ ± 3σ     ({mu-3*sigma:>5.2f}-{mu+3*sigma:<5.2f} nm) : {get_prob(mu-3*sigma, mu+3*sigma):.1f}%")
 
     def get_relative_height(self, x_value):
-        """Calculates height relative to the peak (mu)."""
+        """
+        Calculate height relative to the distribution peak.
+    
+        For Gaussian: uses the standard Gaussian ratio exp(-0.5 * z^2).
+        For Schulz:   evaluates f(x) / f(mu) analytically.
+    
+        Args:
+            x_value (float or np.ndarray): Size value(s) in nm.
+    
+        Returns:
+            float or np.ndarray: Relative height in [0, 1].
+        """
         mu = self.results['mean']
         sigma = self.results['sigma']
-        z = (x_value - mu) / sigma
-        return np.exp(-0.5 * z**2)
+
+        if self.model_type == 'gaussian':
+            z_score = (x_value - mu) / sigma
+            return np.exp(-0.5 * z_score**2)
+
+        elif self.model_type == 'schulz':
+            z = self.results['z']
+            x = np.asarray(x_value, dtype=float)
+            ratio = x / mu
+            return ratio**z * np.exp(-(z + 1.0) * (ratio - 1.0))
+    
+        else:
+            raise NotImplementedError(f"get_relative_height() not implemented for model_type='{self.model_type}'.")
         
         
     def get_binned_statistics(self, bin_width_nm=None, total_n=None):
@@ -485,11 +516,10 @@ class NanoparticleDistribution:
 
         Note:
             - For Gaussian models, bins are generated symmetrically around the mean.
-            - For Log-normal models, the lower limit is strictly clamped at 0.01 nm.
             - Synchronization: Updating the bins here will immediately change the 
               appearance of the histogram in the plot() method.
         """
-        from scipy.stats import norm, lognorm
+        from scipy.stats import norm
 
         if self.params is None and not hasattr(self, '_results_dict'):
             raise ValueError(f"No parameters available. Fit the model or instantiate from params first.")
@@ -520,10 +550,7 @@ class NanoparticleDistribution:
             # 1. On regarde d'abord si une valeur a été stockée explicitement
             if hasattr(self, 'total_n_expected') and self.total_n_expected is not None:
                 total_n = self.total_n_expected
-            # 2. Sinon, si c'est du Log-Normal, on prend l'amplitude stockée
-            elif getattr(self, 'model_type', 'gaussian') == 'lognormal':
-                total_n = self.results.get('amplitude', 1000)
-            # 3. En dernier recours, on somme (cas des vraies données expérimentales)
+            # 2. En dernier recours, on somme (cas des vraies données expérimentales)
             elif len(self.counts) > 0 and self.cov is not None and np.any(self.cov > 0):
                 total_n = np.sum(self.counts)
             else:
@@ -532,8 +559,6 @@ class NanoparticleDistribution:
         # 1. Define coverage limits (±3.5 sigma)
         # For lognormal, we must ensure we don't go below or equal to zero
         limit_min = mu - 3.5 * sigma
-        if getattr(self, 'model_type', 'gaussian') == 'lognormal':
-            limit_min = max(0.01, limit_min)
         limit_max = mu + 3.5 * sigma
         
         # 2. Generate bin edges starting from mu to ensure symmetry (for Gaussian)
@@ -541,6 +566,8 @@ class NanoparticleDistribution:
         right_edges = np.arange(mu + w/2, limit_max + w, w)
         left_edges = np.arange(mu - w/2, limit_min - w, -w)
         edges = np.sort(np.concatenate([left_edges, right_edges]))
+        if self.model_type == 'schulz':
+            edges = edges[edges > 0]   # Schulz is defined on (0, +inf) only
         
         # --- 1. First pass: calculate data and sum of ratios for normalization ---
         bins_results = []
@@ -550,18 +577,11 @@ class NanoparticleDistribution:
             s1, s2 = edges[i], edges[i+1]
             bin_center = (s1 + s2) / 2
             
-            if getattr(self, 'model_type', 'lognormal') == 'lognormal' and hasattr(self, '_lognormal_model'):
-                # Lognormal probability and relative height
-                s_param = np.log(stats['sigma_g'])
-                prob = lognorm.cdf(s2, s=s_param, scale=stats['median']) - \
-                       lognorm.cdf(s1, s=s_param, scale=stats['median'])
-                peak_val = self._lognormal_model(stats['median'], 1, stats['median'], stats['sigma_g'])
-                current_val = self._lognormal_model(bin_center, 1, stats['median'], stats['sigma_g'])
-                ratio_to_peak = current_val / peak_val
-            else:
-                # Gaussian probability and relative height
+            if self.model_type == 'schulz':
+                prob = self._schulz_cdf_bin(max(s1, 1e-6), s2, mu, self.results['z'])
+            elif self.model_type == 'gaussian':
                 prob = norm.cdf(s2, mu, sigma) - norm.cdf(s1, mu, sigma)
-                ratio_to_peak = self.get_relative_height(bin_center)
+            ratio_to_peak = self.get_relative_height(bin_center)
             
             total_ratio_sum += ratio_to_peak
             bins_results.append({
@@ -613,94 +633,73 @@ class NanoparticleDistribution:
               f"{'-':>{w_ratio-2}} | "
               f"{running_norm:>{w_norm-2}.3f}")
 
-    def get_proportions(self, target_sizes, bin_width_nm=None):
-        """
-        Calculate relative proportions and estimated counts for specific diameters.
-
-        This method determines how specific particle sizes relate to the overall 
-        distribution. It calculates the ratio of the probability density at the 
-        target size relative to the peak (Ratio/Peak). 
-
-        Critically, it also provides a 'Normalized' value (Norm. (1)). This is 
-        calculated by summing the relative heights of all theoretical bins in 
-        the distribution and dividing the target's ratio by this sum, allowing 
-        for a discrete weight comparison.
-
-        Args:
-            target_sizes (float or array-like): The specific diameters (nm) to evaluate.
-            bin_width_nm (float, optional): The reference bin width used to 
-                calculate the total distribution sum for normalization. 
-                Defaults to sigma.
-
-        Returns:
-            dict: A dictionary containing:
-                - "sizes": The input target diameters.
-                - "ratios": Probability at target relative to the peak (0 to 1).
-                - "counts": Estimated number of particles at these specific sizes.
-                - "norms": Normalized weight relative to the full binned distribution.
-        """
+    def get_proportions(self, target_sizes, labels=None, bin_width_nm=None):
         targets = np.atleast_1d(target_sizes)
+    
+        if labels is None:
+            resolved_labels = [''] * len(targets)
+        else:
+            resolved_labels = list(labels)
+    
         stats = self.results
         mu, sigma = stats['mean'], stats['sigma']
-        
-        # 1. Calculate the total_ratio_sum from the theoretical bins (for normalization)
-        if bin_width_nm is None: bin_width_nm = sigma
-        limit_min, limit_max = mu - 3.5 * sigma, mu + 3.5 * sigma
-        if getattr(self, 'model_type', 'gaussian') == 'lognormal':
-            limit_min = max(0.01, limit_min)
-            
-        r_edges = np.arange(mu + bin_width_nm/2, limit_max + bin_width_nm, bin_width_nm)
-        l_edges = np.arange(mu - bin_width_nm/2, limit_min - bin_width_nm, -bin_width_nm)
+    
+        # --- Bin width ---
+        if bin_width_nm is None:
+            bin_width_nm = self.bin_width_nm if self.bin_width_nm else sigma
+    
+        # --- Coverage limits ---
+        limit_min = mu - 3.5 * sigma
+        limit_max = mu + 3.5 * sigma
+    
+        # --- Bin edges ---
+        r_edges = np.arange(mu + bin_width_nm / 2, limit_max + bin_width_nm, bin_width_nm)
+        l_edges = np.arange(mu - bin_width_nm / 2, limit_min - bin_width_nm, -bin_width_nm)
         edges = np.sort(np.concatenate([l_edges, r_edges]))
-        
+        if self.model_type == 'schulz':
+            edges = edges[edges > 0]   # Schulz defined on (0, +inf) only
+    
+        # --- total_ratio_sum via get_relative_height (model-aware) ---
         total_ratio_sum = 0
         for i in range(len(edges) - 1):
-            bc = (edges[i] + edges[i+1]) / 2
-            if getattr(self, 'model_type', 'gaussian') == 'lognormal':
-                peak = self._lognormal_model(stats['median'], 1, stats['median'], stats['sigma_g'])
-                total_ratio_sum += self._lognormal_model(bc, 1, stats['median'], stats['sigma_g']) / peak
-            else:
-                total_ratio_sum += np.exp(-0.5 * ((bc - mu) / sigma)**2)
-
-        # 2. Calculate ratios for the specific targets
-        if self.model_type == 'lognormal':
-            peak_val = self._lognormal_model(stats['median'], 1, stats['median'], stats['sigma_g'])
-            ratios = self._lognormal_model(targets, 1, stats['median'], stats['sigma_g']) / peak_val
-        else:
-            z = (targets - mu) / sigma
-            ratios = np.exp(-0.5 * z**2)
-
-        # 3. Normalize based on the distribution sum
-        norm_values = ratios / total_ratio_sum if total_ratio_sum > 0 else 0
-        norm_sum = ratios.sum()
+            bc = (edges[i] + edges[i + 1]) / 2
+            total_ratio_sum += self.get_relative_height(bc)
+    
+        # --- Ratios for targets via get_relative_height (model-aware) ---
+        ratios = np.array([self.get_relative_height(t) for t in targets])
+    
+        # --- Normalization ---
+        norm_values  = ratios / total_ratio_sum if total_ratio_sum > 0 else np.zeros_like(ratios)
+        norm_sum     = ratios.sum()
         norm_relative = ratios / norm_sum if norm_sum > 0 else np.zeros_like(ratios)
-        counts = ratios * (stats['amplitude'] if self.params is not None else 1000)
-        
+        counts = ratios * stats['amplitude']
+    
         return {
-            "sizes": targets,
-            "ratios": ratios,
-            "counts": counts,
-            "norms": norm_values,
-            "norms_relative": norm_relative   #
+            "sizes"         : targets,
+            "labels"        : resolved_labels,
+            "ratios"        : ratios,
+            "counts"        : counts,
+            "norms"         : norm_values,
+            "norms_relative": norm_relative,
         }
-        
+            
     def print_specific_proportions(self, target_sizes, labels=None):
         """
-        Prints a formatted summary including the normalized distribution value.
+        Print a formatted summary of proportions for specific diameters.
         """
-        data = self.get_proportions(target_sizes)
+        data = self.get_proportions(target_sizes, labels=labels)
         
         centerTitle("Specific Diameter Proportions")
-        # Added Norm. (1) column
-        has_labels = labels is not None and len(labels) == len(data['sizes'])
-    
+        has_labels = any(l != '' for l in data['labels'])
+        
         label_col = f"{'Label':<8} | " if has_labels else ""
-        header = f"{label_col}{'Diameter (nm)':<15} | {'Ratio/Peak':<12} | {'Est. Count':<12} | {'Norm. (dist)':<14} | {'Norm. (1)':<12}"
+        header = (f"{label_col}{'Diameter (nm)':<15} | {'Ratio/Peak':<12} | "
+                  f"{'Est. Count':<12} | {'Norm. (dist)':<14} | {'Norm. (1)':<12}")
         print(header)
         print("-" * len(header))
-        
+    
         for i in range(len(data['sizes'])):
-            label_str = f"{labels[i]:<8} | " if has_labels else ""
+            label_str = f"{data['labels'][i]:<8} | " if has_labels else ""
             print(f"{label_str}"
                   f"{data['sizes'][i]:>12.2f} nm | "
                   f"{data['ratios'][i]:>10.3f}   | "
@@ -710,7 +709,7 @@ class NanoparticleDistribution:
         print("-" * len(header))
         
     def plot(self, title='Nanoparticle Size Distribution', color_histo="skyblue",
-             color_gaussian="red", plot_histogram=True, highlight_sizes=None,
+             color_curve="red", plot_histogram=True, highlight_sizes=None,
              save_img=None, dpi=300):
         """
         Visualize the nanoparticle size distribution (histogram) overlaid with the 
@@ -724,7 +723,7 @@ class NanoparticleDistribution:
         Args:
             title (str): Graph title displayed at the top.
             color_histo (str): Color name or hex code for the histogram bars.
-            color_gaussian (str): Color name or hex code for the Gaussian fit line.
+            color_curve (str): Color name or hex code for the Gaussian Or Schuz fit line.
             plot_histogram (bool): If True, superimposes the bars over the curve. 
                 Requires sizes and counts to be initialized.
             highlight_sizes (list/array, optional): Specific diameters (nm) to mark 
@@ -771,23 +770,33 @@ class NanoparticleDistribution:
         if self.model_type == 'gaussian':
             y_smooth = self._gaussian_model(x_smooth, *self.params) * scaling_w
             model_name = "Gaussian"
-        else:
-            y_smooth = self._lognormal_model(x_smooth, *self.params) * scaling_w
-            model_name = "Log-Normal"
         
+        elif self.model_type == 'schulz':
+            mu, z = self.params
+            # Scale PDF so its peak aligns with histogram bars
+            y_smooth = self._schulz_model(x_smooth, mu, z) * scaling_w * self.results['amplitude']
+            model_name = "Schulz"
+        
+        extra = f"\n$z$ = {self.results['z']:.1f}" if self.model_type == 'schulz' else ""
         label_text = (f"{model_name} {'Fit' if scaling_w == 1.0 else 'Model'}:\n"
                       f"$\mu$ = {res['mean']:.2f} nm\n"
                       f"$\sigma$ = {res['sigma']:.2f} nm\n"
-                      f"Polydispersity = {res['cv_percentage']:.1f}%")
+                      f"Polydispersity = {res['cv_percentage']:.1f}%"
+                      f"{extra}")
         
-        plt.plot(x_smooth, y_smooth, color=color_gaussian, lw=2, label=label_text)
+        plt.plot(x_smooth, y_smooth, color=color_curve, lw=2, label=label_text)
 
         # Plot FWHM (Full Width at Half Maximum) indicator line
-        plt.hlines(y=res['amplitude']/2 * scaling_w, 
-                   xmin=res['mean'] - res['fwhm']/2, 
-                   xmax=res['mean'] + res['fwhm']/2, 
+        fwhm, x_left, x_right = self._compute_fwhm(mu, sigma)
+        # print(f"model={self.model_type}, mu={mu}, sigma={sigma}, fwhm={fwhm}")
+        if self.model_type == 'gaussian':
+            y_half = res['amplitude'] / 2 * scaling_w
+        elif self.model_type == 'schulz':
+            x_mode = self.params[1] / (self.params[1] + 1) * mu
+            y_half = self._schulz_model(x_mode, *self.params) / 2 * scaling_w * res['amplitude']
+        plt.hlines(y=y_half, xmin=x_left, xmax=x_right,
                    colors='green', linestyles='--',
-                   label=f"FWHM span ({res['fwhm']:.2f} nm)")
+                   label=f"FWHM ({fwhm:.2f} nm)")
 
         # --- 5. Statistical Overlays ---
         # Vertical lines at +/- 1 and 2 sigma to visualize spread
@@ -795,6 +804,10 @@ class NanoparticleDistribution:
         plt.axvline(x=mu + sigma, color='#3f8188', linestyle=':', lw=1.5)
         plt.axvline(x=mu - 2*sigma, color='#3f8188', linestyle=':', lw=1.5, label=f"$\pm 2\sigma$ (Spread)")
         plt.axvline(x=mu + 2*sigma, color='#3f8188', linestyle=':', lw=1.5)
+        plt.axvline(x=mu - 3*sigma, color='#3f8188', linestyle=':', lw=1.5, label=f"$\pm 3\sigma$ (Spread)")
+        plt.axvline(x=mu + 3*sigma, color='#3f8188', linestyle=':', lw=1.5)
+        plt.axvline(x=mu - 4*sigma, color='#3f8188', linestyle=':', lw=1.5, label=f"$\pm 4\sigma$ (Spread)")
+        plt.axvline(x=mu + 4*sigma, color='#3f8188', linestyle=':', lw=1.5)
 
         # --- 6. Specific Point Highlighting ---
         # Parse highlight_sizes: either a flat list or [sizes, labels]
@@ -814,8 +827,10 @@ class NanoparticleDistribution:
             
             for i, size in enumerate(h_sizes):
                 current_norm = props['norms_relative'][i]
-                y_pos = (self._gaussian_model(size, *self.params) * scaling_w if self.model_type == 'gaussian'
-                         else self._lognormal_model(size, *self.params) * scaling_w)
+                if self.model_type == 'gaussian':
+                    y_pos = self._gaussian_model(size, *self.params) * scaling_w
+                elif self.model_type == 'schulz':
+                    y_pos = self._schulz_model(size, *self.params) * scaling_w * res['amplitude']
                 
                 # Build annotation text
                 label_prefix = f"{h_labels[i]}: " if h_labels is not None else ""

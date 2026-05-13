@@ -63,7 +63,7 @@ class Crystal(pyNMBcore):
         directionCylinder: float = None,
         refPlaneWire: float = None,
         nRotWire: int = 6,
-        hollow_sphere_diameter: float = None,
+        # hollow_sphere_diameter: float = None,
         surfacesWulff: np.ndarray = None,
         eSurfacesWulff: np.ndarray = None,
         sizesWulff: np.ndarray = None,
@@ -95,7 +95,7 @@ class Crystal(pyNMBcore):
             directionCylinder (list, optional): Cylinder growth direction (default: [0, 0, 1]).
             refPlaneWire (list, optional): Miller indices of wire reference plane.
             nRotWire (int): Number of rotations for wire cross-section (default: 6).
-            hollow_sphere_diameter (list, optional): Hollow sphere diameter (Kirkendall effect).
+            # hollow_sphere_diameter (list, optional): Hollow sphere diameter (Kirkendall effect).
             surfacesWulff (np.ndarray, optional): Miller indices for Wulff surfaces.
             eSurfacesWulff (np.ndarray, optional): Surface energies for Wulff construction.
             sizesWulff (np.ndarray, optional): Size parameters for Wulff construction.
@@ -124,8 +124,8 @@ class Crystal(pyNMBcore):
             directionCylinder = [0, 0, 1]
         if refPlaneWire is None:
             refPlaneWire = [1, 0, 0]
-        if hollow_sphere_diameter is None:
-            hollow_sphere_diameter = [0.0]
+        # if hollow_sphere_diameter is None:
+        #     hollow_sphere_diameter = [0.0]
         if dbFolder is None:
             dbFolder = data.pyNMBvar.dbFolder
 
@@ -139,7 +139,7 @@ class Crystal(pyNMBcore):
         self.directionCylinder = directionCylinder
         self.refPlaneWire = refPlaneWire
         self.nRotWire = nRotWire
-        self.hollow_sphere_diameter = hollow_sphere_diameter
+        # self.hollow_sphere_diameter = hollow_sphere_diameter
         self.surfacesWulff = surfacesWulff
         self.eSurfacesWulff = eSurfacesWulff
         self.sizesWulff = sizesWulff
@@ -556,7 +556,7 @@ class Crystal(pyNMBcore):
 
         # Identify atoms to delete (distance > radius)
         del_atom = []
-        del_atom_hollow = []
+        # del_atom_hollow = []
         for atom_coord in self.sc.positions:
             del_atom.extend(
                 pyNMBu.Rbetween2Points(com, atom_coord) / 10 > [sphere_radius]
@@ -580,13 +580,13 @@ class Crystal(pyNMBcore):
             print(f"Volume: {self.volume:.2f} Å³")
             
         # Handle hollow sphere (Kirkendall effect)
-        if not self.hollow_sphere_diameter[0] == 0.0:
-            for atom_coord in self.NP.positions:
-                del_atom_hollow.extend(
-                    pyNMBu.Rbetween2Points(com, atom_coord) / 10
-                    < [self.hollow_sphere_diameter[0] / 2]
-                )
-            del self.NP[del_atom_hollow]
+        # if not self.hollow_sphere_diameter[0] == 0.0:
+        #     for atom_coord in self.NP.positions:
+        #         del_atom_hollow.extend(
+        #             pyNMBu.Rbetween2Points(com, atom_coord) / 10
+        #             < [self.hollow_sphere_diameter[0] / 2]
+        #         )
+        #     del self.NP[del_atom_hollow]
 
         if not noOutput:
             chrono.chrono_stop(hdelay=False)

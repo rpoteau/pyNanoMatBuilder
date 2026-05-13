@@ -245,12 +245,6 @@
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.platonicNPs.cube.prop"><code class="docutils literal notranslate"><span class="pre">cube.prop()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.platonicNPs.hollow_shapes"><code class="docutils literal notranslate"><span class="pre">hollow_shapes</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.platonicNPs.hollow_shapes.nAtoms"><code class="docutils literal notranslate"><span class="pre">hollow_shapes.nAtoms</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.platonicNPs.hollow_shapes.cog"><code class="docutils literal notranslate"><span class="pre">hollow_shapes.cog</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.platonicNPs.hollow_shapes.create_hollow"><code class="docutils literal notranslate"><span class="pre">hollow_shapes.create_hollow()</span></code></a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyNanoMatBuilder.archimedeanNPs">archimedeanNPs.py</a><ul>
@@ -801,6 +795,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.DrawJmol"><code class="docutils literal notranslate"><span class="pre">DrawJmol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defHelixShapeForJMol"><code class="docutils literal notranslate"><span class="pre">defHelixShapeForJMol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defSlabShapeForJMol"><code class="docutils literal notranslate"><span class="pre">defSlabShapeForJMol()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defSlicingPlanesForJMol"><code class="docutils literal notranslate"><span class="pre">defSlicingPlanesForJMol()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -846,7 +841,7 @@
 <span id="crystalnps-py"></span><h2>CrystalNPs.py<a class="headerlink" href="#module-pyNanoMatBuilder.crystalNPs" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.crystalNPs.Crystal">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.crystalNPs.</span></span><span class="sig-name descname"><span class="pre">Crystal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crystal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Au'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaleDmin2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setSymbols2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">userDefCif</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'sphere'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directionsPPD</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buildPPD</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'xyz'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directionWire</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directionCylinder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refPlaneWire</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nRotWire</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hollow_sphere_diameter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surfacesWulff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eSurfacesWulff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sizesWulff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symWulff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aseSymPrec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pbc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dbFolder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.crystalNPs.Crystal" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.crystalNPs.</span></span><span class="sig-name descname"><span class="pre">Crystal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crystal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Au'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaleDmin2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setSymbols2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">userDefCif</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'sphere'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directionsPPD</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buildPPD</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'xyz'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directionWire</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directionCylinder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refPlaneWire</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nRotWire</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surfacesWulff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eSurfacesWulff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sizesWulff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symWulff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aseSymPrec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pbc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dbFolder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.crystalNPs.Crystal" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pyNMBcore</span></code></p>
 <p>A class for generating XYZ and CIF files of crystalline nanoparticles (NPs)
 of various shapes and sizes, based on user-defined compounds (either by
@@ -893,7 +888,7 @@ See pyNMBu.ciflist() for available options.</p></li>
 <li><p><strong>directionCylinder</strong> (<em>list</em><em>, </em><em>optional</em>) – Cylinder growth direction (default: [0, 0, 1]).</p></li>
 <li><p><strong>refPlaneWire</strong> (<em>list</em><em>, </em><em>optional</em>) – Miller indices of wire reference plane.</p></li>
 <li><p><strong>nRotWire</strong> (<em>int</em>) – Number of rotations for wire cross-section (default: 6).</p></li>
-<li><p><strong>hollow_sphere_diameter</strong> (<em>list</em><em>, </em><em>optional</em>) – Hollow sphere diameter (Kirkendall effect).</p></li>
+<li><p><strong>hollow_sphere_diameter</strong> (<em>#</em>) – Hollow sphere diameter (Kirkendall effect).</p></li>
 <li><p><strong>surfacesWulff</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Miller indices for Wulff surfaces.</p></li>
 <li><p><strong>eSurfacesWulff</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Surface energies for Wulff construction.</p></li>
 <li><p><strong>sizesWulff</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Size parameters for Wulff construction.</p></li>
@@ -2935,126 +2930,6 @@ information.</p>
 <dt class="sig sig-object py" id="pyNanoMatBuilder.platonicNPs.cube.prop">
 <span class="sig-name descname"><span class="pre">prop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.platonicNPs.cube.prop" title="Link to this definition"></a></dt>
 <dd><p>Display unit cell and nanoparticle properties.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="pyNanoMatBuilder.platonicNPs.hollow_shapes">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.platonicNPs.</span></span><span class="sig-name descname"><span class="pre">hollow_shapes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">full_cube</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nOrder_hollow</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.platonicNPs.hollow_shapes" title="Link to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pyNanoMatBuilder.platonicNPs.PlatonicNP" title="pyNanoMatBuilder.platonicNPs.PlatonicNP"><code class="xref py py-class docutils literal notranslate"><span class="pre">PlatonicNP</span></code></a></p>
-<p>A class for generating XYZ and CIF files
-of hollow cubic nanoparticles (NPs).</p>
-<p>Creates NPs with customizable sizes and
-compositions. Users can define the composition
-by specifying element names (e.g., “Fe”, “Au”)
-and provide a “cube” class instance from this
-module to construct the nanoparticle structure.</p>
-<dl class="simple">
-<dt>Key Features:</dt><dd><ul class="simple">
-<li><dl class="simple">
-<dt>Allows to choose the cube size and the</dt><dd><p>size of its hollow.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>Can analyze the structure in detail,</dt><dd><p>including symmetry and properties.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>Offers options for core/surface</dt><dd><p>differentiation based on a threshold.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>Generates outputs in XYZ and CIF formats</dt><dd><p>for visualization and simulations.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>Provides compatibility with jMol for 3D</dt><dd><p>visualization.</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-<dt>Additional Notes:</dt><dd><ul class="simple">
-<li><p>The symmetry analysis can be skipped to speed up computations.</p></li>
-<li><p>Customizable precision thresholds for structural analysis.</p></li>
-</ul>
-</dd>
-</dl>
-<p>Initialize the class with all necessary parameters.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>full_cube</strong> (<a class="reference internal" href="#pyNanoMatBuilder.platonicNPs.cube" title="pyNanoMatBuilder.platonicNPs.cube"><em>cube</em></a>) – Instance of the
-class “cube” of the module “pNP”.</p></li>
-<li><p><strong>nOrder_hollow</strong> (<em>int</em>) – Size of the hollow
-in nOrder (number of atomic layers
-along an edge).</p></li>
-<li><p><strong>postAnalyzis</strong> (<em>bool</em>) – If True, prints
-additional NP information (e.g.,
-cell parameters, moments of inertia,
-inscribed/circumscribed sphere
-diameters, etc.).</p></li>
-<li><p><strong>aseView</strong> (<em>bool</em>) – If True, enables
-visualization of the NP using ASE.</p></li>
-<li><p><strong>thresholdCoreSurface</strong> (<em>float</em>) – Precision
-threshold for core/surface
-differentiation (distance threshold
-for retaining atoms).</p></li>
-<li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – If False,
-performs an atomic structure analysis
-using pymatgen.</p></li>
-<li><p><strong>jmolCrystalShape</strong> (<em>bool</em>) – If True,
-generates a JMOL script for
-visualization.</p></li>
-<li><p><strong>noOutput</strong> (<em>bool</em>) – If False, prints
-details about the NP structure.</p></li>
-<li><p><strong>calcPropOnly</strong> (<em>bool</em>) – If False, generates
-the atomic structure of the NP.</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pyNanoMatBuilder.platonicNPs.hollow_shapes.nAtoms">
-<span class="sig-name descname"><span class="pre">nAtoms</span></span><a class="headerlink" href="#pyNanoMatBuilder.platonicNPs.hollow_shapes.nAtoms" title="Link to this definition"></a></dt>
-<dd><p>Number of atoms in the NP.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pyNanoMatBuilder.platonicNPs.hollow_shapes.cog">
-<span class="sig-name descname"><span class="pre">cog</span></span><a class="headerlink" href="#pyNanoMatBuilder.platonicNPs.hollow_shapes.cog" title="Link to this definition"></a></dt>
-<dd><p>Center of gravity of
-the NP.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.array</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pyNanoMatBuilder.platonicNPs.hollow_shapes.create_hollow">
-<span class="sig-name descname"><span class="pre">create_hollow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">noOutput</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.platonicNPs.hollow_shapes.create_hollow" title="Link to this definition"></a></dt>
-<dd><p>Function that creates the cube hollow.</p>
-<p>The hollow is created using planes that
-defines the hollow [h k l d] with
-d= +/- size of the hollow/2.
-Update: the hollow size is given in nOrder
-of atomic layers.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>noOutput</strong> (<em>bool</em>) – If False, prints details about the NP structure.</p>
-</dd>
-</dl>
 </dd></dl>
 
 </dd></dl>
@@ -9308,6 +9183,10 @@ Uses KDTree for neighbor searching and Numba for parallelized math.</p>
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.external_pgm.defCrystalShapeForJMol">
 <span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">defCrystalShapeForJMol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.defCrystalShapeForJMol" title="Link to this definition"></a></dt>
 <dd><p>Generate a Jmol command to visualize the crystal shape based on the facets of the NP.</p>
+<p>For Wulff constructions and crystal shapes, uses HalfspaceIntersection to
+compute the reduced convex hull facets. For slicing planes (applySlicing),
+redirects to defSlicingPlanesForJMol since the resulting shape may be
+non-convex and cannot be represented by HalfspaceIntersection.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses the output of the command.</p>
@@ -9419,6 +9298,35 @@ which is the case for slabs generated by ASE or pymatgen surface builders.</p>
 </dl>
 <p>script = slab.defSlabShapeForJMol([1, 1, 5], offset=1.7)
 pyNMBu.write(‘coords/Au_115.script’, script)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.external_pgm.defSlicingPlanesForJMol">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">defSlicingPlanesForJMol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">translucency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">70</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.defSlicingPlanesForJMol" title="Link to this definition"></a></dt>
+<dd><p>Generate a Jmol command to visualize all slicing planes stored in
+self.trPlanes_Slicing as translucent square polygons.</p>
+<p>For each plane [nx, ny, nz, d], a square polygon is built centered
+on the closest point of the plane to the origin, in the plane itself.
+Planes from the same group share the same color.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – pyNMBcore object with self.trPlanes_Slicing defined.</p></li>
+<li><p><strong>size</strong> (<em>float</em>) – Half-size of each plane polygon in Å. Default is 30.0.</p></li>
+<li><p><strong>colors</strong> (<em>list</em><em> of </em><em>str</em>) – List of hex colors (e.g. [‘x0055ff’, ‘xff5500’])
+one per plane. If None, a default palette is used.</p></li>
+<li><p><strong>translucency</strong> (<em>int</em>) – Translucency of the planes in percent (0=opaque,
+100=translucent). Default is 70.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Jmol command string.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
