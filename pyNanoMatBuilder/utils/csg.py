@@ -354,7 +354,7 @@ def cut_by(self,
           cogB: list = None,
           rotB=None,
           mode: str = 'hull',
-          threshold: float = 1.0,
+          threshold: float = 0.8,
           skipSymmetryAnalyzis: bool = None,
           thresholdCoreSurface: float = None,
           noOutput: bool = False):
@@ -388,7 +388,7 @@ def cut_by(self,
               rotates B first by 45° around z, then by 30° around x.
         mode (str): 'hull' (default) or 'atoms'.
         threshold (float): Only for mode='atoms'. Atoms of A closer than
-            threshold * Rnn_A to any atom of B are removed. Default is 1.0.
+            threshold * Rnn_A to any atom of B are removed. Default is 0.8.
         noOutput (bool): If True, suppresses output. Default is False.
 
     Note:
@@ -425,13 +425,33 @@ def cut_by(self,
     n_total = len(pos_A)
 
     # --- Compute mask: atoms of A to remove ---
-    if mode == 'hull':
-        from scipy.spatial import ConvexHull, Delaunay
-        hull_B = ConvexHull(pos_B)
-        # Use Delaunay triangulation to test if points are inside hull
-        delaunay_B = Delaunay(pos_B[hull_B.vertices])
-        inside_mask = delaunay_B.find_simplex(pos_A) >= 0
+    # --- Estimate Rnn_A --- needed for both modes
+    Rnn_A = getattr(self, 'Rnn', None)
+    if Rnn_A is None:
+        from scipy.spatial import KDTree
+        tree = KDTree(pos_A)
+        dists, _ = tree.query(pos_A, k=2)
+        Rnn_A = np.median(dists[:, 1])
+        if not noOutput:
+            print(f"  Rnn_A estimated: {Rnn_A:.3f} Å")
+    cutoff = threshold * Rnn_A
 
+    if mode == 'hull':
+        from scipy.spatial import ConvexHull, Delaunay, KDTree
+        # Compute hull on surface atoms of B if available
+        if hasattr(NP_B, 'surfaceAtoms') and NP_B.surfaceAtoms is not None:
+            pos_B_hull = pos_B[NP_B.surfaceAtoms]
+        else:
+            pos_B_hull = pos_B
+        hull_B = ConvexHull(pos_B_hull)
+        delaunay_B = Delaunay(pos_B_hull[hull_B.vertices])
+        # Atoms strictly inside hull
+        inside_hull = delaunay_B.find_simplex(pos_A) >= 0
+        # Also remove atoms within cutoff of any surface atom of B
+        tree_surf = KDTree(pos_B_hull)
+        dists_to_surf, _ = tree_surf.query(pos_A)
+        near_surface = dists_to_surf < cutoff
+        inside_mask = inside_hull | near_surface
     else:  # mode == 'atoms'
         from scipy.spatial import KDTree
         Rnn_A = getattr(self, 'Rnn', None)
@@ -463,7 +483,19 @@ def cut_by(self,
     # --- Apply mask ---
     self.NP = self.NP[~inside_mask]
 
-    
+    # --- Remove isolated/undercoordinated atoms after cut ---
+    # Atoms left floating after the cut (e.g. at cavity edges) are removed
+    from .geometry import peel_by_coordination
+    n_before = len(self.NP)
+    peel_by_coordination(self,
+                         threshold_peeling=1,  # remove only truly isolated atoms
+                         Rmax=1.2 * Rnn_A,
+                         noOutput=True)
+    n_removed_isolated = n_before - len(self.NP)
+    if not noOutput and n_removed_isolated > 0:
+        print(f"{bg.LIGHTYELLOWB}Warning: {n_removed_isolated} isolated "
+              f"atom(s) removed after cut.{bg.OFF}")
+        
     # --- Invalidate old truncation planes ---
     # After intersection, the original planes are no longer valid
     # since the shape has fundamentally changed
@@ -494,7 +526,7 @@ def union_with(self,
          cogB: list = None,
          rotB=None,
          mode: str = 'hull',
-         threshold: float = 1.0,
+         threshold: float = 0.8,
          skipSymmetryAnalyzis: bool = None,
          thresholdCoreSurface: float = None,
          noOutput: bool = False):
@@ -521,7 +553,7 @@ def union_with(self,
               applied sequentially in the given order.
         mode (str): 'hull' (default) or 'atoms'.
         threshold (float): Atoms of A closer than threshold * Rnn_A to any
-            atom of B are removed before merging. Default is 1.0.
+            atom of B are removed before merging. Default is 0.8.
         noOutput (bool): If True, suppresses output. Default is False.
 
     Note:
@@ -562,17 +594,39 @@ def union_with(self,
 
     # --- Remove atoms of A that overlap with B ---
     if mode == 'hull':
-        from scipy.spatial import ConvexHull, Delaunay
-        hull_B = ConvexHull(pos_B)
-        delaunay_B = Delaunay(pos_B[hull_B.vertices])
-        overlap_mask = delaunay_B.find_simplex(pos_A) >= 0
+        from scipy.spatial import ConvexHull, Delaunay, KDTree
+
+        # Compute hull only on surface atoms of B if available
+        # — much faster than using all atoms
+        if hasattr(NP_B, 'surfaceAtoms') and NP_B.surfaceAtoms is not None:
+            pos_B_hull = pos_B[NP_B.surfaceAtoms]
+        else:
+            pos_B_hull = pos_B
+
+        hull_B = ConvexHull(pos_B_hull)
+        delaunay_B = Delaunay(pos_B_hull[hull_B.vertices])
+
+        # Atoms strictly inside hull
+        inside_hull = delaunay_B.find_simplex(pos_A) >= 0
+
+        # Also remove atoms of A within cutoff of ANY surface atom of B
+        # — hull vertices alone are not enough (only corners, missing most surface)
+        if hasattr(NP_B, 'surfaceAtoms') and NP_B.surfaceAtoms is not None:
+            pos_B_surface = pos_B[NP_B.surfaceAtoms]
+        else:
+            pos_B_surface = pos_B
+        tree_surf = KDTree(pos_B_surface)
+        dists_to_surf, _ = tree_surf.query(pos_A)
+        near_surface = dists_to_surf < cutoff
+        overlap_mask = inside_hull | near_surface
+
     else:  # mode == 'atoms'
         from scipy.spatial import KDTree
         tree_B = KDTree(pos_B)
         dists_A, _ = tree_B.query(pos_A)
         overlap_mask = dists_A < cutoff
+        
     n_removed = int(np.count_nonzero(overlap_mask))
-
     if not noOutput:
         print(f"  {n_removed} atoms of A removed (overlap within "
               f"{threshold:.2f} * Rnn = {cutoff:.3f} Å)")
@@ -617,7 +671,7 @@ def intersect_with(self,
               cogB: list = None,
               rotB=None,
               mode: str = 'hull',
-              threshold: float = 1.0,
+              threshold: float = 0.8,
               skipSymmetryAnalyzis: bool = None,
               thresholdCoreSurface: float = None,
               noOutput: bool = False):
@@ -646,7 +700,7 @@ def intersect_with(self,
               applied sequentially in the given order.
         mode (str): 'hull' (default) or 'atoms'.
         threshold (float): Only for mode='atoms'. Atoms of A closer than
-            threshold * Rnn_A to any atom of B are kept. Default is 1.0.
+            threshold * Rnn_A to any atom of B are kept. Default is 0.8.
         noOutput (bool): If True, suppresses output. Default is False.
 
     Note:
@@ -679,12 +733,35 @@ def intersect_with(self,
     pos_A = self.NP.get_positions()
     n_total = len(pos_A)
 
+    # --- Estimate Rnn_A ---
+    Rnn_A = getattr(self, 'Rnn', None)
+    if Rnn_A is None:
+        from scipy.spatial import KDTree
+        tree = KDTree(pos_A)
+        dists, _ = tree.query(pos_A, k=2)
+        Rnn_A = np.median(dists[:, 1])
+        if not noOutput:
+            print(f"  Rnn_A estimated: {Rnn_A:.3f} Å")
+    cutoff = threshold * Rnn_A
+
     # --- Compute mask: atoms of A to KEEP ---
     if mode == 'hull':
-        from scipy.spatial import ConvexHull, Delaunay
-        hull_B = ConvexHull(pos_B)
-        delaunay_B = Delaunay(pos_B[hull_B.vertices])
-        keep_mask = delaunay_B.find_simplex(pos_A) >= 0
+        from scipy.spatial import ConvexHull, Delaunay, KDTree
+        # Compute hull on surface atoms of B if available
+        if hasattr(NP_B, 'surfaceAtoms') and NP_B.surfaceAtoms is not None:
+            pos_B_hull = pos_B[NP_B.surfaceAtoms]
+        else:
+            pos_B_hull = pos_B
+        hull_B = ConvexHull(pos_B_hull)
+        delaunay_B = Delaunay(pos_B_hull[hull_B.vertices])
+        # Atoms strictly inside hull
+        inside_hull = delaunay_B.find_simplex(pos_A) >= 0
+        # Also keep atoms within cutoff of any surface atom of B
+        # — avoids losing atoms just outside the hull but close to surface
+        tree_surf = KDTree(pos_B_hull)
+        dists_to_surf, _ = tree_surf.query(pos_A)
+        near_surface = dists_to_surf < cutoff
+        keep_mask = inside_hull | near_surface
 
     else:  # mode == 'atoms'
         from scipy.spatial import KDTree
@@ -747,7 +824,7 @@ def embed_in(self,
           cogB: list = None,
           rotB=None,
           mode: str = 'hull',
-          threshold: float = 1.0,
+          threshold: float = 0.8,
           skipSymmetryAnalyzis: bool = None,
           thresholdCoreSurface: float = None,
           noOutput: bool = False):
@@ -779,7 +856,7 @@ def embed_in(self,
               applied sequentially in the given order.
         mode (str): 'hull' (default) or 'atoms'.
         threshold (float): Distance threshold in units of Rnn for overlap
-            detection and deduplication. Default is 1.0.
+            detection and deduplication. Default is 0.8.
         noOutput (bool): If True, suppresses output. Default is False.
 
     Note:
@@ -826,16 +903,28 @@ def embed_in(self,
 
     # --- Step 1: keep only atoms of B inside A ---
     if mode == 'hull':
-        from scipy.spatial import ConvexHull, Delaunay
-        hull_A = ConvexHull(pos_A)
-        delaunay_A = Delaunay(pos_A[hull_A.vertices])
-        keep_B_mask = delaunay_A.find_simplex(pos_B) >= 0
+        from scipy.spatial import ConvexHull, Delaunay, KDTree
+        # Compute hull on surface atoms of A if available
+        if hasattr(self, 'surfaceAtoms') and self.surfaceAtoms is not None:
+            pos_A_hull = pos_A[self.surfaceAtoms]
+        else:
+            pos_A_hull = pos_A
+        hull_A = ConvexHull(pos_A_hull)
+        delaunay_A = Delaunay(pos_A_hull[hull_A.vertices])
+        # Atoms of B strictly inside hull of A
+        inside_hull = delaunay_A.find_simplex(pos_B) >= 0
+        # Also keep atoms of B within cutoff of surface of A
+        tree_surf_A = KDTree(pos_A_hull)
+        dists_to_surf, _ = tree_surf_A.query(pos_B)
+        near_surface = dists_to_surf < cutoff
+        keep_B_mask = inside_hull | near_surface
+
     else:  # mode == 'atoms'
         from scipy.spatial import KDTree
         tree_A = KDTree(pos_A)
         dists_B, _ = tree_A.query(pos_B)
         keep_B_mask = dists_B < cutoff
-
+        
     n_B_kept = int(np.count_nonzero(keep_B_mask))
 
     if n_B_kept == 0:

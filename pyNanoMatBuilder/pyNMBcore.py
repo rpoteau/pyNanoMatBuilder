@@ -451,7 +451,7 @@ class pyNMBcore:
                             noOutput=noOutput)
 
     def cut_by(self, NP_B, cogB=None, rotB=None, mode='hull',
-              threshold=1.0, skipSymmetryAnalyzis=None,
+              threshold=0.8, skipSymmetryAnalyzis=None,
               thresholdCoreSurface=None, noOutput=None):
         """
         Remove from self.NP the atoms inside NP_B (hollow cavity).
@@ -481,7 +481,7 @@ class pyNMBcore:
                      noOutput=noOutput)
         
     def union_with(self, NP_B, cogB=None, rotB=None, mode='hull',
-              threshold=1.0, skipSymmetryAnalyzis=None,
+              threshold=0.8, skipSymmetryAnalyzis=None,
               thresholdCoreSurface=None, noOutput=None):
         """
         Add NP_B to self.NP, removing overlapping atoms.
@@ -511,7 +511,7 @@ class pyNMBcore:
                      noOutput=noOutput)
 
     def intersect_with(self, NP_B, cogB=None, rotB=None,mode='hull',
-              threshold=1.0, skipSymmetryAnalyzis=None,
+              threshold=0.8, skipSymmetryAnalyzis=None,
               thresholdCoreSurface=None, noOutput=None):
         """
         Keep in self.NP only the atoms inside NP_B.
@@ -540,7 +540,7 @@ class pyNMBcore:
                      noOutput=noOutput)
 
     def embed_in(self, NP_B, cogB=None, rotB=None, mode='hull',
-              threshold=1.0, skipSymmetryAnalyzis=None,
+              threshold=0.8, skipSymmetryAnalyzis=None,
               thresholdCoreSurface=None, noOutput=None):
         """
         Add to self.NP the part of NP_B that overlaps with self.NP.
@@ -567,7 +567,12 @@ class pyNMBcore:
                      skipSymmetryAnalyzis=skipSymmetryAnalyzis,
                      thresholdCoreSurface=thresholdCoreSurface,
                      noOutput=noOutput)
-            
+
+    def copy(self):
+        "Create and return a deep copy of any pyNanoMatBuilder system"
+        from .utils.core import clone
+        return clone(self)
+
 ######################################### load external file
     @classmethod
     def from_file(cls, file_path, **kwargs):

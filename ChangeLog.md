@@ -5,6 +5,32 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
+## [0.12.1] - 2025-05-13 "csg version beta bis"
+
+### Added
+
+- **`pyNMBcore.py`**: Added the `copy()` interface calling the corresponding `clone()` function in `utils.core.py`
+
+### Fixed
+
+- **`clone()` function in `utils.core.py`** falls back to shallow copy
+  for ASE/pymatgen objects (`cif`, `ucSG`, `sc`) that contain internal
+  circular references or recursive `BravaisLattice.__getattr__` calls which
+  would cause a `RecursionError`
+- **`utils.csg.py`**
+    - All four CSG functions (`cut_by`, `union_with`, `intersect_with`, `embed_in`)
+      now use `self.surfaceAtoms` (when available) instead of all atoms to compute
+      the convex hull of B — significantly faster for large NPs since only surface
+      atoms are needed to define the hull.
+    - In `mode='hull'`, threshold is now also applied to atoms near the hull
+      surface (not only strictly inside), avoiding residual overlapping atoms
+      at the interface between A and B. The cutoff is `threshold * Rnn_A`,
+      computed from `self.Rnn` or estimated from nearest-neighbor distances.
+    - `cut_by`: added automatic removal of isolated atoms (coordination number = 0)
+      after the cut operation, using `peel_by_coordination(threshold_peeling=1,
+      Rmax=1.2 * Rnn_A)`. A warning is printed if `noOutput=False` and isolated
+      atoms were found and removed.
+
 ## [0.12.0] - 2025-05-13 "csg version beta"
 
 ### Added
@@ -128,7 +154,7 @@ produced by `applySlicing`.
 
 ### Removed
 
-**hollow** routines in `crystalNPs.py` and `platonicNPs.py`. Will be replaced with the CSG tools
+**hollow** routines in `crystalNPs.py` and `platonicNPs.py`. Are from now on replaced with the CSG tools
 
 ## [0.11.5] - 2025-05-04 "Polydispersity II"
 

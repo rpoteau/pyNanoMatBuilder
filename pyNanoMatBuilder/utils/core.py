@@ -517,22 +517,48 @@ def rgb2hex(c, frac=True):
         b = c[2]
     return f"[x{r:02X}{g:02X}{b:02X}]"
 
+# def clone(system):
+#     """
+#     Create and return a deep copy of any pyNanoMatBuilder system.
+    
+#     This ensures that all internal arrays, ASE atoms objects, 
+#     and Pymatgen structures are fully independent from the original.
+    
+#     Args:
+#         system: A pyNanoMatBuilder object (e.g., Crystal, Icosahedron).
+        
+#     Returns:
+#         A completely independent clone of the input system.
+#     """
+#     import copy
+#     return copy.deepcopy(system)
 def clone(system):
     """
     Create and return a deep copy of any pyNanoMatBuilder system.
-    
-    This ensures that all internal arrays, ASE atoms objects, 
-    and Pymatgen structures are fully independent from the original.
-    
-    Args:
-        system: A pyNanoMatBuilder object (e.g., Crystal, Icosahedron).
-        
-    Returns:
-        A completely independent clone of the input system.
     """
     import copy
-    return copy.deepcopy(system)
-
+    
+    # Attributes that cannot be deepcopied due to ASE internal recursion
+    # (BravaisLattice.__getattr__ infinite recursion)
+    skip_attrs = {'cif', 'ucSG', 'sc'}
+    
+    # Create a new empty instance of the same class
+    new_obj = object.__new__(system.__class__)
+    
+    # Deep copy all attributes except problematic ones
+    for k, v in system.__dict__.items():
+        if k in skip_attrs:
+            # Shallow copy for problematic ASE objects
+            setattr(new_obj, k, v)
+        else:
+            try:
+                setattr(new_obj, k, copy.deepcopy(v))
+            except Exception:
+                # Fallback to shallow copy if deepcopy fails
+                setattr(new_obj, k, v)
+    
+    return new_obj
+    
 def deleteElementsOfAList(t,
                           list2Delete: bool):
     """
