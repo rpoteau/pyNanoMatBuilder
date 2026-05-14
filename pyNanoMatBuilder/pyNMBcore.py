@@ -455,7 +455,7 @@ class pyNMBcore:
               thresholdCoreSurface=None, noOutput=None):
         """
         Remove from self.NP the atoms inside NP_B (hollow cavity).
-        See utils.csg.minus for full documentation.
+        See utils.csg.cut_by for full documentation.
     
         Args:
             NP_B: pyNMBcore object defining the cavity shape.
@@ -475,17 +475,17 @@ class pyNMBcore:
         if thresholdCoreSurface is None:
             thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 1.0)
         return cut_by(self, NP_B, cogB=cogB, rotB=rotB, mode=mode,
-                     threshold=threshold,
-                     skipSymmetryAnalyzis=skipSymmetryAnalyzis,
-                     thresholdCoreSurface=thresholdCoreSurface,
-                     noOutput=noOutput)
+                      threshold=threshold,
+                      skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                      thresholdCoreSurface=thresholdCoreSurface,
+                      noOutput=noOutput)
         
     def union_with(self, NP_B, cogB=None, rotB=None, mode='hull',
               threshold=0.8, skipSymmetryAnalyzis=None,
               thresholdCoreSurface=None, noOutput=None):
         """
         Add NP_B to self.NP, removing overlapping atoms.
-        See utils.csg.plus for full documentation.
+        See utils.csg.union_with for full documentation.
     
         Args:
             NP_B: pyNMBcore object to add.
@@ -505,17 +505,17 @@ class pyNMBcore:
         if thresholdCoreSurface is None:
             thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 1.0)
         return union_with(self, NP_B, cogB=cogB, rotB=rotB, mode=mode,
-                     threshold=threshold,
-                     skipSymmetryAnalyzis=skipSymmetryAnalyzis,
-                     thresholdCoreSurface=thresholdCoreSurface,
-                     noOutput=noOutput)
+                          threshold=threshold,
+                          skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                          thresholdCoreSurface=thresholdCoreSurface,
+                          noOutput=noOutput)
 
     def intersect_with(self, NP_B, cogB=None, rotB=None,mode='hull',
               threshold=0.8, skipSymmetryAnalyzis=None,
               thresholdCoreSurface=None, noOutput=None):
         """
         Keep in self.NP only the atoms inside NP_B.
-        See utils.csg.intersect for full documentation.
+        See utils.csg.intersect_with for full documentation.
     
         Args:
             NP_B: pyNMBcore object defining the intersection region.
@@ -534,17 +534,17 @@ class pyNMBcore:
         if thresholdCoreSurface is None:
             thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 1.0)
         return intersect_with(self, NP_B, cogB=cogB, rotB=rotB, mode=mode,
-                     threshold=threshold,
-                     skipSymmetryAnalyzis=skipSymmetryAnalyzis,
-                     thresholdCoreSurface=thresholdCoreSurface,
-                     noOutput=noOutput)
+                              threshold=threshold,
+                              skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                              thresholdCoreSurface=thresholdCoreSurface,
+                              noOutput=noOutput)
 
-    def embed_in(self, NP_B, cogB=None, rotB=None, mode='hull',
-              threshold=0.8, skipSymmetryAnalyzis=None,
-              thresholdCoreSurface=None, noOutput=None):
+    def flush_inlay_with(self, NP_B, cogB=None, rotB=None, mode='hull',
+                         threshold=0.8, skipSymmetryAnalyzis=None,
+                         thresholdCoreSurface=None, noOutput=None):
         """
         Add to self.NP the part of NP_B that overlaps with self.NP.
-        See utils.csg.union for full documentation.
+        See utils.csg.flush_inlay_with for full documentation.
     
         Args:
             NP_B: pyNMBcore object to partially merge.
@@ -554,7 +554,7 @@ class pyNMBcore:
             threshold (float): Distance threshold in units of Rnn.
             noOutput (bool): If True, suppresses output. Default is self.noOutput.
         """
-        from .utils.csg import embed_in
+        from .utils.csg import flush_inlay_with
         # --- Use defaults from self if not provided ---
         if noOutput is None:
             noOutput = self.noOutput
@@ -562,11 +562,11 @@ class pyNMBcore:
             skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
         if thresholdCoreSurface is None:
             thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 1.0)
-        return embed_in(self, NP_B, cogB=cogB, rotB=rotB, mode=mode,
-                     threshold=threshold,
-                     skipSymmetryAnalyzis=skipSymmetryAnalyzis,
-                     thresholdCoreSurface=thresholdCoreSurface,
-                     noOutput=noOutput)
+        return flush_inlay_with(self, NP_B, cogB=cogB, rotB=rotB, mode=mode,
+                                threshold=threshold,
+                                skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                                thresholdCoreSurface=thresholdCoreSurface,
+                                noOutput=noOutput)
 
     def copy(self):
         "Create and return a deep copy of any pyNanoMatBuilder system"

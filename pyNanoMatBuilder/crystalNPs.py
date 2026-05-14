@@ -19,6 +19,7 @@ from . import data
 from . import utils as pyNMBu
 from .utils import hl, fg, bg
 from .pyNMBcore import pyNMBcore
+from .utils.crystals import make_packed_supercell
 
 class Crystal(pyNMBcore):
     """
@@ -490,6 +491,9 @@ class Crystal(pyNMBcore):
         M1nm = [[ma1nm, 0, 0], [0, mb1nm, 0], [0, 0, mc1nm]]
         sc1nm = make_supercell(self.cif, M1nm)
 
+        print(f"ma1nm={ma1nm}, Ma={Ma}")
+        print(f"sc1nm cell: {sc1nm.get_cell().lengths()}")
+
         # Scale up supercell size (find nearest even numbers)
         Ma = Ma / ma1nm
         Mb = Mb / mb1nm
@@ -503,7 +507,9 @@ class Crystal(pyNMBcore):
             print(f"       = {Ma * ma1nm}x{Mb * mb1nm}x{Mc * mc1nm} supercell")
 
         M = [[Ma, 0, 0], [0, Mb, 0], [0, 0, Mc]]
-        sc = make_supercell(sc1nm, M)
+        sc = make_supercell(sc1nm, M)          # standard supercell
+        sc = make_packed_supercell(sc, tol=0.02)  # apply packed on final sc
+        print(f"sc final cell: {sc.get_cell().lengths()}")
         V = cellpar_to_cell(sc.cell.cellpar())
 
         # Center supercell at origin
@@ -512,9 +518,8 @@ class Crystal(pyNMBcore):
             print(f"Center of Mass: {[f'{c:.2f}' for c in com]} Å")
             print("Now translating the supercell to origin")
 
-        sc.translate(-V[0] / 2)
-        sc.translate(-V[1] / 2)
-        sc.translate(-V[2] / 2)
+        # Center supercell at origin using center of mass
+        sc.translate(-sc.get_center_of_mass())
 
         if not noOutput:
             print(f"Center of Mass after translation: {sc.get_center_of_mass()} Å")

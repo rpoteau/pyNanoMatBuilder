@@ -5,7 +5,53 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
-## [0.12.1] - 2025-05-13 "csg version beta bis"
+## [0.12.2] - 2025-05-13 "csg version beta III. Intermediate version that must be checked"
+
+### Added
+
+- **new `make_packed_supercell(sc, tol=0.02)` function in `utils/crystals.py`**: 
+  adds missing atoms on
+  faces, edges, and corners of an already-built supercell, equivalent to
+  JMol's PACKED mode. Atoms whose fractional coordinates are within `tol`
+  of 0 or 1 on any axis are duplicated on the opposite face, guaranteeing
+  complete outer atomic shells for any crystal system (fcc, bcc, hcp,
+  monoclinic, etc.). The tolerance `tol` (default 0.02, same as JMol)
+  controls the fractional coordinate threshold for face detection.
+  Unlike the previous `ase.build.cut(extend=...)` approach, this function
+  operates on the **final supercell** rather than the intermediate one,
+  ensuring that the packed atoms are correctly placed on the outer faces
+  of the full supercell.
+
+### Changed
+
+- in `utils.csg.pyt`, **`embed_in()` renamed as `flush_inlay_with()`**
+
+- **`cube.coords()` in `platonicNPs.py`**: 
+  Replaced `ase_cut(sc, extend=1.05)` with `make_packed_supercell(sc,
+  tol=0.02)` to complete the outer atomic shells of the cubic supercell
+  before centering. This is more robust and consistent with the JMol PACKED
+  mode, and avoids the `ase.build.cut` dependency.
+
+- **`Crystal.makeSuperCell()` in `crystalNPs.py`**:
+    - Replaced the three successive `sc.translate(-V[i]/2)` calls with a
+      single `sc.translate(-sc.get_center_of_mass())` to correctly center the
+      supercell on its atomic center of mass, fixing the asymmetry observed
+      in sphere and ellipsoid NPs (previously the center of mass was offset
+      by ~Rnn/2 in each direction, breaking Oh symmetry).
+    - Added `make_packed_supercell(sc, tol=0.02)` call on the final supercell
+      (after the second `make_supercell`) to ensure complete outer atomic
+  shells before carving any shape (sphere, ellipsoid, wire, cylinder,
+  Wulff). Previously `make_supercell` alone could leave incomplete layers
+  on the supercell faces, causing asymmetric NPs (Td instead of Oh for
+  spheres above ~7 nm).
+
+> ⚠️ **TODO — requires verification**: Wulff construction NPs must be
+> checked after this change to ensure that the new supercell centering
+> and packed mode do not affect the Wulff truncation planes and the
+> resulting shapes. Run the full Wulff test suite and compare with
+> previous results before releasing [0.12.3].
+
+## [0.12.1] - 2025-05-13 "csg version beta II"
 
 ### Added
 

@@ -3,7 +3,7 @@ import os
 import sys
 import numpy as np
 import ase
-from ase.build import bulk, make_supercell, cut
+from ase.build import bulk, make_supercell
 from ase.visualize import view
 from ase.cluster.cubic import FaceCenteredCubic
 
@@ -12,6 +12,7 @@ from . import visualID as vID
 from . import utils as pyNMBu
 from .utils import hl, fg, bg
 from .pyNMBcore import pyNMBcore
+from .utils.crystals import make_packed_supercell
 
 ###############################################################################
 class PlatonicNP(pyNMBcore):
@@ -2033,7 +2034,7 @@ class cube(PlatonicNP):
         # Adding the last layers
         if not noOutput:
             print("... and adding the upper layers")
-        sc = cut(sc, extend=1.05)
+        sc = make_packed_supercell(sc, tol=0.02)
         natoms = len(sc.positions)
         self.nAtoms = natoms
         self.cog = pyNMBu.centerOfGravity(sc.get_positions())

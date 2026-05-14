@@ -819,7 +819,7 @@ def intersect_with(self,
         n_removed = n_total - n_to_keep
         print(f"  {n_removed} atoms removed, {self.nAtoms} remaining.")
 
-def embed_in(self,
+def flush_inlay_with(self,
           NP_B,
           cogB: list = None,
           rotB=None,
@@ -869,7 +869,7 @@ def embed_in(self,
         AuCube.union(PtOh, cogB=[0, 0, 0.95], mode='hull')
     """
     if not noOutput:
-        centertxt(f"CSG union (mode={mode})", bgc="#cbcbcb", size="12",
+        centertxt(f"CSG flush inlay (mode={mode})", bgc="#cbcbcb", size="12",
                   fgc="b", weight="bold")
 
     if mode not in ('hull', 'atoms'):
@@ -977,4 +977,4 @@ def embed_in(self,
     )
 
     if not noOutput:
-        print(f"  {self.nAtoms} total atoms after union.")
+        print(f"  {self.nAtoms} total atoms after inlay.")
