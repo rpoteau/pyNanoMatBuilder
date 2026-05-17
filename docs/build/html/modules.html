@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.12.1 documentation</title>
+  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.12.3 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="canonical" href="https://pynanomatbuilder.readthedocs.io/modules.html" />
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=c5b435e8"></script>
+      <script src="_static/documentation_options.js?v=56343b9b"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -1119,6 +1119,15 @@ inscribed/circumscribed sphere diameters, etc.).</p></li>
 differentiation (distance threshold for retaining atoms).</p></li>
 <li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – If False, performs an atomic
 structure analysis using pymatgen.</p></li>
+<li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – <p>If True, skips the automatic computation of
+external facet areas and relative energies in propPostMake.
+Useful for shapes without flat facets (spheres, ellipsoids) or
+for large NPs where the computation is slow. Default is False.
+The analysis can always be run manually afterwards:</p>
+<blockquote>
+<div><p>NP.external_facets_info(mode=’auto’, noOutput=False)</p>
+</div></blockquote>
+</p></li>
 <li><p><strong>jmolCrystalShape</strong> (<em>bool</em>) – If True, generates a JMOL script
 for visualization.</p></li>
 <li><p><strong>noOutput</strong> (<em>bool</em>) – If False, prints details about the NP structure.</p></li>
@@ -2954,6 +2963,15 @@ inscribed/circumscribed sphere diameters, etc.).</p></li>
 differentiation (distance threshold for retaining atoms).</p></li>
 <li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – If False, performs an atomic
 structure analysis using pymatgen.</p></li>
+<li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – <p>If True, skips the automatic computation of
+external facet areas and relative energies in propPostMake.
+Useful for shapes without flat facets (spheres, ellipsoids) or
+for large NPs where the computation is slow. Default is False.
+The analysis can always be run manually afterwards:</p>
+<blockquote>
+<div><p>NP.external_facets_info(mode=’auto’, noOutput=False)</p>
+</div></blockquote>
+</p></li>
 <li><p><strong>jmolCrystalShape</strong> (<em>bool</em>) – If True, generates a JMOL script
 for visualization.</p></li>
 <li><p><strong>noOutput</strong> (<em>bool</em>) – If False, prints details about the NP structure.</p></li>
@@ -3977,6 +3995,15 @@ inscribed/circumscribed sphere diameters, etc.).</p></li>
 differentiation (distance threshold for retaining atoms).</p></li>
 <li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – If False, performs an atomic
 structure analysis using pymatgen.</p></li>
+<li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – <p>If True, skips the automatic computation of
+external facet areas and relative energies in propPostMake.
+Useful for shapes without flat facets (spheres, ellipsoids) or
+for large NPs where the computation is slow. Default is False.
+The analysis can always be run manually afterwards:</p>
+<blockquote>
+<div><p>NP.external_facets_info(mode=’auto’, noOutput=False)</p>
+</div></blockquote>
+</p></li>
 <li><p><strong>jmolCrystalShape</strong> (<em>bool</em>) – If True, generates a JMOL script
 for visualization.</p></li>
 <li><p><strong>noOutput</strong> (<em>bool</em>) – If False, prints details about the NP structure.</p></li>
@@ -4079,6 +4106,15 @@ inscribed/circumscribed sphere diameters, etc.).</p></li>
 differentiation (distance threshold for retaining atoms).</p></li>
 <li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – If False, performs an atomic
 structure analysis using pymatgen.</p></li>
+<li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – <p>If True, skips the automatic computation of
+external facet areas and relative energies in propPostMake.
+Useful for shapes without flat facets (spheres, ellipsoids) or
+for large NPs where the computation is slow. Default is False.
+The analysis can always be run manually afterwards:</p>
+<blockquote>
+<div><p>NP.external_facets_info(mode=’auto’, noOutput=False)</p>
+</div></blockquote>
+</p></li>
 <li><p><strong>jmolCrystalShape</strong> (<em>bool</em>) – If True, generates a JMOL script
 for visualization.</p></li>
 <li><p><strong>noOutput</strong> (<em>bool</em>) – If False, prints details about the NP structure.</p></li>
@@ -4704,6 +4740,15 @@ inscribed/circumscribed sphere diameters, etc.).</p></li>
 differentiation (distance threshold for retaining atoms).</p></li>
 <li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – If False, performs an atomic
 structure analysis using pymatgen.</p></li>
+<li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – <p>If True, skips the automatic computation of
+external facet areas and relative energies in propPostMake.
+Useful for shapes without flat facets (spheres, ellipsoids) or
+for large NPs where the computation is slow. Default is False.
+The analysis can always be run manually afterwards:</p>
+<blockquote>
+<div><p>NP.external_facets_info(mode=’auto’, noOutput=False)</p>
+</div></blockquote>
+</p></li>
 <li><p><strong>jmolCrystalShape</strong> (<em>bool</em>) – If True, generates a JMOL script
 for visualization.</p></li>
 <li><p><strong>noOutput</strong> (<em>bool</em>) – If False, prints details about the NP structure.</p></li>
@@ -8444,17 +8489,19 @@ and assigns them to attributes within the <cite>system</cite> instance.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.io.write">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.io.</span></span><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wa</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'w'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.io.write" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.io.</span></span><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wa</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'w'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.io.write" title="Link to this definition"></a></dt>
 <dd><p>Unified write function for pyNanoMatBuilder.</p>
-<p>This function serves as a central hub for exporting data. It handles directory
-creation automatically and routes the data to the appropriate writer based
-on the file extension.</p>
+<p>This function serves as a central hub for exporting data. It handles
+directory creation automatically and routes the data to the appropriate
+writer based on the file extension.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>filename</strong> (<em>str</em>) – Path to the output file (e.g., ‘coords/np.xyz’).</p></li>
-<li><p><strong>atoms</strong> (<em>ase.Atoms</em><em> or </em><em>str</em>) – The atomic structure to save, or a string
-containing script content for .script/.spt files.</p></li>
+<li><p><strong>data</strong> (<em>ase.Atoms</em><em> or </em><em>str</em>) – The data to save. Either an ASE Atoms
+object for atomic structures (.xyz, .cif, .pdb, etc.), or a
+string containing script content for Jmol files (.script, .spt).
+If None or empty, the file is not written and a warning is printed.</p></li>
 <li><p><strong>wa</strong> (<em>str</em><em>, </em><em>optional</em>) – Write mode. ‘w’ for overwrite (default) or ‘a’
 for append (useful for multi-frame trajectories).</p></li>
 <li><p><strong>**kwargs</strong> – Additional arguments passed to the underlying ASE write
@@ -8469,6 +8516,8 @@ function (e.g., ‘format’).</p></li>
 <li><p>Uses internal ‘writexyz’ for .xyz files to preserve custom headers.</p></li>
 <li><p>Uses ASE for crystallography formats (.cif, .res, .pdb, etc.).</p></li>
 <li><p>Handles raw text writing for Jmol scripts (.script, .spt).</p></li>
+<li><p>If data is None or an empty string, a warning is printed and the
+file is not written (no exception raised).</p></li>
 </ul>
 </div>
 </dd></dl>
@@ -8999,7 +9048,7 @@ facet. 0.0 if absent from the reduced hull.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.propPostMake">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">propPostMake</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_optimized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.propPostMake" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">propPostMake</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_optimized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.propPostMake" title="Link to this definition"></a></dt>
 <dd><p>Compute and store various post-construction
 properties of the nanoparticle.</p>
 <p>This function calculates moments of inertia
@@ -9011,6 +9060,7 @@ core and surface atoms.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>skipChiralityCalculation</strong> (<em>bool</em>) – If True, skips the calculation of the opd index</p></li>
 <li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – If True, skips symmetry analysis.</p></li>
+<li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – if True skips external facet info calculation</p></li>
 <li><p><strong>thresholdCoreSurface</strong> (<em>float</em>) – Threshold
 to distinguish core and surface atoms.</p></li>
 <li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses

@@ -5,6 +5,113 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
+## [0.12.3] - "various bug fixes and associated changes"
+
+### Added
+
+- **new `skipFacetInfo` argument in `pyNMBcore.py`**: 
+    Added `skipFacetInfo` (bool, default `False`) to `pyNMBcore.__init__`:
+    if `True`, skips the automatic computation of external facet areas and
+    relative energies during `propPostMake`. Useful for shapes without flat
+    facets (spheres, ellipsoids) or for large NPs where `reduceHullFacets`
+    is slow (hundreds of hull simplices). The analysis can always be run
+    manually afterwards:
+    ```python
+    NP.external_facets_info(mode='auto', noOutput=False)
+      ```
+- **new `system.ucMatrix` attribute in `returnUnitcellData()` of `utils/io.py`**: 
+    Added `system.ucMatrix = system.cif.get_cell()`: stores the 3x3 unit cell
+    matrix as a named attribute, consistent with the other `uc*` attributes.
+    Used by `external_facets_info` for Cartesian → Miller index conversion.
+  
+### Changed
+
+- **`propPostMake()` in `utils/prop.py`**:
+  **`external_facets_info()`** is now only called automatically if:
+  1. `self.skipFacetInfo` is `False` (default), and
+  2. at least one truncation plane attribute is available
+     (`trPlanes_Wulff`, `trPlanes`, `trPlanes_opt`, or `trPlanes_Slices`).
+  This avoids unnecessary and slow hull reduction on spheres, ellipsoids,
+  and other shapes without flat facets.
+- all calls to `propPostMake()` now include the `skipFacetInfo` argument
+- all the **Generation of simple structures for the documentation** section of `pyNMB-examples.ipynb` has been moved to a new `pyNMB-GraphAbs.ipynb` notebook
+- **hcp wire, aka hcpw pre-defined Wulff shape was inconsistent with a Wulff construction**
+    - **`data/WulffShapes`**: removed `hcpw` (hcp nanowire along c direction) from
+      the predefined Wulff shapes. A nanowire is not a Wulff construction — it is
+      an infinite periodic structure along one axis and cannot be described by a
+      closed convex hull. A dedicated `hcpRod` class will be implemented in a
+      future release.
+    - **`propPostMake()` in `utils/prop.py`**: `defCrystalShapeForJMol` and
+      `external_facets_info` are now skipped when `self.pbc=True`. A periodic
+      structure (wire, slab) has no closed convex hull and `HalfspaceIntersection`
+      would fail with a `QhullError`. This also avoids the need for a `pbc` column
+      in the `WulffShapes` data file.
+    - **`pyNMB-examples.ipynb`**: replaced the `hcpw` example with `hcpsph2`
+      (hcp spherical Wulff shape) in the predefined Wulff shapes section.
+- **`write()` in `utils/io.py`**:
+  - Renamed the `atoms` argument to `data` — more accurate since the function
+    accepts both ASE Atoms objects and strings (Jmol scripts).
+  - Updated docstring accordingly.
+  - Added safety checks for all three branches:
+    - `.xyz`: warns and returns early if `data` is `None`, not an ASE Atoms
+      object, or empty (0 atoms).
+    - `.script`/`.spt`: warns and returns early if `data` is `None`, not a
+      string, or an empty string. The warning message hints at the likely
+      cause (`jmolCrystalShape` disabled or `pbc=True`).
+    - other formats: warns and returns early if `data` is `None`.
+  - No exception is raised in any of these cases — the function fails
+    gracefully with a printed **red** warning
+      message (`fg.RED`).
+
+### Fixed
+
+- several calls to `propPostMake()` did not integrate the **`skipChiralityCalculation` argument**
+- **`get_ellipsoid_analysis()` in `utils/prop.py`**
+    Fixed incorrect ellipsoid dimensions for flat/oblate shapes (e.g. ellipsoids
+    with a large aspect ratio like 2nm x 8nm x 8nm). Previously, all three
+    semi-axes were derived from a single global scale factor
+    (`scale = max_dist / sqrt(max_eigenvalue)`), which severely underestimated
+    the minor axis (small dimension) for highly anisotropic shapes.
+    - Fix: each semi-axis is now scaled independently by projecting the surface
+    atom positions onto the corresponding PCA eigenvector and taking the maximum
+    absolute projection:
+    ```python
+      a = np.max(np.abs(pos_c @ evecs[:, 0]))
+      b = np.max(np.abs(pos_c @ evecs[:, 1]))
+      c = np.max(np.abs(pos_c @ evecs[:, 2]))
+    ```
+    This correctly recovers the true extent along each principal axis regardless
+    of the aspect ratio.
+- **`external_facets_info()` in `utils/prop.py`**: 
+    Fixed incorrect Miller index labeling for non-cubic crystal systems
+    (hcp, monoclinic, trigonal, etc.). Previously, Cartesian plane normals
+    were passed directly to `round_to_Miller`, which only works correctly
+    for cubic systems where the Cartesian and crystallographic bases coincide.
+    For non-cubic systems, the normals are now first projected onto the
+    crystallographic basis via `p @ self.ucMatrix.T` before conversion,
+    where `self.ucMatrix` is the 3x3 unit cell matrix. This correctly recovers
+    e.g. `(1 0 0)` for the `[√3/2, 1/2, 0]` Cartesian normal of the Ru hcp
+    `a`-face. Falls back to direct Cartesian conversion for non-Crystal objects
+    that do not have `ucMatrix`.
+- **`external_facets_info()` in `utils/prop.py`**, Wulff mode with symmetry:
+    Fixed `IndexError` when `symWulff=True` and `surfacesWulff` contains fewer
+    planes than `trPlanes_Wulff` (which is expanded by symmetry). Previously,
+    the display loop indexed `self.surfacesWulff[i]` and `self.eSurfacesWulff[i]`
+    directly with the plane index `i`, causing an out-of-range error when the
+    symmetry-expanded `trPlanes_Wulff` has more planes than the user-defined
+    `surfacesWulff`. Fix: the labels and energies are now expanded to match
+    `trPlanes_Wulff` by replicating each entry for all its symmetry-equivalent
+    planes via `get_equivalent_miller_indices` (imported from `utils/symmetry.py`).
+- **`external_facets_info()` in `utils/prop.py`** — `UnboundLocalError` fix:
+  `expanded_labels` was computed at the end of the function but also referenced
+  in the "Warn about absent facets" block which runs earlier.
+  Fixed by moving the construction of `expanded_labels`, `expanded_energies`
+  and `expanded_sizes` before the warning block, so they are always available.
+
+### Deleted
+
+- deprecated hollow sphere example in **`pyNMB-examples.ipynb`**
+
 ## [0.12.2] - 2025-05-13 "csg version beta III. Intermediate version that must be checked"
 
 ### Added

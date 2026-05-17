@@ -106,7 +106,8 @@ class fcctpt(pyNMBcore):
             if self.aseView:
                 view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis,
+                                  self.skipFacetInfo, self.thresholdCoreSurface, noOutput)
                 if self.aseView:
                     view(self.NPcs)
 

@@ -118,7 +118,8 @@ class regfccOh(PlatonicNP):
             if self.aseView:
                 view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis,
+                                  self.skipFacetInfo, self.thresholdCoreSurface, noOutput)
                 if self.aseView:
                     view(self.NPcs)
 
@@ -560,7 +561,8 @@ class regIco(PlatonicNP):
             if self.aseView:
                 view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis,
+                                  self.skipFacetInfo, self.thresholdCoreSurface, noOutput)
                 if self.aseView:
                     view(self.NPcs)
 
@@ -1018,7 +1020,8 @@ class regfccTd(PlatonicNP):
             if self.aseView:
                 view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput=noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis,
+                                  self.skipFacetInfo, self.thresholdCoreSurface, noOutput=noOutput)
                 if self.aseView:
                     view(self.NPcs)
           
@@ -1436,7 +1439,8 @@ class regDD(PlatonicNP):
             if self.aseView:
                 view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput=noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis,
+                                  self.skipFacetInfo, self.thresholdCoreSurface, noOutput=noOutput)
                 if self.aseView:
                     view(self.NPcs)
           
@@ -1821,7 +1825,8 @@ class cube(PlatonicNP):
             if self.aseView:
                 view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput=noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis,
+                                  self.skipFacetInfo, self.thresholdCoreSurface, noOutput=noOutput)
                 if self.aseView:
                     view(self.NPcs)
 

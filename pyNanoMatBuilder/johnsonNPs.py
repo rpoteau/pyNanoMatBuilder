@@ -142,6 +142,7 @@ class fcctbp(JohnsonNP):
                 self.propPostMake(
                     self.skipChiralityCalculation,
                     self.skipSymmetryAnalyzis,
+                    self.skipFacetInfo,
                     self.thresholdCoreSurface, noOutput)
                 if self.aseView:
                     view(self.NPcs)
@@ -443,6 +444,7 @@ class epbpyM(JohnsonNP):
                 self.propPostMake(
                     self.skipChiralityCalculation,
                     self.skipSymmetryAnalyzis,
+                    self.skipFacetInfo,
                     self.thresholdCoreSurface,
                     noOutput)
                 if self.aseView:
@@ -1023,6 +1025,7 @@ class eOhM(JohnsonNP):
                 self.propPostMake(
                     self.skipChiralityCalculation,
                     self.skipSymmetryAnalyzis,
+                    self.skipFacetInfo,
                     self.thresholdCoreSurface,
                     noOutput)
                 if self.aseView:

@@ -42,6 +42,7 @@ def returnUnitcellData(system):
     
     # ase analyzis
     system.ucUnitcell = system.cif.cell.cellpar()
+    system.ucMatrix = system.cif.get_cell()
     system.ucV = cellpar_to_cell(system.ucUnitcell)
     system.ucBL = system.cif.cell.get_bravais_lattice()
     # system.ucSG = get_spacegroup(system.cif, symprec=system.aseSymPrec) #deprecated
@@ -232,21 +233,23 @@ def ciflist(dbFolder="resources/cif_database"):
 
 ######################################## Functions that writes xyz, cif, jmol script files
 
-def write(filename: str, atoms, wa='w', **kwargs):
+def write(filename: str, data, wa='w', **kwargs):
     """
     Unified write function for pyNanoMatBuilder.
 
-    This function serves as a central hub for exporting data. It handles directory 
-    creation automatically and routes the data to the appropriate writer based 
-    on the file extension.
+    This function serves as a central hub for exporting data. It handles
+    directory creation automatically and routes the data to the appropriate
+    writer based on the file extension.
 
     Args:
         filename (str): Path to the output file (e.g., 'coords/np.xyz').
-        atoms (ase.Atoms or str): The atomic structure to save, or a string 
-            containing script content for .script/.spt files.
-        wa (str, optional): Write mode. 'w' for overwrite (default) or 'a' 
+        data (ase.Atoms or str): The data to save. Either an ASE Atoms
+            object for atomic structures (.xyz, .cif, .pdb, etc.), or a
+            string containing script content for Jmol files (.script, .spt).
+            If None or empty, the file is not written and a warning is printed.
+        wa (str, optional): Write mode. 'w' for overwrite (default) or 'a'
             for append (useful for multi-frame trajectories).
-        **kwargs: Additional arguments passed to the underlying ASE write 
+        **kwargs: Additional arguments passed to the underlying ASE write
             function (e.g., 'format').
 
     Note:
@@ -254,27 +257,56 @@ def write(filename: str, atoms, wa='w', **kwargs):
         - Uses internal 'writexyz' for .xyz files to preserve custom headers.
         - Uses ASE for crystallography formats (.cif, .res, .pdb, etc.).
         - Handles raw text writing for Jmol scripts (.script, .spt).
+        - If data is None or an empty string, a warning is printed and the
+          file is not written (no exception raised).
     """
     file_path = Path(filename)
     file_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     extension = file_path.suffix.lower()
 
     if extension == ".xyz":
-        # Call your custom function for the specific pyNMB header
-        writexyz(filename, atoms, wa=wa)
-    
+        # Use custom writer to preserve the pyNMB-specific header
+        if data is None:
+            print(f"{fg.RED}Warning: atomic structure is None — "
+                  f"'{filename}' not written.{fg.OFF}")
+            return
+        if not hasattr(data, 'get_positions'):
+            print(f"{fg.RED}Warning: expected an ASE Atoms object for "
+                  f"'{filename}', got {type(data).__name__} — not written.{fg.OFF}")
+            return
+        if len(data) == 0:
+            print(f"{fg.RED}Warning: atomic structure is empty (0 atoms) — "
+                  f"'{filename}' not written.{fg.OFF}")
+            return
+        writexyz(filename, data, wa=wa)
+
     elif extension in [".script", ".spt"]:
-        # Handle Jmol scripts (which are strings, not Atoms objects)
+        # Jmol script files — data must be a non-empty string
+        if data is None:
+            print(f"{fg.RED}Warning: Jmol script is None — "
+                  f"'{filename}' not written. "
+                  f"(jmolCrystalShape may be disabled or pbc=True){fg.OFF}")
+            return
+        if not isinstance(data, str):
+            print(f"{fg.RED}Warning: expected a string for '{filename}', "
+                  f"got {type(data).__name__} — not written.{fg.OFF}")
+            return
+        if data.strip() == "":
+            print(f"{fg.RED}Warning: Jmol script is empty — "
+                  f"'{filename}' not written.{fg.OFF}")
+            return
         with open(file_path, wa) as f:
-            f.write(atoms)
-            
+            f.write(data)
+
     else:
-        # For everything else (.cif, .pdb, etc.), use the power of ASE
-        # Translate 'wa' for ASE
-        # If wa is 'a', then is_append is True.
+        # For all other formats (.cif, .pdb, .res, etc.), delegate to ASE
+        if data is None:
+            print(f"{fg.RED}Warning: atomic structure is None — "
+                  f"'{filename}' not written.{fg.OFF}")
+            return
         is_append = (wa == 'a')
-        ase_io.write(filename, atoms, append=is_append, **kwargs)
+        ase_io.write(filename, data, append=is_append, **kwargs)
         
 def writexyz(filename: str,
              atoms: Atoms,

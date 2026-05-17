@@ -138,15 +138,23 @@ def defCrystalShapeForJMol(self,
 
     if useWulff:
         target_planes = self.trPlanes_Wulff
+        # print("wulff")
     elif self.is_optimized:
         target_planes = getattr(self, 'trPlanes_opt', None)
+        # print("is_optimized")
     else:
         target_planes = getattr(self, 'trPlanes', None)
+        # print("other")
+
     # if target_planes is not None:
     #     vertices, redFacets = reduceHullFacets(self, noOutput=noOutput, useWulff=useWulff)
 
+    # print(target_planes)
+
     if target_planes is not None:
-        vertices, redFacets = reduceHullFacets(self, noOutput=noOutput, useWulff=useWulff)
+        vertices, redFacets = reduceHullFacets(self, noOutput=noOutput, 
+                                               tolAngle=4.0 if self.is_optimized else 2.0,
+                                               useWulff=useWulff)
         if not noOutput:
             centertxt(
                 "generating the jmol command line to view the crystal shape",

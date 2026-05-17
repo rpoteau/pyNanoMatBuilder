@@ -206,7 +206,9 @@ def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1):
     self.is_optimized = True
     self.cog_opt = self.NP_opt.get_center_of_mass()
     
-    self.propPostMake(skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
+    self.propPostMake(skipChiralityCalculation=self.skipChiralityCalculation,
+                      skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
+                      skipFacetInfo=self.skipFacetInfo, 
                       thresholdCoreSurface=self.thresholdCoreSurface,
                       noOutput=False, is_optimized=True)
     

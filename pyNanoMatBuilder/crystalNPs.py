@@ -192,7 +192,8 @@ class Crystal(pyNMBcore):
                 view(self.sc)
                 view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis,
+                                 self.skipFacetInfo, self.thresholdCoreSurface, noOutput)
                 if self.aseView:
                     view(self.NPcs)
                     
@@ -490,9 +491,9 @@ class Crystal(pyNMBcore):
         # Generate initial supercell
         M1nm = [[ma1nm, 0, 0], [0, mb1nm, 0], [0, 0, mc1nm]]
         sc1nm = make_supercell(self.cif, M1nm)
-
-        print(f"ma1nm={ma1nm}, Ma={Ma}")
-        print(f"sc1nm cell: {sc1nm.get_cell().lengths()}")
+        if not noOutput: 
+            print(f"ma1nm={ma1nm}, Ma={Ma}")
+            print(f"sc1nm cell: {sc1nm.get_cell().lengths()}")
 
         # Scale up supercell size (find nearest even numbers)
         Ma = Ma / ma1nm
@@ -509,7 +510,7 @@ class Crystal(pyNMBcore):
         M = [[Ma, 0, 0], [0, Mb, 0], [0, 0, Mc]]
         sc = make_supercell(sc1nm, M)          # standard supercell
         sc = make_packed_supercell(sc, tol=0.02)  # apply packed on final sc
-        print(f"sc final cell: {sc.get_cell().lengths()}")
+        if not noOutput: print(f"sc final cell: {sc.get_cell().lengths()}")
         V = cellpar_to_cell(sc.cell.cellpar())
 
         # Center supercell at origin

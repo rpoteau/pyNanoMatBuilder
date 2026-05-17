@@ -36,7 +36,6 @@ class WulffShapes:
                   'rhcubo': 'rhombicuboctahedron',
                  'hcpsph1': 'hcp sphere-like 6-fold symmetry',
                  'hcpsph2': 'hcp sphere-like 6-fold symmetry',
-                    'hcpw': 'hcp nanowire along the c direction',
                  },
          'lattice system': {
                    'cube': 'cubic',
@@ -52,7 +51,6 @@ class WulffShapes:
                  'rhcubo': 'cubic',
                 'hcpsph1': 'hexagonal',
                 'hcpsph2': 'hexagonal',
-                   'hcpw': 'hexagonal',
                  },
         'Bravais lattice': {
                    'cube': 'bcc, fcc',
@@ -68,7 +66,6 @@ class WulffShapes:
                  'rhcubo': 'bcc',
                 'hcpsph1': 'hcp',
                 'hcpsph2': 'hcp',
-                   'hcpw': 'hcp',
                  },
                  'planes': {
                    'cube': [[1,0,0]],
@@ -84,7 +81,6 @@ class WulffShapes:
                  'rhcubo': [[1,1,0],[0,0,1],[1,1,1]],
                 'hcpsph1': [[0,0,1],[1,0,0],[1,0,1]],
                 'hcpsph2': [[0,0,1],[1,0,0],[1,0,1],[2,0,1],[1,1,1],[2,1,0]],
-                   'hcpw': [[1,0,0]],
                  },
          'apply symmetry': {
                    'cube': True,
@@ -100,7 +96,6 @@ class WulffShapes:
                  'rhcubo': True,
                 'hcpsph1': True,
                 'hcpsph2': True,
-                   'hcpw': True,
                  },
       'relative energies': {
                    'cube': [1.0],
@@ -116,7 +111,6 @@ class WulffShapes:
                  'rhcubo': [(1+np.sqrt(2))/2,(1+np.sqrt(2))/2,(np.sqrt((11+6*np.sqrt(2))/3))/2],
                 'hcpsph1': [34.6,39.9,40.9],
                 'hcpsph2': [2.76,3.07,3.15,3.51,3.39,3.41],
-                   'hcpw': [1.0],
                  },
         
            'MOI for size': {
@@ -133,7 +127,6 @@ class WulffShapes:
                      'rhcubo': 'sphere',
                     'hcpsph1': 'hcpsph',
                     'hcpsph2': 'hcpsph',
-                       'hcpw': 'wire',
                  },
                 'comment': {
                    'cube': 'cutting length from the cube''s vertex c = 0',
@@ -149,7 +142,6 @@ class WulffShapes:
                  'rhcubo': 'yet another truncated rhombic dodecahedron = truncated cuboctahedral rhombus, r4 = (1+sqr(2))/2, r3 = (sqr((11+6*sqr(2))/3))/2, 10.1039/c6dt00343e',
                 'hcpsph1': '10.1039/c8cp06171h',
                 'hcpsph2': '10.1126/science.1106435',
-                   'hcpw': None,
                  },
      })
     WSdf = pd.DataFrame(data)

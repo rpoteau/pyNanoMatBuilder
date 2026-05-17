@@ -136,6 +136,17 @@ def reduceHullFacets(self,
         
     if target_planes is None or target_cog is None:
         raise ValueError(f"Missing data for the {status}. Please check the building process or the optimization results.")
+
+    # --- Deduplicate and clean planes before HalfspaceIntersection ---
+    if not useWulff:
+        if not noOutput:
+            print(f"  Planes before deduplication: {len(target_planes)}")
+        # Round normals to remove near-duplicate planes from ConvexHull
+        planes_rounded = np.round(target_planes[:, :3], decimals=4)
+        _, unique_idx = np.unique(planes_rounded, axis=0, return_index=True)
+        target_planes = target_planes[np.sort(unique_idx)]
+        if not noOutput:
+            print(f"  Planes after deduplication: {len(target_planes)}")
         
     feasible_point = np.array(target_cog)
     hs = HalfspaceIntersection(target_planes, feasible_point)
@@ -1418,7 +1429,9 @@ def peel_by_coordination(self, threshold_peeling=6, Rmax=2.9, noOutput=False):
     # Sync Metadata and Clean Stale Data !!!
     self._flush_stale_data(shape_update="_peeled_CN")
     self.is_optimized = False
-    self.propPostMake(skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
+    self.propPostMake(skipChiralityCalculation=self.skipChiralityCalculation,
+                      skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
+                      skipFacetInfo=self.skipFacetInfo,
                       thresholdCoreSurface=self.thresholdCoreSurface,
                       noOutput=False, is_optimized=False)
     
@@ -1509,7 +1522,9 @@ def peel_by_shifted_ellipsoid(self, shift_dist=2.5, noOutput=False):
     # Sync Metadata and Clean Stale Data !!!
     self._flush_stale_data(shape_update="_peeled_ellipsoid")
     self.is_optimized = False
-    self.propPostMake(skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
+    self.propPostMake(skipChiralityCalculation=self.skipChiralityCalculation,
+                      skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
+                      skipFacetInfo=self.skipFacetInfo, 
                       thresholdCoreSurface=self.thresholdCoreSurface,
                       noOutput=False, is_optimized=False)
 
@@ -1964,6 +1979,8 @@ def applyTwist(self,
                   f"jMolCS and jMolCS_opt will not be available.{bg.OFF}")
             print(f"{bg.LIGHTGREENB}To visualize the helical envelope, use: "
                   f"script = NP.defHelixShapeForJMol(){bg.OFF}")
-    self.propPostMake(skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
+    self.propPostMake(skipChiralityCalculation=self.skipChiralityCalculation,
+                      skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
+                      skipFacetInfo = self.skipFacetInfo,
                       thresholdCoreSurface=self.thresholdCoreSurface,
                       noOutput=noOutput, is_optimized=False)

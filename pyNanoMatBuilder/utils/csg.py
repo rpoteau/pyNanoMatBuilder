@@ -306,9 +306,11 @@ def applySlicing(self,
     self._flush_stale_data(shape_update="_Slices")
     self.is_optimized     = False
     self.propPostMake(
-        skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
-        thresholdCoreSurface=self.thresholdCoreSurface,
-        noOutput=noOutput,
+        skipChiralityCalculation = self.skipChiralityCalculation,
+        skipSymmetryAnalyzis = self.skipSymmetryAnalyzis,
+        skipFacetInfo = self.skipFacetInfo, 
+        thresholdCoreSurface = self.thresholdCoreSurface,
+        noOutput = noOutput,
         is_optimized=False,
     )
 
@@ -511,7 +513,9 @@ def cut_by(self,
     self._flush_stale_data(shape_update="_hollow")
     self.is_optimized = False
     self.propPostMake(
-        skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
+        skipChiralityCalculation = self.skipChiralityCalculation,
+        skipSymmetryAnalyzis = self.skipSymmetryAnalyzis,
+        skipFacetInfo = self.skipFacetInfo, 
         thresholdCoreSurface=self.thresholdCoreSurface,
         noOutput=noOutput,
         is_optimized=False,
@@ -656,7 +660,9 @@ def union_with(self,
     self._flush_stale_data(shape_update="_plus")
     self.is_optimized = False
     self.propPostMake(
+        skipChiralityCalculation = self.skipChiralityCalculation,
         skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
+        skipFacetInfo = self.skipFacetInfo, 
         thresholdCoreSurface=self.thresholdCoreSurface,
         noOutput=noOutput,
         is_optimized=False,
@@ -809,7 +815,9 @@ def intersect_with(self,
     self._flush_stale_data(shape_update="_intersect")
     self.is_optimized = False
     self.propPostMake(
+        skipChiralityCalculation = self.skipChiralityCalculation,
         skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
+        skipFacetInfo = self.skipFacetInfo,
         thresholdCoreSurface=self.thresholdCoreSurface,
         noOutput=noOutput,
         is_optimized=False,
@@ -911,6 +919,7 @@ def flush_inlay_with(self,
             pos_A_hull = pos_A
         hull_A = ConvexHull(pos_A_hull)
         delaunay_A = Delaunay(pos_A_hull[hull_A.vertices])
+
         # Atoms of B strictly inside hull of A
         inside_hull = delaunay_A.find_simplex(pos_B) >= 0
         # Also keep atoms of B within cutoff of surface of A
@@ -970,10 +979,12 @@ def flush_inlay_with(self,
     self._flush_stale_data(shape_update="_union")
     self.is_optimized = False
     self.propPostMake(
-        skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
-        thresholdCoreSurface=self.thresholdCoreSurface,
-        noOutput=noOutput,
-        is_optimized=False,
+        skipChiralityCalculation = self.skipChiralityCalculation,
+        skipSymmetryAnalyzis = self.skipSymmetryAnalyzis,
+        thresholdCoreSurface = self.thresholdCoreSurface,
+        skipFacetInfo = self.skipFacetInfo, 
+        noOutput = noOutput,
+        is_optimized = False,
     )
 
     if not noOutput:

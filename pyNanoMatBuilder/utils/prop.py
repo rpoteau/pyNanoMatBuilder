@@ -710,7 +710,12 @@ def get_ellipsoid_analysis(self, noOutput=False):
         scale_factor = max_dist / np.sqrt(evals[0])
         
         # Calculate semi-axes a, b, c
-        a, b, c = scale_factor * np.sqrt(evals)
+        #Fix 20260517
+        # a, b, c = scale_factor * np.sqrt(evals)
+        # Scale each axis independently by projecting atoms onto each eigenvector
+        a = np.max(np.abs(pos_c @ evecs[:, 0]))
+        b = np.max(np.abs(pos_c @ evecs[:, 1]))
+        c = np.max(np.abs(pos_c @ evecs[:, 2]))        
         
         # 4. Physical Properties
         # Volume: (4/3) * pi * a * b * c
@@ -815,6 +820,9 @@ def external_facets_info(self, mode='auto', noOutput=False):
         elif getattr(self, 'is_optimized', False) and getattr(self, 'trPlanes_opt', None) is not None:
             target_planes = self.trPlanes_opt
             useWulff = False
+        elif getattr(self, 'trPlanes_Slices', None) is not None:
+            target_planes = self.trPlanes_Slices  # ← manquait !
+            useWulff = False
         else:
             target_planes = getattr(self, 'trPlanes', None)
             useWulff = False
@@ -829,6 +837,9 @@ def external_facets_info(self, mode='auto', noOutput=False):
         useWulff = False
     elif mode == 'crystal_opt':
         target_planes = getattr(self, 'trPlanes_opt', None)
+        useWulff = False
+    else:
+        target_planes = None
         useWulff = False
 
     if target_planes is None:
@@ -899,12 +910,36 @@ def external_facets_info(self, mode='auto', noOutput=False):
         assigned_facets.add(fi)
         assigned_planes.add(pi)
 
+    # --- Build expanded labels/energies BEFORE display ---
+    # (needed both for warnings and for display)
+    if useWulff:
+        has_energies = (hasattr(self, 'eSurfacesWulff') and
+                self.eSurfacesWulff is not None)
+        from .symmetry import get_equivalent_miller_indices
+        expanded_labels = []
+        expanded_energies = []
+        expanded_sizes = []
+        for j, p in enumerate(self.surfacesWulff):
+            if getattr(self, 'symWulff', False):
+                sym_p = get_equivalent_miller_indices(self.ucSG_number, p)
+                n_sym = len(sym_p)
+                expanded_labels.extend(sym_p)
+            else:
+                n_sym = 1
+                expanded_labels.append(p)
+            has_energies = (hasattr(self, 'eSurfacesWulff') and
+                            self.eSurfacesWulff is not None)
+            if has_energies:
+                expanded_energies.extend([self.eSurfacesWulff[j]] * n_sym)
+            else:
+                expanded_sizes.extend([self.sizesWulff[j]] * n_sym)
+    
     # --- Warn about absent facets ---
     absent_planes = [i for i in range(len(planes)) if i not in matched_planes]
     if absent_planes and not noOutput:
         for i in absent_planes:
             if useWulff:
-                p = self.surfacesWulff[i]
+                p = expanded_labels[i]
                 label = f"({p[0]:2d} {p[1]:2d} {p[2]:2d})"
             else:
                 nn = planes[i, :3]
@@ -915,30 +950,59 @@ def external_facets_info(self, mode='auto', noOutput=False):
     n_absent = len(absent_planes)
 
     # --- Sort by distance (descending) ---
-    sort_idx = np.argsort(distances)[::-1]
+    sort_idx = np.argsort(facet_areas_per_plane)[::-1]
 
     # --- Display ---
     if not noOutput:
-        mode_label = ('Wulff' if useWulff else
-                      'optimized crystal' if mode == 'crystal_opt' else 'crystal')
-        centertxt(f"Surface area and relative energies analysis — {mode_label}",
-                  bgc='#007a7a', size='14', weight='bold')
+        # --- Build mode label and attribute name for display ---
+        mode_label_map = {
+            'Wulff':       ('Wulff',             'trPlanes_Wulff'),
+            'Slices':      ('Slices',             'trPlanes_Slices'),
+            'crystal':     ('crystal',            'trPlanes'),
+            'crystal_opt': ('optimized crystal',  'trPlanes_opt'),
+        }
+
+        if mode == 'auto':
+            if useWulff:
+                mode_label, attr_name = 'Wulff', 'trPlanes_Wulff'
+            elif getattr(self, 'is_optimized', False) and \
+                 getattr(self, 'trPlanes_opt', None) is not None:
+                mode_label, attr_name = 'optimized crystal', 'trPlanes_opt'
+            elif getattr(self, 'trPlanes_Slices', None) is not None:
+                mode_label, attr_name = 'Slices', 'trPlanes_Slices'
+            else:
+                mode_label, attr_name = 'crystal', 'trPlanes'
+        else:
+            mode_label, attr_name = mode_label_map.get(
+                mode, (mode, 'unknown'))
+
+        centertxt(
+            f"Surface area and relative energies analysis "
+            f"— {mode_label} (Attribute: {attr_name})",
+            bgc='#007a7a', size='14', weight='bold'
+        )
 
         # Convert Cartesian normals to Miller indices for hull mode
         if not useWulff:
             from .core import round_to_Miller
             miller_indexes = []
-            for p in planes[:, :3]:
+            for p in planes[:, :3]: # Fixed 20260517
                 try:
-                    m, ok = round_to_Miller(p.reshape(1, 3), tol=0.15)
+                    if hasattr(self, 'ucMatrix') and self.ucMatrix is not None:
+                        p_miller = p @ self.ucMatrix.T
+                        nonzero = np.abs(p_miller) > 1e-6
+                        if nonzero.any():
+                            p_miller = p_miller / np.max(np.abs(p_miller[nonzero]))
+                    else:
+                        p_miller = p  # fallback for non-Crystal objects
+                    m, ok = round_to_Miller(p_miller.reshape(1, 3), tol=0.15)
                     miller_indexes.append(m[0] if ok else None)
                 except Exception:
                     miller_indexes.append(None)
 
         # Build header
         if useWulff:
-            has_energies = (hasattr(self, 'eSurfacesWulff') and
-                            self.eSurfacesWulff is not None)
+                    
             if has_energies:
                 header = (f"{'Plane (hkl)':<22} {'d / nm':>8} {'e_input':>9} "
                           f"{'e_rel':>10} {'Area (nm²)':>15}")
@@ -958,12 +1022,12 @@ def external_facets_info(self, mode='auto', noOutput=False):
                         if facet_areas_per_plane[i] > 0 else "  absent")
 
             if useWulff:
-                p = self.surfacesWulff[i]
+                p = expanded_labels[i]
                 label = f"({p[0]:2d} {p[1]:2d} {p[2]:2d})"
                 if has_energies:
-                    input_str = f"{self.eSurfacesWulff[i]:9.3f}"
+                    input_str = f"{expanded_energies[i]:9.3f}"
                 else:
-                    input_str = f"{self.sizesWulff[i]:9.3f}"
+                    input_str = f"{expanded_sizes[i]:9.3f}"
                 print(f"  {label:<18} {distances[i]/10:8.2f}   {input_str}   "
                       f"{e_relative[i]:8.3f}   {area_str:>12}")
             else:
@@ -985,7 +1049,8 @@ def external_facets_info(self, mode='auto', noOutput=False):
     return distances, e_relative, facet_areas_per_plane
 #------------------------------------------------------------------------------------------------------------------------
 
-def propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis, thresholdCoreSurface, noOutput, is_optimized=False):
+def propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis, skipFacetInfo,
+                 thresholdCoreSurface, noOutput, is_optimized=False):
     """
     Compute and store various post-construction
     properties of the nanoparticle.
@@ -998,6 +1063,7 @@ def propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis, threshold
     Args:
         skipChiralityCalculation (bool): If True, skips the calculation of the opd index
         skipSymmetryAnalyzis (bool): If True, skips symmetry analysis.
+        skipFacetInfo (bool): if True skips external facet info calculation
         thresholdCoreSurface (float): Threshold
             to distinguish core and surface atoms.
         noOutput (bool): If True, suppresses
@@ -1046,9 +1112,11 @@ def propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis, threshold
         current_g0s = compute_opd_index(target_np, noOutput=noOutput)
         setattr(self, f"opd_index{suffix}", current_g0s)
 
-    # Core/surface
+    # Symmetry
     if not skipSymmetryAnalyzis:
         MolSym(target_np, noOutput=noOutput)
+        
+    # Core/surface
     (
         [v, s, n, e], 
         surfaceAtoms
@@ -1075,7 +1143,7 @@ def propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis, threshold
         setattr(self, f'trPlanes{suffix}', setdAsNegative(current_planes))
 
     # Jmol Crystal Shape
-    if getattr(self, 'jmolCrystalShape', False):
+    if getattr(self, 'jmolCrystalShape', False) and not getattr(self, 'pbc', False):
         # We assume defCrystalShape... can handle the suffix or we pass use_opt
         cs = defCrystalShapeForJMol(self, noOutput=True)
         setattr(self, f"jMolCS{suffix}", cs)
@@ -1090,16 +1158,17 @@ def propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis, threshold
     get_ellipsoid_analysis(self, noOutput) 
 
     # External facets info
-    if hasattr(self, 'trPlanes_Wulff') and self.trPlanes_Wulff is not None:
-        self.external_facets_info(mode='Wulff', noOutput=noOutput)
-    if hasattr(self, 'trPlanes_Slices') and self.trPlanes_Slices is not None:
-        self.external_facets_info(mode='Slices', noOutput=noOutput)
-    if (hasattr(self, 'trPlanes') and self.trPlanes is not None
-            and not (hasattr(self, 'trPlanes_Wulff') and self.trPlanes_Wulff is not None)
-            and not (hasattr(self, 'trPlanes_Slices') and self.trPlanes_Slices is not None)):
-        self.external_facets_info(mode='crystal', noOutput=noOutput)
-    if (hasattr(self, 'trPlanes_opt') and self.trPlanes_opt is not None):
-        self.external_facets_info(mode='crystal_opt', noOutput=noOutput)
+    if not skipFacetInfo and not getattr(self, 'pbc', False):
+        if hasattr(self, 'trPlanes_Wulff') and self.trPlanes_Wulff is not None:
+            self.external_facets_info(mode='Wulff', noOutput=noOutput)
+        if hasattr(self, 'trPlanes_Slices') and self.trPlanes_Slices is not None:
+            self.external_facets_info(mode='Slices', noOutput=noOutput)
+        if (hasattr(self, 'trPlanes') and self.trPlanes is not None
+                and not (hasattr(self, 'trPlanes_Wulff') and self.trPlanes_Wulff is not None)
+                and not (hasattr(self, 'trPlanes_Slices') and self.trPlanes_Slices is not None)):
+            self.external_facets_info(mode='crystal', noOutput=noOutput)
+        if (hasattr(self, 'trPlanes_opt') and self.trPlanes_opt is not None):
+            self.external_facets_info(mode='crystal_opt', noOutput=noOutput)
 
     # Specific print for regfccTd helix
     if (hasattr(self, 'n_Td')

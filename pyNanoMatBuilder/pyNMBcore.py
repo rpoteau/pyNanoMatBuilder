@@ -7,6 +7,7 @@ class pyNMBcore:
                  thresholdCoreSurface: float = 1.,
                  skipChiralityCalculation: bool=True,
                  skipSymmetryAnalyzis: bool = False,
+                 skipFacetInfo: bool=True,
                  jmolCrystalShape: bool = True,
                  noOutput: bool = False,
                  calcPropOnly: bool = False,
@@ -21,6 +22,12 @@ class pyNMBcore:
                 differentiation (distance threshold for retaining atoms).
             skipSymmetryAnalyzis (bool): If False, performs an atomic
                 structure analysis using pymatgen.
+            skipFacetInfo (bool): If True, skips the automatic computation of
+                external facet areas and relative energies in propPostMake.
+                Useful for shapes without flat facets (spheres, ellipsoids) or
+                for large NPs where the computation is slow. Default is False.
+                The analysis can always be run manually afterwards:
+                    NP.external_facets_info(mode='auto', noOutput=False)
             jmolCrystalShape (bool): If True, generates a JMOL script
                 for visualization.
             noOutput (bool): If False, prints details about the NP structure.
@@ -32,6 +39,7 @@ class pyNMBcore:
         self.thresholdCoreSurface = thresholdCoreSurface
         self.skipChiralityCalculation = skipChiralityCalculation
         self.skipSymmetryAnalyzis = skipSymmetryAnalyzis
+        self.skipFacetInfo = skipFacetInfo
         self.jmolCrystalShape = jmolCrystalShape
         self.noOutput = noOutput
         self.calcPropOnly = calcPropOnly
@@ -55,7 +63,6 @@ class pyNMBcore:
         self.vol_Hull = None
         self.area_Hull = None
         self.opd_index = None
-        
         self.shape = None
 
         self.NP_opt = None
@@ -86,8 +93,11 @@ class pyNMBcore:
         self.trPlanes_Slices = None
         self.WulffShape = None
         self.jMolSlices = None
-
-
+        
+        self.G = None
+        self.Gstar = None
+        self.ucMatrix = None
+        
     def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1):
         """
         Optimize the NP geometry using an ASE calculator.
@@ -179,6 +189,7 @@ class pyNMBcore:
         return _flush_stale_data(self, shape_update)
 
     def propPostMake(self, skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
+                     skipFacetInfo=None,
                      thresholdCoreSurface=None, noOutput=None, is_optimized=None):
         """
         Compute post-construction properties: MOI, NPR, Rg, core/surface,
@@ -190,6 +201,8 @@ class pyNMBcore:
                                              (default: self.skipChiralityCalculation).
             skipSymmetryAnalyzis (bool): If True, skips pymatgen symmetry analysis
                                          (default: self.skipSymmetryAnalyzis).
+            skipFacetInfo (bool): If True, skips the automatic computation of 
+                                  external facet areas and relative energies
             thresholdCoreSurface (float): Distance threshold for core/surface
                                           differentiation (default: self.thresholdCoreSurface).
             noOutput (bool): If True, suppresses output (default: self.noOutput).
@@ -198,10 +211,12 @@ class pyNMBcore:
         from .utils.prop import propPostMake
         if skipChiralityCalculation is None: skipChiralityCalculation = self.skipChiralityCalculation
         if skipSymmetryAnalyzis is None: skipSymmetryAnalyzis = self.skipSymmetryAnalyzis
+        if skipFacetInfo is None: skipFacetInfo = self.skipFacetInfo
         if thresholdCoreSurface is None: thresholdCoreSurface = self.thresholdCoreSurface
         if noOutput is None: noOutput = self.noOutput
         if is_optimized is None: is_optimized = self.is_optimized
         return propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis,
+                            skipFacetInfo,
                             thresholdCoreSurface, noOutput, is_optimized)
 
     def plot_npr_triangle(self=None, is_optimized: bool = None, save_path: str = None, 

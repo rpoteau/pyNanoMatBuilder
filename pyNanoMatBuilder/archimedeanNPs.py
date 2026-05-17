@@ -99,7 +99,8 @@ class fccCubo(ArchimedeanNP):
             self.coords(noOutput)
             if self.aseView: view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, 
+                                  self.skipFacetInfo, self.thresholdCoreSurface, noOutput)
                 if self.aseView: view(self.NPcs)
           
     def __str__(self):
@@ -458,7 +459,8 @@ class fccTrTd(ArchimedeanNP):
             self.coords(noOutput)
             if self.aseView: view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis,
+                                  self.skipFacetInfo, self.thresholdCoreSurface, noOutput)
                 if self.aseView: view(self.NPcs)
 
     def __str__(self):
@@ -708,7 +710,8 @@ class fccTrOh(ArchimedeanNP):
             self.coords(noOutput)
             if self.aseView: view(self.NP)
             if self.postAnalyzis:
-                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+                self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis,
+                                  self.skipFacetInfo, self.thresholdCoreSurface, noOutput)
                 if self.aseView: view(self.NPcs)
           
     def __str__(self):
@@ -992,7 +995,7 @@ class fccTrCube(ArchimedeanNP):
         #     self.coords(noOutput)
         #     if self.aseView: view(self.NP)
         #     if self.postAnalyzis:
-        #         self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+        #         self.propPostMake(self.skipChiralityCalculation, self.skipSymmetryAnalyzis,self.skipFacetInfo,  self.thresholdCoreSurface, noOutput)
 
     def NumberOfCubeEdgeAtomsValid4ATrCube(self):
         """Calculates the approximate number of atoms remaining on an edge."""
@@ -1070,7 +1073,7 @@ class fccTrCube(ArchimedeanNP):
     #         self.coords(noOutput)
     #         if self.aseView: view(self.NP)
     #         if self.postAnalyzis:
-    #             self.propPostMake(self.skipSymmetryAnalyzis, self.thresholdCoreSurface, noOutput)
+    #             self.propPostMake(self.skipSymmetryAnalyzis, self.skipFacetInfo, self.thresholdCoreSurface, noOutput)
     #             if self.aseView: view(self.NPcs)
           
     # def __str__(self):
