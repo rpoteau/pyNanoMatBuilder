@@ -3,6 +3,7 @@ ipython
 ipywidgets
 jupyter
 matplotlib
+mendeleev
 numpy
 pandas
 plotly
