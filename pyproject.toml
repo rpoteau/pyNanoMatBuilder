@@ -1,6 +1,6 @@
 [project]
 name = "pyNanoMatBuilder"
-version = "0.12.3"
+version = "0.12.4"
 description = "Build and visualize complex crystalline nanoparticle architectures, including models on substrates, for materials science, X-ray data analysis, and electron microscopy research"
 authors = [{name = "Sara Mokhtari, LPCNO", email = "smokhtari@insa-toulouse.fr"}, {name = "Romuald Poteau, LPCNO", email = "romuald.poteau@utoulouse.fr"}]
 readme = "README.md"
@@ -12,6 +12,7 @@ dependencies = [
     "ipywidgets",       # Interactive HTML widgets for Jupyter notebooks (sliders, buttons)
     "jupyter",          # The complete ecosystem for interactive computing and notebooks
     "matplotlib",       # The standard 2D plotting library for publication-quality figures
+    "mendeleev",        # Atomic properties database (radii, ionization energies, etc.)
     "numpy",            # Fundamental package for linear algebra and multi-dimensional arrays
     "pandas",           # Powerful data structures for tabular data analysis and manipulation
     "plotly",           # High-level interactive 3D and 2D charting library

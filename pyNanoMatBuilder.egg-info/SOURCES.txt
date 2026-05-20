@@ -3,6 +3,7 @@ ChangeLog.md
 LICENSE
 MANIFEST.in
 README.md
+pyNMB-GraphAbs.ipynb
 pyNMB-examples.ipynb
 pyproject.toml
 docs/Makefile

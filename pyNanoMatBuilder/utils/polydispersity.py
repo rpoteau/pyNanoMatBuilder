@@ -877,3 +877,70 @@ class NanoparticleDistribution:
                 print(f"Plot saved with {ext} format: {save_path}")
 
         plt.show()
+
+    @property
+    def representative_sizes(self):
+        """
+        Returns the representative sizes at μ - 4σ, μ - 3σ, ..., μ, ..., μ + 4σ.
+        Negative or zero sizes are excluded (relevant for small NPs or wide distributions).
+        """
+        res = self.results
+        mu, sigma = res['mean'], res['sigma']
+        sizes = np.array([mu + k * sigma for k in range(-4, 5)])
+        return sizes[sizes > 0]
+    
+    @property
+    def representative_labels(self):
+        """
+        Returns the corresponding labels: μ - 4σ, ..., μ, ..., μ + 4σ.
+        """
+        res = self.results
+        mu, sigma = res['mean'], res['sigma']
+        all_labels = [
+            'μ-4σ', 'μ-3σ', 'μ-2σ', 'μ-σ', 'μ',
+            'μ+σ', 'μ+2σ', 'μ+3σ', 'μ+4σ'
+        ]
+        sizes = np.array([mu + k * sigma for k in range(-4, 5)])
+        # Keep only positive sizes
+        valid = sizes > 0
+        return [l for l, v in zip(all_labels, valid) if v]
+
+    def filter_proportions(self, data, threshold=0.01):
+        """
+        Filter proportions above a threshold, renormalize, and sort by size.
+        
+        Args:
+            data (dict): Output of get_proportions().
+            threshold (float): Minimum normalized proportion to keep.
+                              Default is 0.01 (1%).
+        Returns:
+            dict: Filtered, renormalized and size-sorted data,
+                  same structure as get_proportions().
+        """
+        import numpy as np
+        
+        # Filter by norms_relative threshold
+        mask = data['norms_relative'] >= threshold
+        
+        if not np.any(mask):
+            print(f"Warning: no sizes above threshold {threshold}. Returning empty.")
+            return data
+        
+        filtered_sizes          = data['sizes'][mask]
+        filtered_labels         = [l for l, m in zip(data['labels'], mask) if m]
+        filtered_ratios         = data['ratios'][mask]
+        filtered_counts         = data['counts'][mask]
+        filtered_norms          = data['norms'][mask]
+        filtered_norms_relative = filtered_ratios / filtered_ratios.sum()
+    
+        # Sort by size (ascending)
+        sort_idx = np.argsort(filtered_sizes)
+        
+        return {
+            'sizes':          filtered_sizes[sort_idx],
+            'labels':         [filtered_labels[i] for i in sort_idx],
+            'ratios':         filtered_ratios[sort_idx],
+            'counts':         filtered_counts[sort_idx],
+            'norms':          filtered_norms[sort_idx],
+            'norms_relative': filtered_norms_relative[sort_idx],
+        }

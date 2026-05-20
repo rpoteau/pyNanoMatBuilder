@@ -149,7 +149,7 @@ def optimizeEMT(model: Atoms, saveCoords=True, pathway="./coords/model", fthresh
     chrono.chrono_show()
     return model
 
-def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1):
+def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1, noOutput=False):
     """
     Optimize the geometry of an atomic system using various energy calculators and geometry optimization algorithms.
 
@@ -158,6 +158,7 @@ def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1):
         saveCoords (bool, optional): If True, saves the optimized coordinates.
         pathway (str, optional): Path to save the trajectory and final structure.
         fthreshold (float, optional): Convergence threshold for forces (in eV/Å).
+        noOutput (bool):if True, do not print the properties of the final geometry (default is False)
 
     Creates:
         self.NP_opt (ase.Atoms): Optimized atomic model.
@@ -189,11 +190,12 @@ def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1):
         raise ValueError(f"'{optimizer}' geometry optimizer is not yet supported.")    
     chrono = timer()
     chrono.chrono_start()
-    centerTitle(f"{nrj_txt} & {opt_txt} algorithms for geometry optimization")
+    if not noOutput:
+        centerTitle(f"{nrj_txt} & {opt_txt} algorithms for geometry optimization")
 
     if CALC == 'EMT':
         model = self.NP
-        full_diagnosticsEMT(model, verbose=True)
+        full_diagnosticsEMT(model, verbose=False)
         model.set_pbc(False)
         model.calc = EMT()
         model.get_potential_energy()
@@ -210,7 +212,7 @@ def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1):
                       skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
                       skipFacetInfo=self.skipFacetInfo, 
                       thresholdCoreSurface=self.thresholdCoreSurface,
-                      noOutput=False, is_optimized=True)
+                      noOutput=noOutput, is_optimized=True)
     
     chrono.chrono_stop(hdelay=False)
     chrono.chrono_show()

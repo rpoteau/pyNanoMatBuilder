@@ -627,146 +627,786 @@ def _update_sasview_dims_from_spheres(self, noOutput):
         if not noOutput:
             print(f"⚠ Error updating sasview_dims: {e}")
 
-def get_ellipsoid_analysis(self, noOutput=False):
-        """
-        Perform a Principal Component Analysis (PCA) on the outer envelope to 
-        calculate the best-fitting circumscribed ellipsoid.
+# def get_ellipsoid_analysis(self, noOutput=False):
+#         """
+#         Perform a Principal Component Analysis (PCA) on the outer envelope to 
+#         calculate the best-fitting circumscribed ellipsoid.
 
-        This method identifies the principal axes of the nanoparticle's surface 
-        by analyzing the covariance matrix of the Convex Hull vertices. The 
-        resulting ellipsoid is scaled such that its major semi-axis matches 
-        the maximum radial distance found in the structure, ensuring a perfect 
-        fit for circumscribed diameter measurements (e.g., 1.63 nm for a 
-        3-shell icosahedron).
+#         This method identifies the principal axes of the nanoparticle's surface 
+#         by analyzing the covariance matrix of the Convex Hull vertices. The 
+#         resulting ellipsoid is scaled such that its major semi-axis matches 
+#         the maximum radial distance found in the structure, ensuring a perfect 
+#         fit for circumscribed diameter measurements (e.g., 1.63 nm for a 
+#         3-shell icosahedron).
 
-        The analysis automatically selects between 'initial structure' and 
-        'optimized structure' based on the current state of the object.
+#         The analysis automatically selects between 'initial structure' and 
+#         'optimized structure' based on the current state of the object.
 
-        Args:
-            noOutput (bool): If True, suppresses printed summaries and Jmol 
-                command generation. Defaults to False.
+#         Args:
+#             noOutput (bool): If True, suppresses printed summaries and Jmol 
+#                 command generation. Defaults to False.
 
-        Returns:
-            dict: A dictionary containing the following physical properties:
-                - "status": String indicating which envelope was analyzed.
-                - "D1", "D2", "D3": Major, intermediate, and minor diameters (Å).
-                - "volume": Volume of the ellipsoid (Å³).
-                - "surface": Approximate surface area (Å²) using Knud Thomsen's formula.
-                - "asphericity": Ratio of D1/D3 (1.0 for a perfect sphere).
+#         Returns:
+#             dict: A dictionary containing the following physical properties:
+#                 - "status": String indicating which envelope was analyzed.
+#                 - "D1", "D2", "D3": Major, intermediate, and minor diameters (Å).
+#                 - "volume": Volume of the ellipsoid (Å³).
+#                 - "surface": Approximate surface area (Å²) using Knud Thomsen's formula.
+#                 - "asphericity": Ratio of D1/D3 (1.0 for a perfect sphere).
 
-        Raises:
-            ValueError: If fewer than 4 Hull vertices are found, indicating 
-                that coreSurface() has not been run or the NP is invalid.
+#         Raises:
+#             ValueError: If fewer than 4 Hull vertices are found, indicating 
+#                 that coreSurface() has not been run or the NP is invalid.
 
-        Notes:
-            - Scaling Logic: The semi-axes are derived from the square root of 
-              the eigenvalues of the covariance matrix. The scale factor is 
-              defined as: scale = max_radius / sqrt(max_eigenvalue).
-            - Surface Area: Calculated using an approximation with p=1.6075, 
-              limiting the maximum relative error to 1.061%.
-            - Visualization: Generates a Jmol-ready command using the 'AXES' 
-              and 'CENTER' keywords for precise orientation.
-        """
-        import numpy as np
-        if not hasattr(self, 'ellipsoid'):
-            self.ellipsoid = {}
+#         Notes:
+#             - Scaling Logic: The semi-axes are derived from the square root of 
+#               the eigenvalues of the covariance matrix. The scale factor is 
+#               defined as: scale = max_radius / sqrt(max_eigenvalue).
+#             - Surface Area: Calculated using an approximation with p=1.6075, 
+#               limiting the maximum relative error to 1.061%.
+#             - Visualization: Generates a Jmol-ready command using the 'AXES' 
+#               and 'CENTER' keywords for precise orientation.
+#         """
+#         import numpy as np
+#         if not hasattr(self, 'ellipsoid'):
+#             self.ellipsoid = {}
             
-        # 1. Select the correct envelope data
-        if self.is_optimized and hasattr(self, 'vertices_opt'):
-            target_atoms = self.NP_opt
-            hull_indices = self.vertices_opt
-            status = "optimized envelope"
-            key = "optimized structure"
-        else:
-            target_atoms = self.NP
-            hull_indices = self.vertices
-            status = "initial envelope"
-            key = "initial structure"
-
-        hull_coords = target_atoms.get_positions()[hull_indices]
-        pts = np.asarray(hull_coords)
+#         # 1. Select the correct envelope data
+#         if self.is_optimized and hasattr(self, 'vertices_opt'):
+#             target_atoms = self.NP_opt
+#             hull_indices = self.vertices_opt
+#             status = "optimized envelope"
+#             key = "optimized structure"
+#         else:
+#             target_atoms = self.NP
+#             hull_indices = self.vertices
+#             status = "initial envelope"
+#             key = "initial structure"
     
-        if hull_coords is None or len(hull_coords) < 4:
-            raise ValueError(f"Insufficient Hull vertices found for {status} ({len(hull_coords)} is < 4). "
+#         hull_coords = target_atoms.get_positions()[hull_indices]
+
+#         if hull_coords is None or len(hull_coords) < 4:
+#             raise ValueError(f"Insufficient Hull vertices found for {status} ({len(hull_coords)} is < 4). "
+#                          "Please run coreSurface() before this analysis.")
+
+#         # 2. PCA on surface atoms
+#         if self.is_optimized:
+#             surface_mask = getattr(self, 'surfaceAtoms_opt', None)
+#         else:
+#             surface_mask = getattr(self, 'surfaceAtoms', None)
+
+#         if surface_mask is not None and np.count_nonzero(surface_mask) >= 4:
+#             pts = target_atoms.get_positions()[surface_mask]
+#         else:
+#             pts = np.asarray(hull_coords)
+
+#         # Force center to origin — NP is already centered in pyNMB
+#         center = np.zeros(3)
+#         pos_c = pts - center
+
+#         S = (pos_c.T @ pos_c) / len(pts)
+#         evals, evecs = np.linalg.eigh(S)
+#         idx = np.argsort(evals)[::-1]
+#         evals = evals[idx]
+#         evecs = evecs[:, idx]
+
+#         # 3. Scale — use hull vertices for true extent
+#         hull_c = np.asarray(hull_coords) - center
+#         max_dist = np.max(np.linalg.norm(hull_c, axis=1))
+#         scale_factor = max_dist / np.sqrt(evals[0])
+#         # Eigenvalue scaling (correct ratios)
+#         a_ev, b_ev, c_ev = scale_factor * np.sqrt(evals)
+#         # Independent projection on hull vertices (correct for flat shapes)
+#         a_pr = np.max(np.abs(hull_c @ evecs[:, 0]))
+#         b_pr = np.max(np.abs(hull_c @ evecs[:, 1]))
+#         c_pr = np.max(np.abs(hull_c @ evecs[:, 2]))
+#         # Take the maximum of both
+#         a = max(a_ev, a_pr)
+#         b = max(b_ev, b_pr)
+#         c = max(c_ev, c_pr)
+        
+#         # Safety: if a, b, c are too different from max_dist
+#         # (PCA axes don't align with vertices), fall back to max_dist
+#         tol = 0.05  # 5% tolerance
+#         if abs(a - max_dist) / max_dist > tol or \
+#            abs(b - max_dist) / max_dist > tol or \
+#            abs(c - max_dist) / max_dist > tol:
+#             # Use all atoms projected onto eigenvectors
+#             all_pos = target_atoms.get_positions() - center
+#             a = np.max(np.abs(all_pos @ evecs[:, 0]))
+#             b = np.max(np.abs(all_pos @ evecs[:, 1]))
+#             c = np.max(np.abs(all_pos @ evecs[:, 2]))
+    
+#         # 4. Physical Properties
+#         # Volume: (4/3) * pi * a * b * c
+#         volume = (4/3) * np.pi * a * b * c
+        
+#         # Surface Area (Knud Thomsen's formula - approximation error < 1.06%)
+#         p = 1.6075
+#         surface_area = 4 * np.pi * (
+#             ((a*b)**p + (a*c)**p + (b*c)**p) / 3
+#         )**(1/p)
+
+#         # 5. Results Dictionary
+#         D1, D2, D3 = 2*a, 2*b, 2*c
+
+#         self.ellipsoid[key] = {
+#             "status": status,
+#             "D1": D1, # Major (A) -> Should match 2 * max_dist
+#             "D2": D2, # Intermediate (A)
+#             "D3": D3, # Minor (A)
+#             "volume": volume,
+#             "surface": surface_area,
+#             "asphericity": D1 / D3 if c > 0 else 1.0
+#         }
+
+
+#         if not noOutput:
+#             results = self.ellipsoid[key]
+#             centertxt(f"Hull Ellipsoid Analysis ({status})", 
+#                         bgc='#007a7a',
+#                         size='14',
+#                         weight='bold')
+#             print(f"  - Dimensions (Å): {results['D1']:.2f} x {results['D2']:.2f} x {results['D3']:.2f}")
+#             print(f"  - Volume: {results['volume']/1000:.2f} nm³")
+#             print(f"  - Surface: {results['surface']/100:.2f} nm²")
+#             print(f"  - Asphericity: {results['asphericity']:.2f}")
+#             print(f"  - Max Radius found: {max_dist/10:.3f} nm")
+#             # --- Jmol Command Generation ---
+#             # Semi-axes vectors for Jmol
+#             v1, v2, v3 = evecs[:,0]*a, evecs[:,1]*b, evecs[:,2]*c
+            
+#             # THE VALIDATED JMOL COMMAND
+#             key_cmd = key.replace(" ", "_")
+#             jmol_cmd = (f"ellipsoid ID {key_cmd}_el AXES "
+#                         f"{{{v1[0]:.6f} {v1[1]:.6f} {v1[2]:.6f}}} "
+#                         f"{{{v2[0]:.6f} {v2[1]:.6f} {v2[2]:.6f}}} "
+#                         f"{{{v3[0]:.6f} {v3[1]:.6f} {v3[2]:.6f}}}; "
+#                         f"ellipsoid ID {key_cmd}_el CENTER {{{center[0]:.3f} {center[1]:.3f} {center[2]:.3f}}}; "
+#                         f"color ${key_cmd}_el [x919191] translucent 0.3;")
+            
+#             print("\n  [Jmol Command to visualize the ellipsoid]:")
+#             print(f"  {jmol_cmd}")
+
+### K E E P
+# def get_ellipsoid_analysis(self, noOutput=False, mode='inscribed'):
+#         """
+#         Perform a Principal Component Analysis (PCA) on the outer envelope to 
+#         calculate the best-fitting circumscribed or inscribed ellipsoid.
+#         This method identifies the principal axes of the nanoparticle's surface 
+#         by analyzing the covariance matrix of the surface atoms or convex Hull vertices. The semi-axes
+#         are scaled by projecting the target atoms onto each principal axis.
+#         Works correctly for convex shapes (spheres, ellipsoids), symmetric
+#         shapes (icosahedra), and non-convex shapes (peeled structures).
+#         The analysis automatically selects between 'initial structure' and 
+#         'optimized structure' based on the current state of the object.
+#         Args:
+#             noOutput (bool): If True, suppresses printed summaries and Jmol 
+#                 command generation. Defaults to False.
+#             mode (str): 'inscribed' (default) — PCA on surface atoms, ellipsoid
+#                 fits inside the structure. 'circumscribed' — projection on hull
+#                 vertices, ellipsoid contains all atoms. 
+#         Returns:
+#             dict: A dictionary containing the following physical properties:
+#                 - "status": String indicating which geometry was analyzed (optimized or initial).
+#                 - "mode": String indicating which ellipsoid has been calculated.
+#                 - "D1", "D2", "D3": Major, intermediate, and minor diameters (Å).
+#                 - "volume": Volume of the ellipsoid (Å³).
+#                 - "surface": Approximate surface area (Å²) using Knud Thomsen's formula.
+#                 - "asphericity": Ratio of D1/D3 (1.0 for a perfect sphere).
+#         Raises:
+#             ValueError: If fewer than 4 surface atoms are found.
+#         Notes:
+#             - PCA is performed on surface atoms (uniform coverage).
+#             - Scaling is done by projecting surface atoms onto each PCA axis.
+#             - Surface Area: Knud Thomsen approximation, error < 1.06%.
+#             - Visualization: Jmol-ready command using AXES and CENTER keywords.
+#         """
+#         import numpy as np
+#         if not hasattr(self, 'ellipsoid'):
+#             self.ellipsoid = {}
+            
+#         # 1. Select the correct structure
+#         if self.is_optimized and hasattr(self, 'vertices_opt'):
+#             target_atoms = self.NP_opt
+#             hull_indices = self.vertices_opt
+#             status = "optimized envelope"
+#             key = "optimized structure"
+#         else:
+#             target_atoms = self.NP
+#             hull_indices = self.vertices
+#             status = "initial envelope"
+#             key = "initial structure"
+
+#         hull_coords = target_atoms.get_positions()[hull_indices]
+#         # 2. Select surface atoms
+#         if self.is_optimized:
+#             surface_mask = getattr(self, 'surfaceAtoms_opt', None)
+#         else:
+#             surface_mask = getattr(self, 'surfaceAtoms', None)
+
+#         # Check that coreSurface() has been run
+#         if surface_mask is None or np.count_nonzero(surface_mask) < 4:
+#             raise ValueError(f"No surface atoms found for {status}. "
+#                              "Please run coreSurface() before this analysis.")
+
+#         if surface_mask is not None and np.count_nonzero(surface_mask) >= 4:
+#             pts = target_atoms.get_positions()[surface_mask]
+#         else:
+#             pts = np.asarray(hull_coords)
+
+#         # Force center to origin — NP is already centered in pyNMB
+#         center = np.zeros(3)
+#         pos_c = pts - center
+
+#         S = (pos_c.T @ pos_c) / len(pts)
+#         evals, evecs = np.linalg.eigh(S)
+#         idx = np.argsort(evals)[::-1]
+#         evals = evals[idx]
+#         evecs = evecs[:, idx]
+
+#         # 3. Scale — use hull vertices for true extent
+#         hull_c = np.asarray(hull_coords) - center
+#         max_dist = np.max(np.linalg.norm(hull_c, axis=1))
+#         scale_factor = max_dist / np.sqrt(evals[0])
+#         # Eigenvalue scaling (correct ratios)
+#         a_ev, b_ev, c_ev = scale_factor * np.sqrt(evals)
+#         # Independent projection on hull vertices (correct for flat shapes)
+#         a_pr = np.max(np.abs(hull_c @ evecs[:, 0]))
+#         b_pr = np.max(np.abs(hull_c @ evecs[:, 1]))
+#         c_pr = np.max(np.abs(hull_c @ evecs[:, 2]))
+#         # Take the maximum of both
+#         a = max(a_ev, a_pr)
+#         b = max(b_ev, b_pr)
+#         c = max(c_ev, c_pr)
+
+#         # 5. Physical Properties
+#         volume = (4/3) * np.pi * a * b * c
+#         p = 1.6075
+#         surface_area = 4 * np.pi * (
+#             ((a*b)**p + (a*c)**p + (b*c)**p) / 3
+#         )**(1/p)
+
+#         # 6. Results Dictionary
+#         D1, D2, D3 = 2*a, 2*b, 2*c
+#         self.ellipsoid[key] = {
+#             "status": status,
+#             "mode": mode,
+#             "D1": D1,
+#             "D2": D2,
+#             "D3": D3,
+#             "volume": volume,
+#             "surface": surface_area,
+#             "asphericity": D1 / D3 if c > 0 else 1.0
+#         }
+
+#         if not noOutput:
+#             results = self.ellipsoid[key]
+#             centertxt(f"Hull {mode} Ellipsoid Analysis ({status})", 
+#                       bgc='#007a7a', size='14', weight='bold')
+#             print(f"  - Dimensions (Å): {results['D1']:.2f} x {results['D2']:.2f} x {results['D3']:.2f}")
+#             print(f"  - Volume: {results['volume']/1000:.2f} nm³")
+#             print(f"  - Surface: {results['surface']/100:.2f} nm²")
+#             print(f"  - Asphericity: {results['asphericity']:.2f}")
+#             print(f"  - Max Radius found: {max_dist/10:.3f} nm")
+#             v1, v2, v3 = evecs[:,0]*a, evecs[:,1]*b, evecs[:,2]*c
+#             key_cmd = key.replace(" ", "_")
+#             jmol_cmd = (f"ellipsoid ID {key_cmd}_el AXES "
+#                         f"{{{v1[0]:.6f} {v1[1]:.6f} {v1[2]:.6f}}} "
+#                         f"{{{v2[0]:.6f} {v2[1]:.6f} {v2[2]:.6f}}} "
+#                         f"{{{v3[0]:.6f} {v3[1]:.6f} {v3[2]:.6f}}}; "
+#                         f"ellipsoid ID {key_cmd}_el CENTER "
+#                         f"{{{center[0]:.3f} {center[1]:.3f} {center[2]:.3f}}}; "
+#                         f"color ${key_cmd}_el [x919191] translucent 0.3;")
+#             print("\n  [Jmol Command to visualize the ellipsoid]:")
+#             print(f"  {jmol_cmd}")
+
+## tentative avec les plans
+# def get_ellipsoid_analysis(self, noOutput=False, mode='inscribed'):
+#         """
+#         Perform a Principal Component Analysis (PCA) on the outer envelope to 
+#         calculate the best-fitting circumscribed or inscribed ellipsoid.
+#         This method identifies the principal axes of the nanoparticle's surface 
+#         by analyzing the covariance matrix of the surface atoms or convex Hull vertices. The semi-axes
+#         are scaled by projecting the target atoms onto each principal axis.
+#         Works correctly for convex shapes (spheres, ellipsoids), symmetric
+#         shapes (icosahedra), and non-convex shapes (peeled structures).
+#         The analysis automatically selects between 'initial structure' and 
+#         'optimized structure' based on the current state of the object.
+#         Args:
+#             noOutput (bool): If True, suppresses printed summaries and Jmol 
+#                 command generation. Defaults to False.
+#             mode (str): 'inscribed' (default) — PCA on surface atoms, ellipsoid
+#                 fits inside the structure. 'circumscribed' — projection on hull
+#                 vertices, ellipsoid contains all atoms. 
+#         Returns:
+#             dict: A dictionary containing the following physical properties:
+#                 - "status": String indicating which geometry was analyzed (optimized or initial).
+#                 - "mode": String indicating which ellipsoid has been calculated.
+#                 - "D1", "D2", "D3": Major, intermediate, and minor diameters (Å).
+#                 - "volume": Volume of the ellipsoid (Å³).
+#                 - "surface": Approximate surface area (Å²) using Knud Thomsen's formula.
+#                 - "asphericity": Ratio of D1/D3 (1.0 for a perfect sphere).
+#         Raises:
+#             ValueError: If fewer than 4 surface atoms are found.
+#         Notes:
+#             - PCA is performed on surface atoms (uniform coverage).
+#             - Scaling is done by projecting surface atoms onto each PCA axis.
+#             - Surface Area: Knud Thomsen approximation, error < 1.06%.
+#             - Visualization: Jmol-ready command using AXES and CENTER keywords.
+#         """
+#         import numpy as np
+#         if not hasattr(self, 'ellipsoid'):
+#             self.ellipsoid = {}
+            
+#         # 1. Select the correct structure
+#         if self.is_optimized and hasattr(self, 'vertices_opt'):
+#             target_atoms = self.NP_opt
+#             hull_indices = self.vertices_opt
+#             status = "optimized envelope"
+#             key = "optimized structure"
+#         else:
+#             target_atoms = self.NP
+#             hull_indices = self.vertices
+#             status = "initial envelope"
+#             key = "initial structure"
+
+#         hull_coords = target_atoms.get_positions()[hull_indices]
+#         # 2. Select surface atoms
+#         if self.is_optimized:
+#             surface_mask = getattr(self, 'surfaceAtoms_opt', None)
+#         else:
+#             surface_mask = getattr(self, 'surfaceAtoms', None)
+
+#         # Check that coreSurface() has been run
+#         if surface_mask is None or np.count_nonzero(surface_mask) < 4:
+#             raise ValueError(f"No surface atoms found for {status}. "
+#                              "Please run coreSurface() before this analysis.")
+
+#         if surface_mask is not None and np.count_nonzero(surface_mask) >= 4:
+#             pts = target_atoms.get_positions()[surface_mask]
+#         else:
+#             pts = np.asarray(hull_coords)
+
+#         if mode == 'circumscribed':
+#             # Project hull vertices — ellipsoid contains all atoms
+#             proj_pts = np.asarray(hull_coords)
+#             center = proj_pts.mean(axis=0)
+#             proj_pts = proj_pts - center
+    
+#             # PCA on proj_pts (consistent with scaling)
+#             S = (proj_pts.T @ proj_pts) / len(proj_pts)
+#             evals, evecs = np.linalg.eigh(S)
+#             idx = np.argsort(evals)[::-1]
+#             evals = evals[idx]
+#             evecs = evecs[:, idx]
+    
+#             # 3. Scale — use hull vertices for true extent
+    
+#             max_dist = np.max(np.linalg.norm(proj_pts, axis=1))
+#             scale_factor = max_dist / np.sqrt(evals[0])
+            
+#             # Eigenvalue scaling (correct ratios for symmetric shapes)
+#             a_ev, b_ev, c_ev = scale_factor * np.sqrt(evals)
+            
+#             # Independent projection (correct extent for flat/elongated shapes)
+#             a_pr = np.max(np.abs(proj_pts @ evecs[:, 0]))
+#             b_pr = np.max(np.abs(proj_pts @ evecs[:, 1]))
+#             c_pr = np.max(np.abs(proj_pts @ evecs[:, 2]))
+            
+#             # Take the maximum of both
+#             a = max(a_ev, a_pr)
+#             b = max(b_ev, b_pr)
+#             c = max(c_ev, c_pr)
+            
+#         elif mode == 'inscribed':
+#             # Use hull face equations — normals weighted by face distance
+#             # This finds the axes that best fit the convex hull faces
+#             if self.is_optimized:
+#                 equations = getattr(self, 'equations_opt', None)
+#             else:
+#                 equations = getattr(self, 'equations', None)
+            
+#             # equations: [nx, ny, nz, d] with d = distance from origin
+#             normals = equations[:, :3]   # unit normals
+#             distances = np.abs(equations[:, 3])  # distances from origin
+            
+#             # Weighted PCA: weight each normal by its distance
+#             weighted_pts = normals * distances[:, np.newaxis]
+#             center = np.zeros(3)
+#             S = (weighted_pts.T @ weighted_pts) / len(weighted_pts)
+#             evals, evecs = np.linalg.eigh(S)
+#             idx = np.argsort(evals)[::-1]
+#             evals = evals[idx]; evecs = evecs[:, idx]
+            
+#             # Semi-axes = mean distance projected onto each axis
+#             a = np.mean(distances)  # for isotropic shapes
+#             # or better: max projection of face centers onto axes
+#             face_centers = normals * distances[:, np.newaxis]
+#             a = np.max(np.abs(face_centers @ evecs[:, 0]))
+#             b = np.max(np.abs(face_centers @ evecs[:, 1]))
+#             c = np.max(np.abs(face_centers @ evecs[:, 2]))
+            
+#         print(f"mode={mode}, n proj_pts={len(proj_pts)}")
+#         print(f"max_dist={max_dist:.3f}")
+#         print(f"evals={evals}")
+#         print(f"a_ev={a_ev:.3f}, b_ev={b_ev:.3f}, c_ev={c_ev:.3f}")
+#         print(f"a_pr={a_pr:.3f}, b_pr={b_pr:.3f}, c_pr={c_pr:.3f}")
+
+
+#         # 5. Physical Properties
+#         volume = (4/3) * np.pi * a * b * c
+#         p = 1.6075
+#         surface_area = 4 * np.pi * (
+#             ((a*b)**p + (a*c)**p + (b*c)**p) / 3
+#         )**(1/p)
+
+#         # 6. Results Dictionary
+#         D1, D2, D3 = 2*a, 2*b, 2*c
+#         self.ellipsoid[key] = {
+#             "status": status,
+#             "mode": mode,
+#             "D1": D1,
+#             "D2": D2,
+#             "D3": D3,
+#             "volume": volume,
+#             "surface": surface_area,
+#             "asphericity": D1 / D3 if c > 0 else 1.0
+#         }
+
+#         if not noOutput:
+#             results = self.ellipsoid[key]
+#             centertxt(f"Hull {mode} Ellipsoid Analysis ({status})", 
+#                       bgc='#007a7a', size='14', weight='bold')
+#             print(f"  - Dimensions (Å): {results['D1']:.2f} x {results['D2']:.2f} x {results['D3']:.2f}")
+#             print(f"  - Volume: {results['volume']/1000:.2f} nm³")
+#             print(f"  - Surface: {results['surface']/100:.2f} nm²")
+#             print(f"  - Asphericity: {results['asphericity']:.2f}")
+#             print(f"  - Max Radius found: {max_dist/10:.3f} nm")
+#             v1, v2, v3 = evecs[:,0]*a, evecs[:,1]*b, evecs[:,2]*c
+#             key_cmd = key.replace(" ", "_")
+#             jmol_cmd = (f"ellipsoid ID {key_cmd}_el AXES "
+#                         f"{{{v1[0]:.6f} {v1[1]:.6f} {v1[2]:.6f}}} "
+#                         f"{{{v2[0]:.6f} {v2[1]:.6f} {v2[2]:.6f}}} "
+#                         f"{{{v3[0]:.6f} {v3[1]:.6f} {v3[2]:.6f}}}; "
+#                         f"ellipsoid ID {key_cmd}_el CENTER "
+#                         f"{{{center[0]:.3f} {center[1]:.3f} {center[2]:.3f}}}; "
+#                         f"color ${key_cmd}_el [x919191] translucent 0.3;")
+#             print("\n  [Jmol Command to visualize the ellipsoid]:")
+#             print(f"  {jmol_cmd}")
+
+# def get_ellipsoid_analysis(self, noOutput=False, mode='inscribed'):
+#         """..."""
+#         import numpy as np
+#         if not hasattr(self, 'ellipsoid'):
+#             self.ellipsoid = {}
+            
+#         # 1. Select the correct structure
+#         if self.is_optimized and hasattr(self, 'vertices_opt'):
+#             target_atoms = self.NP_opt
+#             hull_indices = self.vertices_opt
+#             equations    = getattr(self, 'equations_opt', None)
+#             surface_mask = getattr(self, 'surfaceAtoms_opt', None)
+#             status = "optimized envelope"
+#             key    = "optimized structure"
+#         else:
+#             target_atoms = self.NP
+#             hull_indices = self.vertices
+#             equations    = getattr(self, 'equations', None)
+#             surface_mask = getattr(self, 'surfaceAtoms', None)
+#             status = "initial envelope"
+#             key    = "initial structure"
+
+#         # 2. Check that coreSurface() has been run
+#         if surface_mask is None or np.count_nonzero(surface_mask) < 4:
+#             raise ValueError(f"No surface atoms found for {status}. "
+#                              "Please run coreSurface() before this analysis.")
+
+#         # 3. Select projection points depending on mode
+#         if mode == 'circumscribed':
+#             # Hull vertices — ellipsoid contains all atoms
+#             proj_pts = target_atoms.get_positions()[hull_indices]
+
+#         elif mode == 'inscribed':
+#             # Hull face equations — normals × distances = face centers
+#             # Works for any shape, even 13-atom icosahedra
+#             if equations is None:
+#                 raise ValueError(f"No hull equations found for {status}. "
+#                                  "Please run coreSurface() before this analysis.")
+#             normals   = equations[:, :3]
+#             distances = np.abs(equations[:, 3])
+#             proj_pts  = normals * distances[:, np.newaxis]  # face centers
+
+#         else:
+#             raise ValueError(f"Unknown mode '{mode}'. Choose 'inscribed' or 'circumscribed'.")
+
+#         # 4. PCA
+#         center  = proj_pts.mean(axis=0)
+#         proj_c  = proj_pts - center
+#         S       = (proj_c.T @ proj_c) / len(proj_c)
+#         evals, evecs = np.linalg.eigh(S)
+#         idx     = np.argsort(evals)[::-1]
+#         evals   = evals[idx]
+#         evecs   = evecs[:, idx]
+
+#         # 5. Scale — combine eigenvalue scaling + independent projection
+#         max_dist     = np.max(np.linalg.norm(proj_c, axis=1))
+#         scale_factor = max_dist / np.sqrt(evals[0])
+#         a_ev, b_ev, c_ev = scale_factor * np.sqrt(evals)
+#         a_pr = np.max(np.abs(proj_c @ evecs[:, 0]))
+#         b_pr = np.max(np.abs(proj_c @ evecs[:, 1]))
+#         c_pr = np.max(np.abs(proj_c @ evecs[:, 2]))
+#         a = max(a_ev, a_pr)
+#         b = max(b_ev, b_pr)
+#         c = max(c_ev, c_pr)
+
+#         # 6. Physical Properties
+#         volume = (4/3) * np.pi * a * b * c
+#         p = 1.6075
+#         surface_area = 4 * np.pi * (
+#             ((a*b)**p + (a*c)**p + (b*c)**p) / 3
+#         )**(1/p)
+
+#         # 7. Results Dictionary
+#         D1, D2, D3 = 2*a, 2*b, 2*c
+#         self.ellipsoid[key] = {
+#             "status":      status,
+#             "mode":        mode,
+#             "D1":          D1,
+#             "D2":          D2,
+#             "D3":          D3,
+#             "volume":      volume,
+#             "surface":     surface_area,
+#             "asphericity": D1 / D3 if c > 0 else 1.0
+#         }
+
+#         if not noOutput:
+#             results = self.ellipsoid[key]
+#             centertxt(f"Ellipsoid Analysis — {mode} ({status})",
+#                       bgc='#007a7a', size='14', weight='bold')
+#             print(f"  - Dimensions (Å): {results['D1']:.2f} x {results['D2']:.2f} x {results['D3']:.2f}")
+#             print(f"  - Volume: {results['volume']/1000:.2f} nm³")
+#             print(f"  - Surface: {results['surface']/100:.2f} nm²")
+#             print(f"  - Asphericity: {results['asphericity']:.2f}")
+#             print(f"  - Max Radius found: {max_dist/10:.3f} nm")
+#             v1, v2, v3 = evecs[:,0]*a, evecs[:,1]*b, evecs[:,2]*c
+#             key_cmd = key.replace(" ", "_")
+#             jmol_cmd = (f"ellipsoid ID {key_cmd}_el AXES "
+#                         f"{{{v1[0]:.6f} {v1[1]:.6f} {v1[2]:.6f}}} "
+#                         f"{{{v2[0]:.6f} {v2[1]:.6f} {v2[2]:.6f}}} "
+#                         f"{{{v3[0]:.6f} {v3[1]:.6f} {v3[2]:.6f}}}; "
+#                         f"ellipsoid ID {key_cmd}_el CENTER "
+#                         f"{{{center[0]:.3f} {center[1]:.3f} {center[2]:.3f}}}; "
+#                         f"color ${key_cmd}_el [x919191] translucent 0.3;")
+#             print("\n  [Jmol Command to visualize the ellipsoid]:")
+#             print(f"  {jmol_cmd}")
+def get_ellipsoid_analysis(self, noOutput=False, mode='vertices'):
+    """
+    Perform a Principal Component Analysis (PCA) to calculate the best-fitting
+    ellipsoid of a nanoparticle, using three different sets of points.
+
+    The analysis automatically selects between 'initial structure' and
+    'optimized structure' based on the current state of the object.
+
+    Args:
+        noOutput (bool): If True, suppresses printed summaries and Jmol
+            command generation. Defaults to False.
+        mode (str): Defines which atoms are used for PCA and scaling:
+            - 'vertices' (default): PCA and scaling on convex hull vertices.
+              Gives the circumscribed ellipsoid — ellipsoid contains all atoms.
+              Verified to exactly match core-to-core dimensions measured in JMol.
+              Recommended for SAXS diameter comparison and for
+              peel_by_shifted_ellipsoid().
+            - 'planes': Weighted PCA on face centers of the ConvexHull built
+              on surface atoms (weighted by face area), scaled by projection of
+              surface atoms excluding hull vertices. Gives a slightly smaller
+              ellipsoid than 'vertices' — useful as a lower bound estimate.
+            - 'all': PCA on all atoms of the structure. Gives an intermediate
+              result between 'surface' and 'vertices'. Useful to evaluate the
+              influence of the atomic density distribution on the ellipsoid axes.
+
+    Returns:
+        dict: Stored in self.ellipsoid[key] with the following fields:
+            - "status" (str): 'initial envelope' or 'optimized envelope'.
+            - "mode"   (str): the mode used for this calculation.
+            - "D1", "D2", "D3" (float): major, intermediate and minor
+              diameters in Å, sorted in descending order.
+            - "volume"      (float): ellipsoid volume in Å³.
+            - "surface"     (float): ellipsoid surface area in Å²,
+              computed via Knud Thomsen's approximation (error < 1.06%).
+            - "asphericity" (float): D1/D3 ratio (1.0 for a perfect sphere).
+
+    Raises:
+        ValueError: If fewer than 4 surface atoms are found (coreSurface()
+            has not been run), or if an unknown mode is requested.
+
+    Notes:
+        - The Jmol command to visualize the ellipsoid is printed when
+          noOutput=False, using the AXES and CENTER keywords.
+        - Results are stored under self.ellipsoid['initial structure'] or
+          self.ellipsoid['optimized structure'] and overwritten on each call.
+        - Use effective_diameter() to get the volume-equivalent diameter in nm.
+    """
+    import numpy as np
+    if not hasattr(self, 'ellipsoid'):
+        self.ellipsoid = {}
+        
+    # 1. Select the correct structure
+    if self.is_optimized and hasattr(self, 'vertices_opt'):
+        target_atoms = self.NP_opt
+        hull_indices = self.vertices_opt
+        equations    = getattr(self, 'equations_opt', None)
+        surface_mask = getattr(self, 'surfaceAtoms_opt', None)
+        status = "optimized envelope"
+        key    = "optimized structure"
+    else:
+        target_atoms = self.NP
+        hull_indices = self.vertices
+        equations    = getattr(self, 'equations', None)
+        surface_mask = getattr(self, 'surfaceAtoms', None)
+        status = "initial envelope"
+        key    = "initial structure"
+
+    # 2. Check that coreSurface() has been run
+    if surface_mask is None or np.count_nonzero(surface_mask) < 4:
+        raise ValueError(f"No surface atoms found for {status}. "
                          "Please run coreSurface() before this analysis.")
 
-        # 2. PCA on the envelope vertices only
-        # Center the vertices on their own center of geometry
-        center = pts.mean(axis=0)
-        pos_c = pts - center
-        
-        # Compute covariance matrix of the surface points
-        S = (pos_c.T @ pos_c) / len(hull_coords)
-        # We use eigh to get the vectors (v)
-        evals, evecs = np.linalg.eigh(S)
-        # Sort both in descending order (Major -> Minor)
-        idx = np.argsort(evals)[::-1]
-        evals = evals[idx]
-        evecs = evecs[:, idx] # Columns are the eigenvectors
-        
-        # 3. Scaling to match the circumscribed sphere (1.63 nm logic)
-        # We ensure the major semi-axis 'a' equals the max distance from center
-        max_dist = np.max(np.linalg.norm(pos_c, axis=1))
+    # 3. Select projection points depending on mode and do PCA
+    if mode == 'vertices':
+        # Hull vertices — ellipsoid contains all atoms
+        proj_pts = target_atoms.get_positions()[hull_indices]
+        center  = proj_pts.mean(axis=0)
+        proj_c  = proj_pts - center
+        S       = (proj_c.T @ proj_c) / len(proj_c)
+
+    elif mode == 'all':
+        # PCA on all atoms — gives the overall extent of the structure
+        proj_pts = target_atoms.get_positions()
+        center   = proj_pts.mean(axis=0)
+        proj_c   = proj_pts - center
+        S        = (proj_c.T @ proj_c) / len(proj_c)            
+
+    elif mode == 'planes':
+        from scipy.spatial import ConvexHull as _ConvexHull
+        from scipy.spatial import KDTree
+
+        surface_pts = target_atoms.get_positions()[surface_mask]
+
+        # --- Isotropy test on surface atoms ---
+        def _inertia_evals(pts):
+            I = np.zeros((3, 3))
+            for p in pts:
+                I[0,0] += p[1]**2 + p[2]**2
+                I[1,1] += p[0]**2 + p[2]**2
+                I[2,2] += p[0]**2 + p[1]**2
+                I[0,1] -= p[0]*p[1]
+                I[0,2] -= p[0]*p[2]
+                I[1,2] -= p[1]*p[2]
+            I[1,0]=I[0,1]; I[2,0]=I[0,2]; I[2,1]=I[1,2]
+            ev = np.linalg.eigvalsh(I)
+            return ev / ev.max()
+
+        surface_pts_c = surface_pts - surface_pts.mean(axis=0)
+        ev_norm  = _inertia_evals(surface_pts_c)
+        isotropy = ev_norm.min() / ev_norm.max()
+        tol_isotropy = 0.02  # 2% tolerance
+
+        # --- Weighted PCA on face centers → axes ---
+        hull_sa = _ConvexHull(surface_pts)
+        face_areas, face_centers = [], []
+        for simplex in hull_sa.simplices:
+            p1 = surface_pts[simplex[0]]
+            p2 = surface_pts[simplex[1]]
+            p3 = surface_pts[simplex[2]]
+            area = 0.5 * np.linalg.norm(np.cross(p2 - p1, p3 - p1))
+            face_areas.append(area)
+            face_centers.append((p1 + p2 + p3) / 3)
+        face_areas   = np.array(face_areas)
+        face_centers = np.array(face_centers)
+        weights      = face_areas / face_areas.sum()
+        center = (face_centers * weights[:, np.newaxis]).sum(axis=0)
+        proj_c = face_centers - center
+        S = np.zeros((3, 3))
+        for i, fc in enumerate(proj_c):
+            S += weights[i] * np.outer(fc, fc)
+
+    else:
+        raise ValueError(f"Unknown mode '{mode}'. Choose 'vertices', 'all' or 'surface'.")
+ 
+    evals, evecs = np.linalg.eigh(S)
+    idx     = np.argsort(evals)[::-1]
+    evals   = evals[idx]
+    evecs   = evecs[:, idx]
+
+
+    # 5. Scale
+    if mode in ('vertices', 'all'):
+        # Project hull vertices onto PCA axes
+        max_dist     = np.max(np.linalg.norm(proj_c, axis=1))
         scale_factor = max_dist / np.sqrt(evals[0])
+        a_ev, b_ev, c_ev = scale_factor * np.sqrt(evals)
+        a_pr = np.max(np.abs(proj_c @ evecs[:, 0]))
+        b_pr = np.max(np.abs(proj_c @ evecs[:, 1]))
+        c_pr = np.max(np.abs(proj_c @ evecs[:, 2]))
+        a = max(a_ev, a_pr)
+        b = max(b_ev, b_pr)
+        c = max(c_ev, c_pr)
+        max_dist = max_dist  # already defined
+
+    elif mode == 'planes':
+        if isotropy > 1 - tol_isotropy:
+            # Isotropic — force equal axes = max distance of face centers
+            max_dist = np.max(np.linalg.norm(proj_c, axis=1))
+            a = b = c = max_dist
+        else:
+            # Anisotropic — project face centers onto PCA axes
+            a = np.max(np.abs(proj_c @ evecs[:, 0]))
+            b = np.max(np.abs(proj_c @ evecs[:, 1]))
+            c = np.max(np.abs(proj_c @ evecs[:, 2]))
+            max_dist = np.max(np.linalg.norm(proj_c, axis=1))
         
-        # Calculate semi-axes a, b, c
-        #Fix 20260517
-        # a, b, c = scale_factor * np.sqrt(evals)
-        # Scale each axis independently by projecting atoms onto each eigenvector
-        a = np.max(np.abs(pos_c @ evecs[:, 0]))
-        b = np.max(np.abs(pos_c @ evecs[:, 1]))
-        c = np.max(np.abs(pos_c @ evecs[:, 2]))        
-        
-        # 4. Physical Properties
-        # Volume: (4/3) * pi * a * b * c
-        volume = (4/3) * np.pi * a * b * c
-        
-        # Surface Area (Knud Thomsen's formula - approximation error < 1.06%)
-        p = 1.6075
-        surface_area = 4 * np.pi * (
-            ((a*b)**p + (a*c)**p + (b*c)**p) / 3
-        )**(1/p)
+    # 6. Physical Properties
+    volume = (4/3) * np.pi * a * b * c
+    p = 1.6075
+    surface_area = 4 * np.pi * (
+        ((a*b)**p + (a*c)**p + (b*c)**p) / 3
+    )**(1/p)
 
-        # 5. Results Dictionary
-        D1, D2, D3 = 2*a, 2*b, 2*c
+    # 7. Results Dictionary
+    D1, D2, D3 = 2*a, 2*b, 2*c
+    self.ellipsoid[key] = {
+        "status":      status,
+        "mode":        mode,
+        "D1":          D1,
+        "D2":          D2,
+        "D3":          D3,
+        "volume":      volume,
+        "surface":     surface_area,
+        "asphericity": D1 / D3 if c > 0 else 1.0
+    }
 
-        self.ellipsoid[key] = {
-            "status": status,
-            "D1": D1, # Major (A) -> Should match 2 * max_dist
-            "D2": D2, # Intermediate (A)
-            "D3": D3, # Minor (A)
-            "volume": volume,
-            "surface": surface_area,
-            "asphericity": D1 / D3 if c > 0 else 1.0
-        }
+    if not noOutput:
+        results = self.ellipsoid[key]
+        centertxt(f"Ellipsoid Analysis — {mode} ({status})",
+                  bgc='#007a7a', size='14', weight='bold')
+        print(f"  - Dimensions (Å): {results['D1']:.2f} x {results['D2']:.2f} x {results['D3']:.2f}")
+        print(f"  - Volume: {results['volume']/1000:.2f} nm³")
+        print(f"  - Surface: {results['surface']/100:.2f} nm²")
+        print(f"  - Asphericity: {results['asphericity']:.2f}")
+        print(f"  - Max Radius found: {max_dist/10:.3f} nm")
+        v1, v2, v3 = evecs[:,0]*a, evecs[:,1]*b, evecs[:,2]*c
+        key_cmd = key.replace(" ", "_")
+        jmol_cmd = (f"ellipsoid ID {key_cmd}_el AXES "
+                    f"{{{v1[0]:.6f} {v1[1]:.6f} {v1[2]:.6f}}} "
+                    f"{{{v2[0]:.6f} {v2[1]:.6f} {v2[2]:.6f}}} "
+                    f"{{{v3[0]:.6f} {v3[1]:.6f} {v3[2]:.6f}}}; "
+                    f"ellipsoid ID {key_cmd}_el CENTER "
+                    f"{{{center[0]:.3f} {center[1]:.3f} {center[2]:.3f}}}; "
+                    f"color ${key_cmd}_el [x919191] translucent 0.3;")
+        print("\n  [Jmol Command to visualize the ellipsoid]:")
+        print(f"  {jmol_cmd}")
 
-
-        if not noOutput:
-            results = self.ellipsoid[key]
-            centertxt(f"Hull Ellipsoid Analysis ({status})", 
-                        bgc='#007a7a',
-                        size='14',
-                        weight='bold')
-            print(f"  - Dimensions (Å): {results['D1']:.2f} x {results['D2']:.2f} x {results['D3']:.2f}")
-            print(f"  - Volume: {results['volume']/1000:.2f} nm³")
-            print(f"  - Surface: {results['surface']/100:.2f} nm²")
-            print(f"  - Asphericity: {results['asphericity']:.2f}")
-            print(f"  - Max Radius found: {max_dist/10:.3f} nm")
-            # --- Jmol Command Generation ---
-            # Semi-axes vectors for Jmol
-            v1, v2, v3 = evecs[:,0]*a, evecs[:,1]*b, evecs[:,2]*c
-            
-            # THE VALIDATED JMOL COMMAND
-            key_cmd = key.replace(" ", "_")
-            jmol_cmd = (f"ellipsoid ID {key_cmd}_el AXES "
-                        f"{{{v1[0]:.6f} {v1[1]:.6f} {v1[2]:.6f}}} "
-                        f"{{{v2[0]:.6f} {v2[1]:.6f} {v2[2]:.6f}}} "
-                        f"{{{v3[0]:.6f} {v3[1]:.6f} {v3[2]:.6f}}}; "
-                        f"ellipsoid ID {key_cmd}_el CENTER {{{center[0]:.3f} {center[1]:.3f} {center[2]:.3f}}}; "
-                        f"color ${key_cmd}_el [x919191] translucent 0.3;")
-            
-            print("\n  [Jmol Command to visualize the ellipsoid]:")
-            print(f"  {jmol_cmd}")
             
 def external_facets_info(self, mode='auto', noOutput=False):
     """
@@ -1086,6 +1726,13 @@ def propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis, skipFacet
         Rg (float): Radius of Gyration, in nm
     """
 
+    # print(f"{skipChiralityCalculation=}")
+    # print(f"{skipSymmetryAnalyzis=}")
+    # print(f"{skipFacetInfo=}")
+    # print(f"{thresholdCoreSurface=}")
+    # print(f"{noOutput=}")
+    # print(f"{is_optimized=}")
+
     # Determine the "Target" and the "Suffix"
     # This replaces hardcoded self.NP with a dynamic target
     suffix = "_opt" if is_optimized else ""
@@ -1315,3 +1962,111 @@ def compute_opd_index(NP:Atoms, cutoff=6.0, noOutput=False):
         # Final display line
         print(f" G0 = {G0:.2e} ({hand})")
     return G0
+
+class AtomicRadii:
+    """
+    Container for atomic radii of a given element.
+    All radii are stored in nm.
+    """
+    def __init__(self, el, ionic_list):
+        self.metallic_radius = el.metallic_radius / 100 if el.metallic_radius else None
+        self.covalent_radius = el.covalent_radius / 100 if el.covalent_radius else None
+        self.vdw_radius      = el.vdw_radius      / 100 if el.vdw_radius      else None
+        self.atomic_radius   = el.atomic_radius   / 100 if el.atomic_radius   else None
+        self.ionic_radii     = ionic_list
+
+    def get_ionic_radii(self, charge, coordination=None, spin=None):
+        """
+        Retrieve a specific ionic radius.
+        Args:
+            charge (int): Ionic charge (e.g. +1, +3).
+            coordination (str, optional): Coordination number in Roman numerals
+                (e.g. 'VI', 'IV', 'IVSQ'). See print_atomic_radii() for available values.
+            spin (str, optional): Spin state ('High Spin', 'Low Spin', etc.).
+        Returns:
+            float: Ionic radius in nm, or None if not found.
+        """
+        for r in self.ionic_radii:
+            if r['charge'] != charge:
+                continue
+            if coordination is not None and r['coordination'] != coordination:
+                continue
+            if spin is not None and r['spin'] != spin:
+                continue
+            return r['radius_ang']
+        return None
+
+    def __repr__(self):
+        return (f"AtomicRadii(metallic_radius={self.metallic_radius:.4f} Å, "
+                f"covalent_radius={self.covalent_radius:.4f} Å, "
+                f"vdw_radius={self.vdw_radius:.4f} Å, "
+                f"atomic_radius={self.atomic_radius:.4f} Å)")
+        
+def print_atomic_radii(element_symbol):
+    """
+    Print the available atomic radii for a given element using mendeleev.
+    Helps the user choose the appropriate radius for the SAXS → core-to-core
+    diameter correction: D_core = D_SAXS - 2 * r_atom.
+
+    Args:
+        element_symbol (str): Chemical symbol of the element (e.g. 'Ag', 'Au').
+
+    Returns:
+        dict: Available radii in nm, including ionic radii as a list of dicts.
+    """
+    from mendeleev import element as mendeleev_element
+    el = mendeleev_element(element_symbol)
+
+    print(f"Atomic radii for {el.name} ({element_symbol})")
+    print(f"{'─'*50}")
+    radii = {
+        'metallic_radius': el.metallic_radius,
+        'covalent_radius': el.covalent_radius,
+        'vdw_radius'     :      el.vdw_radius,
+        'atomic_radius'  :   el.atomic_radius,
+    }
+    for name, val in radii.items():
+        if val is not None:
+            print(f"  {name:<20} : {val:>5.0f} pm  =  {val/100:.4f} Å")
+        else:
+            print(f"  {name:<20} : not available")
+
+    # Ionic radii
+    print(f"\n  {'Ionic radii':}")
+    print(f"  {'─'*46}")
+    print(f"  {'Charge':<8} {'Coord.':<8} {'Spin':<12} {'Radius (pm)':<14} {'Radius (Å)'}")
+    print(f"  {'─'*46}")
+    ionic_list = []
+    for ir in el.ionic_radii:
+        spin_str = ir.spin if ir.spin else 'n/a'
+        coord_str = str(ir.coordination) if ir.coordination else 'n/a'
+        print(f"  {ir.charge:>+6}   {coord_str:<8} {spin_str:<12} "
+              f"{ir.ionic_radius:>8.0f} pm   {ir.ionic_radius/100:.4f} Å")
+        ionic_list.append({
+            'charge':       ir.charge,
+            'coordination': ir.coordination,
+            'spin':         ir.spin,
+            'radius_ang':   ir.ionic_radius / 100,  # pm → Å
+        })
+
+    print(f"{'─'*50}")
+    print(f"  Recommended for metallic NPs : metallic radius")
+    print(f"  Recommended for oxides/salts : ionic radius (choose charge and coordination)")
+    print(f"  SAXS correction: D_core = D_SAXS - 2 × r")
+    print(f"\n  To retrieve a specific radius (in Å):")
+    print(f"    Ag = pyNMBu.print_atomic_radii('{element_symbol}')")
+    print(f"    Ag.metallic_radius                                # metallic radius in Å")
+    print(f"    Ag.covalent_radius                                # covalent radius in Å")
+    print(f"    Ag.vdw_radius                                     # Van der Waals radius in Å")
+    print(f"    Ag.atomic_radius                                  # atomic radius in Å")
+    print(f"    Ag.get_ionic_radii(charge=+1, coordination='VI')  # ionic radius in Å")
+
+    return AtomicRadii(el, ionic_list)
+
+def effective_diameter(self, structure='optimized', mode='vertices'):
+    """Returns the volume-equivalent diameter from the ellipsoid analysis, in nm."""
+    key = 'optimized structure' if structure == 'optimized' else 'initial structure'
+    if key not in self.ellipsoid or self.ellipsoid[key].get('mode') != mode:
+        self.get_ellipsoid_analysis(noOutput=True, mode=mode)
+    e = self.ellipsoid[key]
+    return (e['D1'] * e['D2'] * e['D3']) ** (1/3) / 10  # Å → nm

@@ -5,6 +5,113 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
+## [0.12.4] - "polydispersity II"
+
+### Added
+- **`AtomicRadii` class and `print_atomic_radii(element_symbol)` in `utils/prop.py`**,
+    with **new dependence toward the `mendeleev` library**:
+    New utility function and container class for atomic radii. `print_atomic_radii`
+    prints all available atomic radii for a given element (metallic, covalent,
+    Van der Waals, atomic, and ionic) using `mendeleev`, and returns an `AtomicRadii`
+    instance with all radii in Angstrom. The `AtomicRadii` class exposes radii as named
+    attributes (`metallic_radius`, `covalent_radius`, `vdw_radius`, `atomic_radius`,
+    `ionic_radii`) and provides a `get_ionic_radii(charge, coordination, spin)` method
+    to retrieve a specific ionic radius by charge and coordination number (in Roman
+    numerals, e.g. `'VI'`, `'IVSQ'`). Designed to help the user choose the appropriate
+    radius for the SAXS → core-to-core diameter correction `D_core = D_SAXS - 2 × r`.
+    Recommended radius for metallic NPs is the metallic radius (`r = Rnn / 2`).
+```python
+    Ag = pyNMBu.print_atomic_radii('Ag')
+    r = Ag.metallic_radius          # in Angström
+    r = Ag.get_ionic_radii(charge=+1, coordination='VI')  # in Angström
+    D_core = D_saxs - 2 * Ag.metallic_radius / 10  # nm
+```
+- **`mendeleev`** added as an explicit dependency in `pyproject.toml`.
+- **`effective_diameter(structure='optimized', mode='vertices')` in `utils/prop.py`**:
+  New method returning the volume-equivalent effective diameter (in nm)
+  from the ellipsoid analysis: `D_eff = (D1 * D2 * D3)^(1/3) / 10`.
+  Useful for comparing non-spherical or partially peeled structures to
+  a size distribution. `structure` can be `'optimized'` (default) or
+  `'initial'`. Uses `mode='vertices'` by default — consistent with
+  the physically relevant core-to-core dimensions.
+- **`get_ellipsoid_analysis()` and `effective_diameter()` exposed in `pyNMBcore`**:
+  New interface methods making these functions directly callable on any pyNMB object:
+    ```python
+        ico.get_ellipsoid_analysis(mode='vertices')  # default
+        ico.get_ellipsoid_analysis(mode='plane')
+        ico.get_ellipsoid_analysis(mode='all')
+        ico.effective_diameter()                          # volume-equivalent diameter in nm
+    ```
+- **`filter_proportions(data, threshold=0.01)` in `utils/polydispersity.py`**:
+    New method of `NanoparticleDistribution` that filters the output of
+    `get_proportions()` by keeping only sizes whose normalized proportion
+    (`norms_relative`) is above `threshold` (default 1%). The remaining
+    proportions are renormalized so that they sum to 1, and results are
+    sorted by ascending size. Useful to identify the most representative
+    structures for a weighted SAXS sum:
+    ```python
+      data = nd.get_proportions(D, labels)
+      data_filtered = nd.filter_proportions(data, threshold=0.01)
+      nd.plot(highlight_sizes=[data_filtered['sizes'], data_filtered['labels']])
+      nd.print_specific_proportions(data_filtered['sizes'], data_filtered['labels'])
+    ```
+- **new `pyNMB-tutorials.ipynb` notebook**:
+    New tutorial notebook covering advanced use cases of pyNanoMatBuilder.
+    Currently contains one complete tutorial:
+    
+    **Tutorial: Evaluating relevant sizes to fit an experimental SAXS signal**
+    A step-by-step workflow for polydispersity-aware SAXS modeling, based on
+    a study of silver icosahedral nanoparticles. Covers:
+    - **Step 1** — Build the theoretical Schulz size distribution from
+    experimental SAXS parameters (μ, %PD), apply the SAXS → core-to-core
+    diameter correction via `print_atomic_radii()`, and identify
+    characteristic sizes at μ ± nσ using `representative_sizes` and
+    `representative_labels`.
+    - **Step 2** — Build and optimize icosahedral structures with
+    `regIco` + `optimize()`, bracket around the 4-shell icosahedron,
+    and generate intermediate structures with partially filled outer
+    shells using `peel_by_shifted_ellipsoid()`.
+    - **Step 3** — Evaluate the relevance of each structure by overlaying
+    its diameter on the size distribution via `get_proportions()`,
+    filter out negligible contributions with `filter_proportions()`,
+    and extract the renormalized weights for the weighted SAXS sum.
+- **`Polydispersity` section in `pyNMB-examples.ipynb`**:
+    Added an introduction to the existing section, describing the purpose
+    and capabilities of the `NanoparticleDistribution` class and its
+    connection to the pyNanoMatBuilder SAXS modeling workflow.
+
+### Changed
+- **`get_ellipsoid_analysis()` default mode** changed from `'planes'` to
+  `'vertices'` — the circumscribed ellipsoid exactly matches the core-to-core
+  dimensions measured in JMol, making it the physically relevant quantity for SAXS
+  diameter comparison.
+- **`effective_diameter()`** now uses `mode='vertices'` by default, consistent
+  with the new default in `get_ellipsoid_analysis()`.
+
+### Fixed
+- **`get_ellipsoid_analysis()` in `utils/prop.py`** — complete rewrite of the
+  PCA and scaling logic, now supporting two modes:
+  - **`'vertices'`** (default): PCA and scaling on hull vertices. Semi-axes
+    are taken as the maximum of eigenvalue-based scaling (correct ratios for
+    symmetric shapes) and independent projection (correct extent for flat/elongated
+    shapes). Verified to exactly recover core-to-core dimensions measured in JMol:
+    89.92 x 70.12 x 39.34 Å for a 4x7x9 nm ellipsoid, and 25.68 x 25.68 x 25.68 Å
+    for a 5-shell icosahedron.
+  - **`'planes'`**: weighted PCA on face centers of the ConvexHull
+    built on surface atoms (weighted by face area). Scaling on surface
+    atoms excluding hull vertices. For isotropic shapes (icosahedra,
+    spheres), an isotropy test on the inertia tensor eigenvalues
+    (tolerance 2%) forces `a = b = c = max_dist` to avoid asymmetric
+    results due to the discrete triangulation of the hull. For
+    anisotropic shapes (ellipsoids, rods), standard projection onto
+    PCA axes is used.
+  - **`'all'`**: PCA on all atoms — intermediate between `'surface'`
+    and `'vertices'`. Useful to evaluate the influence of atomic
+    density distribution on the ellipsoid axes.
+  - All thress modes are available for initial and optimized structures.
+  - Used internally by `peel_by_shifted_ellipsoid()` with `mode='vertices'`
+    to ensure no atoms are removed at `shift_dist=0`.
+
 ## [0.12.3] - "various bug fixes and associated changes"
 
 ### Added
@@ -309,7 +416,7 @@ produced by `applySlicing`.
 
 **hollow** routines in `crystalNPs.py` and `platonicNPs.py`. Are from now on replaced with the CSG tools
 
-## [0.11.5] - 2025-05-04 "Polydispersity II"
+## [0.11.5] - 2025-05-04 "Polydispersity III"
 
 ### Added
 - new **polydispersity** section in **`pyNMB-examples.ipynb`**

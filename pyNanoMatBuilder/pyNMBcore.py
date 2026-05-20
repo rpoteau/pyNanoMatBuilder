@@ -98,7 +98,7 @@ class pyNMBcore:
         self.Gstar = None
         self.ucMatrix = None
         
-    def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1):
+    def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1, noOutput=False):
         """
         Optimize the NP geometry using an ASE calculator.
         See utils/energy.optimize for full documentation.
@@ -107,9 +107,10 @@ class pyNMBcore:
             calculator (str): ASE calculator to use (default: 'EMT').
             optimizer (str): ASE optimizer to use (default: 'QN').
             fthreshold (float): Force convergence threshold in eV/Å (default: 0.1).
+            noOutput (bool):if True, do not print the properties of the final geometry (default is False).
         """
         from .utils.energy import optimize
-        return optimize(self, calculator, optimizer, fthreshold)
+        return optimize(self, calculator, optimizer, fthreshold, noOutput)
     
     def _update_sasview_dims_from_spheres(self, noOutput = None):
         """
@@ -588,6 +589,29 @@ class pyNMBcore:
         from .utils.core import clone
         return clone(self)
 
+    def effective_diameter(self, structure=None, mode='vertices'):
+        """Returns the volume-equivalent diameter from the ellipsoid analysis, in nm."""
+        key = 'optimized structure' if structure == 'optimized' else 'initial structure'
+        from .utils.prop import effective_diameter
+        return effective_diameter(self, structure, mode)
+
+    def get_ellipsoid_analysis(self, noOutput=False, mode='vertices'):
+        """
+        Perform a Principal Component Analysis (PCA) on the outer envelope to 
+        calculate the best-fitting ellipsoid calculated after all atoms (mode='all'),
+        surface atoms (mode='surface') or Hull vertices (mode='vertices').
+        Returns:
+            dict: A dictionary containing the following physical properties:
+                - "status": String indicating which geometry was analyzed (optimized or initial).
+                - "mode": String indicating which ellipsoid has been calculated.
+                - "D1", "D2", "D3": Major, intermediate, and minor diameters (Å).
+                - "volume": Volume of the ellipsoid (Å³).
+                - "surface": Approximate surface area (Å²) using Knud Thomsen's formula.
+                - "asphericity": Ratio of D1/D3 (1.0 for a perfect sphere).
+        """
+        from .utils.prop import get_ellipsoid_analysis
+        return  get_ellipsoid_analysis(self, noOutput, mode)
+
 ######################################### load external file
     @classmethod
     def from_file(cls, file_path, **kwargs):
@@ -619,19 +643,23 @@ class pyNMBcore:
         # 4. Cleanup and synchronize data structures
         instance.skipChiralityCalculation = kwargs.get('skipChiralityCalculation', True)
         instance.skipSymmetryAnalyzis = kwargs.get('skipSymmetryAnalyzis', False)
+        instance.skipFacetInfo = kwargs.get('skipFacetInfo', False)
         instance.thresholdCoreSurface = kwargs.get('thresholdCoreSurface', 1.0)
         instance.aseView = kwargs.get('aseView', False)
         instance.jmolCrystalShape = kwargs.get('jmolCrystalShape', True)
         instance.noOutput = kwargs.get('noOutput', False)
         instance.calcPropOnly = kwargs.get('calcPropOnly', False)
         instance._flush_stale_data(shape_update=f"loaded_{Path(file_path).suffix[1:]}")
+        instance.shape=""
         
         # 5. Operational settings
         instance.noOutput = kwargs.get('noOutput', False)
         
         # 6. Property analysis (OPD, MOI, etc.)
         instance.propPostMake(
+            skipChiralityCalculation=instance.skipChiralityCalculation,
             skipSymmetryAnalyzis=instance.skipSymmetryAnalyzis,
+            skipFacetInfo=instance.skipFacetInfo,
             thresholdCoreSurface=instance.thresholdCoreSurface,
             noOutput=instance.noOutput,
             is_optimized=False,

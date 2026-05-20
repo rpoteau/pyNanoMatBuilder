@@ -1421,8 +1421,11 @@ def peel_by_coordination(self, threshold_peeling=6, Rmax=2.9, noOutput=False):
     # 4. Update the structure in place
     old_count = len(target_atoms)
     self.NP = target_atoms[indices_to_keep]
+    self.NP.positions -= self.NP.get_center_of_mass()
     self.nAtoms = len(self.NP)
+    
     if not noOutput:
+        centertxt("Removing surface atoms with low coordination numbers", bgc='#007a7a', size='14', weight='bold')
         print(f"Peeling the {status} (CN < {threshold_peeling}): "
               f"removed {old_count - self.nAtoms} atoms. self.NP updated.")
     
@@ -1459,11 +1462,7 @@ def peel_by_shifted_ellipsoid(self, shift_dist=2.5, noOutput=False):
     """
     import numpy as np
     
-    # 1. Ensure geometric data exists
-    if not hasattr(self, 'ellipsoid'):
-        self.get_ellipsoid_analysis(noOutput=True)
-    
-    # 2. Identify source data using your updated keys
+    # 1. Identify source data using your updated keys
     if self.is_optimized and hasattr(self, 'NP_opt'):
         target_atoms = self.NP_opt
         key = 'optimized structure'
@@ -1471,49 +1470,55 @@ def peel_by_shifted_ellipsoid(self, shift_dist=2.5, noOutput=False):
         target_atoms = self.NP
         key = 'initial structure'
         
-    # Re-run analysis if the specific key is missing
-    if key not in self.ellipsoid:
-        self.get_ellipsoid_analysis(noOutput=True)    
-        
+    # 2. Re-run ellipsoid analysis to get evecs aligned with surface atoms
+    self.get_ellipsoid_analysis(noOutput=True, mode='vertices')
     res = self.ellipsoid[key]
     a, b, c = res['D1']/2, res['D2']/2, res['D3']/2
+
+    # Get evecs from hull vertices — SAME as get_ellipsoid_analysis(mode='vertices')
+    if self.is_optimized:
+        hull_indices = getattr(self, 'vertices_opt', None)
+    else:
+        hull_indices = getattr(self, 'vertices', None)
     
-    # 3. Perform a quick PCA to get the current orientation (evecs)
-    # This ensures the 'sheath' is perfectly aligned with the target_atoms
-    pos = target_atoms.get_positions()
-    center_orig = pos.mean(axis=0)
-    pos_c = pos - center_orig
-    S = (pos_c.T @ pos_c) / len(pos)
+    hull_pts = target_atoms.get_positions()[hull_indices]
+    center_orig = hull_pts.mean(axis=0)
+    pos_c = hull_pts - center_orig
+    S = (pos_c.T @ pos_c) / len(pos_c)
     evals, evecs = np.linalg.eigh(S)
-    
-    # Sort eigenvectors to match D1, D2, D3 order (descending)
     idx = np.argsort(evals)[::-1]
     evecs = evecs[:, idx]
-    
-    # 4. Define the Shift in Cartesian space
-    random_vec = np.random.normal(size=3)
-    random_vec /= np.linalg.norm(random_vec)
-    shift_vec = random_vec * shift_dist
-    
-    # New center for the truncation volume
+
+    # 3. Define shift
+    if shift_dist == 0:
+        shift_vec = np.zeros(3)
+    else:
+        random_vec = np.random.normal(size=3)
+        random_vec /= np.linalg.norm(random_vec)
+        shift_vec = random_vec * shift_dist
+        
     new_center = center_orig + shift_vec
-    
-    # 5. Transform atom positions to the Ellipsoid's local frame
-    # This aligns the axes with the particle's elongation (e.g., Cylinder axis)
+
+    # 4. Apply ellipsoid in local frame
+    pos = target_atoms.get_positions()
     relative_pos = pos - new_center
     local_pos = relative_pos @ evecs
+
+    inside = (local_pos[:,0]**2 / a**2 +
+              local_pos[:,1]**2 / b**2 +
+              local_pos[:,2]**2 / c**2) <= 1.0 + 1e-6 # small tolerance
     
-    # 6. Apply the ellipsoid inequality in local coordinates
-    inside = (local_pos[:,0]**2 / a**2 + 
-              local_pos[:,1]**2 / b**2 + 
-              local_pos[:,2]**2 / c**2) <= 1.0
-    
-    # 7. Update and Reset
+    # 5. Update and Reset
     old_count = len(target_atoms)
     self.NP = target_atoms[inside]
+    self.NP.positions -= self.NP.get_center_of_mass()
+    self.nAtoms = len(self.NP)
+    
     if not noOutput:
         # Calculating the two ratios (Major/Intermediate and Major/Minor)
         # This reflects the full 3D shape (Cylindrical vs Spheroidal)
+
+        centertxt("Truncating the nanoparticle using a shape-adaptive envelope", bgc='#007a7a', size='14', weight='bold')
         print(f"Shifted Truncation ({key}):")
         print(f"  - Envelope matched to particle length ({a*0.1:.2f} nm) and shape.")
         print(f"  - Aspect Ratios: a/b = {a/b:.2f} ; a/c = {a/c:.2f}")

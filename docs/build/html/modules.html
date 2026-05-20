@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.12.3 documentation</title>
+  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.12.4 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="canonical" href="https://pynanomatbuilder.readthedocs.io/modules.html" />
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=56343b9b"></script>
+      <script src="_static/documentation_options.js?v=9dbdab56"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -786,6 +786,12 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.compute_opd_index"><code class="docutils literal notranslate"><span class="pre">compute_opd_index()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.AtomicRadii"><code class="docutils literal notranslate"><span class="pre">AtomicRadii</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.AtomicRadii.get_ionic_radii"><code class="docutils literal notranslate"><span class="pre">AtomicRadii.get_ionic_radii()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.print_atomic_radii"><code class="docutils literal notranslate"><span class="pre">print_atomic_radii()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.effective_diameter"><code class="docutils literal notranslate"><span class="pre">effective_diameter()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyNanoMatBuilder.utils.external_pgm">External programs (external_pgm.py)</a><ul>
@@ -8654,7 +8660,7 @@ directory and recreate it. Default is False.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.energy.optimize">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.energy.</span></span><span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calculator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'EMT'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'QN'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fthreshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.energy.optimize" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.energy.</span></span><span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calculator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'EMT'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'QN'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fthreshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.energy.optimize" title="Link to this definition"></a></dt>
 <dd><p>Optimize the geometry of an atomic system using various energy calculators and geometry optimization algorithms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -8663,6 +8669,7 @@ directory and recreate it. Default is False.</p></li>
 <li><p><strong>saveCoords</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, saves the optimized coordinates.</p></li>
 <li><p><strong>pathway</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to save the trajectory and final structure.</p></li>
 <li><p><strong>fthreshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Convergence threshold for forces (in eV/Å).</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – if True, do not print the properties of the final geometry (default is False)</p></li>
 </ul>
 </dd>
 </dl>
@@ -8934,30 +8941,47 @@ from the NP positions to the planes (based on Hull equations)</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.get_ellipsoid_analysis">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">get_ellipsoid_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.get_ellipsoid_analysis" title="Link to this definition"></a></dt>
-<dd><p>Perform a Principal Component Analysis (PCA) on the outer envelope to
-calculate the best-fitting circumscribed ellipsoid.</p>
-<p>This method identifies the principal axes of the nanoparticle’s surface
-by analyzing the covariance matrix of the Convex Hull vertices. The
-resulting ellipsoid is scaled such that its major semi-axis matches
-the maximum radial distance found in the structure, ensuring a perfect
-fit for circumscribed diameter measurements (e.g., 1.63 nm for a
-3-shell icosahedron).</p>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">get_ellipsoid_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vertices'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.get_ellipsoid_analysis" title="Link to this definition"></a></dt>
+<dd><p>Perform a Principal Component Analysis (PCA) to calculate the best-fitting
+ellipsoid of a nanoparticle, using three different sets of points.</p>
 <p>The analysis automatically selects between ‘initial structure’ and
 ‘optimized structure’ based on the current state of the object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses printed summaries and Jmol
-command generation. Defaults to False.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses printed summaries and Jmol
+command generation. Defaults to False.</p></li>
+<li><p><strong>mode</strong> (<em>str</em>) – <p>Defines which atoms are used for PCA and scaling:
+- ‘vertices’ (default): PCA and scaling on convex hull vertices.</p>
+<blockquote>
+<div><p>Gives the circumscribed ellipsoid — ellipsoid contains all atoms.
+Verified to exactly match core-to-core dimensions measured in JMol.
+Recommended for SAXS diameter comparison and for
+peel_by_shifted_ellipsoid().</p>
+</div></blockquote>
+<ul>
+<li><p>’planes’: Weighted PCA on face centers of the ConvexHull built
+on surface atoms (weighted by face area), scaled by projection of
+surface atoms excluding hull vertices. Gives a slightly smaller
+ellipsoid than ‘vertices’ — useful as a lower bound estimate.</p></li>
+<li><p>’all’: PCA on all atoms of the structure. Gives an intermediate
+result between ‘surface’ and ‘vertices’. Useful to evaluate the
+influence of the atomic density distribution on the ellipsoid axes.</p></li>
+</ul>
+</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><dl class="simple">
-<dt>A dictionary containing the following physical properties:</dt><dd><ul class="simple">
-<li><p>”status”: String indicating which envelope was analyzed.</p></li>
-<li><p>”D1”, “D2”, “D3”: Major, intermediate, and minor diameters (Å).</p></li>
-<li><p>”volume”: Volume of the ellipsoid (Å³).</p></li>
-<li><p>”surface”: Approximate surface area (Å²) using Knud Thomsen’s formula.</p></li>
-<li><p>”asphericity”: Ratio of D1/D3 (1.0 for a perfect sphere).</p></li>
+<dt>Stored in self.ellipsoid[key] with the following fields:</dt><dd><ul class="simple">
+<li><p>”status” (str): ‘initial envelope’ or ‘optimized envelope’.</p></li>
+<li><p>”mode”   (str): the mode used for this calculation.</p></li>
+<li><p>”D1”, “D2”, “D3” (float): major, intermediate and minor
+diameters in Å, sorted in descending order.</p></li>
+<li><p>”volume”      (float): ellipsoid volume in Å³.</p></li>
+<li><p>”surface”     (float): ellipsoid surface area in Å²,
+computed via Knud Thomsen’s approximation (error &lt; 1.06%).</p></li>
+<li><p>”asphericity” (float): D1/D3 ratio (1.0 for a perfect sphere).</p></li>
 </ul>
 </dd>
 </dl>
@@ -8967,19 +8991,17 @@ command generation. Defaults to False.</p>
 <dd class="field-odd"><p>dict</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If fewer than 4 Hull vertices are found, indicating
-    that coreSurface() has not been run or the NP is invalid.</p>
+<dd class="field-even"><p><strong>ValueError</strong> – If fewer than 4 surface atoms are found (coreSurface()
+    has not been run), or if an unknown mode is requested.</p>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
 <ul class="simple">
-<li><p>Scaling Logic: The semi-axes are derived from the square root of
-the eigenvalues of the covariance matrix. The scale factor is
-defined as: scale = max_radius / sqrt(max_eigenvalue).</p></li>
-<li><p>Surface Area: Calculated using an approximation with p=1.6075,
-limiting the maximum relative error to 1.061%.</p></li>
-<li><p>Visualization: Generates a Jmol-ready command using the ‘AXES’
-and ‘CENTER’ keywords for precise orientation.</p></li>
+<li><p>The Jmol command to visualize the ellipsoid is printed when
+noOutput=False, using the AXES and CENTER keywords.</p></li>
+<li><p>Results are stored under self.ellipsoid[‘initial structure’] or
+self.ellipsoid[‘optimized structure’] and overwritten on each call.</p></li>
+<li><p>Use effective_diameter() to get the volume-equivalent diameter in nm.</p></li>
 </ul>
 </dd></dl>
 
@@ -9214,6 +9236,62 @@ Uses KDTree for neighbor searching and Numba for parallelized math.</p>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.AtomicRadii">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">AtomicRadii</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">el</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ionic_list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.AtomicRadii" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Container for atomic radii of a given element.
+All radii are stored in nm.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.AtomicRadii.get_ionic_radii">
+<span class="sig-name descname"><span class="pre">get_ionic_radii</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">charge</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coordination</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.AtomicRadii.get_ionic_radii" title="Link to this definition"></a></dt>
+<dd><p>Retrieve a specific ionic radius.
+:param charge: Ionic charge (e.g. +1, +3).
+:type charge: int
+:param coordination: Coordination number in Roman numerals</p>
+<blockquote>
+<div><p>(e.g. ‘VI’, ‘IV’, ‘IVSQ’). See print_atomic_radii() for available values.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>spin</strong> (<em>str</em><em>, </em><em>optional</em>) – Spin state (‘High Spin’, ‘Low Spin’, etc.).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Ionic radius in nm, or None if not found.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.print_atomic_radii">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">print_atomic_radii</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">element_symbol</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.print_atomic_radii" title="Link to this definition"></a></dt>
+<dd><p>Print the available atomic radii for a given element using mendeleev.
+Helps the user choose the appropriate radius for the SAXS → core-to-core
+diameter correction: D_core = D_SAXS - 2 * r_atom.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>element_symbol</strong> (<em>str</em>) – Chemical symbol of the element (e.g. ‘Ag’, ‘Au’).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Available radii in nm, including ionic radii as a list of dicts.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.effective_diameter">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">effective_diameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">structure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'optimized'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vertices'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.effective_diameter" title="Link to this definition"></a></dt>
+<dd><p>Returns the volume-equivalent diameter from the ellipsoid analysis, in nm.</p>
 </dd></dl>
 
 </section>

@@ -915,8 +915,6 @@ class regIco(PlatonicNP):
         print("Dual polyhedron: dodecahedron")
 
 
-
-
 ###########################################################################################################
 class regfccTd(PlatonicNP):
     """A class for generating XYZ and CIF files of regular fcc tetrahedral nanoparticles (NPs).
