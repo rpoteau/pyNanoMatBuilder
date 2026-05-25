@@ -21,7 +21,13 @@ def applySlicing(self,
              distance_unit: str = 'nm',
              mode: str = 'OR',
              recenter: bool=True,
-             noOutput: bool = False):
+             noOutput: bool = False,
+             postAnalyzis: bool = None,
+             skipChiralityCalculation: bool = None,
+             skipSymmetryAnalyzis: bool = None,
+             skipFacetInfo: bool = None,
+             thresholdCoreSurface: float = None,
+             ):
     """
     Apply one or more truncation plane groups to self.NP, with optional
     rotational symmetry generation and logical combination of groups.
@@ -43,9 +49,17 @@ def applySlicing(self,
                 vector perpendicular to rotAxis by this angle.
 
         Mandatory keys:
-            'distance' (float): Distance from the origin (center of mass) to
-                the truncation plane, in nm (default) or Å (distance_unit).
-            'side' (str): Which atoms to remove.
+            'distance' (float): Signed orthogonal distance from the origin
+                (center of mass of the NP) to the truncation plane, in nm
+                (default) or Å (distance_unit), along the plane normal n.
+                The plane is defined by n · x = distance, where x is any
+                point on the plane.
+                - distance > 0 : plane is on the positive side of n,
+                                 at distance Å from the origin.
+                - distance = 0 : plane passes through the origin.
+                - distance < 0 : plane is on the negative side of n,
+                                 at |distance| Å from the origin.
+            'delete' (str): Which atoms to remove.
                 'above' removes atoms on the positive side of the plane normal.
                 'below' removes atoms on the negative side.
                 Default is 'above'.
@@ -92,20 +106,20 @@ def applySlicing(self,
 
     Examples:
         # Facet a cube with 4 {010} planes (OR mode, default)
-        NP.applyCSG(
+        NP.applySlicing(
             planes=[
                 {'normal': [0, 1, 0], 'distance': 6.0,
-                 'nRot': 4, 'rotAxis': [0, 0, 1], 'side': 'above'},
+                 'nRot': 4, 'rotAxis': [0, 0, 1], 'delete': 'above'},
             ],
             distance_unit='Angstrom'
         )
 
         # Carve a pyramidal hole on top of a cube
-        NP.applyCSG(
+        NP.applySlicing(
             planes=[
                 {'normal': [0, 1, 1], 'distance': 5.0,
                  'nRot': 4, 'rotAxis': [0, 0, 1],
-                 'side': 'below', 'modeP': 'AND'},
+                 'delete': 'below', 'modeP': 'AND'},
             ],
             distance_unit='Angstrom'
         )
@@ -114,9 +128,9 @@ def applySlicing(self,
         NP.applySlicing(
             planes=[
                 {'normal': [0, 1, 0], 'distance': 6.0,
-                 'nRot': 4, 'rotAxis': [0, 0, 1], 'side': 'above'},
+                 'nRot': 4, 'rotAxis': [0, 0, 1], 'delete': 'above'},
                 {'normal': [0, 0, 1], 'distance': 6.0,
-                 'nRot': 1, 'side': 'above'},
+                 'nRot': 1, 'delete': 'above'},
             ],
             mode='AND',
             distance_unit='Angstrom'
@@ -140,19 +154,25 @@ def applySlicing(self,
 
     for plane_def in planes:
 
+        # --- Side to delete --- backward compatibility with 'side'
+        if 'side' in plane_def and 'delete' not in plane_def:
+            delete = plane_def['side']  # legacy alias
+        else:
+            delete = plane_def.get('delete', 'above')
+            
         # --- Distance ---
         distance_ang = plane_def['distance'] * scale
 
-        # --- Side ---
-        side = plane_def.get('side', 'above')
-        if side not in ('above', 'below'):
-            print(f"{bg.LIGHTYELLOWB}Warning: unknown side '{side}', "
+        # --- Side 2 delete---
+        delete = plane_def.get('delete', 'above')
+        if delete not in ('above', 'below'):
+            print(f"{bg.LIGHTYELLOWB}Warning: unknown side to delete '{delete}', "
                   f"defaulting to 'above'.{bg.OFF}")
-            side = 'above'
-        del_above = (side == 'above')
+            delete = 'above'
+        del_above = (delete == 'above')
 
         # --- modeP within group ---
-        default_modeP = 'AND' if side == 'below' else 'OR'
+        default_modeP = 'AND' if delete == 'below' else 'OR'
         modeP = plane_def.get('modeP', default_modeP)
         if modeP not in ('OR', 'AND'):
             print(f"{bg.LIGHTYELLOWB}Warning: unknown modeP '{modeP}', "
@@ -218,7 +238,7 @@ def applySlicing(self,
             print(f"\n  Group {len(group_masks)+1} — "
                   f"normal: {normal_label}"
                   f"  nRot: {nRot}  distance: {plane_def['distance']} {distance_unit}"
-                  f"  side: {side}  modeP: {modeP}")
+                  f"  side to delete: {delete}  modeP: {modeP}")
             for nn in normals:
                 nn_n = nn / np.linalg.norm(nn)
                 print(f"    [{nn_n[0]:+.4f} {nn_n[1]:+.4f} {nn_n[2]:+.4f}]"
@@ -238,7 +258,7 @@ def applySlicing(self,
         group_summaries.append({
             'normal': plane_def.get('normal', f"angle={plane_def.get('angle')}"),
             'distance': plane_def['distance'],
-            'side': side,
+            'delete': delete,
             'modeP': modeP,
             'nRot': nRot,
             'n_condemned': int(np.count_nonzero(group_mask)),
@@ -269,16 +289,16 @@ def applySlicing(self,
         print(f"\n{bg.LIGHTYELLOWB}Summary of plane groups:{bg.OFF}")
         print(f"  Global mode : {mode}")
         print(f"  {'Group':<6} {'normal':<20} {'distance':>10} "
-              f"{'side':<8} {'modeP':<6} {'nRot':<6} {'condemned':>10}")
+              f"{'delete':<8} {'modeP':<6} {'nRot':<6} {'condemned':>10}")
         print(f"  {'─'*70}")
         for i, s in enumerate(group_summaries):
             print(f"  {i+1:<6} {str(s['normal']):<20} "
                   f"{s['distance']:>8.3f} {distance_unit}  "
-                  f"{s['side']:<8} {s['modeP']:<6} {s['nRot']:<6} "
+                  f"{s['delete']:<8} {s['modeP']:<6} {s['nRot']:<6} "
                   f"{s['n_condemned']:>6}/{n_total}")
         print(f"\n{bg.LIGHTYELLOWB}Hints:{bg.OFF}")
         print(f"  - Check distances (too small → plane inside NP → everything condemned)")
-        print(f"  - Check side ('above' vs 'below')")
+        print(f"  - Check delete ('above' vs 'below')")
         print(f"  - Check modeP ('OR' vs 'AND') within each group")
         print(f"  - Check mode ('OR' vs 'AND') between groups")
         return
@@ -287,16 +307,32 @@ def applySlicing(self,
     self.NP = self.NP[~final_mask]
 
     group_info = []
+    delete_by_plane = []
     for i, plane_def in enumerate(planes):
         nRot = plane_def.get('nRot', 1)
+        if 'side' in plane_def and 'delete' not in plane_def:
+            d = plane_def['side']  # backward compatibility
+        else:
+            d = plane_def.get('delete', 'above')
         for _ in range(nRot):
-            group_info.append(i)   # index du groupe
+            group_info.append(i)
+            delete_by_plane.append(d)
     
-    self.trPlanes_Slicing_groups = group_info  # ex: [0,0,0,0,1] for 4+1 planes
+    self.trPlanes_Slicing_groups = group_info
+    self.trPlanes_Slicing_delete = delete_by_plane
 
     # --- Recenter ---
     if recenter:
-        self.NP.positions -= self.NP.get_center_of_mass()
+        com_shift = self.NP.get_center_of_mass()  # ← avant le recentrage !
+        self.NP.positions -= com_shift
+        # Update plane distances to account for recentering
+        if len(all_tr_planes) > 0:
+            all_tr_planes_arr = np.array(all_tr_planes)
+            for i, plane in enumerate(all_tr_planes_arr):
+                n = plane[:3]
+                # New d = old d + n · shift
+                all_tr_planes_arr[i, 3] += np.dot(n, com_shift)
+            all_tr_planes = all_tr_planes_arr.tolist()
 
     # --- Update attributes ---
     self.trPlanes_Slices  = setdAsNegative(np.array(all_tr_planes))
@@ -305,17 +341,31 @@ def applySlicing(self,
     self.cog              = self.NP.get_center_of_mass()
     self._flush_stale_data(shape_update="_Slices")
     self.is_optimized     = False
-    self.propPostMake(
-        skipChiralityCalculation = self.skipChiralityCalculation,
-        skipSymmetryAnalyzis = self.skipSymmetryAnalyzis,
-        skipFacetInfo = self.skipFacetInfo, 
-        thresholdCoreSurface = self.thresholdCoreSurface,
-        noOutput = noOutput,
-        is_optimized=False,
-    )
-
+    
     if not noOutput:
         print(f"  {n_to_del} atoms removed, {self.nAtoms} remaining.")
+        
+    # --- Resolve parameters ---
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation = skipChiralityCalculation,
+            skipSymmetryAnalyzis     = skipSymmetryAnalyzis,
+            skipFacetInfo            = skipFacetInfo,
+            thresholdCoreSurface     = thresholdCoreSurface,
+            noOutput                 = noOutput,
+            is_optimized             = False,
+        )
 
 def _apply_rotB(pos_B, rotB):
     """
@@ -352,14 +402,18 @@ def _apply_rotB(pos_B, rotB):
     return pos_B
     
 def cut_by(self,
-          NP_B,
-          cogB: list = None,
-          rotB=None,
-          mode: str = 'hull',
-          threshold: float = 0.8,
-          skipSymmetryAnalyzis: bool = None,
-          thresholdCoreSurface: float = None,
-          noOutput: bool = False):
+            NP_B,
+            cogB: list = None,
+            rotB=None,
+            mode: str = 'hull',
+            threshold: float = 0.8,
+            noOutput: bool = False,
+            postAnalyzis: bool = None,
+            skipChiralityCalculation: bool = None,
+            skipSymmetryAnalyzis: bool = None,
+            skipFacetInfo: bool = None,
+            thresholdCoreSurface: float = None,
+             ):
     """
     Remove from self.NP (object A) the atoms that lie inside object B,
     creating a hollow cavity in the shape of B.
@@ -492,6 +546,7 @@ def cut_by(self,
     peel_by_coordination(self,
                          threshold_peeling=1,  # remove only truly isolated atoms
                          Rmax=1.2 * Rnn_A,
+                         postAnalyzis=False,
                          noOutput=True)
     n_removed_isolated = n_before - len(self.NP)
     if not noOutput and n_removed_isolated > 0:
@@ -512,28 +567,46 @@ def cut_by(self,
     self.cog    = self.NP.get_center_of_mass()
     self._flush_stale_data(shape_update="_hollow")
     self.is_optimized = False
-    self.propPostMake(
-        skipChiralityCalculation = self.skipChiralityCalculation,
-        skipSymmetryAnalyzis = self.skipSymmetryAnalyzis,
-        skipFacetInfo = self.skipFacetInfo, 
-        thresholdCoreSurface=self.thresholdCoreSurface,
-        noOutput=noOutput,
-        is_optimized=False,
-    )
 
     if not noOutput:
         print(f"  {n_to_del} atoms removed from A, "
               f"{self.nAtoms} remaining.")
 
+    # --- Resolve parameters ---
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation = skipChiralityCalculation,
+            skipSymmetryAnalyzis     = skipSymmetryAnalyzis,
+            skipFacetInfo            = skipFacetInfo,
+            thresholdCoreSurface     = thresholdCoreSurface,
+            noOutput                 = noOutput,
+            is_optimized             = False,
+        )
+
 def union_with(self,
-         NP_B,
-         cogB: list = None,
-         rotB=None,
-         mode: str = 'hull',
-         threshold: float = 0.8,
-         skipSymmetryAnalyzis: bool = None,
-         thresholdCoreSurface: float = None,
-         noOutput: bool = False):
+                NP_B,
+                cogB: list = None,
+                rotB=None,
+                mode: str = 'hull',
+                threshold: float = 0.8,
+                 noOutput: bool = False,
+                 postAnalyzis: bool = None,
+                 skipChiralityCalculation: bool = None,
+                 skipSymmetryAnalyzis: bool = None,
+                 skipFacetInfo: bool = None,
+                 thresholdCoreSurface: float = None,
+             ):
     """
     Add NP_B to self.NP (object A), removing overlapping atoms closer
     than threshold * Rnn to avoid unphysical interatomic distances.
@@ -659,28 +732,46 @@ def union_with(self,
     self.cog    = self.NP.get_center_of_mass()
     self._flush_stale_data(shape_update="_plus")
     self.is_optimized = False
-    self.propPostMake(
-        skipChiralityCalculation = self.skipChiralityCalculation,
-        skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
-        skipFacetInfo = self.skipFacetInfo, 
-        thresholdCoreSurface=self.thresholdCoreSurface,
-        noOutput=noOutput,
-        is_optimized=False,
-    )
 
     if not noOutput:
         print(f"  {len(NP_B_shifted)} atoms of B added, "
               f"{self.nAtoms} total atoms.")
 
+    # --- Resolve parameters ---
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation = skipChiralityCalculation,
+            skipSymmetryAnalyzis     = skipSymmetryAnalyzis,
+            skipFacetInfo            = skipFacetInfo,
+            thresholdCoreSurface     = thresholdCoreSurface,
+            noOutput                 = noOutput,
+            is_optimized             = False,
+        )
+
 def intersect_with(self,
-              NP_B,
-              cogB: list = None,
-              rotB=None,
-              mode: str = 'hull',
-              threshold: float = 0.8,
-              skipSymmetryAnalyzis: bool = None,
-              thresholdCoreSurface: float = None,
-              noOutput: bool = False):
+                    NP_B,
+                    cogB: list = None,
+                    rotB=None,
+                    mode: str = 'hull',
+                    threshold: float = 0.8,
+                    noOutput: bool = False,
+                    postAnalyzis: bool = None,
+                    skipChiralityCalculation: bool = None,
+                    skipSymmetryAnalyzis: bool = None,
+                    skipFacetInfo: bool = None,
+                    thresholdCoreSurface: float = None,
+             ):
     """
     Keep in self.NP (object A) only the atoms that lie inside object B,
     discarding everything outside.
@@ -814,28 +905,46 @@ def intersect_with(self,
     self.cog    = self.NP.get_center_of_mass()
     self._flush_stale_data(shape_update="_intersect")
     self.is_optimized = False
-    self.propPostMake(
-        skipChiralityCalculation = self.skipChiralityCalculation,
-        skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
-        skipFacetInfo = self.skipFacetInfo,
-        thresholdCoreSurface=self.thresholdCoreSurface,
-        noOutput=noOutput,
-        is_optimized=False,
-    )
 
     if not noOutput:
         n_removed = n_total - n_to_keep
         print(f"  {n_removed} atoms removed, {self.nAtoms} remaining.")
 
+    # --- Resolve parameters ---
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation = skipChiralityCalculation,
+            skipSymmetryAnalyzis     = skipSymmetryAnalyzis,
+            skipFacetInfo            = skipFacetInfo,
+            thresholdCoreSurface     = thresholdCoreSurface,
+            noOutput                 = noOutput,
+            is_optimized             = False,
+        )
+
 def flush_inlay_with(self,
-          NP_B,
-          cogB: list = None,
-          rotB=None,
-          mode: str = 'hull',
-          threshold: float = 0.8,
-          skipSymmetryAnalyzis: bool = None,
-          thresholdCoreSurface: float = None,
-          noOutput: bool = False):
+                    NP_B,
+                    cogB: list = None,
+                    rotB=None,
+                    mode: str = 'hull',
+                    threshold: float = 0.8,
+                    noOutput: bool = False,
+                    postAnalyzis: bool = None,
+                    skipChiralityCalculation: bool = None,
+                    skipSymmetryAnalyzis: bool = None,
+                    skipFacetInfo: bool = None,
+                    thresholdCoreSurface: float = None,
+             ):
     """
     Merge self.NP (object A) with the part of NP_B that overlaps with self.NP.
     Atoms of B outside A are discarded. Overlapping atoms are deduplicated.
@@ -978,14 +1087,28 @@ def flush_inlay_with(self,
     self.cog      = self.NP.get_center_of_mass()
     self._flush_stale_data(shape_update="_union")
     self.is_optimized = False
-    self.propPostMake(
-        skipChiralityCalculation = self.skipChiralityCalculation,
-        skipSymmetryAnalyzis = self.skipSymmetryAnalyzis,
-        thresholdCoreSurface = self.thresholdCoreSurface,
-        skipFacetInfo = self.skipFacetInfo, 
-        noOutput = noOutput,
-        is_optimized = False,
-    )
 
     if not noOutput:
         print(f"  {self.nAtoms} total atoms after inlay.")
+
+    # --- Resolve parameters ---
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation = skipChiralityCalculation,
+            skipSymmetryAnalyzis     = skipSymmetryAnalyzis,
+            skipFacetInfo            = skipFacetInfo,
+            thresholdCoreSurface     = thresholdCoreSurface,
+            noOutput                 = noOutput,
+            is_optimized             = False,
+        )

@@ -560,7 +560,57 @@ def crystallographic_angle(self,
         print(f"Angle between {type1} {t1} and {type2} {t2} : {angle:.4f}°")
 
     return angle
-    
+
+def angles_between_planes(self_or_system, hkl_list, noOutput=False):
+    """
+    Compute all pairwise dihedral angles between a list of crystallographic
+    planes, for any crystal system.
+
+    Builds on angle_between_planes() / crystallographic_angle() to compute
+    the full symmetric angle matrix, displays it as a formatted pandas
+    DataFrame (with Miller index labels as index and columns), and returns
+    the raw matrix as a numpy array.
+
+    Args:
+        self_or_system: A pyNMB object with crystallographic_angle() method.
+        hkl_list (list of list): List of Miller indices,
+            e.g. [[1,0,0], [1,1,0], [1,1,1], [3,1,1]].
+        noOutput (bool): If True, suppresses DataFrame display.
+            Default is False.
+
+    Returns:
+        np.ndarray: Symmetric (n x n) matrix of dihedral angles in degrees,
+            where n = len(hkl_list). Diagonal is 0.0.
+
+    Example:
+        matrix = AuNP.angles_between_planes(
+            [[1,0,0],[1,1,0],[1,1,1],[3,1,1],[2,1,0]])
+        # Displays a formatted DataFrame and returns the numpy matrix.
+    """
+    import numpy as np
+    import pandas as pd
+
+    labels = [f"({h[0]}{h[1]}{h[2]})" for h in hkl_list]
+    n = len(hkl_list)
+    matrix = np.zeros((n, n))
+
+    for i, hkl1 in enumerate(hkl_list):
+        for j, hkl2 in enumerate(hkl_list):
+            if i == j:
+                matrix[i, j] = 0.0
+            elif j > i:
+                matrix[i, j] = crystallographic_angle(self_or_system,
+                    hkl1, hkl2, type1='plane', type2='plane', noOutput=True)
+                matrix[j, i] = matrix[i, j]
+
+    if not noOutput:
+        from IPython.display import display
+        df = pd.DataFrame(matrix, index=labels, columns=labels)
+        df_display = df.map(lambda x: f"{x:.2f}°" if x > 0 else "—")
+        display(df_display)
+
+    return matrix
+
 def generateSlab(self,
                  hkl,
                  size_a: float = 2.0,

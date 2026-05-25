@@ -5,7 +5,211 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
-## [0.12.4] - "polydispersity II"
+## [0.13.0] - "feat(csg): add symmetry ops, nanostar tools, fix plane orientation and slicing artifacts"
+
+### Added
+
+- **`saveCoords_DrawJmol`: new parameters**
+  - `cpk` (float, default 0): atom CPK radius passed directly to the Jmol script
+  - `wireframe` (float, default 0.05): wireframe thickness passed directly to the Jmol script
+  - `saveXYZ` (bool, default True): controls whether the `.xyz` file is saved
+  - `user_output_dir` (str, default `"figs"`): output directory for generated files
+- **added a second tutorial in `pyNMB-tutorials.ipynb`**:
+    **Tutorial: Morphing — Cube to octahedron** = Animated Wulff construction morphing between a cube {100} and a
+    truncated octahedron {100}+{111}
+- **`THH210` (tetrakis hexahedron) and `TZH211` (trapezohedron) in `data.py`**:
+  New predefined Wulff shapes for fcc metals, bounded by {210} and {211} facets, respectively.
+
+- **`THH210` and `TZH211` added to the graphical abstract** of pyNanoMatBuilder.
+- **`angles_between_planes(system, hkl_list)` in `utils/crystals.py`**,
+    exposed via `pyNMBcore`:
+    Computes all pairwise dihedral angles between a list of crystallographic
+    planes for any crystal system, building on the existing
+    `crystallographic_angle()`. Displays a formatted pandas DataFrame with
+    Miller index labels and returns the raw (n×n) symmetric angle matrix as
+    a numpy array. Example:
+    ```python
+      AuNP.angles_between_planes([[1,0,0],[1,1,0],[1,1,1],[3,1,1],[2,1,0]])
+    ```
+- **`self.trPlanes_Slicing_delete`** attribute in `applySlicing()`: list of
+    `'above'`/`'below'` strings, one per generated plane (after `nRot`
+    expansion), used by `defSlicingPlanesForJMol()` to orient the normal
+    arrows correctly.
+
+- **new symmetry operations**
+    - **`apply_rotation(angle_deg, axis, center, axis_def)` in `utils/geometry.py`**,
+        exposed via `pyNMBcore`:
+        Rotates `self.NP` by `angle_deg` around an axis passing through a center
+        point. Also rotates all truncation planes (`trPlanes`, `trPlanes_Wulff`,
+        `trPlanes_Slices`, `trPlanes_opt`) accordingly. Axis can be given as Miller
+        indices (`axis_def='hkl'`, default) or Cartesian vector (`axis_def='cart'`).
+        Center defaults to the center of mass.
+        ```python
+        NP.apply_rotation(120.0, axis=[1,1,1], axis_def='hkl')
+        ```
+    
+    - **`apply_reflection(plane, plane_def)` in `utils/geometry.py`**,
+        exposed via `pyNMBcore`:
+        Reflects `self.NP` across a plane defined by Miller indices (`plane_def='hkl'`,
+        default) or Cartesian coefficients (`plane_def='cart'`). Also reflects all
+        truncation plane normals accordingly.
+        ```python
+        NP.apply_reflection([1,1,0], plane_def='hkl')
+        ```
+    
+    - **`rotate_to_align(axis, target_axis, axis_def)` in `utils/geometry.py`**,
+        exposed via `pyNMBcore`:
+        Rotates `self.NP` to align a crystallographic axis with a target Cartesian
+        direction. Uses `alignV1WithV2_returnR` and applies the same rotation matrix
+        to all truncation planes. Default target axis is `[0,0,1]`.
+        ```python
+        NP.rotate_to_align(axis=[1,1,1], target_axis=[0,0,1], axis_def='hkl')
+        ```
+    
+    - **`replicate_by_rotation(n_copies, axis, center, axis_def)` in `utils/geometry.py`**,
+        exposed via `pyNMBcore`:
+        Duplicates `self.NP` by rotating it `n_copies` times by `360°/n_copies`
+        around an axis and merges all copies into a single structure. Designed for
+        building rotationally symmetric assemblies (e.g. nanostar arms around `<111>`).
+        ```python
+        arm.replicate_by_rotation(4, axis=[0,0,1], axis_def='cart')
+        ```
+    
+    - **`replicate_by_reflection(plane, plane_def)` in `utils/geometry.py`**,
+        exposed via `pyNMBcore`:
+        Duplicates `self.NP` by reflecting only atoms on the positive side of the
+        plane (signed distance > 0), then merges original + reflected atoms into
+        a single structure. Atoms on the negative side are not reflected to avoid
+        creating wrong-species duplicates at the junction. Designed for building
+        mirror-symmetric assemblies (e.g. completing a nanostar from 4 to 8 arms).
+        ```python
+        arm4.replicate_by_reflection([0,0,1,0], plane_def='cart')
+        ```
+
+    All five functions support the standard `postAnalyzis`, `skipChiralityCalculation`,
+    `skipSymmetryAnalyzis`, `skipFacetInfo`, and `thresholdCoreSurface` parameters
+    for fine-grained control over post-analysis.
+    
+- **`remove_duplicates(tol)` in `utils/geometry.py`**,
+    exposed via `pyNMBcore`:
+    Removes duplicate atoms from `self.NP` using a KDTree neighbor search.
+    Atoms closer than `tol` Å (default 0.1 Å) are considered duplicates —
+    the atom with the lower index is always kept. Essential after
+    `replicate_by_rotation` or `replicate_by_reflection` to clean up atoms
+    at the junction between merged structures.
+    ```python
+    NP.remove_duplicates(tol=0.1)
+    ```
+
+- **`clip_to_sphere(radius_nm)` in `utils/geometry.py`**,
+    exposed via `pyNMBcore`:
+    Removes all atoms farther than `radius_nm` from the center of mass,
+    effectively clipping the structure to a spherical envelope. Recenters
+    the NP after clipping. Useful to trim elongated structures such as
+    nanostar arms to a well-defined spherical boundary.
+    ```python
+    nanostar.clip_to_sphere(radius_nm=10.0)
+    ```
+
+### Fixed
+
+- **`makeWulff` in `crystalNPs.py`: fix inhomogeneous array error with `symWulff=True` in size mode**. 
+    When using `symWulff=True` with `sizesWulff` (i.e. without `eSurfacesWulff`),
+    symmetry-equivalent sizes were appended as a nested list instead of being
+    flattened into `sizes`, causing a `ValueError` on `np.array(sizes)`.
+    Replace `sizes.append(len(sym_p) * [self.sizesWulff[i]])` with
+    `sizes += len(sym_p) * [self.sizesWulff[i]]` to match the `eSurfacesWulff` code path.
+- **`applySlicing()` in `utils/csg.py`** — slicing plane visualization fix:
+    After slicing, `self.NP` is recentered on its center of mass, but
+    `trPlanes_Slices` was not updated accordingly — the planes remained in
+    the pre-recentering reference frame, causing them to appear offset in
+    the JMol visualization generated by `defSlicingPlanesForJMol()`.
+    Fixed by computing the center of mass shift **before** recentering and
+    updating the plane distances accordingly:
+    ```python
+    # d_new = d_old + n · com_shift
+    all_tr_planes_arr[i, 3] += np.dot(n, com_shift)
+    ```
+- **`reduceHullFacets()` in `utils/geometry.py`** — stale feasible point fix:
+    `HalfspaceIntersection` requires a feasible point strictly inside all
+    halfspaces. Previously, `self.cog` was used as the feasible point, but
+    it could be stale when `applySlicing()` was called with `recenter=False`
+    — causing a `QhullError` if the center of mass of the remaining atoms
+    had shifted outside one of the truncation planes.
+    Fixed by:
+    1. Always recomputing the feasible point from `self.NP.get_center_of_mass()`
+     (current atom positions) instead of `self.cog`.
+    2. Adding a safety check — if the feasible point is still outside any
+     halfspace (margin ≥ 0), falling back to the centroid of all atom
+     positions. If the fallback also fails, `reduceHullFacets` returns
+     `([], [])` with a warning instead of raising a `QhullError`.
+
+- **`replicate_by_reflection()`**: atoms on the **negative** side of the
+    reflection plane are now excluded from reflection. Previously, all atoms
+    were reflected regardless of their position, causing atoms from the
+    negative side to be mapped back onto existing atoms on the positive side,
+    creating spurious wrong-species duplicates at the junction.
+
+- **`setdAsNegative()` in `utils/geometry.py`** — new optional `cog` parameter:
+    When `cog` is provided, each plane is flipped if the center of mass lies
+    on the wrong (positive) side of the halfspace, instead of relying solely
+    on the sign of `d`. This correctly handles planes with `d ≈ 0` (planes
+    passing through or near the origin) when the NP is not centered at the
+    origin — a common situation when `applySlicing()` is called with
+    `recenter=False`.
+    Backward compatible: without `cog`, behavior is identical to before.
+
+- **`propPostMake()` in `utils/prop.py`** — `setdAsNegative()` now called
+    with `cog=target_np.get_center_of_mass()` when updating `trPlanes` and
+    `trPlanes_opt`. This ensures truncation plane normals always point outward
+    from the NP center of mass, regardless of whether the NP is centered at
+    the origin. Fixes `reduceHullFacets()` failures (QhullError, empty facet
+    list) that occurred when `applySlicing()` was called with `recenter=False`.
+
+- **`reduceHullFacets()` in `utils/geometry.py`** — added plane orientation
+    correction before `HalfspaceIntersection`: planes whose normal points
+    toward the feasible point (i.e. `n·cog + d >= 0`) are flipped in place.
+    Also calls `setdAsNegative(trPlanes, cog=target_cog)` at the end.
+    This provides a second line of defense against incorrectly oriented planes.
+
+### Changed
+- **`applySlicing()`, `cut_by()`, `union_with()`, `intersect_with()`,
+    `flush_inlay_with()` in `utils/csg.py` and `pyNMBcore`**:
+    Added explicit parameters to control the post-processing analysis
+    triggered at the end of each CSG operation:
+    - `postAnalyzis` (bool, default `None` → `self.postAnalyzis`): whether
+    to run `propPostMake()` at all after the operation.
+    - `skipChiralityCalculation` (bool, default `None` → `self.skipChiralityCalculation`)
+    - `skipSymmetryAnalyzis` (bool, default `None` → `self.skipSymmetryAnalyzis`)
+    - `skipFacetInfo` (bool, default `None` → `self.skipFacetInfo`)
+    - `thresholdCoreSurface` (float, default `None` → `self.thresholdCoreSurface`)
+    
+    All parameters default to `None`, in which case the corresponding
+    instance attribute is used as fallback via `getattr(self, ..., default)`.
+    This allows fine-grained control over post-analysis when calling CSG
+    operations in loops or pipelines without modifying the object's global
+    settings.
+- **`applySlicing()` in `utils/csg.py`** — plane group key `'side'` renamed
+    to `'delete'` for clarity: `'delete': 'above'` removes atoms above the
+    plane, `'delete': 'below'` removes atoms below. The old key `'side'` is
+    kept as a deprecated alias for backward compatibility.
+- **`defSlicingPlanesForJMol()` in `utils/external_pgm.py`** — normal arrow
+    now points toward the **deleted** side of each plane, using the new
+    `self.trPlanes_Slicing_delete` attribute stored by `applySlicing()`.
+- **`external_facets_info()` in `utils/prop.py`** — new `mode='hull'`
+    and improved `mode='auto'`:
+    - New `mode='hull'`: uses `trPlanes` (or `trPlanes_opt` for optimized
+    structures) — the convex hull planes computed by `coreSurface()`.
+    Always up to date regardless of how many `applySlicing()` calls were
+    made, since `trPlanes_Slices` only retains planes from the last call.
+    - `mode='auto'` now falls back to `trPlanes` (hull) instead of
+    `trPlanes_Slices`, for the same reason.
+
+### Dependencies
+
+- Added `imageio[ffmpeg]` for MP4 animation export
+
+## [0.12.4 & 0.12.5] - "polydispersity III"
 
 ### Added
 - **`AtomicRadii` class and `print_atomic_radii(element_symbol)` in `utils/prop.py`**,

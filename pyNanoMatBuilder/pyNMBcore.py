@@ -1,4 +1,5 @@
 import numpy as np
+from .utils.core import centertxt, centerTitle, fg, bg, hl, color
 
 class pyNMBcore:
     def __init__(self,
@@ -147,7 +148,9 @@ class pyNMBcore:
         if noOutput is None: noOutput = self.noOutput    
         return get_ellipsoid_analysis(self, noOutput)
 
-    def peel_by_coordination(self, threshold_peeling=6, Rmax=2.9, noOutput=None):
+    def peel_by_coordination(self, threshold_peeling=6, Rmax=2.9, noOutput=None,
+                             postAnalyzis=None, skipChiralityCalculation=None,skipSymmetryAnalyzis=None,
+                             skipFacetInfo=None, thresholdCoreSurface=None):
         """
         Remove surface atoms with coordination number below threshold_peeling.
         See utils/geometry.peel_by_coordination for full documentation.
@@ -160,9 +163,13 @@ class pyNMBcore:
         """
         from .utils.geometry import peel_by_coordination
         if noOutput is None: noOutput = self.noOutput            
-        return peel_by_coordination(self, threshold_peeling, Rmax, noOutput)
+        return peel_by_coordination(self, threshold_peeling, Rmax, noOutput,
+                                    postAnalyzis, skipChiralityCalculation, skipSymmetryAnalyzis,
+                                    skipFacetInfo, thresholdCoreSurface)
 
-    def peel_by_shifted_ellipsoid(self, shift_dist=2.5, noOutput=None):
+    def peel_by_shifted_ellipsoid(self, shift_dist=2.5, noOutput=None,
+                                  postAnalyzis=None, skipChiralityCalculation=None,skipSymmetryAnalyzis=None,
+                                  skipFacetInfo=None, thresholdCoreSurface=None):
         """
         Truncate the NP using a shape-adaptive ellipsoidal envelope shifted
         in a random direction, simulating asymmetric growth or dissolution.
@@ -175,8 +182,30 @@ class pyNMBcore:
         """
         from .utils.geometry import peel_by_shifted_ellipsoid
         if noOutput is None: noOutput = self.noOutput            
-        return peel_by_shifted_ellipsoid(self, shift_dist, noOutput)
-
+        return peel_by_shifted_ellipsoid(self, shift_dist, noOutput,
+                                        postAnalyzis, skipChiralityCalculation, skipSymmetryAnalyzis,
+                                        skipFacetInfo, thresholdCoreSurface)
+            
+    def clip_to_sphere(self, radius_nm, noOutput=None,
+                           postAnalyzis=None,
+                           skipChiralityCalculation=None,
+                           skipSymmetryAnalyzis=None,
+                           skipFacetInfo=None,
+                           thresholdCoreSurface=None):
+            """
+            Keep only atoms within a sphere of given radius from the center of mass.
+            See utils.geometry.clip_to_sphere for full documentation.
+            """
+            from .utils.geometry import clip_to_sphere
+            if noOutput is None: noOutput = self.noOutput
+            return clip_to_sphere(self, radius_nm,
+                                  noOutput=noOutput,
+                                  postAnalyzis=postAnalyzis,
+                                  skipChiralityCalculation=skipChiralityCalculation,
+                                  skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                                  skipFacetInfo=skipFacetInfo,
+                                  thresholdCoreSurface=thresholdCoreSurface)
+    
     def _flush_stale_data(self, shape_update=None):
         """
         Reset all stale derived attributes after a geometry modification.
@@ -318,6 +347,11 @@ class pyNMBcore:
             noOutput = self.noOutput
         return crystallographic_angle(self, v1, v2, type1, type2, noOutput)
 
+    def angles_between_planes(self, hkl_list, noOutput=False):
+        """Compute all pairwise dihedral angles between a list of crystallographic planes."""
+        from .utils.crystals import angles_between_planes
+        return angles_between_planes(self, hkl_list, noOutput=noOutput)
+   
     def generateSlab(self,
                      hkl,
                      size_a: float = 2.0,
@@ -432,30 +466,15 @@ class pyNMBcore:
     
         return external_facets_info(self, mode=mode, noOutput=noOutput)
 
-    def applySlicing(self, planes, distance_unit='nm', mode='OR', recenter: bool = True, noOutput=None):
+    def applySlicing(self, planes, distance_unit='nm', mode='OR', recenter: bool = True,
+                     noOutput=None, postAnalyzis=None, skipChiralityCalculation=None,
+                     skipSymmetryAnalyzis=None, skipFacetInfo=None, thresholdCoreSurface=None):
         """
         Apply one or more truncation plane groups to self.NP, with optional
         rotational symmetry generation and logical combination of groups.
-        Works on any pyNMBcore object.
-
+        Works on any pyNMBcore object. 
+    
         See utils.csg.applySlicing for full documentation.
-
-        Args:
-            planes (list of dict): List of plane group definitions. Each dict
-                must contain either 'normal' or 'angle', plus 'distance' and
-                'side'. Optional keys: 'normal_def', 'nRot', 'rotAxis', 'modeP'.
-            distance_unit (str): Unit for all distances. 'nm' (default) or
-                'Angstrom'.
-            mode (str): Logical combination of plane groups.
-                'OR'  — atom removed if condemned by ANY group (default).
-                'AND' — atom removed only if condemned by ALL groups.
-            recenter (bool): If True, recenters self.NP on its center of mass
-                after slicing (default).
-            noOutput (bool): If True, suppresses output. Default is self.noOutput.
-
-        Returns:
-            None. Updates self.NP, self.nAtoms, self.cog,
-            self.trPlanes_Slices in place. self.trPlanes_Wulff is set to None.
         """
         from .utils.csg import applySlicing
         if noOutput is None:
@@ -464,125 +483,71 @@ class pyNMBcore:
                             distance_unit=distance_unit,
                             mode=mode,
                             recenter=recenter,
-                            noOutput=noOutput)
+                            noOutput=noOutput,
+                            postAnalyzis=postAnalyzis,
+                            skipChiralityCalculation=skipChiralityCalculation,
+                            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                            skipFacetInfo=skipFacetInfo,
+                            thresholdCoreSurface=thresholdCoreSurface)
 
-    def cut_by(self, NP_B, cogB=None, rotB=None, mode='hull',
-              threshold=0.8, skipSymmetryAnalyzis=None,
-              thresholdCoreSurface=None, noOutput=None):
-        """
-        Remove from self.NP the atoms inside NP_B (hollow cavity).
-        See utils.csg.cut_by for full documentation.
-    
-        Args:
-            NP_B: pyNMBcore object defining the cavity shape.
-            cogB (list): Center of mass position for B in nm.
-            rotB: rotation operation applied to B (axis+angle or list of rotations).
-                (see detailed docstring of utils.csg.minus())
-            mode (str): 'hull' (convex hull) or 'atoms' (distance-based).
-            threshold (float): Distance threshold in units of Rnn (mode='atoms').
-            noOutput (bool): If True, suppresses output. Default is self.noOutput.
-        """
+    def cut_by(self, NP_B, cogB=None, rotB=None, mode='hull', threshold=0.8,
+               noOutput=None, postAnalyzis=None, skipChiralityCalculation=None,
+               skipSymmetryAnalyzis=None, skipFacetInfo=None, thresholdCoreSurface=None):
+        """Cut self.NP by NP_B — keeps atoms of A outside B. See utils.csg.cut_by for full documentation."""
         from .utils.csg import cut_by
-        # --- Use defaults from self if not provided ---
-        if noOutput is None:
-            noOutput = self.noOutput
-        if skipSymmetryAnalyzis is None:
-            skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
-        if thresholdCoreSurface is None:
-            thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 1.0)
+        if noOutput is None: noOutput = self.noOutput
         return cut_by(self, NP_B, cogB=cogB, rotB=rotB, mode=mode,
-                      threshold=threshold,
+                      threshold=threshold, noOutput=noOutput,
+                      postAnalyzis=postAnalyzis,
+                      skipChiralityCalculation=skipChiralityCalculation,
                       skipSymmetryAnalyzis=skipSymmetryAnalyzis,
-                      thresholdCoreSurface=thresholdCoreSurface,
-                      noOutput=noOutput)
-        
-    def union_with(self, NP_B, cogB=None, rotB=None, mode='hull',
-              threshold=0.8, skipSymmetryAnalyzis=None,
-              thresholdCoreSurface=None, noOutput=None):
-        """
-        Add NP_B to self.NP, removing overlapping atoms.
-        See utils.csg.union_with for full documentation.
-    
-        Args:
-            NP_B: pyNMBcore object to add.
-            cogB (list): Center of mass position for B in nm.
-            rotB: Rotation for B (axis+angle or list of rotations).
-                (see detailed docstring of utils.csg.plus())
-            mode (str): 'hull' (convex hull) or 'atoms' (distance-based).
-            threshold (float): Overlap threshold in units of Rnn.
-            noOutput (bool): If True, suppresses output. Default is self.noOutput.
-        """
+                      skipFacetInfo=skipFacetInfo,
+                      thresholdCoreSurface=thresholdCoreSurface)
+
+
+    def union_with(self, NP_B, cogB=None, rotB=None, mode='hull', threshold=0.8,
+                   noOutput=None, postAnalyzis=None, skipChiralityCalculation=None,
+                   skipSymmetryAnalyzis=None, skipFacetInfo=None, thresholdCoreSurface=None):
+        """Union of self.NP and NP_B — keeps all atoms of A and B. See utils.csg.union_with for full documentation."""
         from .utils.csg import union_with
-        # --- Use defaults from self if not provided ---
-        if noOutput is None:
-            noOutput = self.noOutput
-        if skipSymmetryAnalyzis is None:
-            skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
-        if thresholdCoreSurface is None:
-            thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 1.0)
+        if noOutput is None: noOutput = self.noOutput
         return union_with(self, NP_B, cogB=cogB, rotB=rotB, mode=mode,
-                          threshold=threshold,
+                          threshold=threshold, noOutput=noOutput,
+                          postAnalyzis=postAnalyzis,
+                          skipChiralityCalculation=skipChiralityCalculation,
                           skipSymmetryAnalyzis=skipSymmetryAnalyzis,
-                          thresholdCoreSurface=thresholdCoreSurface,
-                          noOutput=noOutput)
-
-    def intersect_with(self, NP_B, cogB=None, rotB=None,mode='hull',
-              threshold=0.8, skipSymmetryAnalyzis=None,
-              thresholdCoreSurface=None, noOutput=None):
-        """
-        Keep in self.NP only the atoms inside NP_B.
-        See utils.csg.intersect_with for full documentation.
+                          skipFacetInfo=skipFacetInfo,
+                          thresholdCoreSurface=thresholdCoreSurface)
     
-        Args:
-            NP_B: pyNMBcore object defining the intersection region.
-            cogB (list): Center of mass position for B in nm.
-            rotB: Rotation for B (axis+angle or list of rotations).
-            mode (str): 'hull' (convex hull) or 'atoms' (distance-based).
-            threshold (float): Distance threshold in units of Rnn (mode='atoms').
-            noOutput (bool): If True, suppresses output. Default is self.noOutput.
-        """
+    
+    def intersect_with(self, NP_B, cogB=None, rotB=None, mode='hull', threshold=0.8,
+                       noOutput=None, postAnalyzis=None, skipChiralityCalculation=None,
+                       skipSymmetryAnalyzis=None, skipFacetInfo=None, thresholdCoreSurface=None):
+        """Intersection of self.NP and NP_B — keeps atoms inside both. See utils.csg.intersect_with for full documentation."""
         from .utils.csg import intersect_with
-        # --- Use defaults from self if not provided ---
-        if noOutput is None:
-            noOutput = self.noOutput
-        if skipSymmetryAnalyzis is None:
-            skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
-        if thresholdCoreSurface is None:
-            thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 1.0)
+        if noOutput is None: noOutput = self.noOutput
         return intersect_with(self, NP_B, cogB=cogB, rotB=rotB, mode=mode,
-                              threshold=threshold,
+                              threshold=threshold, noOutput=noOutput,
+                              postAnalyzis=postAnalyzis,
+                              skipChiralityCalculation=skipChiralityCalculation,
                               skipSymmetryAnalyzis=skipSymmetryAnalyzis,
-                              thresholdCoreSurface=thresholdCoreSurface,
-                              noOutput=noOutput)
-
-    def flush_inlay_with(self, NP_B, cogB=None, rotB=None, mode='hull',
-                         threshold=0.8, skipSymmetryAnalyzis=None,
-                         thresholdCoreSurface=None, noOutput=None):
-        """
-        Add to self.NP the part of NP_B that overlaps with self.NP.
-        See utils.csg.flush_inlay_with for full documentation.
+                              skipFacetInfo=skipFacetInfo,
+                              thresholdCoreSurface=thresholdCoreSurface)
     
-        Args:
-            NP_B: pyNMBcore object to partially merge.
-            cogB (list): Center of mass position for B in nm.
-            rotB: Rotation for B (axis+angle or list of rotations).
-            mode (str): 'hull' (convex hull) or 'atoms' (distance-based).
-            threshold (float): Distance threshold in units of Rnn.
-            noOutput (bool): If True, suppresses output. Default is self.noOutput.
-        """
+    
+    def flush_inlay_with(self, NP_B, cogB=None, rotB=None, mode='hull', threshold=0.8,
+                         noOutput=None, postAnalyzis=None, skipChiralityCalculation=None,
+                         skipSymmetryAnalyzis=None, skipFacetInfo=None, thresholdCoreSurface=None):
+        """Flush inlay of NP_B into self.NP. See utils.csg.flush_inlay_with for full documentation."""
         from .utils.csg import flush_inlay_with
-        # --- Use defaults from self if not provided ---
-        if noOutput is None:
-            noOutput = self.noOutput
-        if skipSymmetryAnalyzis is None:
-            skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
-        if thresholdCoreSurface is None:
-            thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 1.0)
+        if noOutput is None: noOutput = self.noOutput
         return flush_inlay_with(self, NP_B, cogB=cogB, rotB=rotB, mode=mode,
-                                threshold=threshold,
+                                threshold=threshold, noOutput=noOutput,
+                                postAnalyzis=postAnalyzis,
+                                skipChiralityCalculation=skipChiralityCalculation,
                                 skipSymmetryAnalyzis=skipSymmetryAnalyzis,
-                                thresholdCoreSurface=thresholdCoreSurface,
-                                noOutput=noOutput)
+                                skipFacetInfo=skipFacetInfo,
+                                thresholdCoreSurface=thresholdCoreSurface)
 
     def copy(self):
         "Create and return a deep copy of any pyNanoMatBuilder system"
@@ -590,7 +555,7 @@ class pyNMBcore:
         return clone(self)
 
     def effective_diameter(self, structure=None, mode='vertices'):
-        """Returns the volume-equivalent diameter from the ellipsoid analysis, in nm."""
+        """Returns the volume-equivalent diameter from the ellipsoid analysis, in Å."""
         key = 'optimized structure' if structure == 'optimized' else 'initial structure'
         from .utils.prop import effective_diameter
         return effective_diameter(self, structure, mode)
@@ -611,6 +576,95 @@ class pyNMBcore:
         """
         from .utils.prop import get_ellipsoid_analysis
         return  get_ellipsoid_analysis(self, noOutput, mode)
+
+    def apply_rotation(self, angle_deg, axis, center=None, axis_def='hkl',
+                       noOutput=True, postAnalyzis=None,
+                       skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
+                       skipFacetInfo=None, thresholdCoreSurface=None):
+        """Rotate self.NP around an axis through a center point. See utils.geometry.apply_rotation."""
+        from .utils.geometry import apply_rotation
+        if noOutput is None: noOutput = self.noOutput
+        return apply_rotation(self, angle_deg, axis, center=center,
+                              axis_def=axis_def, noOutput=noOutput,
+                              postAnalyzis=postAnalyzis,
+                              skipChiralityCalculation=skipChiralityCalculation,
+                              skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                              skipFacetInfo=skipFacetInfo,
+                              thresholdCoreSurface=thresholdCoreSurface)
+    
+    def apply_reflection(self, plane, plane_def='hkl', noOutput=True,
+                         postAnalyzis=None, skipChiralityCalculation=None,
+                         skipSymmetryAnalyzis=None, skipFacetInfo=None,
+                         thresholdCoreSurface=None):
+        """Reflect self.NP across a plane. See utils.geometry.apply_reflection."""
+        from .utils.geometry import apply_reflection
+        if noOutput is None: noOutput = self.noOutput
+        return apply_reflection(self, plane, plane_def=plane_def, noOutput=noOutput,
+                                postAnalyzis=postAnalyzis,
+                                skipChiralityCalculation=skipChiralityCalculation,
+                                skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                                skipFacetInfo=skipFacetInfo,
+                                thresholdCoreSurface=thresholdCoreSurface)
+    
+    def rotate_to_align(self, axis, target_axis=[0,0,1], axis_def='hkl',
+                        noOutput=True, postAnalyzis=None,
+                        skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
+                        skipFacetInfo=None, thresholdCoreSurface=None):
+        """Rotate self.NP to align an axis with a target direction. See utils.geometry.rotate_to_align."""
+        from .utils.geometry import rotate_to_align
+        if noOutput is None: noOutput = self.noOutput
+        return rotate_to_align(self, axis, target_axis=target_axis,
+                               axis_def=axis_def, noOutput=noOutput,
+                               postAnalyzis=postAnalyzis,
+                               skipChiralityCalculation=skipChiralityCalculation,
+                               skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                               skipFacetInfo=skipFacetInfo,
+                               thresholdCoreSurface=thresholdCoreSurface)
+
+    def replicate_by_rotation(self, n_copies, axis, center=None, axis_def='hkl',
+                              noOutput=None, postAnalyzis=None,
+                              skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
+                              skipFacetInfo=None, thresholdCoreSurface=None):
+        """Duplicate self.NP n_copies times by rotation and merge. See utils.geometry.replicate_by_rotation."""
+        from .utils.geometry import replicate_by_rotation
+        if noOutput is None: noOutput = self.noOutput
+        return replicate_by_rotation(self, n_copies, axis, center=center,
+                                     axis_def=axis_def, noOutput=noOutput,
+                                     postAnalyzis=postAnalyzis,
+                                     skipChiralityCalculation=skipChiralityCalculation,
+                                     skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                                     skipFacetInfo=skipFacetInfo,
+                                     thresholdCoreSurface=thresholdCoreSurface)
+    
+    def replicate_by_reflection(self, plane, plane_def='hkl', eps=1e-2, noOutput=None,
+                                 postAnalyzis=None, skipChiralityCalculation=None,
+                                 skipSymmetryAnalyzis=None, skipFacetInfo=None,
+                                 thresholdCoreSurface=None):
+        """Duplicate self.NP by reflection across a plane and merge. See utils.geometry.replicate_by_reflection."""
+        from .utils.geometry import replicate_by_reflection
+        if noOutput is None: noOutput = self.noOutput
+        return replicate_by_reflection(self, plane, plane_def=plane_def, eps=eps, noOutput=noOutput,
+                                       postAnalyzis=postAnalyzis,
+                                       skipChiralityCalculation=skipChiralityCalculation,
+                                       skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                                       skipFacetInfo=skipFacetInfo,
+                                       thresholdCoreSurface=thresholdCoreSurface)
+
+    def remove_duplicates(self, tol=0.1, noOutput=None):
+        """
+        Remove duplicate atoms from self.NP — atoms closer than tol Å are
+        considered duplicates. See utils.geometry.remove_duplicates.
+    
+        Args:
+            tol (float): Distance threshold in Å. Default is 0.1 Å.
+            noOutput (bool): If True, suppresses output. Default is self.noOutput.
+    
+        Returns:
+            None. Updates self.NP in place.
+        """
+        from .utils.geometry import remove_duplicates
+        if noOutput is None: noOutput = self.noOutput
+        return remove_duplicates(self, tol=tol, noOutput=noOutput)
 
 ######################################### load external file
     @classmethod

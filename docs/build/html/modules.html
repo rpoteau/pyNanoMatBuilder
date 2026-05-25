@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.12.5 documentation</title>
+  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.13.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="canonical" href="https://pynanomatbuilder.readthedocs.io/modules.html" />
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=39c52f4f"></script>
+      <script src="_static/documentation_options.js?v=1019fba8"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -713,8 +713,15 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.coreSurface"><code class="docutils literal notranslate"><span class="pre">coreSurface()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.peel_by_coordination"><code class="docutils literal notranslate"><span class="pre">peel_by_coordination()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.peel_by_shifted_ellipsoid"><code class="docutils literal notranslate"><span class="pre">peel_by_shifted_ellipsoid()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.clip_to_sphere"><code class="docutils literal notranslate"><span class="pre">clip_to_sphere()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.plot_npr_triangle"><code class="docutils literal notranslate"><span class="pre">plot_npr_triangle()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.applyTwist"><code class="docutils literal notranslate"><span class="pre">applyTwist()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.apply_rotation"><code class="docutils literal notranslate"><span class="pre">apply_rotation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.apply_reflection"><code class="docutils literal notranslate"><span class="pre">apply_reflection()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.rotate_to_align"><code class="docutils literal notranslate"><span class="pre">rotate_to_align()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.replicate_by_rotation"><code class="docutils literal notranslate"><span class="pre">replicate_by_rotation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.replicate_by_reflection"><code class="docutils literal notranslate"><span class="pre">replicate_by_reflection()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.remove_duplicates"><code class="docutils literal notranslate"><span class="pre">remove_duplicates()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyNanoMatBuilder.utils.crystals">Crystal &amp; Wulff Utilities (crystals.py)</a><ul>
@@ -729,6 +736,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.crystals.Gstar"><code class="docutils literal notranslate"><span class="pre">Gstar()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.crystals.spacegroup_to_bravais"><code class="docutils literal notranslate"><span class="pre">spacegroup_to_bravais()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.crystals.crystallographic_angle"><code class="docutils literal notranslate"><span class="pre">crystallographic_angle()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.crystals.angles_between_planes"><code class="docutils literal notranslate"><span class="pre">angles_between_planes()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.crystals.generateSlab"><code class="docutils literal notranslate"><span class="pre">generateSlab()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.crystals.direction_to_plane"><code class="docutils literal notranslate"><span class="pre">direction_to_plane()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.crystals.plane_to_direction"><code class="docutils literal notranslate"><span class="pre">plane_to_direction()</span></code></a></li>
@@ -7405,19 +7413,9 @@ basis. Only returned if returnMiller=True.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.setdAsNegative">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">setdAsNegative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">planes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.setdAsNegative" title="Link to this definition"></a></dt>
-<dd><p>Flip plane signs so that d is negative.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>planes</strong> (<em>np.ndarray</em>) – Array of planes.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Updated planes.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.ndarray</p>
-</dd>
-</dl>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">setdAsNegative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">planes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cog</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.setdAsNegative" title="Link to this definition"></a></dt>
+<dd><p>Flip plane signs so that d is negative AND the normal points outward
+(away from cog). If cog is provided, use it to determine outward direction.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -7801,7 +7799,7 @@ initial structure (NP) or the relaxed structure (NP_opt).</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.peel_by_coordination">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">peel_by_coordination</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_peeling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.peel_by_coordination" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">peel_by_coordination</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_peeling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.peel_by_coordination" title="Link to this definition"></a></dt>
 <dd><p>Remove surface atoms with low coordination numbers to simulate truncation or
 incomplete shell growth.</p>
 <p>This method uses a KDTree-based neighbor search (via self.kDTreeCN) to identify
@@ -7829,7 +7827,7 @@ nearest neighbor.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.peel_by_shifted_ellipsoid">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">peel_by_shifted_ellipsoid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.peel_by_shifted_ellipsoid" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">peel_by_shifted_ellipsoid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.peel_by_shifted_ellipsoid" title="Link to this definition"></a></dt>
 <dd><p>Truncate the nanoparticle using a shape-adaptive envelope shifted in a
 random direction.</p>
 <p>This method simulates asymmetric growth or partial dissolution by shifting
@@ -7850,6 +7848,33 @@ self.is_optimized is reset to False.</p>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.clip_to_sphere">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">clip_to_sphere</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.clip_to_sphere" title="Link to this definition"></a></dt>
+<dd><p>Keep only atoms within a sphere of given radius from the center of mass.
+Useful to clip elongated structures (e.g. nanostar arms) to a spherical
+envelope.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>radius_nm</strong> (<em>float</em>) – Radius of the clipping sphere in nm.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is True.</p></li>
+<li><p><strong>postAnalyzis</strong> (<em>bool</em>) – If True, runs propPostMake(). Default None → self.postAnalyzis.</p></li>
+<li><p><strong>skipChiralityCalculation</strong> (<em>bool</em>) – Default None → self.skipChiralityCalculation.</p></li>
+<li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – Default None → self.skipSymmetryAnalyzis.</p></li>
+<li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – Default None → self.skipFacetInfo.</p></li>
+<li><p><strong>thresholdCoreSurface</strong> (<em>float</em>) – Default None → self.thresholdCoreSurface.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None. Updates self.NP in place.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p># Clip nanostar arms to a 10 nm sphere
+nanostar.clip_to_sphere(radius_nm=10.0)</p>
 </dd></dl>
 
 <dl class="py function">
@@ -7969,6 +7994,155 @@ NP.applyTwist(axis=[0, 0, 1], rate=45.0, profile=’custom’,</p>
 <blockquote>
 <div><p>custom_profile=lambda z, L: np.sin(4 * np.pi * z / L))</p>
 </div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.apply_rotation">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">apply_rotation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle_deg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_def</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hkl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.apply_rotation" title="Link to this definition"></a></dt>
+<dd><p>Rotate self.NP by angle_deg around an axis passing through a center point.
+Also rotates all truncation planes accordingly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>angle_deg</strong> (<em>float</em>) – Rotation angle in degrees.</p></li>
+<li><p><strong>axis</strong> (<em>array-like</em>) – Rotation axis as Miller indices [h,k,l] (axis_def=’hkl’)
+or Cartesian vector [x,y,z] (axis_def=’cart’).</p></li>
+<li><p><strong>center</strong> (<em>array-like</em>) – Center point of rotation in Å. Default is center of mass.</p></li>
+<li><p><strong>axis_def</strong> (<em>str</em>) – ‘hkl’ (default) or ‘cart’.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is True.</p></li>
+<li><p><strong>postAnalyzis</strong> (<em>bool</em>) – If True, runs propPostMake(). Default None → self.postAnalyzis.</p></li>
+<li><p><strong>skipChiralityCalculation</strong> (<em>bool</em>) – Default None → self.skipChiralityCalculation.</p></li>
+<li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – Default None → self.skipSymmetryAnalyzis.</p></li>
+<li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – Default None → self.skipFacetInfo.</p></li>
+<li><p><strong>thresholdCoreSurface</strong> (<em>float</em>) – Default None → self.thresholdCoreSurface.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.apply_reflection">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">apply_reflection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane_def</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hkl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.apply_reflection" title="Link to this definition"></a></dt>
+<dd><p>Reflect self.NP across a plane. Also reflects all truncation planes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>plane</strong> (<em>array-like</em>) – Plane as [h,k,l] or [h,k,l,d] (plane_def=’hkl’)
+or [a,b,c,d] in Cartesian (plane_def=’cart’).
+d is the signed distance from the origin. Default is 0.</p></li>
+<li><p><strong>plane_def</strong> (<em>str</em>) – ‘hkl’ (default) or ‘cart’.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is True.</p></li>
+<li><p><strong>postAnalyzis</strong> (<em>bool</em>) – Default None → self.postAnalyzis.</p></li>
+<li><p><strong>skipChiralityCalculation</strong> (<em>bool</em>) – Default None → self.skipChiralityCalculation.</p></li>
+<li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – Default None → self.skipSymmetryAnalyzis.</p></li>
+<li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – Default None → self.skipFacetInfo.</p></li>
+<li><p><strong>thresholdCoreSurface</strong> (<em>float</em>) – Default None → self.thresholdCoreSurface.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.rotate_to_align">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">rotate_to_align</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_def</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hkl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.rotate_to_align" title="Link to this definition"></a></dt>
+<dd><p>Rotate self.NP to align a crystallographic axis with a target direction.
+Also rotates all truncation planes accordingly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>axis</strong> (<em>array-like</em>) – Source axis as Miller indices [h,k,l] (axis_def=’hkl’)
+or Cartesian [x,y,z] (axis_def=’cart’).</p></li>
+<li><p><strong>target_axis</strong> (<em>array-like</em>) – Target direction in Cartesian [x,y,z].
+Default is [0,0,1].</p></li>
+<li><p><strong>axis_def</strong> (<em>str</em>) – ‘hkl’ (default) or ‘cart’.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is True.</p></li>
+<li><p><strong>postAnalyzis</strong> (<em>bool</em>) – Default None → self.postAnalyzis.</p></li>
+<li><p><strong>skipChiralityCalculation</strong> (<em>bool</em>) – Default None → self.skipChiralityCalculation.</p></li>
+<li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – Default None → self.skipSymmetryAnalyzis.</p></li>
+<li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – Default None → self.skipFacetInfo.</p></li>
+<li><p><strong>thresholdCoreSurface</strong> (<em>float</em>) – Default None → self.thresholdCoreSurface.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.replicate_by_rotation">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">replicate_by_rotation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_copies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_def</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hkl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.replicate_by_rotation" title="Link to this definition"></a></dt>
+<dd><p>Duplicate self.NP n_copies times by rotation around an axis,
+and merge all copies into a single structure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_copies</strong> (<em>int</em>) – Number of copies. Rotation angle = 360° / n_copies.</p></li>
+<li><p><strong>axis</strong> (<em>array-like</em>) – Rotation axis as Miller indices [h,k,l] (axis_def=’hkl’)
+or Cartesian [x,y,z] (axis_def=’cart’).</p></li>
+<li><p><strong>center</strong> (<em>array-like</em>) – Center point of rotation in Å. Default is origin [0,0,0].</p></li>
+<li><p><strong>axis_def</strong> (<em>str</em>) – ‘hkl’ (default) or ‘cart’.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is True.</p></li>
+<li><p><strong>postAnalyzis</strong> (<em>bool</em>) – Default None → self.postAnalyzis.</p></li>
+<li><p><strong>skipChiralityCalculation</strong> (<em>bool</em>) – Default None → self.skipChiralityCalculation.</p></li>
+<li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – Default None → self.skipSymmetryAnalyzis.</p></li>
+<li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – Default None → self.skipFacetInfo.</p></li>
+<li><p><strong>thresholdCoreSurface</strong> (<em>float</em>) – Default None → self.thresholdCoreSurface.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None. Updates self.NP with the merged structure.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p># Generate 3 arms around [1,1,1] from a single arm
+arm.replicate_by_rotation(3, axis=[1,1,1], axis_def=’hkl’)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.replicate_by_reflection">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">replicate_by_reflection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plane_def</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hkl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.replicate_by_reflection" title="Link to this definition"></a></dt>
+<dd><p>Duplicate self.NP by reflection across a plane and merge both into one structure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>plane</strong> (<em>array-like</em>) – Plane as [h,k,l] or [h,k,l,d] (plane_def=’hkl’)
+or [a,b,c,d] in Cartesian (plane_def=’cart’).
+d is the signed distance from the origin. Default is 0.</p></li>
+<li><p><strong>plane_def</strong> (<em>str</em>) – ‘hkl’ (default) or ‘cart’.</p></li>
+<li><p><strong>(</strong><strong>float</strong> (<em>eps</em>) – 1e-2): threshold associated to doItForAtomsThatLieInTheReflectionPlane
+of the internally called reflection() function</p></li>
+<li><p><strong>default</strong> – 1e-2): threshold associated to doItForAtomsThatLieInTheReflectionPlane
+of the internally called reflection() function</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is True.</p></li>
+<li><p><strong>postAnalyzis</strong> (<em>bool</em>) – Default None → self.postAnalyzis.</p></li>
+<li><p><strong>skipChiralityCalculation</strong> (<em>bool</em>) – Default None → self.skipChiralityCalculation.</p></li>
+<li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – Default None → self.skipSymmetryAnalyzis.</p></li>
+<li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – Default None → self.skipFacetInfo.</p></li>
+<li><p><strong>thresholdCoreSurface</strong> (<em>float</em>) – Default None → self.thresholdCoreSurface.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None. Updates self.NP with original + reflected atoms.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p># Mirror a [1,1,1] arm to get the [-1,-1,-1] arm
+arm.replicate_by_reflection(plane=[1,1,1], plane_def=’hkl’)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.remove_duplicates">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">remove_duplicates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.remove_duplicates" title="Link to this definition"></a></dt>
+<dd><p>Remove duplicate atoms from self.NP — atoms closer than tol Å are considered duplicates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol</strong> (<em>float</em>) – Distance threshold in Å. Default is 0.1 Å.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is self.noOutput.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None. Updates self.NP in place.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -8277,6 +8451,44 @@ plane normals computed via G* then converted to Cartesian.</p></li>
 90° minus the angle between the direction and the plane normal.</p></li>
 </ul>
 </div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.crystals.angles_between_planes">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.crystals.</span></span><span class="sig-name descname"><span class="pre">angles_between_planes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self_or_system</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hkl_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.crystals.angles_between_planes" title="Link to this definition"></a></dt>
+<dd><p>Compute all pairwise dihedral angles between a list of crystallographic
+planes, for any crystal system.</p>
+<p>Builds on angle_between_planes() / crystallographic_angle() to compute
+the full symmetric angle matrix, displays it as a formatted pandas
+DataFrame (with Miller index labels as index and columns), and returns
+the raw matrix as a numpy array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self_or_system</strong> – A pyNMB object with crystallographic_angle() method.</p></li>
+<li><p><strong>hkl_list</strong> (<em>list</em><em> of </em><em>list</em>) – List of Miller indices,
+e.g. [[1,0,0], [1,1,0], [1,1,1], [3,1,1]].</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses DataFrame display.
+Default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Symmetric (n x n) matrix of dihedral angles in degrees,</dt><dd><p>where n = len(hkl_list). Diagonal is 0.0.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<dl class="simple">
+<dt>matrix = AuNP.angles_between_planes(</dt><dd><p>[[1,0,0],[1,1,0],[1,1,1],[3,1,1],[2,1,0]])</p>
+</dd>
+</dl>
+<p># Displays a formatted DataFrame and returns the numpy matrix.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -9001,7 +9213,7 @@ computed via Knud Thomsen’s approximation (error &lt; 1.06%).</p></li>
 noOutput=False, using the AXES and CENTER keywords.</p></li>
 <li><p>Results are stored under self.ellipsoid[‘initial structure’] or
 self.ellipsoid[‘optimized structure’] and overwritten on each call.</p></li>
-<li><p>Use effective_diameter() to get the volume-equivalent diameter in nm.</p></li>
+<li><p>Use effective_diameter() to get the volume-equivalent diameter in Å.</p></li>
 </ul>
 </dd></dl>
 
@@ -9041,7 +9253,11 @@ the reduced hull are reported as warnings.</p>
 </dl>
 </li>
 <li><p>’Slices’      : used trPlanes_Slices</p></li>
-<li><p>’crystal’     : use trPlanes (initial structure).</p></li>
+<li><dl class="simple">
+<dt>’crystal’<span class="classifier">use trPlanes = convex hull planes computed by</span></dt><dd><p>coreSurface() (initial structure).</p>
+</dd>
+</dl>
+</li>
 <li><p>’crystal_opt’ : use trPlanes_opt (optimized structure).</p></li>
 </ul>
 <p>Default is ‘auto’.</p>
@@ -9291,7 +9507,7 @@ diameter correction: D_core = D_SAXS - 2 * r_atom.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.effective_diameter">
 <span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">effective_diameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">structure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'optimized'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vertices'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.effective_diameter" title="Link to this definition"></a></dt>
-<dd><p>Returns the volume-equivalent diameter from the ellipsoid analysis, in nm.</p>
+<dd><p>Returns the volume-equivalent diameter from the ellipsoid analysis, in Å.</p>
 </dd></dl>
 
 </section>
@@ -9304,7 +9520,7 @@ diameter correction: D_core = D_SAXS - 2 * r_atom.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.external_pgm.saveCoords_DrawJmol">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">saveCoords_DrawJmol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asemol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scriptJ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundaries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.saveCoords_DrawJmol" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">saveCoords_DrawJmol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asemol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scriptJ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundaries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'figs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wireframe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saveXYZ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.saveCoords_DrawJmol" title="Link to this definition"></a></dt>
 <dd><p>Save coordinates and generate a Jmol visualization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -9314,6 +9530,10 @@ diameter correction: D_core = D_SAXS - 2 * r_atom.</p>
 <li><p><strong>scriptJ</strong> (<em>str</em>) – Additional Jmol script commands.</p></li>
 <li><p><strong>boundaries</strong> (<em>bool</em>) – If True, draws boundaries without facets script.</p></li>
 <li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses command output.</p></li>
+<li><p><strong>user_output_dir</strong> (<em>str</em>) – Output directory for files.</p></li>
+<li><p><strong>cpk</strong> (<em>float</em>) – CPK radius for atom display.</p></li>
+<li><p><strong>wireframe</strong> (<em>float</em>) – Wireframe thickness.</p></li>
+<li><p><strong>saveXYZ</strong> (<em>bool</em>) – If True, saves the .xyz file.</p></li>
 </ul>
 </dd>
 </dl>

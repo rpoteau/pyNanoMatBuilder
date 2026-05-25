@@ -1,4 +1,5 @@
 ase
+imageio[ffmpeg]
 ipython
 ipywidgets
 jupyter

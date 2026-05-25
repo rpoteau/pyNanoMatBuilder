@@ -33,8 +33,6 @@ from .io import writexyz
 ######################################## coupling with Jmol 
 
 def check_jmol():
-    from pyNanoMatBuilder import data
-    from pathlib import Path
     
     # We check the CURRENT value of the variable in RAM
     path = Path(data.pyNMBvar.path2Jmol) / "JmolData.jar"
@@ -48,7 +46,8 @@ def check_jmol():
         return False
     return True
     
-def saveCoords_DrawJmol(asemol, prefix, scriptJ="", boundaries=False, noOutput=True):
+def saveCoords_DrawJmol(asemol, prefix, scriptJ="", boundaries=False, noOutput=True,
+                        user_output_dir="figs", cpk=0, wireframe=0.05, saveXYZ=True):
     """
     Save coordinates and generate a Jmol visualization.
 
@@ -58,8 +57,11 @@ def saveCoords_DrawJmol(asemol, prefix, scriptJ="", boundaries=False, noOutput=T
         scriptJ (str): Additional Jmol script commands.
         boundaries (bool): If True, draws boundaries without facets script.
         noOutput (bool): If True, suppresses command output.
+        user_output_dir (str): Output directory for files.
+        cpk (float): CPK radius for atom display.
+        wireframe (float): Wireframe thickness.
+        saveXYZ (bool): If True, saves the .xyz file.
     """
-    from pyNanoMatBuilder import data
     path2Jmol = Path(data.pyNMBvar.path2Jmol)
     jar_file = path2Jmol / "JmolData.jar"
     # fxyz = "./figs/" + prefix + ".xyz"
@@ -67,10 +69,11 @@ def saveCoords_DrawJmol(asemol, prefix, scriptJ="", boundaries=False, noOutput=T
 
     # Output directory for the USER (Working Directory)
     # We save results in a local 'figs' folder so the user can see them
-    user_output_dir = Path("figs")
+    user_output_dir = Path(user_output_dir)
     user_output_dir.mkdir(exist_ok=True)
     fxyz = user_output_dir / f"{prefix}.xyz"
-    writexyz(str(fxyz), asemol)
+    if saveXYZ:
+        writexyz(str(fxyz), asemol)
 
     if not jar_file.exists():
         if not noOutput:
@@ -85,15 +88,23 @@ def saveCoords_DrawJmol(asemol, prefix, scriptJ="", boundaries=False, noOutput=T
         internal_spt = None
 
     # Build the Jmol Script
+    # if not boundaries and internal_spt:
+    #     jmolscript = scriptJ + (
+    #         f"; frank off; cpk 0; wireframe 0.05; "
+    #         f"script '{internal_spt}'; "  # Points to the internal resource
+    #         "facettes345ptlight; draw * opaque;"
+    #     )
+    # else:
+    #     jmolscript = scriptJ + "; frank off; cpk 0; wireframe 0.0; draw * opaque;"
     if not boundaries and internal_spt:
         jmolscript = scriptJ + (
-            f"; frank off; cpk 0; wireframe 0.05; "
-            f"script '{internal_spt}'; "  # Points to the internal resource
+            f"; frank off; cpk {cpk}; wireframe {wireframe}; "
+            f"script '{internal_spt}'; "
             "facettes345ptlight; draw * opaque;"
         )
     else:
-        jmolscript = scriptJ + "; frank off; cpk 0; wireframe 0.0; draw * opaque;"
-
+        jmolscript = scriptJ + f"; frank off; cpk {cpk}; wireframe {wireframe}; draw * opaque;"
+        
     # Save the PNG to the USER'S local figs folder
     output_png = user_output_dir / f"{prefix}.png"
     jmolscript += (
@@ -553,7 +564,10 @@ def defSlicingPlanesForJMol(self,
     color_by_family = [default_colors[f % len(default_colors)] for f in family]
 
     cmd = ""
-
+    
+    delete_by_plane = getattr(self, 'trPlanes_Slicing_delete',
+                              ['above'] * len(planes))  # fallback
+    
     for i, plane in enumerate(planes):
         n = plane[:3]
         d = plane[3]
@@ -597,9 +611,22 @@ def defSlicingPlanesForJMol(self,
             cmd += "] width 0.15; "
         cmd += f"color $slpedge{i}_* [{color}]; "
 
-        # --- Normal arrow (optional — shows orientation) ---
+        # --- Arrow points toward the deleted side ---
+        delete = delete_by_plane[i] if i < len(delete_by_plane) else 'above'
+        center_norm = np.linalg.norm(center)
+        if center_norm > 1e-10:
+            outward = center / center_norm
+        else:
+            outward = n
+        # outward points from origin toward the plane center
+        # delete='below' → delete on the side OPPOSITE to outward → arrow = -outward
+        # delete='above' → delete on the same side as outward → arrow = +outward
+        # BUT if d was originally negative, outward is already inverted
+        # → use sign of d to correct
+        d_sign = 1.0 if d < 0 else -1.0
+        arrow_dir = outward * d_sign if delete == 'above' else -outward * d_sign
         p_start = center
-        p_end = center + arrow_length * n
+        p_end = center + arrow_length * arrow_dir
         cmd += f"draw slparrow{i} arrow "
         cmd += f"{{{p_start[0]:.4f},{p_start[1]:.4f},{p_start[2]:.4f}}} "
         cmd += f"{{{p_end[0]:.4f},{p_end[1]:.4f},{p_end[2]:.4f}}} "

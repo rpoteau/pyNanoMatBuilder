@@ -161,6 +161,7 @@ class Crystal(pyNMBcore):
             else:
                 self.WulffShape = None
 
+
         if self.userDefCif is not None:
             self.loadExternalCif()
 
@@ -170,7 +171,7 @@ class Crystal(pyNMBcore):
             self.imageFigsize = row['figsize']
             self.imageRot = row['rot']
         else:
-            sys.exit(f"Shape '{self.shape}' is unknown")
+            sys.exit(f"Shape '{self.shape}' is not defined in 'data.pyNMBimg.IMGdf'")
 
         if not noOutput:
             pyNMBu.centerTitle(f"{self.crystal} {self.shape}")
@@ -995,7 +996,7 @@ class Crystal(pyNMBcore):
                     )
                 tr_planes += list(normal)
                 if self.eSurfacesWulff is None:
-                    sizes.append(len(sym_p) * [self.sizesWulff[i]])
+                    sizes += len(sym_p) * [self.sizesWulff[i]]
                 if self.eSurfacesWulff is not None:
                     e_surf += list(len(sym_p) * [self.eSurfacesWulff[i]])
             else:

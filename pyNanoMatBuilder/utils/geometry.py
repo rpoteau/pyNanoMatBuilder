@@ -132,7 +132,13 @@ def reduceHullFacets(self,
         target_planes = np.array(self.trPlanes)
         status = "initial structure"
 
-    target_cog = self.cog_opt if self.is_optimized else self.cog
+    # Use current center of mass of remaining atoms as feasible point
+    # self.cog may be stale if recenter=False was used in applySlicing
+    target_np = self.NP_opt if self.is_optimized else self.NP
+    if target_np is not None:
+        target_cog = target_np.get_center_of_mass()
+    else:
+        target_cog = self.cog_opt if self.is_optimized else self.cog
         
     if target_planes is None or target_cog is None:
         raise ValueError(f"Missing data for the {status}. Please check the building process or the optimization results.")
@@ -149,7 +155,33 @@ def reduceHullFacets(self,
             print(f"  Planes after deduplication: {len(target_planes)}")
         
     feasible_point = np.array(target_cog)
+
+    # feasible_point = np.array(target_cog)
+    # print(f"DEBUG feasible_point = {feasible_point}")  # ← ici
+    # margins = target_planes[:, :3] @ feasible_point + target_planes[:, 3]
+    # print(f"DEBUG margins = {margins}")
+    # print(f"DEBUG any margins >= 0: {np.any(margins >= 0)}")
+    
+    feasible_point = np.array(target_cog)
+    
+    # Safety check: feasible point must be strictly inside all halfspaces
+    margins = target_planes[:, :3] @ feasible_point + target_planes[:, 3]
+    if np.any(margins >= 0):
+        # Fix: flip planes whose normal points toward feasible_point
+        # instead of away from it
+        for i in range(len(target_planes)):
+            if target_planes[i, :3] @ feasible_point + target_planes[i, 3] >= 0:
+                target_planes[i] = -target_planes[i]
+        # Re-check
+        margins2 = target_planes[:, :3] @ feasible_point + target_planes[:, 3]
+        if np.any(margins2 >= 0):
+            if not noOutput:
+                print(f"Warning: feasible point is outside some halfspaces — "
+                      f"skipping reduceHullFacets.")
+            return [], []
+    
     hs = HalfspaceIntersection(target_planes, feasible_point)
+    
     vertices = hs.intersections
     hull = ConvexHull(vertices)
 
@@ -258,9 +290,9 @@ def reduceHullFacets(self,
         planeDef = np.array(planeDef)
         trPlanes.append(planeFittingLSF(planeDef, printErrors=False, printEq=False))
     if self.is_optimized:
-        self.trPlanes_opt = setdAsNegative(np.array(trPlanes))
+        self.trPlanes_opt = setdAsNegative(np.array(trPlanes), cog=target_cog)
     else:
-        self.trPlanes = setdAsNegative(np.array(trPlanes))
+        self.trPlanes = setdAsNegative(np.array(trPlanes), cog=target_cog)
     return vertices, new_facesS
 
 
@@ -287,7 +319,6 @@ def RotationMol(coords, angle, axis="z"):
         R = np.array(Rz(angler) @ coords.transpose())
 
     return R
-
 
 def EulerRotationMol(coords, gamma, beta, alpha, order="zyx"):
     """
@@ -424,7 +455,7 @@ def rotation_around_axis_through_point(coords, angle_deg, axis, center):
 #             pr.append(ptmp)
 #     return np.array(pr)
 
-def reflection(plane,points,doItForAtomsThatLieInTheReflectionPlane=False,eps=1e-2):
+def reflection(plane, points, doItForAtomsThatLieInTheReflectionPlane=False, eps=1e-2):
     '''
     Apply a mirror-image symmetry operation to an array of points.
 
@@ -803,22 +834,37 @@ def rotateMoltoAlignItWithAxis(coords, axis, targetAxis=np.array([0, 0, 1])):
     rMat = alignV1WithV2_returnR(axis, targetAxis)
     return np.array(rMat @ coords.transpose()).transpose()
 
-def setdAsNegative(planes):
-    """
-    Flip plane signs so that d is negative.
+# def setdAsNegative(planes):
+#     """
+#     Flip plane signs so that d is negative.
 
-    Args:
-        planes (np.ndarray): Array of planes.
+#     Args:
+#         planes (np.ndarray): Array of planes.
 
-    Returns:
-        np.ndarray: Updated planes.
+#     Returns:
+#         np.ndarray: Updated planes.
+#     """
+#     for i,p in enumerate(planes):
+#         if p[3] > 0:
+#             p = -p
+#             planes[i] = p
+#     return planes
+
+def setdAsNegative(planes, cog=None):
     """
-    for i,p in enumerate(planes):
-        if p[3] > 0:
-            p = -p
-            planes[i] = p
+    Flip plane signs so that d is negative AND the normal points outward
+    (away from cog). If cog is provided, use it to determine outward direction.
+    """
+    for i, p in enumerate(planes):
+        if cog is not None:
+            # Normal should point AWAY from cog: n·cog + d < 0
+            if np.dot(p[:3], cog) + p[3] > 0:
+                planes[i] = -p
+        else:
+            if p[3] > 0:
+                planes[i] = -p
     return planes
-
+    
 def returnPlaneParallel2Line(V, shift=[1,0,0], debug = False):
     """
     Return plane parameters for a plane parallel to a direction vector.
@@ -1377,7 +1423,12 @@ def coreSurface(self,
 
 ################################################################
 
-def peel_by_coordination(self, threshold_peeling=6, Rmax=2.9, noOutput=False):
+def peel_by_coordination(self, threshold_peeling=6, Rmax=2.9, noOutput=False,
+                         postAnalyzis=None,
+                         skipChiralityCalculation=None,
+                         skipSymmetryAnalyzis=None,
+                         skipFacetInfo=None,
+                         thresholdCoreSurface=None):
     """
     Remove surface atoms with low coordination numbers to simulate truncation or 
     incomplete shell growth.
@@ -1432,14 +1483,35 @@ def peel_by_coordination(self, threshold_peeling=6, Rmax=2.9, noOutput=False):
     # Sync Metadata and Clean Stale Data !!!
     self._flush_stale_data(shape_update="_peeled_CN")
     self.is_optimized = False
-    self.propPostMake(skipChiralityCalculation=self.skipChiralityCalculation,
-                      skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
-                      skipFacetInfo=self.skipFacetInfo,
-                      thresholdCoreSurface=self.thresholdCoreSurface,
-                      noOutput=False, is_optimized=False)
+    
+    # --- Resolve parameters ---
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation=skipChiralityCalculation,
+            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+            skipFacetInfo=skipFacetInfo,
+            thresholdCoreSurface=thresholdCoreSurface,
+            noOutput=noOutput,
+            is_optimized=False)
     
 
-def peel_by_shifted_ellipsoid(self, shift_dist=2.5, noOutput=False):
+def peel_by_shifted_ellipsoid(self, shift_dist=2.5, noOutput=False,
+                             postAnalyzis=None,
+                             skipChiralityCalculation=None,
+                             skipSymmetryAnalyzis=None,
+                             skipFacetInfo=None,
+                             thresholdCoreSurface=None):
     """
     Truncate the nanoparticle using a shape-adaptive envelope shifted in a 
     random direction.
@@ -1527,12 +1599,104 @@ def peel_by_shifted_ellipsoid(self, shift_dist=2.5, noOutput=False):
     # Sync Metadata and Clean Stale Data !!!
     self._flush_stale_data(shape_update="_peeled_ellipsoid")
     self.is_optimized = False
-    self.propPostMake(skipChiralityCalculation=self.skipChiralityCalculation,
-                      skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
-                      skipFacetInfo=self.skipFacetInfo, 
-                      thresholdCoreSurface=self.thresholdCoreSurface,
-                      noOutput=False, is_optimized=False)
+    
+    # --- Resolve parameters ---
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
 
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation=skipChiralityCalculation,
+            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+            skipFacetInfo=skipFacetInfo,
+            thresholdCoreSurface=thresholdCoreSurface,
+            noOutput=noOutput,
+            is_optimized=False)
+
+def clip_to_sphere(self, radius_nm, noOutput=True,
+                   postAnalyzis=None,
+                   skipChiralityCalculation=None,
+                   skipSymmetryAnalyzis=None,
+                   skipFacetInfo=None,
+                   thresholdCoreSurface=None):
+    """
+    Keep only atoms within a sphere of given radius from the center of mass.
+    Useful to clip elongated structures (e.g. nanostar arms) to a spherical
+    envelope.
+
+    Args:
+        radius_nm (float): Radius of the clipping sphere in nm.
+        noOutput (bool): If True, suppresses output. Default is True.
+        postAnalyzis (bool): If True, runs propPostMake(). Default None → self.postAnalyzis.
+        skipChiralityCalculation (bool): Default None → self.skipChiralityCalculation.
+        skipSymmetryAnalyzis (bool): Default None → self.skipSymmetryAnalyzis.
+        skipFacetInfo (bool): Default None → self.skipFacetInfo.
+        thresholdCoreSurface (float): Default None → self.thresholdCoreSurface.
+
+    Returns:
+        None. Updates self.NP in place.
+
+    Example:
+        # Clip nanostar arms to a 10 nm sphere
+        nanostar.clip_to_sphere(radius_nm=10.0)
+    """
+    import numpy as np
+
+    if not noOutput:
+        centertxt("Clipping to sphere", bgc='#007a7a', size='14', weight='bold')
+        chrono = timer()
+        chrono.chrono_start()
+
+    radius_ang = radius_nm * 10  # nm → Å
+    pos = self.NP.get_positions()
+    cog = self.NP.get_center_of_mass()
+
+    distances = np.linalg.norm(pos - cog, axis=1)
+    mask = distances <= radius_ang
+
+    old_count = len(self.NP)
+    self.NP = self.NP[mask]
+    self.NP.positions -= self.NP.get_center_of_mass()
+    self.nAtoms = len(self.NP)
+    self.cog = self.NP.get_center_of_mass()
+
+    if not noOutput:
+        print(f"  - Radius: {radius_nm:.2f} nm")
+        print(f"  - Removed {old_count - self.nAtoms} atoms.")
+        print(f"  - {self.nAtoms} atoms remaining. self.NP updated.")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+
+    self._flush_stale_data(shape_update="_clipped_sphere")
+    self.is_optimized = False
+
+    # --- Resolve propPostMake parameters ---
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation=skipChiralityCalculation,
+            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+            skipFacetInfo=skipFacetInfo,
+            thresholdCoreSurface=thresholdCoreSurface,
+            noOutput=noOutput,
+            is_optimized=False)
 
 def plot_npr_triangle(self=None, is_optimized: bool = False, save_path: str = None, 
                       external_data: dict = None, color_by: str = 'Rg', color: str='viridis'):
@@ -1989,3 +2153,515 @@ def applyTwist(self,
                       skipFacetInfo = self.skipFacetInfo,
                       thresholdCoreSurface=self.thresholdCoreSurface,
                       noOutput=noOutput, is_optimized=False)
+
+def apply_rotation(self, angle_deg, axis, center=None, axis_def='hkl',
+                   noOutput=True, postAnalyzis=None,
+                   skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
+                   skipFacetInfo=None, thresholdCoreSurface=None):
+    """
+    Rotate self.NP by angle_deg around an axis passing through a center point.
+    Also rotates all truncation planes accordingly.
+
+    Args:
+        angle_deg (float): Rotation angle in degrees.
+        axis (array-like): Rotation axis as Miller indices [h,k,l] (axis_def='hkl')
+            or Cartesian vector [x,y,z] (axis_def='cart').
+        center (array-like): Center point of rotation in Å. Default is center of mass.
+        axis_def (str): 'hkl' (default) or 'cart'.
+        noOutput (bool): If True, suppresses output. Default is True.
+        postAnalyzis (bool): If True, runs propPostMake(). Default None → self.postAnalyzis.
+        skipChiralityCalculation (bool): Default None → self.skipChiralityCalculation.
+        skipSymmetryAnalyzis (bool): Default None → self.skipSymmetryAnalyzis.
+        skipFacetInfo (bool): Default None → self.skipFacetInfo.
+        thresholdCoreSurface (float): Default None → self.thresholdCoreSurface.
+    """
+    from .crystals import lattice_cart
+    import numpy as np
+
+    if not noOutput:
+        centertxt("Rotating the nanoparticle", bgc='#007a7a', size='14', weight='bold')
+        chrono = timer()
+        chrono.chrono_start()
+    if axis_def == 'hkl':
+        if not hasattr(self, 'Gstar'):
+            raise AttributeError("axis_def='hkl' requires a Crystal object with Gstar.")
+        axis_cart = lattice_cart(self, [axis], Bravais2cart=True, printV=not noOutput)[0]
+    else:
+        axis_cart = np.array(axis, dtype=float)
+    axis_cart = axis_cart / np.linalg.norm(axis_cart)
+        
+    if center is None:
+        center = self.NP.get_center_of_mass()
+    center = np.array(center, dtype=float)
+        
+    # --- Rotate atoms ---
+    new_pos = rotation_around_axis_through_point(
+        self.NP.get_positions(), angle_deg, axis_cart, center)
+    self.NP.set_positions(new_pos)
+    self.cog = self.NP.get_center_of_mass()
+
+    # --- Rotate truncation planes (normals only, d unchanged) ---
+    for attr in ['trPlanes', 'trPlanes_Wulff', 'trPlanes_Slices', 'trPlanes_opt']:
+        planes = getattr(self, attr, None)
+        if planes is not None:
+            new_planes = []
+            for p in np.array(planes):
+                n_new = rotation_around_axis_through_point(
+                    p[:3].reshape(1, 3), angle_deg, axis_cart, np.zeros(3))[0]
+                new_planes.append(np.append(n_new, p[3]))
+            setattr(self, attr, np.array(new_planes))
+
+    # --- Flush stale data ---
+    self._flush_stale_data(shape_update="_rotated")
+    self.is_optimized = False
+
+    if not noOutput:
+        print(f"  - Rotation of {angle_deg:.2f}° around axis {axis} ({axis_def})")
+        print(f"  - Center of rotation: {center}")
+        print(f"  - Cartesian axis: [{axis_cart[0]:.4f} {axis_cart[1]:.4f} {axis_cart[2]:.4f}]")
+        print(f"  - {self.nAtoms} atoms. self.NP updated.")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+        
+    # --- Resolve propPostMake parameters ---
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation=skipChiralityCalculation,
+            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+            skipFacetInfo=skipFacetInfo,
+            thresholdCoreSurface=thresholdCoreSurface,
+            noOutput=noOutput,
+            is_optimized=False)
+
+
+def apply_reflection(self, plane, plane_def='hkl', noOutput=True,
+                     postAnalyzis=None, skipChiralityCalculation=None,
+                     skipSymmetryAnalyzis=None, skipFacetInfo=None,
+                     thresholdCoreSurface=None):
+    """
+    Reflect self.NP across a plane. Also reflects all truncation planes.
+
+    Args:
+        plane (array-like): Plane as [h,k,l] or [h,k,l,d] (plane_def='hkl')
+            or [a,b,c,d] in Cartesian (plane_def='cart').
+            d is the signed distance from the origin. Default is 0.
+        plane_def (str): 'hkl' (default) or 'cart'.
+        noOutput (bool): If True, suppresses output. Default is True.
+        postAnalyzis (bool): Default None → self.postAnalyzis.
+        skipChiralityCalculation (bool): Default None → self.skipChiralityCalculation.
+        skipSymmetryAnalyzis (bool): Default None → self.skipSymmetryAnalyzis.
+        skipFacetInfo (bool): Default None → self.skipFacetInfo.
+        thresholdCoreSurface (float): Default None → self.thresholdCoreSurface.
+    """
+    from .crystals import lattice_cart
+    import numpy as np
+    
+    if not noOutput:
+        centertxt("Reflecting the nanoparticle", bgc='#007a7a', size='14', weight='bold')
+        chrono = timer()
+        chrono.chrono_start()
+        
+    plane = np.array(plane, dtype=float)
+
+    if plane_def == 'hkl':
+        if not hasattr(self, 'Gstar'):
+            raise AttributeError("plane_def='hkl' requires a Crystal object with Gstar.")
+        n = lattice_cart(self, [plane[:3]], Bravais2cart=True, printV=not noOutput)[0]
+        d = float(plane[3]) if len(plane) == 4 else 0.0
+        plane_cart = np.append(n / np.linalg.norm(n), d)
+    else:
+        plane_cart = plane
+
+    # --- Reflect atoms ---
+    new_pos = reflection(plane_cart, self.NP.get_positions())
+    self.NP.set_positions(new_pos)
+    self.cog = self.NP.get_center_of_mass()
+
+    # --- Reflect truncation plane normals ---
+    # Reflection of a normal n across plane with normal p: n' = n - 2(n·p̂)p̂
+    p_hat = plane_cart[:3] / np.linalg.norm(plane_cart[:3])
+    for attr in ['trPlanes', 'trPlanes_Wulff', 'trPlanes_Slices', 'trPlanes_opt']:
+        planes = getattr(self, attr, None)
+        if planes is not None:
+            new_planes = []
+            for p in np.array(planes):
+                n = p[:3]
+                n_new = n - 2 * np.dot(n, p_hat) * p_hat
+                new_planes.append(np.append(n_new, p[3]))
+            setattr(self, attr, np.array(new_planes))
+
+    # --- Flush stale data ---
+    self._flush_stale_data(shape_update="_reflected")
+    self.is_optimized = False
+
+    if not noOutput:
+        print(f"  - Reflection across plane {plane} ({plane_def})")
+        print(f"  - Cartesian plane: [{plane_cart[0]:.4f} {plane_cart[1]:.4f} {plane_cart[2]:.4f} {plane_cart[3]:.4f}]")
+        print(f"  - {self.nAtoms} atoms. self.NP updated.")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+
+    # --- Resolve propPostMake parameters ---
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation=skipChiralityCalculation,
+            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+            skipFacetInfo=skipFacetInfo,
+            thresholdCoreSurface=thresholdCoreSurface,
+            noOutput=noOutput,
+            is_optimized=False)
+
+
+def rotate_to_align(self, axis, target_axis=[0,0,1], axis_def='hkl',
+                    noOutput=True, postAnalyzis=None,
+                    skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
+                    skipFacetInfo=None, thresholdCoreSurface=None):
+    """
+    Rotate self.NP to align a crystallographic axis with a target direction.
+    Also rotates all truncation planes accordingly.
+
+    Args:
+        axis (array-like): Source axis as Miller indices [h,k,l] (axis_def='hkl')
+            or Cartesian [x,y,z] (axis_def='cart').
+        target_axis (array-like): Target direction in Cartesian [x,y,z].
+            Default is [0,0,1].
+        axis_def (str): 'hkl' (default) or 'cart'.
+        noOutput (bool): If True, suppresses output. Default is True.
+        postAnalyzis (bool): Default None → self.postAnalyzis.
+        skipChiralityCalculation (bool): Default None → self.skipChiralityCalculation.
+        skipSymmetryAnalyzis (bool): Default None → self.skipSymmetryAnalyzis.
+        skipFacetInfo (bool): Default None → self.skipFacetInfo.
+        thresholdCoreSurface (float): Default None → self.thresholdCoreSurface.
+    """
+    from .crystals import lattice_cart
+    import numpy as np
+    
+    if not noOutput:
+        centertxt("Aligning the nanoparticle", bgc='#007a7a', size='14', weight='bold')
+        chrono = timer()
+        chrono.chrono_start()
+        
+    if axis_def == 'hkl':
+        if not hasattr(self, 'Gstar'):
+            raise AttributeError("axis_def='hkl' requires a Crystal object with Gstar.")
+        axis_cart = lattice_cart(self, [axis], Bravais2cart=True, printV=not noOutput)[0]
+    else:
+        axis_cart = np.array(axis, dtype=float)
+    axis_cart = axis_cart / np.linalg.norm(axis_cart)
+
+    target = np.array(target_axis, dtype=float)
+    target = target / np.linalg.norm(target)
+        
+    # --- Rotate atoms ---
+    new_pos = rotateMoltoAlignItWithAxis(
+        self.NP.get_positions(), axis_cart, target)
+    self.NP.set_positions(new_pos)
+    self.cog = self.NP.get_center_of_mass()
+
+    # --- Rotate truncation plane normals using same rotation matrix ---
+    R = alignV1WithV2_returnR(axis_cart, target)
+    for attr in ['trPlanes', 'trPlanes_Wulff', 'trPlanes_Slices', 'trPlanes_opt']:
+        planes = getattr(self, attr, None)
+        if planes is not None:
+            new_planes = []
+            for p in np.array(planes):
+                n_new = R @ p[:3]
+                new_planes.append(np.append(n_new, p[3]))
+            setattr(self, attr, np.array(new_planes))
+
+    # --- Flush stale data ---
+    self._flush_stale_data(shape_update="_aligned")
+    self.is_optimized = False
+
+    if not noOutput:
+        print(f"  - Aligning axis {axis} ({axis_def}) with target {target_axis}")
+        print(f"  - Cartesian source axis: [{axis_cart[0]:.4f} {axis_cart[1]:.4f} {axis_cart[2]:.4f}]")
+        print(f"  - {self.nAtoms} atoms. self.NP updated.")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+        
+    # --- Resolve propPostMake parameters ---
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation=skipChiralityCalculation,
+            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+            skipFacetInfo=skipFacetInfo,
+            thresholdCoreSurface=thresholdCoreSurface,
+            noOutput=noOutput,
+            is_optimized=False)
+
+def replicate_by_rotation(self, n_copies, axis, center=None, axis_def='hkl',
+                          noOutput=True, postAnalyzis=None,
+                          skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
+                          skipFacetInfo=None, thresholdCoreSurface=None):
+    """
+    Duplicate self.NP n_copies times by rotation around an axis,
+    and merge all copies into a single structure.
+
+    Args:
+        n_copies (int): Number of copies. Rotation angle = 360° / n_copies.
+        axis (array-like): Rotation axis as Miller indices [h,k,l] (axis_def='hkl')
+            or Cartesian [x,y,z] (axis_def='cart').
+        center (array-like): Center point of rotation in Å. Default is origin [0,0,0].
+        axis_def (str): 'hkl' (default) or 'cart'.
+        noOutput (bool): If True, suppresses output. Default is True.
+        postAnalyzis (bool): Default None → self.postAnalyzis.
+        skipChiralityCalculation (bool): Default None → self.skipChiralityCalculation.
+        skipSymmetryAnalyzis (bool): Default None → self.skipSymmetryAnalyzis.
+        skipFacetInfo (bool): Default None → self.skipFacetInfo.
+        thresholdCoreSurface (float): Default None → self.thresholdCoreSurface.
+
+    Returns:
+        None. Updates self.NP with the merged structure.
+
+    Example:
+        # Generate 3 arms around [1,1,1] from a single arm
+        arm.replicate_by_rotation(3, axis=[1,1,1], axis_def='hkl')
+    """
+    from .crystals import lattice_cart
+    from ase import Atoms
+    import numpy as np
+
+    if not noOutput:
+        centertxt("Replicating the nanoparticle by rotation", bgc='#007a7a', size='14', weight='bold')
+        chrono = timer()
+        chrono.chrono_start()
+
+    if axis_def == 'hkl':
+        if not hasattr(self, 'Gstar'):
+            raise AttributeError("axis_def='hkl' requires a Crystal object with Gstar.")
+        axis_cart = lattice_cart(self, [axis], Bravais2cart=True, printV=not noOutput)[0]
+    else:
+        axis_cart = np.array(axis, dtype=float)
+    axis_cart = axis_cart / np.linalg.norm(axis_cart)
+
+    if center is None:
+        center = np.zeros(3)
+    center = np.array(center, dtype=float)
+
+    angle_step = 360.0 / n_copies
+    original_pos = self.NP.get_positions()
+    original_elem = self.NP.get_chemical_symbols()
+
+    all_pos = [original_pos]
+    all_elem = list(original_elem)
+
+    for i in range(1, n_copies):
+        angle = i * angle_step
+        rotated = rotation_around_axis_through_point(
+            original_pos, angle, axis_cart, center)
+        all_pos.append(rotated)
+        all_elem.extend(original_elem)
+
+    all_pos = np.vstack(all_pos)
+    self.NP = Atoms(symbols=all_elem, positions=all_pos)
+    self.nAtoms = len(self.NP)
+    self.cog = self.NP.get_center_of_mass()
+
+    self._flush_stale_data(shape_update="_replicated_rotation")
+    self.is_optimized = False
+
+    if not noOutput:
+        print(f"  - {n_copies} copies, rotation angle: {angle_step:.2f}° around axis {axis} ({axis_def})")
+        print(f"  - Cartesian axis: [{axis_cart[0]:.4f} {axis_cart[1]:.4f} {axis_cart[2]:.4f}]")
+        print(f"  - Center: {center}")
+        print(f"  - {self.nAtoms} atoms total. self.NP updated.")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+
+    # --- Resolve propPostMake parameters ---
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation=skipChiralityCalculation,
+            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+            skipFacetInfo=skipFacetInfo,
+            thresholdCoreSurface=thresholdCoreSurface,
+            noOutput=noOutput,
+            is_optimized=False)
+
+
+def replicate_by_reflection(self, plane, plane_def='hkl', eps=1e-2, noOutput=True,
+                             postAnalyzis=None, skipChiralityCalculation=None,
+                             skipSymmetryAnalyzis=None, skipFacetInfo=None,
+                             thresholdCoreSurface=None):
+    """
+    Duplicate self.NP by reflection across a plane and merge both into one structure.
+
+    Args:
+        plane (array-like): Plane as [h,k,l] or [h,k,l,d] (plane_def='hkl')
+            or [a,b,c,d] in Cartesian (plane_def='cart').
+            d is the signed distance from the origin. Default is 0.
+        plane_def (str): 'hkl' (default) or 'cart'.
+        eps (float, default: 1e-2): threshold associated to doItForAtomsThatLieInTheReflectionPlane
+            of the internally called reflection() function
+        noOutput (bool): If True, suppresses output. Default is True.
+        postAnalyzis (bool): Default None → self.postAnalyzis.
+        skipChiralityCalculation (bool): Default None → self.skipChiralityCalculation.
+        skipSymmetryAnalyzis (bool): Default None → self.skipSymmetryAnalyzis.
+        skipFacetInfo (bool): Default None → self.skipFacetInfo.
+        thresholdCoreSurface (float): Default None → self.thresholdCoreSurface.
+
+    Returns:
+        None. Updates self.NP with original + reflected atoms.
+
+    Example:
+        # Mirror a [1,1,1] arm to get the [-1,-1,-1] arm
+        arm.replicate_by_reflection(plane=[1,1,1], plane_def='hkl')
+    """
+    from .crystals import lattice_cart
+    from ase import Atoms
+    import numpy as np
+    
+    if not noOutput:
+        centertxt("Replicating the nanoparticle by reflection", bgc='#007a7a', size='14', weight='bold')
+        chrono = timer()
+        chrono.chrono_start()
+        
+    plane = np.array(plane, dtype=float)
+
+    if plane_def == 'hkl':
+        if not hasattr(self, 'Gstar'):
+            raise AttributeError("plane_def='hkl' requires a Crystal object with Gstar.")
+        n = lattice_cart(self, [plane[:3]], Bravais2cart=True, printV=not noOutput)[0]
+        d = float(plane[3]) if len(plane) == 4 else 0.0
+        plane_cart = np.append(n / np.linalg.norm(n), d)
+    else:
+        plane_cart = plane
+    original_pos = self.NP.get_positions()
+    original_elem = self.NP.get_chemical_symbols()
+
+    # Reflect — exclude atoms that lie on the plane (doItForAtomsThatLieInTheReflectionPlane=False)
+    # Mirror only atoms strictly above the plane (signed_dist > eps)
+    # to be consistent with reflection() which skips atoms on the plane
+    signed_dists = Pt2planeSignedDistance(plane_cart, original_pos)
+    mask_above = signed_dists > eps
+    pos_above  = original_pos[mask_above]
+    elem_above = [original_elem[i] for i in np.where(mask_above)[0]]
+
+    reflected_pos = reflection(plane_cart, pos_above,
+                               doItForAtomsThatLieInTheReflectionPlane=False, eps=eps)
+
+    all_pos  = np.vstack([original_pos, reflected_pos])
+    all_elem = list(original_elem) + list(elem_above)
+
+    self.NP = Atoms(symbols=all_elem, positions=all_pos)
+    self.nAtoms = len(self.NP)
+    self.cog = self.NP.get_center_of_mass()
+
+    self._flush_stale_data(shape_update="_replicated_reflection")
+    self.is_optimized = False
+
+    if not noOutput:
+        print(f"  - Reflection across plane {plane} ({plane_def})")
+        print(f"  - Cartesian plane: [{plane_cart[0]:.4f} {plane_cart[1]:.4f} {plane_cart[2]:.4f} {plane_cart[3]:.4f}]")
+        print(f"  - {self.nAtoms} atoms total (original + reflected). self.NP updated.")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+        
+    # --- Resolve propPostMake parameters ---
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation=skipChiralityCalculation,
+            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+            skipFacetInfo=skipFacetInfo,
+            thresholdCoreSurface=thresholdCoreSurface,
+            noOutput=noOutput,
+            is_optimized=False)
+
+def remove_duplicates(self, tol=0.1, noOutput=None):
+    """
+    Remove duplicate atoms from self.NP — atoms closer than tol Å are considered duplicates.
+
+    Args:
+        tol (float): Distance threshold in Å. Default is 0.1 Å.
+        noOutput (bool): If True, suppresses output. Default is self.noOutput.
+
+    Returns:
+        None. Updates self.NP in place.
+    """
+    from scipy.spatial import KDTree
+    import numpy as np
+    from ase import Atoms
+
+    if noOutput is None: noOutput = self.noOutput
+
+    if not noOutput:
+        centertxt("Removing duplicate atoms with scipy.spatial.KDTree", bgc='#007a7a', size='14', weight='bold')
+        chrono = timer()
+        chrono.chrono_start()
+
+    pos = self.NP.get_positions()
+    elem = self.NP.get_chemical_symbols()
+    n_before = len(pos)
+
+    tree = KDTree(pos)
+    pairs = tree.query_pairs(r=tol)  # all pairs closer than tol
+
+    # Keep the first atom of each duplicate pair
+    to_remove = set()
+    for i, j in pairs:
+        to_remove.add(max(i, j))  # remove the higher index
+
+    to_keep = [i for i in range(n_before) if i not in to_remove]
+    self.NP = Atoms(
+        symbols=[elem[i] for i in to_keep],
+        positions=pos[to_keep]
+    )
+    self.nAtoms = len(self.NP)
+    self.cog = self.NP.get_center_of_mass()
+
+    if not noOutput:
+        print(f"  - Tolerance: {tol} Å")
+        print(f"  - Removed {n_before - self.nAtoms} duplicate atoms.")
+        print(f"  - {self.nAtoms} atoms remaining. self.NP updated.")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()

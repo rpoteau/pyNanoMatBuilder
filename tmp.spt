@@ -1,0 +1,6 @@
+
+load coords/Aufcc_c_Oh_19.xyz
+rotate z 45; rotate x 30; rotate y 15;
+zoom 80
+write image 800 800 PNG coords/Aufcc_c_Oh_19.png
+exit

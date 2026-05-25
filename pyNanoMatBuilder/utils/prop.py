@@ -1245,7 +1245,7 @@ def get_ellipsoid_analysis(self, noOutput=False, mode='vertices'):
           noOutput=False, using the AXES and CENTER keywords.
         - Results are stored under self.ellipsoid['initial structure'] or
           self.ellipsoid['optimized structure'] and overwritten on each call.
-        - Use effective_diameter() to get the volume-equivalent diameter in nm.
+        - Use effective_diameter() to get the volume-equivalent diameter in Å.
     """
     import numpy as np
     if not hasattr(self, 'ellipsoid'):
@@ -1434,7 +1434,8 @@ def external_facets_info(self, mode='auto', noOutput=False):
             - 'Wulff'       : use trPlanes_Wulff with Miller index labeling
                               and relative energy computation.
             - 'Slices'      : used trPlanes_Slices
-            - 'crystal'     : use trPlanes (initial structure).
+            - 'crystal'     : use trPlanes = convex hull planes computed by
+                              coreSurface() (initial structure).
             - 'crystal_opt' : use trPlanes_opt (optimized structure).
             Default is 'auto'.
         noOutput (bool): If True, suppresses all printed output.
@@ -1459,13 +1460,14 @@ def external_facets_info(self, mode='auto', noOutput=False):
             target_planes = self.trPlanes_Wulff
         elif getattr(self, 'is_optimized', False) and getattr(self, 'trPlanes_opt', None) is not None:
             target_planes = self.trPlanes_opt
-            useWulff = False
+        elif getattr(self, 'trPlanes', None) is not None and len(self.trPlanes) > 0:
+            # Prefer hull planes — always up to date regardless of slicing history
+            target_planes = self.trPlanes
         elif getattr(self, 'trPlanes_Slices', None) is not None:
-            target_planes = self.trPlanes_Slices  # ← manquait !
-            useWulff = False
+            # Fallback to slicing planes if hull not available
+            target_planes = self.trPlanes_Slices
         else:
-            target_planes = getattr(self, 'trPlanes', None)
-            useWulff = False
+            target_planes = None
     elif mode == 'Wulff':
         target_planes = getattr(self, 'trPlanes_Wulff', None)
         useWulff = True
@@ -1493,8 +1495,19 @@ def external_facets_info(self, mode='auto', noOutput=False):
     distances = np.abs(planes[:, 3])   # |d|, since ||n||=1
 
     # --- Relative energies (always computed from distances) ---
-    d_min      = distances.min()
+    d_min = distances.min()
+    if d_min < 1e-10:
+        # Avoid division by zero — planes through origin have d=0
+        # Use second smallest non-zero distance as reference
+        nonzero = distances[distances > 1e-10]
+        if len(nonzero) > 0:
+            d_min = nonzero.min()
+        else:
+            d_min = 1.0  # fallback — all planes through origin
     e_relative = distances / d_min
+    if distances.min() < 1e-10 and not noOutput:
+        print(f"  Warning: some planes pass through the origin (d=0) — "
+              f"relative energies are computed from the smallest non-zero distance.")
 
     # --- Facet areas from reduceHullFacets ---
     vertices, redFacets = reduceHullFacets(self, noOutput=True,
@@ -1784,10 +1797,11 @@ def propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis, skipFacet
     setattr(self, f"surfaceatoms{suffix}", npcs_copy[surfaceAtoms])
     setattr(self, f"surfaceAtoms{suffix}", surfaceAtoms)
 
-    # Surface planes
+    # Surface planes — ensure normals point outward from cog
     if hasattr(self, f'trPlanes{suffix}') and getattr(self, f'trPlanes{suffix}') is not None:
         current_planes = getattr(self, f'trPlanes{suffix}')
-        setattr(self, f'trPlanes{suffix}', setdAsNegative(current_planes))
+        cog = target_np.get_center_of_mass()
+        setattr(self, f'trPlanes{suffix}', setdAsNegative(current_planes, cog=cog))
 
     # Jmol Crystal Shape
     if getattr(self, 'jmolCrystalShape', False) and not getattr(self, 'pbc', False):
@@ -2064,9 +2078,9 @@ def print_atomic_radii(element_symbol):
     return AtomicRadii(el, ionic_list)
 
 def effective_diameter(self, structure='optimized', mode='vertices'):
-    """Returns the volume-equivalent diameter from the ellipsoid analysis, in nm."""
+    """Returns the volume-equivalent diameter from the ellipsoid analysis, in Å."""
     key = 'optimized structure' if structure == 'optimized' else 'initial structure'
     if key not in self.ellipsoid or self.ellipsoid[key].get('mode') != mode:
         self.get_ellipsoid_analysis(noOutput=True, mode=mode)
     e = self.ellipsoid[key]
-    return (e['D1'] * e['D2'] * e['D3']) ** (1/3) / 10  # Å → nm
+    return (e['D1'] * e['D2'] * e['D3']) ** (1/3)  # Å
