@@ -633,7 +633,7 @@ class NanoparticleDistribution:
               f"{'-':>{w_ratio-2}} | "
               f"{running_norm:>{w_norm-2}.3f}")
 
-    def get_proportions(self, target_sizes, labels=None, bin_width_nm=None):
+    def get_proportions_old(self, target_sizes, labels=None, bin_width_nm=None):
         targets = np.atleast_1d(target_sizes)
     
         if labels is None:
@@ -682,12 +682,346 @@ class NanoparticleDistribution:
             "norms"         : norm_values,
             "norms_relative": norm_relative,
         }
-            
-    def print_specific_proportions(self, target_sizes, labels=None):
+
+    # def get_proportions_in_bins(self, target_sizes, labels=None, bin_width_nm=None):
+    #     """
+    #     Compute the weight of each target size by integrating the distribution
+    #     over a bin centered on that size. The bin half-width for each target is
+    #     the half-distance to its nearest neighbor, making the bins contiguous
+    #     and non-overlapping. This avoids the over-representation of size ranges
+    #     that happen to have more simulated structures.
+    
+    #     Args:
+    #         target_sizes (array-like): Target diameters in nm.
+    #         labels (list, optional): Labels for each target size.
+    #         bin_width_nm (float, optional): Force a fixed bin width for all targets.
+    #             If None, bin edges are set at midpoints between consecutive sizes.
+    
+    #     Returns:
+    #         dict: keys: sizes, labels, ratios (integrated weights, unnormalized),
+    #               counts, norms (normalized over full distribution),
+    #               norms_relative (normalized so they sum to 1 among targets).
+    #     """
+    #     targets = np.atleast_1d(np.array(target_sizes, dtype=float))
+    #     sort_idx = np.argsort(targets)
+    #     targets_sorted = targets[sort_idx]
+    
+    #     if labels is None:
+    #         resolved_labels = [''] * len(targets)
+    #     else:
+    #         resolved_labels = list(labels)
+    #     labels_sorted = [resolved_labels[i] for i in sort_idx]
+    
+    #     stats = self.results
+    #     mu, sigma = stats['mean'], stats['sigma']
+    
+    #     # --- Bin edges: midpoints between consecutive sorted targets ---
+    #     if bin_width_nm is not None:
+    #         # Fixed bin width: each target gets [D - w/2, D + w/2]
+    #         edges_left  = targets_sorted - bin_width_nm / 2
+    #         edges_right = targets_sorted + bin_width_nm / 2
+    #     else:
+    #         # Adaptive: edges at midpoints between neighbors
+    #         mids = (targets_sorted[:-1] + targets_sorted[1:]) / 2
+    #         edges_left  = np.concatenate([[targets_sorted[0]  - (mids[0] - targets_sorted[0])],  mids])
+    #         edges_right = np.concatenate([mids, [targets_sorted[-1] + (targets_sorted[-1] - mids[-1])]])
+    
+    #     # --- Integrate distribution over each bin ---
+    #     from scipy.stats import norm as scipy_norm
+    #     ratios = np.zeros(len(targets_sorted))
+    
+    #     for i, (s1, s2) in enumerate(zip(edges_left, edges_right)):
+    #         s1 = max(s1, 1e-6)   # Schulz defined on (0, +inf)
+    #         if self.model_type == 'schulz':
+    #             ratios[i] = self._schulz_cdf_bin(s1, s2, mu, stats['z'])
+    #         elif self.model_type == 'gaussian':
+    #             ratios[i] = scipy_norm.cdf(s2, mu, sigma) - scipy_norm.cdf(s1, mu, sigma)
+    
+    #     # --- Total integral over the full distribution (normalization reference) ---
+    #     # = integral from 0 to +inf ≈ 1 for a proper PDF
+    #     # We normalize norms so that sum over ALL bins of the full distribution = 1
+    #     total = ratios.sum()  # sum over selected targets only
+    
+    #     norm_values    = ratios / total if total > 0 else np.zeros_like(ratios)   # sum to 1 among targets
+    #     counts         = ratios * stats['amplitude']
+    
+    #     # --- Also compute what fraction of the total distribution each bin captures ---
+    #     # (useful to know if targets cover the full distribution or only part of it)
+    #     norms_of_total = ratios   # already a probability (CDF difference), so directly comparable
+    
+    #     # Restore original order
+    #     restore_idx = np.argsort(sort_idx)
+    #     return {
+    #         "sizes"         : targets_sorted[restore_idx],
+    #         "labels"        : [labels_sorted[i] for i in restore_idx],
+    #         "ratios"        : ratios[restore_idx],          # integrated probability per bin
+    #         "counts"        : counts[restore_idx],
+    #         "norms"         : norms_of_total[restore_idx],  # fraction of full distribution
+    #         "norms_relative": norm_values[restore_idx],     # fraction among targets only
+    #         "bin_edges"     : list(zip(edges_left[restore_idx], edges_right[restore_idx])),
+    #     }
+
+    def get_proportions(self, target_sizes, labels=None, bin_width_nm=None,
+                        use_bins=True, intensity_weighted=False):
+        """
+        Compute the weight of each target size from the distribution.
+    
+        Two weighting modes are available:
+    
+        use_bins=True (default, recommended):
+            Integrates the distribution over the histogram bin that contains
+            each target size. Bins are constructed symmetrically around mu
+            (the distribution mean), using the same grid as get_binned_statistics(),
+            ensuring full consistency between the displayed histogram and the
+            returned weights. The grid is extended if needed to cover targets
+            that lie beyond mu ± 3.5 sigma.
+            If several targets fall in the same bin, the bin weight is shared
+            proportionally to their pointwise f(D_i) value — so a structure
+            closer to the distribution peak receives a larger share than one
+            at the bin edge.
+            The returned norms are absolute CDF fractions.
+    
+        use_bins=False:
+            Pointwise evaluation of f(D_i), normalized relative to a fine
+            discretization of the full distribution. Simpler but biased when
+            targets are unevenly distributed across the distribution.
+    
+        An optional intensity weighting (intensity_weighted=True) multiplies
+        each bin weight by D**6 before normalization. This is required when
+        the simulated signals are normalized per unit volume (e.g. SasView
+        analytical models in cm**-1). For absolute-intensity simulators such
+        as DebyeCalculator, leave intensity_weighted=False (default).
+    
+        Args:
+            target_sizes (array-like): Target diameters in nm. Order is arbitrary.
+            labels (list, optional): Labels for each target size.
+            bin_width_nm (float, optional):
+                use_bins=True  — bin width used to build the histogram grid
+                                 around mu. If None, falls back to
+                                 self.bin_width_nm or sigma.
+                use_bins=False — bin width used to discretize the full
+                                 distribution for normalization. Same fallback.
+            use_bins (bool): If True (default), use bin integration.
+                If False, use pointwise evaluation.
+            intensity_weighted (bool): If True, multiply each weight by D**6
+                before normalization, accounting for the D**6 intensity scaling
+                of SAXS signals normalized per unit volume (e.g. SasView).
+                If False (default), weights are pure number-distribution fractions,
+                suitable for absolute-intensity simulators (e.g. DebyeCalculator).
+    
+        Returns:
+            dict with keys:
+                sizes           : target diameters in original order (nm).
+                labels          : labels in original order.
+                ratios          : raw integrated weights, before intensity
+                                  weighting and normalization.
+                ratios_weighted : ratios after D**6 weighting (= ratios if
+                                  intensity_weighted=False).
+                counts          : ratios_weighted * amplitude.
+                norms           : absolute fraction of the full distribution.
+                norms_relative  : fraction among targets only (sum to 1).
+                bin_edges       : list of (left, right) bin edges in nm
+                                  (only present when use_bins=True).
+    
+        Example:
+            # DebyeCalculator — absolute intensity, number-weighted
+            data = nd.get_proportions(DNew, labels=labelsNew)
+    
+            # SasView — normalized intensity, intensity-weighted
+            data = nd.get_proportions(DNew, labels=labelsNew,
+                                      intensity_weighted=True)
+    
+            # Pointwise evaluation (previous behavior)
+            data = nd.get_proportions(DNew, labels=labelsNew, use_bins=False)
+        """
+        targets = np.atleast_1d(np.array(target_sizes, dtype=float))
+        resolved_labels = [''] * len(targets) if labels is None else list(labels)
+    
+        stats = self.results
+        mu, sigma = stats['mean'], stats['sigma']
+    
+        # --- Bin width: same fallback logic as get_binned_statistics() ---
+        if bin_width_nm is None:
+            bin_width_nm = self.bin_width_nm if self.bin_width_nm else sigma
+    
+        # =========================================================
+        # Branch 1: bin-integrated weights
+        # =========================================================
+        if use_bins:
+            # --- Build the same histogram grid as get_binned_statistics() ---
+            # Bins are symmetric around mu, extended to cover all targets
+            limit_min = min(mu - 3.5 * sigma, targets.min() - bin_width_nm)
+            limit_max = max(mu + 3.5 * sigma, targets.max() + bin_width_nm)
+            r_edges = np.arange(mu + bin_width_nm / 2, limit_max + bin_width_nm, bin_width_nm)
+            l_edges = np.arange(mu - bin_width_nm / 2, limit_min - bin_width_nm, -bin_width_nm)
+            edges = np.sort(np.concatenate([l_edges, r_edges]))
+            if self.model_type == 'schulz':
+                edges = edges[edges > 0]   # Schulz defined on (0, +inf)
+     
+            from scipy.stats import norm as scipy_norm
+            from collections import Counter
+     
+            # --- Pointwise f(D_i) for proportional intra-bin sharing ---
+            pointwise = np.array([self.get_relative_height(t) for t in targets])
+     
+            # --- First pass: initial bin assignments ---
+            bin_assignments = []
+            for t in targets:
+                idx = np.searchsorted(edges, t, side='right') - 1
+                idx = np.clip(idx, 0, len(edges) - 2)
+                bin_assignments.append(idx)
+     
+            initial_bin_counts = Counter(bin_assignments)
+     
+            # --- Second pass: reassign border targets to empty neighbor bins ---
+            # If a target lies in the last quarter of its bin (rel_pos > 0.75 or
+            # rel_pos < 0.25) and the neighboring bin is empty, reassign it there.
+            reassign_notes = [''] * len(targets)
+            final_assignments = list(bin_assignments)
+     
+            for i, (t, bin_idx) in enumerate(zip(targets, bin_assignments)):
+                rel_pos = (t - edges[bin_idx]) / bin_width_nm
+                right_neighbor = bin_idx + 1
+                left_neighbor  = bin_idx - 1
+     
+                if (rel_pos > 0.75
+                        and right_neighbor < len(edges) - 1
+                        and initial_bin_counts.get(right_neighbor, 0) == 0):
+                    final_assignments[i] = right_neighbor
+                    reassign_notes[i] = (
+                        f"reassigned [{edges[bin_idx]:.4f}, {edges[bin_idx+1]:.4f}] → "
+                        f"[{edges[right_neighbor]:.4f}, {edges[right_neighbor+1]:.4f}] "
+                        f"(rel_pos={rel_pos:.2f} > 0.75, right neighbor was empty)"
+                    )
+                elif (rel_pos < 0.25
+                        and left_neighbor >= 0
+                        and initial_bin_counts.get(left_neighbor, 0) == 0):
+                    final_assignments[i] = left_neighbor
+                    reassign_notes[i] = (
+                        f"reassigned [{edges[bin_idx]:.4f}, {edges[bin_idx+1]:.4f}] → "
+                        f"[{edges[left_neighbor]:.4f}, {edges[left_neighbor+1]:.4f}] "
+                        f"(rel_pos={rel_pos:.2f} < 0.25, left neighbor was empty)"
+                    )
+     
+            bin_counts = Counter(final_assignments)
+     
+            # Sum of pointwise weights per bin (for proportional intra-bin sharing)
+            bin_pointwise_sum = {}
+            for i, bin_idx in enumerate(final_assignments):
+                bin_pointwise_sum[bin_idx] = bin_pointwise_sum.get(bin_idx, 0.0) + pointwise[i]
+     
+            # --- Print bin assignment info ---
+            centertxt("Bin assignments (use_bins=True)",
+                      bgc='#cbcbcb', size='12', fgc='b', weight='bold')
+            for i, (t, bin_idx) in enumerate(zip(targets, final_assignments)):
+                s1, s2 = edges[bin_idx], edges[bin_idx + 1]
+                n_in_bin = bin_counts[bin_idx]
+                label = resolved_labels[i].replace('\n', ' ') if resolved_labels[i] else f"target {i}"
+                share = pointwise[i] / bin_pointwise_sum[bin_idx] if bin_pointwise_sum[bin_idx] > 0 else 0
+                note = f"\n      *** {reassign_notes[i]}" if reassign_notes[i] else ""
+                print(f"  {label:<35} D={t:.4f} nm → bin [{s1:.4f}, {s2:.4f}]  "
+                      f"({n_in_bin} structure{'s' if n_in_bin > 1 else ''} in bin, "
+                      f"intra-bin share={share:.3f}){note}")
+     
+            # --- Third pass: integrate and share proportionally within each bin ---
+            ratios    = np.zeros(len(targets))
+            bin_edges = []
+     
+            for i, (t, bin_idx) in enumerate(zip(targets, final_assignments)):
+                s1, s2 = edges[bin_idx], edges[bin_idx + 1]
+                s1 = max(s1, 1e-6)   # Schulz defined on (0, +inf)
+     
+                if self.model_type == 'schulz':
+                    bin_integral = self._schulz_cdf_bin(s1, s2, mu, stats['z'])
+                elif self.model_type == 'gaussian':
+                    bin_integral = scipy_norm.cdf(s2, mu, sigma) - scipy_norm.cdf(s1, mu, sigma)
+     
+                # Share proportionally to pointwise f(D_i) within the bin
+                intra_bin_weight = (pointwise[i] / bin_pointwise_sum[bin_idx]
+                                    if bin_pointwise_sum[bin_idx] > 0 else 0.0)
+                ratios[i] = bin_integral * intra_bin_weight
+                bin_edges.append((s1, s2))
+     
+            # --- Optional D**6 intensity weighting ---
+            if intensity_weighted:
+                ratios_weighted = ratios * targets**6
+            else:
+                ratios_weighted = ratios.copy()
+     
+            # --- Normalization ---
+            total = ratios_weighted.sum()
+            norms_relative = ratios_weighted / total if total > 0 else np.zeros_like(ratios_weighted)
+            norms  = ratios   # absolute CDF fractions, before D**6 weighting
+            counts = ratios_weighted * stats['amplitude']
+     
+            return {
+                "sizes"          : targets,
+                "labels"         : resolved_labels,
+                "ratios"         : ratios,
+                "ratios_weighted": ratios_weighted,
+                "counts"         : counts,
+                "norms"          : norms,
+                "norms_relative" : norms_relative,
+                "bin_edges"      : bin_edges,
+            }
+    
+        # =========================================================
+        # Branch 2: pointwise evaluation
+        # =========================================================
+        else:
+            # --- Discretize full distribution to compute normalization denominator ---
+            limit_min = mu - 3.5 * sigma
+            limit_max = mu + 3.5 * sigma
+            r_edges = np.arange(mu + bin_width_nm / 2, limit_max + bin_width_nm, bin_width_nm)
+            l_edges = np.arange(mu - bin_width_nm / 2, limit_min - bin_width_nm, -bin_width_nm)
+            edges = np.sort(np.concatenate([l_edges, r_edges]))
+            if self.model_type == 'schulz':
+                edges = edges[edges > 0]
+    
+            total_ratio_sum = sum(
+                self.get_relative_height((edges[i] + edges[i + 1]) / 2)
+                for i in range(len(edges) - 1)
+            )
+    
+            # --- Pointwise evaluation at target sizes ---
+            ratios = np.array([self.get_relative_height(t) for t in targets])
+    
+            # --- Optional D**6 intensity weighting ---
+            if intensity_weighted:
+                ratios_weighted = ratios * targets**6
+            else:
+                ratios_weighted = ratios.copy()
+    
+            # --- Normalization ---
+            norms = ratios_weighted / total_ratio_sum if total_ratio_sum > 0 else np.zeros_like(ratios_weighted)
+            norm_sum = ratios_weighted.sum()
+            norms_relative = ratios_weighted / norm_sum if norm_sum > 0 else np.zeros_like(ratios_weighted)
+            counts = ratios_weighted * stats['amplitude']
+    
+            return {
+                "sizes"          : targets,
+                "labels"         : resolved_labels,
+                "ratios"         : ratios,
+                "ratios_weighted": ratios_weighted,
+                "counts"         : counts,
+                "norms"          : norms,
+                "norms_relative" : norms_relative,
+            }
+        
+    def print_specific_proportions(self, target_sizes, labels=None, use_bins=True):
         """
         Print a formatted summary of proportions for specific diameters.
+    
+        Args:
+            target_sizes (array-like): Target diameters in nm.
+            labels (list, optional): Labels for each target size.
+            use_bins (bool): If True (default), uses get_proportions_in_bins()
+                which integrates the distribution over a bin centered on each
+                target — correcting for over-representation of size ranges with
+                many simulated structures. If False, uses the pointwise
+                get_proportions() instead.
         """
-        data = self.get_proportions(target_sizes, labels=labels)
+        data = self.get_proportions(target_sizes, labels=labels, use_bins=use_bins)
         
         centerTitle("Specific Diameter Proportions")
         has_labels = any(l != '' for l in data['labels'])
@@ -710,7 +1044,7 @@ class NanoparticleDistribution:
         
     def plot(self, title='Nanoparticle Size Distribution', color_histo="skyblue",
              color_curve="red", plot_histogram=True, highlight_sizes=None,
-             save_img=None, dpi=300):
+             save_img=None, dpi=300, use_bins=True):
         """
         Visualize the nanoparticle size distribution (histogram) overlaid with the 
         fitted or theoretical Gaussian model.
@@ -731,7 +1065,10 @@ class NanoparticleDistribution:
             save_img (str, optional): File path or name (e.g., 'plot.png' or 'plot.svg'). 
                 The directory is created automatically if it doesn't exist.
             dpi (int): Image resolution for raster formats like PNG (default 300).
-
+            use_bins (bool): If True (default), uses get_proportions_in_bins()
+                to weight highlighted sizes — correcting for over-representation
+                of densely-sampled size ranges. If False, uses pointwise
+                get_proportions().
         Returns:
             None: Displays the plot using plt.show() and optionally saves to disk.
         """
@@ -748,6 +1085,7 @@ class NanoparticleDistribution:
         
         # Calculate bar width based on data spacing
         bar_width = (self.sizes[1] - self.sizes[0]) * 0.9
+        _bin_width = self.bin_width_nm if self.bin_width_nm else (self.sizes[1] - self.sizes[0])
         
         # --- 2. Scaling Logic ---
         # If the model was fitted (covariance exists), use raw amplitude (scaling = 1.0).
@@ -756,11 +1094,13 @@ class NanoparticleDistribution:
             scaling_w = 1.0
             histo_label = "Exp. data" # Legend for real TEM data
         else:
-            scaling_w = self.bin_width_nm if self.bin_width_nm else 1.0
+            scaling_w = _bin_width
             histo_label = f"Binned Model (w={scaling_w:.2f} nm)" # Legend for simulation
 
         # --- 3. Plotting Data and Fit ---
-        if plot_histogram and self.sizes is not None: plt.bar(self.sizes, self.counts, width=bar_width, color=color_histo, label=histo_label)    
+        if plot_histogram and self.sizes is not None:
+            plt.bar(self.sizes, self.counts, width=_bin_width, color=color_histo, label=histo_label,
+                edgecolor='steelblue', linewidth=0.5)
             
         # --- 4. Distribution Curve ---
         # Generate smooth x values for the curve
@@ -823,7 +1163,7 @@ class NanoparticleDistribution:
                 h_labels = None
     
         if h_sizes is not None:
-            props = self.get_proportions(h_sizes)
+            props = self.get_proportions(h_sizes, labels=h_labels, use_bins=use_bins)
             
             for i, size in enumerate(h_sizes):
                 current_norm = props['norms_relative'][i]
@@ -844,8 +1184,9 @@ class NanoparticleDistribution:
                              bbox=dict(boxstyle='round,pad=0.3', fc='white', alpha=0.7))
                 
         # --- 7. Final Formatting ---
-        plt.title(title)
-        plt.xlabel('Size (nm)')
+        weight_method = "bin-integrated weights" if use_bins else "pointwise weights"
+        plt.title(f"{title}\n({weight_method})", fontsize=13)
+        plt.xlabel('Size / nm')
         plt.ylabel('Count')
         plt.legend()
         plt.grid(axis='y', alpha=0.3)
@@ -905,7 +1246,7 @@ class NanoparticleDistribution:
         valid = sizes > 0
         return [l for l, v in zip(all_labels, valid) if v]
 
-    def filter_proportions(self, data, threshold=0.01):
+    def filter_proportions(self, data, threshold=0.05):
         """
         Filter proportions above a threshold, renormalize, and sort by size.
         
@@ -936,7 +1277,7 @@ class NanoparticleDistribution:
         # Sort by size (ascending)
         sort_idx = np.argsort(filtered_sizes)
         
-        return {
+        result = {
             'sizes':          filtered_sizes[sort_idx],
             'labels':         [filtered_labels[i] for i in sort_idx],
             'ratios':         filtered_ratios[sort_idx],
@@ -944,3 +1285,137 @@ class NanoparticleDistribution:
             'norms':          filtered_norms[sort_idx],
             'norms_relative': filtered_norms_relative[sort_idx],
         }
+        # Propagate bin_edges if present (use_bins=True mode)
+        if 'bin_edges' in data:
+            filtered_bin_edges = [data['bin_edges'][i] for i, m in enumerate(mask) if m]
+            result['bin_edges'] = [filtered_bin_edges[i] for i in sort_idx]
+
+        return result
+
+    def compare_proportions(self, data_bins, data_pointwise=None):
+        """
+        Display a styled comparison table between bin-integrated and pointwise
+        weights for a set of structures.
+    
+        Takes pre-computed outputs of get_proportions() (and optionally
+        filter_proportions()) as input — no recomputation is done internally.
+    
+        Args:
+            data_bins (dict): Output of get_proportions(..., use_bins=True),
+                optionally filtered by filter_proportions().
+            data_pointwise (dict, optional): Output of get_proportions(...,
+                use_bins=False), optionally filtered. If None, the columns
+                'w (pointwise)' and 'Δw' are omitted.
+    
+        Returns:
+            pd.DataFrame: The comparison DataFrame (unstyled).
+    
+        Example:
+            data_bins = nd.get_proportions(DNew, labels=labelsNew, use_bins=True)
+            data_pt   = nd.get_proportions(DNew, labels=labelsNew, use_bins=False)
+            # optional filtering:
+            data_bins = nd.filter_proportions(data_bins, threshold=0.05)
+            data_pt   = nd.filter_proportions(data_pt,   threshold=0.05)
+            nd.compare_proportions(data_bins, data_pt)
+        """
+        import pandas as pd
+        import numpy as np
+    
+        # --- Union of labels, preserving order ---
+        labels_bins = data_bins['labels']
+        labels_pt   = data_pointwise['labels'] if data_pointwise is not None else []
+        all_labels  = list(dict.fromkeys(labels_bins + labels_pt))
+    
+        # --- Helper functions ---
+        def get_val(data, label, key):
+            if label in data['labels']:
+                idx = data['labels'].index(label)
+                return data[key][idx]
+            return float('nan')
+    
+        def get_bin(data, label):
+            if 'bin_edges' not in data or label not in data['labels']:
+                return "—"
+            idx = data['labels'].index(label)
+            s1, s2 = data['bin_edges'][idx]
+            return f"[{s1:.4f}, {s2:.4f}]"
+    
+        def get_bin_total_weight(data, label):
+            if 'bin_edges' not in data or label not in data['labels']:
+                return float('nan')
+            idx = data['labels'].index(label)
+            my_bin = tuple(data['bin_edges'][idx])
+            return sum(
+                data['norms_relative'][j]
+                for j, be in enumerate(data['bin_edges'])
+                if tuple(be) == my_bin
+            )
+    
+        def get_n_in_bin(data, label):
+            if 'bin_edges' not in data or label not in data['labels']:
+                return float('nan')
+            idx = data['labels'].index(label)
+            my_bin = tuple(data['bin_edges'][idx])
+            return sum(1 for be in data['bin_edges'] if tuple(be) == my_bin)
+    
+        # --- Build rows ---
+        rows = []
+        for label in all_labels:
+            d_bins = get_val(data_bins, label, 'sizes')
+            d_pt   = get_val(data_pointwise, label, 'sizes') if data_pointwise else float('nan')
+            D      = d_bins if not np.isnan(d_bins) else d_pt
+    
+            w_bins = get_val(data_bins, label, 'norms_relative')
+            w_pt   = get_val(data_pointwise, label, 'norms_relative') if data_pointwise else float('nan')
+            dw     = w_bins - w_pt
+    
+            bin_str     = get_bin(data_bins, label)
+            n_in_bin    = get_n_in_bin(data_bins, label)
+            bin_total_w = get_bin_total_weight(data_bins, label)
+    
+            rows.append({
+                'Label'         : label.replace('\n', ' '),
+                'D (nm)'        : f"{D:.4f}",
+                'Bin [nm]'      : bin_str,
+                'n in bin'      : int(n_in_bin) if not np.isnan(n_in_bin) else '—',
+                'Bin CDF w'     : bin_total_w,
+                'w (bins)'      : w_bins,
+                'w (pointwise)' : w_pt   if data_pointwise else float('nan'),
+                'Δw'            : dw     if data_pointwise else float('nan'),
+            })
+    
+        df = pd.DataFrame(rows)
+    
+        # --- Σ w(bins) per bin group ---
+        df['Σ w(bins) in bin'] = df.groupby('Bin [nm]')['w (bins)'].transform('sum')
+        df['Check (Σ-CDF)'] = (df['Σ w(bins) in bin'] - df['Bin CDF w']).map(
+            lambda x: f"{x:+.4f}" if not np.isnan(x) else '—'
+        )
+    
+        # --- Format floats ---
+        float_cols = ['Bin CDF w', 'w (bins)', 'w (pointwise)', 'Δw', 'Σ w(bins) in bin']
+        for col in float_cols:
+            df[col] = df[col].map(lambda x: f"{x:.4f}" if not np.isnan(x) else '—')
+        df['Δw'] = df['Δw'].map(lambda x: f"{float(x):+.4f}" if x != '—' else '—')
+    
+        # --- Drop pointwise columns if not provided ---
+        if data_pointwise is None:
+            df = df.drop(columns=['w (pointwise)', 'Δw'])
+    
+        # --- Highlight bin containing mu ---
+        mu = self.results['mean']
+        def highlight_mu_bin(row):
+            """Highlight the row whose bin contains mu."""
+            bin_str = row['Bin [nm]']
+            if bin_str == '—':
+                return [''] * len(row)
+            try:
+                s1, s2 = map(float, bin_str.strip('[]').split(', '))
+                if s1 <= mu <= s2:
+                    return ['background-color: #fff3cd; font-weight: bold'] * len(row)
+            except Exception:
+                pass
+            return [''] * len(row)
+    
+        display(df.style.apply(highlight_mu_bin, axis=1))
+        return df

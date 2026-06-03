@@ -5,7 +5,313 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
-## [0.13.0] - "feat(csg): add symmetry ops, nanostar tools, fix plane orientation and slicing artifacts"
+## [0.14.0] - "csg ops, polydispersity, animations.py"
+
+### Added
+
+- **`NanoparticleDistribution.compare_proportions()` in `utils/polydispersity.py`**,
+  new method:
+
+    Displays a styled comparison table between bin-integrated and pointwise
+    weights for a set of structures. Takes pre-computed outputs of
+    `get_proportions()` and optionally `filter_proportions()` as input.
+    Highlights the bin containing `mu` in yellow. The `'w (pointwise)'` and
+    `'Δw'` columns are omitted if `data_pointwise` is not provided.
+    ```python
+    data_bins = nd.get_proportions(DNew, labelsNew, use_bins=True)
+    data_pt   = nd.get_proportions(DNew, labelsNew, use_bins=False)
+    data_bins = nd.filter_proportions(data_bins, threshold=0.05)
+    data_pt   = nd.filter_proportions(data_pt,   threshold=0.05)
+    nd.compare_proportions(data_bins, data_pt)
+    # Bin-integrated only (no pointwise comparison):
+    nd.compare_proportions(data_bins)
+    ```
+
+- **`compare_effective_diameters()` in `utils/prop.py`**, new utility function:
+
+    Computes and displays a pivot table comparing all diameter methods and
+    ellipsoid modes for both the initial and optimized structures of a NP.
+    Useful to assess the sensitivity of the diameter estimate to the chosen
+    method, and to select the most appropriate one for a given shape.
+    ```python
+    from pyNanoMatBuilder.utils.prop import compare_effective_diameters
+    compare_effective_diameters(ico)
+    compare_effective_diameters(ico, n_feret=5000)
+    ```
+    
+- **`NanoparticleDistribution.get_proportions()` in `utils/polydispersity.py`**,
+  new parameter `use_bins` and `debug`:
+
+    The former `get_proportions_in_bins()` has been merged into
+    `get_proportions()` as a `use_bins` parameter (default `True`).
+    When `use_bins=True`, the distribution is integrated over the histogram
+    bin that contains each target size. Bins are constructed symmetrically
+    around `mu`, using the same grid as `get_binned_statistics()`, ensuring
+    full consistency between the displayed histogram and the returned weights.
+    The grid is extended if needed to cover targets beyond `mu ± 3.5 sigma`.
+    If a target lies within the last quarter of its bin (`rel_pos > 0.75` or
+    `rel_pos < 0.25`) and the neighboring bin is empty, it is automatically
+    reassigned to that neighbor — avoiding spurious bin sharing when a
+    structure naturally belongs to an adjacent empty bin.
+    If several targets remain in the same bin after reassignment, the bin
+    weight is shared proportionally to their pointwise `f(D_i)` value, so a
+    structure closer to the distribution peak receives a larger share.
+    When `use_bins=False`, the original pointwise evaluation is used instead.
+    The two modes differ in the meaning of `norms`: absolute CDF fractions
+    for `use_bins=True`, relative to the full distribution discretization for
+    `use_bins=False`. A `debug=True` parameter prints bin assignment details
+    for each target, including any reassignments and intra-bin sharing.
+    ```python
+    # Bin-integrated weights (default, recommended for polydisperse SAXS averaging)
+    data = nd.get_proportions(DNew, labels=labelsNew)
+    # Pointwise evaluation (previous behavior)
+    data = nd.get_proportions(DNew, labels=labelsNew, use_bins=False)
+    # Show bin assignment details
+    data = nd.get_proportions(DNew, labels=labelsNew, debug=True)
+    ```
+
+- **`NanoparticleDistribution.print_specific_proportions()` and `.plot()`**,
+  new parameter `use_bins`:
+
+    Both methods now forward `use_bins` to `get_proportions()`, defaulting
+    to `True`. Pass `use_bins=False` to restore the previous pointwise behavior.
+    ```python
+    nd.plot(highlight_sizes=[DNew, labelsNew])                    # use_bins=True by default
+    nd.plot(highlight_sizes=[DNew, labelsNew], use_bins=False)    # previous behavior
+    nd.print_specific_proportions(DNew, labelsNew)                # use_bins=True by default
+    ```
+- **`calculate_rg()` in `utils/polydispersity.py`**, bug fix:
+
+    The Å → nm conversion (`/= 10`) was only applied in the geometric
+    (non-mass-weighted) branch. It is now applied in both cases, so the
+    function consistently returns Rg in nm as documented.
+- **`peel_by_shifted_ellipsoid()` in `utils/geometry.py`**, new parameters
+    `shift_direction` and `axis_def`:
+  
+    When `shift_direction` is provided, the ellipsoid envelope is shifted along
+    the given direction instead of a random one. The direction can be given as
+    Miller indices (`axis_def='hkl'`, default) or Cartesian vector
+    (`axis_def='cart'`). Default behavior (random direction) is unchanged.
+    The output now displays the shift direction, normalized, in both the input
+    and Cartesian frames.
+    ```python
+    NP.peel_by_shifted_ellipsoid(shift_dist=2.5, shift_direction=[1,1,0],
+                                axis_def='hkl')
+    ```
+- **`pyNMB-examples.ipynb`**, new section: **Constructive Solid Geometry**:
+
+    Four CSG operations illustrated with a silver (Ag) cube as object A and a
+    gold (Au) square-section wire as object B:
+    - `union_with()` — merge A and B, overlapping atoms removed
+    - `cut_by()` — carve a wire-shaped channel through the cube
+    - `intersect_with()` — keep only the part of the cube inside the wire
+    - `flush_inlay_with()` — embed the wire section flush inside the cube
+  
+    It is accompanied by a description and a graphical abstract
+    (`csg_operations.svg`) summarizing
+    all four Boolean operations with their mathematical notation (A∪B, A−B,
+    A∩B, A⊕(B∩A)).
+
+- **`remove_plane()` in `utils/geometry.py`** and **`pyNMBcore`**, new method:
+
+    Removes the outermost atomic plane perpendicular to a given direction.
+    The direction can be given as Miller indices (`axis_def='hkl'`, default)
+    or Cartesian vector (`axis_def='cart'`). The tolerance `tol` (default 0.5 Å)
+    controls the thickness of the layer to remove. The output prints a JMol
+    command to visualize the removed plane as a yellow translucent polygon.
+```python
+    NP.remove_plane(direction=[1, 1, 1], axis_def='hkl')
+    NP.remove_plane(direction=[0, 0, 1], axis_def='cart')
+```
+
+- **`pyNMB-examples.ipynb`**, new section: **Peeling operations**:
+    Two workflows illustrated:
+    - Au fcc prolate ellipsoid (2 × 2 × 4 nm): asymmetric peeling via
+      `peel_by_shifted_ellipsoid()` followed by `peel_by_coordination()`,
+      with geometry optimization.
+    - Ag regular icosahedron (shell 4): targeted removal of a triangular facet
+      via `remove_plane()` (facet identified using `skipFacetInfo=False`),
+      followed by `peel_by_coordination()` and geometry optimization.
+
+- **`read()` in `utils/io.py`**, new function:
+    Unified reader symmetric to `write()`. Routes by file extension: atomic
+    structures (`.xyz`, `.cif`, `.pdb`, etc.) are read via ASE, while Jmol
+    scripts (`.script`, `.spt`) are returned as raw text. Supports multi-frame
+    selection through an `index` argument passed to ASE (`0`, `-1`, `':'`,
+    `'::2'`, etc.). For `.xyz` files, recovers the pyNMB composition header
+    (line 2 of each frame) into `atoms.info['pyNMB_header']`, and additionally
+    parses it into `atoms.info['pyNMB_composition']` when it is a valid dict
+    literal. Falls back to the raw string only if parsing fails.
+    ```python
+    # Single structure (last frame by default for trajectories)
+    atoms = pyNMBu.read("coords/Aufcc_c_Oh_00.xyz")
+    # All frames as a list
+    traj  = pyNMBu.read("coords/traj.xyz", index=":")
+    # Jmol script returned as raw text
+    script = pyNMBu.read("coords/view.spt")
+    ```
+
+- **`_read_xyz_headers()` in `utils/io.py`**, new helper:
+    Extracts the per-frame comment line (line 2 of each frame) from a
+    multi-frame XYZ file, used by `read()` to reattach the pyNMB header to
+    each frame.
+
+
+- **`animations.py`, new submodule in `utils/`**:
+    Two decoupled helpers to turn a series of `.xyz` frames into a looping
+    movie, factoring out the boilerplate previously copy-pasted in morphing
+    notebooks (cube → octahedron, cube → rhombic dodecahedron, etc.).
+    - **`render_frames_jmol()` in `utils/animations.py`**, new function:
+        Renders a series of `.xyz` frames into `.png` images via
+        `saveCoords_DrawJmol()`. Reads frames named `'<prefix><i>.xyz'` (index
+        zero-padded to 2 digits) from `input_dir` (defaults to `output_dir`) and
+        writes each to `'<output_dir>/<prefix><i>.png'`. Returns the list of PNG
+        paths in frame order; missing source frames or PNGs that fail to render are
+        skipped with a warning and left out of the returned list. `saveXYZ` is
+        forced to `False`; extra Jmol options (`cpk`, `boundaries`, ...) are
+        forwarded via `**jmol_kwargs`.
+        ```python
+        pngs = pyNMBu.render_frames_jmol(prefix="Febcc_c_rdd_",
+                                         n_frames=i_max+1,
+                                         view_script=view_script,
+                                         output_dir="animations",
+                                         boundaries=False, cpk=1.7)
+        ```
+    
+    - **`frames_to_movie()` in `utils/animations.py`**, new function:
+        Assembles a list of PNG paths into an animated `.mp4` or `.gif` (format
+        chosen from the output extension). `pingpong=True` plays the sequence
+        forward then backward (excluding duplicated endpoints) for a seamless loop.
+        Requires `imageio`; if it is absent, a warning is printed and `None` is
+        returned instead of raising. Being decoupled from `render_frames_jmol()`,
+        the movie can be re-assembled (different `fps`, format, or ping-pong) without
+        re-running the slow Jmol rendering step.
+        ```python
+        # One render, two outputs — no need to re-render the frames
+        pyNMBu.frames_to_movie(pngs, "animations/Febcc_c_rdd_animation.mp4",
+                               fps=5, pingpong=True)
+        pyNMBu.frames_to_movie(pngs, "animations/Febcc_c_rdd_animation.gif",
+                               fps=5, pingpong=True)
+        ```
+- **`listOf_Attributes_Methods(obj, show_methods=False)`**:
+
+    - **new function in `utils/core.py`**: inspect any pyNMB
+        object and list its instance attributes, split into those that are set and
+        those that are None/empty, with large objects (ndarrays, ASE `Atoms`, dicts,
+        long sequences) summarized. Optionally lists available methods with
+        `show_methods=True`. Sections are introduced via `utils.centerTitle`.
+    - **documented in the Quick start section of `pyNMB-examples.ipynb`**:
+        - documented the non-exhaustive nature of object attributes and
+          added guidance to inspect them with `listOf_Attributes_Methods`.
+        - added a short section on the role of methods (recomputing
+          properties, adjusting morphology, generating complex shapes).
+
+### Changed
+
+- **`effective_diameter()` in `utils/prop.py`**, extended with new `method`
+  and `n_feret` parameters:
+
+    The previous implementation only computed the volume-equivalent diameter
+    `D = 2*(abc)^(1/3)` from the ellipsoid semi-axes in `mode='vertices'`.
+    It now supports eight diameter computation methods, selectable via the
+    `method` argument (default `'rms'`):
+    - `'feret'`: mean Feret diameter averaged over `n_feret` random
+      orientations — most geometry-independent, directly comparable to TEM.
+      Works for any shape (sphere, icosahedron, nanorod).
+    - `'rg'`: Guinier-consistent diameter `D = 2*sqrt(5/3)*Rg`, computed
+      from the actual atomic positions. Appropriate for SAXS comparison.
+    - `'rms'` (default): `D = 2*sqrt((a²+b²+c²)/3)` from the ellipsoid
+      semi-axes — consistent with Guinier for a uniform solid ellipsoid.
+    - `'volume'`: replaces the previous default behavior —
+      `D = 2*(abc)^(1/3)`, diameter of the sphere with the same volume.
+    - `'arithmetic'`: arithmetic mean of the ellipsoid semi-axes.
+    - `'surface'`: diameter of the sphere with the same surface area
+      (Knud Thomsen approximation, error < 1.06%).
+    - `'radius'`: smallest ellipsoid axis D3 — transverse diameter for nanorods.
+    - `'length'`: largest ellipsoid axis D1 — axial length for nanorods.
+
+    Methods `'feret'` and `'rg'` operate directly on atomic positions and
+    ignore the `mode` parameter. All other methods require the ellipsoid
+    analysis (`mode`: `'vertices'`, `'all'`, or `'planes'`).
+
+    **Breaking change**: the default method is now `'rms'` instead of the
+    implicit `'volume'`. Existing code calling `NP.effective_diameter()`
+    without arguments will get a different result. To restore the previous
+    behavior, use `NP.effective_diameter(method='volume')`.
+    ```python
+    NP.effective_diameter()                               # new default: rms
+    NP.effective_diameter(method='volume')                # previous behavior
+    NP.effective_diameter(method='feret')                 # mean Feret diameter
+    NP.effective_diameter(method='feret', n_feret=5000)   # higher precision
+    ```
+    
+- **`from_file()` in `pyNMBcore.py`**, now reads through `utils.io.read()`:
+    File loading no longer calls `ase.io.read` directly but goes through the
+    new unified `read()`, so all reads share a single I/O path and `.xyz`
+    files inherit header recovery. Added an explicit `index=-1` parameter
+    (default: last frame) and a guard that returns `None` with a clear message
+    if a multi-frame selection (e.g. `index=':'`) is passed where a single
+    structure is expected.
+    ```python
+    import pyNanoMatBuilder as pyNMB
+    # Unchanged default behaviour (last frame)
+    AuNP = pyNMB.from_file("animations/Aufcc_cube.xyz")
+    # Pick a specific frame from a trajectory
+    AuNP = pyNMB.from_file("coords/traj.xyz", index=2)
+    ```
+- **`external_facets_info()` in `utils/prop.py`**, formatting change:
+
+    Cartesian facet normals (printed in hull mode when a label cannot be
+    converted to Miller indices) are now displayed with 3 decimals instead
+    of 2, for both the absent-facet warnings and the main table. The header
+    width and the `'─'` separator lines were widened accordingly so columns
+    stay aligned with the longer `[+0.000 +0.000 +0.000]` labels.
+
+- **`applySlicing()` in `utils/csg.py`**, reworked `'angle'` mode + new
+  `'startVec'` key:
+
+    The `'angle'` key now defines a **tilt** of the plane normal measured from
+    the plane perpendicular to `rotAxis`, instead of an azimuthal rotation
+    around it. `angle=0°` gives a radial normal (facet parallel to `rotAxis`,
+    i.e. vertical); a positive angle tilts the normal towards `+rotAxis`, a
+    negative angle towards `-rotAxis`. This makes `'angle'` directly usable for
+    inclined facets such as the five side facets of a bipyramid (one group at
+    `+angle`, one at `-angle`), where the previous azimuthal behaviour produced
+    vertical facets regardless of the angle value.
+
+    A new optional `'startVec'` key sets the in-plane reference direction used
+    to build the normal in `'angle'` mode. Only its component perpendicular to
+    `rotAxis` is used, so it need not be orthogonal to `rotAxis` — but it must
+    not be collinear with it (a clear error is raised otherwise). If omitted,
+    an arbitrary perpendicular direction is chosen (previous default).
+
+    **Behaviour change**: existing calls relying on `'angle'` as an azimuthal
+    rotation will now tilt the normal instead. Calls using `'normal'` are
+    unaffected.
+    ```python
+    # Five side facets of a bipyramid, tilted by 15.79° towards each tip
+    NP.applySlicing(
+        planes=[
+            {'angle':  15.793, 'startVec': [1, 0, 0], 'rotAxis': [0, 0, 1],
+             'nRot': 5, 'distance': d, 'delete': 'above', 'modeP': 'OR'},
+            {'angle': -15.793, 'startVec': [1, 0, 0], 'rotAxis': [0, 0, 1],
+             'nRot': 5, 'distance': d, 'delete': 'above', 'modeP': 'OR'},
+        ],
+        mode='OR', distance_unit='nm',
+    )
+    ```
+
+### Fixed
+
+- **`optimize()` in `utils/energy.py`**, bug fix:
+
+    `model = self.NP` created a reference instead of an independent copy,
+    causing `QuasiNewton` to modify `self.NP` in-place during optimization.
+    As a result, `self.NP` and `self.NP_opt` pointed to the same object after
+    optimization — the initial structure was silently overwritten.
+    Fixed by replacing `model = self.NP` with `model = self.NP.copy()`.
+  
+## [0.13.0] - "csg ops: add symmetry ops, nanostar tools, fix plane orientation and slicing artifacts"
 
 ### Added
 

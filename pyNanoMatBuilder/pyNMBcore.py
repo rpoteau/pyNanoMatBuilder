@@ -167,25 +167,56 @@ class pyNMBcore:
                                     postAnalyzis, skipChiralityCalculation, skipSymmetryAnalyzis,
                                     skipFacetInfo, thresholdCoreSurface)
 
-    def peel_by_shifted_ellipsoid(self, shift_dist=2.5, noOutput=None,
-                                  postAnalyzis=None, skipChiralityCalculation=None,skipSymmetryAnalyzis=None,
-                                  skipFacetInfo=None, thresholdCoreSurface=None):
-        """
-        Truncate the NP using a shape-adaptive ellipsoidal envelope shifted
-        in a random direction, simulating asymmetric growth or dissolution.
-        See utils/geometry.peel_by_shifted_ellipsoid for full documentation.
+    def peel_by_shifted_ellipsoid(self, shift_dist=2.5, shift_direction=None,
+                                   axis_def='hkl', noOutput=None,
+                                   postAnalyzis=None,
+                                   skipChiralityCalculation=None,
+                                   skipSymmetryAnalyzis=None,
+                                   skipFacetInfo=None,
+                                   thresholdCoreSurface=None):
+        """Truncate self.NP using a shape-adaptive shifted ellipsoid envelope.
+        See utils.geometry.peel_by_shifted_ellipsoid."""
+        from .utils.geometry import peel_by_shifted_ellipsoid
+        if noOutput is None: noOutput = self.noOutput
+        return peel_by_shifted_ellipsoid(self, shift_dist=shift_dist,
+                                         shift_direction=shift_direction,
+                                         axis_def=axis_def,
+                                         noOutput=noOutput,
+                                         postAnalyzis=postAnalyzis,
+                                         skipChiralityCalculation=skipChiralityCalculation,
+                                         skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                                         skipFacetInfo=skipFacetInfo,
+                                         thresholdCoreSurface=thresholdCoreSurface)
 
+    def remove_plane(self, direction, axis_def='hkl', tol=0.5,
+                     noOutput=None,
+                     postAnalyzis=None,
+                     skipChiralityCalculation=None,
+                     skipSymmetryAnalyzis=None,
+                     skipFacetInfo=None,
+                     thresholdCoreSurface=None):
+        """
+        Remove the outermost atomic plane in a given direction.
+        See utils.geometry.remove_plane for full documentation.
+ 
         Args:
-            shift_dist (float): Shift distance in Å, approximately one atomic
-                                 layer (default: 2.5).
+            direction (array-like): Plane normal as Miller indices [h, k, l]
+                (axis_def='hkl') or Cartesian [x, y, z] (axis_def='cart').
+            axis_def (str): 'hkl' (default) or 'cart'.
+            tol (float): Tolerance in Å to identify atoms in the outermost
+                plane. Default is 0.5 Å.
             noOutput (bool): If True, suppresses output. Default is self.noOutput.
         """
-        from .utils.geometry import peel_by_shifted_ellipsoid
-        if noOutput is None: noOutput = self.noOutput            
-        return peel_by_shifted_ellipsoid(self, shift_dist, noOutput,
-                                        postAnalyzis, skipChiralityCalculation, skipSymmetryAnalyzis,
-                                        skipFacetInfo, thresholdCoreSurface)
-            
+        from .utils.geometry import remove_plane
+        if noOutput is None: noOutput = self.noOutput
+        return remove_plane(self, direction, axis_def=axis_def, tol=tol,
+                            noOutput=noOutput,
+                            postAnalyzis=postAnalyzis,
+                            skipChiralityCalculation=skipChiralityCalculation,
+                            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                            skipFacetInfo=skipFacetInfo,
+                            thresholdCoreSurface=thresholdCoreSurface)    
+    
     def clip_to_sphere(self, radius_nm, noOutput=None,
                            postAnalyzis=None,
                            skipChiralityCalculation=None,
@@ -554,11 +585,27 @@ class pyNMBcore:
         from .utils.core import clone
         return clone(self)
 
-    def effective_diameter(self, structure=None, mode='vertices'):
-        """Returns the volume-equivalent diameter from the ellipsoid analysis, in Å."""
-        key = 'optimized structure' if structure == 'optimized' else 'initial structure'
+    def effective_diameter(self, structure=None, mode='vertices',
+                           method='rms', n_feret=2000):
+        """
+        Returns the effective diameter of the nanoparticle in Å.
+        See utils/prop.effective_diameter for full documentation.
+    
+        Args:
+            structure (str): 'optimized' (default) or 'initial'.
+            mode (str): Ellipsoid mode — 'vertices' (default), 'all', or 'planes'.
+                Ignored when method='feret' or method='rg'.
+            method (str): Diameter computation method. Options:
+                'feret', 'rg', 'rms' (default), 'volume', 'arithmetic',
+                'surface', 'radius', 'length'.
+                See utils/prop.effective_diameter for details.
+            n_feret (int): Number of random orientations for method='feret'.
+                Default is 2000.
+        """
         from .utils.prop import effective_diameter
-        return effective_diameter(self, structure, mode)
+        if structure is None:
+            structure = 'optimized' if self.is_optimized else 'initial'
+        return effective_diameter(self, structure, mode, method, n_feret)
 
     def get_ellipsoid_analysis(self, noOutput=False, mode='vertices'):
         """
@@ -668,26 +715,36 @@ class pyNMBcore:
 
 ######################################### load external file
     @classmethod
-    def from_file(cls, file_path, **kwargs):
+    def from_file(cls, file_path, index=-1, **kwargs):
         """
         Create a pyNMB object from any structural file format supported by ASE 
         (.xyz, .cif, .pdb, etc.) and run the analysis pipeline.
         
         Args:
             file_path (str): Path to the structural file.
+            index (int, optional): Frame selector for multi-frame files
+                (default -1, i.e. the last frame). Passed through to the
+                pyNMB reader.
             **kwargs: Arguments for propPostMake and internal settings.
         """
-        from ase.io import read as ase_read
+        from .utils.io import read as pynmb_read
         from pathlib import Path
         # 1. Instantiate the object without calling __init__
         instance = cls.__new__(cls)
-        
-        # 2. Universal read with ASE
-        # ASE will automatically detect the format (CIF, PDB, XYZ, etc.)
+
+        # 2. Universal read via the pyNMB I/O layer
+        # Routes to ASE under the hood (auto-detects CIF, PDB, XYZ, etc.)
+        # and recovers the pyNMB composition header for .xyz files.
         try:
-            instance.NP = ase_read(file_path)
+            instance.NP = pynmb_read(file_path, index=index)
         except Exception as e:
-            print(f"Error: ASE could not read the file {file_path}. {e}")
+            print(f"Error: could not read the file {file_path}. {e}")
+            return None
+
+        # Guard against a multi-frame selection slipping through (e.g. index=':')
+        if isinstance(instance.NP, list):
+            print(f"Error: {file_path} resolved to multiple frames. "
+                  f"Pass a single integer index (got {index!r}).")
             return None
         
         # 3. Basic metadata setup

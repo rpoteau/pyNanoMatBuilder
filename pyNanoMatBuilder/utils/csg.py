@@ -45,8 +45,8 @@ def applySlicing(self,
                 (if normal_def='cart', default) or Miller indices [h, k, l]
                 (if normal_def='hkl', requires self.Gstar — Crystal objects only).
             'angle' (float): Angle in degrees between the plane normal and
-                rotAxis. The reference normal is built by rotating an arbitrary
-                vector perpendicular to rotAxis by this angle.
+                rotAxis. The reference normal is built from a starting
+                direction (see 'startVec') rotated by this angle around rotAxis.
 
         Mandatory keys:
             'distance' (float): Signed orthogonal distance from the origin
@@ -71,6 +71,11 @@ def applySlicing(self,
                 Rotation angle = 360° / nRot. Default is 1 (no rotation).
             'rotAxis' (array-like): Rotation axis as a Cartesian vector.
                 Required if nRot > 1.
+            'startVec' (array-like, optional): Starting direction used to build
+                the reference normal in 'angle' mode. Only its component
+                perpendicular to rotAxis is used, so it need not be orthogonal
+                to rotAxis — but it must not be collinear with it. If omitted,
+                an arbitrary perpendicular direction is chosen.
             'modeP' (str): Logical combination of planes within this group.
                 'OR'  — atom removed if condemned by ANY plane in the group.
                         Default when side='above'. Use for faceting.
@@ -197,11 +202,35 @@ def applySlicing(self,
             rot_axis = np.array(plane_def['rotAxis'], dtype=float)
             rot_axis = rot_axis / np.linalg.norm(rot_axis)
             angle_deg = plane_def['angle']
-            arbitrary = np.array([1, 0, 0]) if abs(rot_axis[0]) < 0.9 \
-                        else np.array([0, 1, 0])
-            perp = np.cross(rot_axis, arbitrary)
-            perp = perp / np.linalg.norm(perp)
-            n = rotationMolAroundAxis(perp, angle_deg, rot_axis)
+
+            # Reference direction in the plane perpendicular to rotAxis:
+            # user-provided 'startVec' if given, else an arbitrary choice.
+            if 'startVec' in plane_def:
+                start = np.array(plane_def['startVec'], dtype=float)
+                if np.linalg.norm(start) < 1e-12:
+                    raise ValueError("'startVec' must be a non-zero vector.")
+                start = start / np.linalg.norm(start)
+                # keep only the component perpendicular to rotAxis
+                perp = start - np.dot(start, rot_axis) * rot_axis
+                if np.linalg.norm(perp) < 1e-8:
+                    raise ValueError(
+                        "'startVec' is collinear with 'rotAxis'; it has no "
+                        "component in the plane perpendicular to the axis. "
+                        "Choose a startVec not parallel to rotAxis.")
+                perp = perp / np.linalg.norm(perp)
+            else:
+                arbitrary = np.array([1, 0, 0]) if abs(rot_axis[0]) < 0.9 \
+                            else np.array([0, 1, 0])
+                perp = np.cross(rot_axis, arbitrary)
+                perp = perp / np.linalg.norm(perp)
+
+            # 'angle' is now a TILT measured from the plane perpendicular to
+            # rotAxis: 0° -> radial normal (vertical facet), >0° tilts the
+            # normal towards +rotAxis (e.g. a bipyramid side facet). The tilt
+            # is performed around an axis orthogonal to (rotAxis, perp).
+            tilt_axis = np.cross(rot_axis, perp)
+            tilt_axis = tilt_axis / np.linalg.norm(tilt_axis)
+            n = rotationMolAroundAxis(perp, angle_deg, tilt_axis)
             n = n / np.linalg.norm(n)
         else:
             raise ValueError(

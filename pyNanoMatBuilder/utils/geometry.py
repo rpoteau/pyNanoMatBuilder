@@ -1506,12 +1506,15 @@ def peel_by_coordination(self, threshold_peeling=6, Rmax=2.9, noOutput=False,
             is_optimized=False)
     
 
-def peel_by_shifted_ellipsoid(self, shift_dist=2.5, noOutput=False,
-                             postAnalyzis=None,
-                             skipChiralityCalculation=None,
-                             skipSymmetryAnalyzis=None,
-                             skipFacetInfo=None,
-                             thresholdCoreSurface=None):
+def peel_by_shifted_ellipsoid(self, shift_dist=2.5,
+                              shift_direction=None,
+                              axis_def='hkl', 
+                              noOutput=False,
+                              postAnalyzis=None,
+                              skipChiralityCalculation=None,
+                              skipSymmetryAnalyzis=None,
+                              skipFacetInfo=None,
+                              thresholdCoreSurface=None):
     """
     Truncate the nanoparticle using a shape-adaptive envelope shifted in a 
     random direction.
@@ -1530,6 +1533,10 @@ def peel_by_shifted_ellipsoid(self, shift_dist=2.5, noOutput=False,
     Args:
         shift_dist (float): The distance to shift the envelope (in Angstroms). 
                             2.5 A corresponds to approximately one atomic layer.
+        shift_direction (array-like): Direction of the shift. If None, a random
+            direction is used. Can be given as Miller indices [u,v,w]
+            (axis_def='hkl') or Cartesian [x,y,z] (axis_def='cart').
+        axis_def (str): 'hkl' (default) or 'cart'.
         noOutput (bool): If True, suppresses output messages.
     """
     import numpy as np
@@ -1553,8 +1560,11 @@ def peel_by_shifted_ellipsoid(self, shift_dist=2.5, noOutput=False,
     else:
         hull_indices = getattr(self, 'vertices', None)
     
-    hull_pts = target_atoms.get_positions()[hull_indices]
-    center_orig = hull_pts.mean(axis=0)
+    from scipy.spatial import ConvexHull
+    pos = target_atoms.get_positions()
+    hull = ConvexHull(pos)
+    hull_pts = pos[hull.vertices]
+    center_orig = target_atoms.get_center_of_mass()
     pos_c = hull_pts - center_orig
     S = (pos_c.T @ pos_c) / len(pos_c)
     evals, evecs = np.linalg.eigh(S)
@@ -1564,10 +1574,28 @@ def peel_by_shifted_ellipsoid(self, shift_dist=2.5, noOutput=False,
     # 3. Define shift
     if shift_dist == 0:
         shift_vec = np.zeros(3)
-    else:
+    elif shift_direction is None:
+        # Random direction — original behavior
         random_vec = np.random.normal(size=3)
         random_vec /= np.linalg.norm(random_vec)
         shift_vec = random_vec * shift_dist
+    else:
+        # User-defined direction
+        if axis_def == 'hkl':
+            if not hasattr(self, 'Gstar') or self.Gstar is None:
+                # Fallback to cart for non-Crystal objects (e.g. platonicNPs)
+                print(f"  Warning: axis_def='hkl' requires a Crystal object "
+                          f"with Gstar — falling back to axis_def='cart'.")
+                axis_def = 'cart'
+                dir_cart = np.array(shift_direction, dtype=float)
+            else:
+                from .crystals import lattice_cart
+                dir_cart = lattice_cart(self, [shift_direction], Bravais2cart=True,
+                                        printV=not noOutput)[0]
+        else:
+            dir_cart = np.array(shift_direction, dtype=float)
+        dir_cart /= np.linalg.norm(dir_cart)
+        shift_vec = dir_cart * shift_dist
         
     new_center = center_orig + shift_vec
 
@@ -1587,20 +1615,207 @@ def peel_by_shifted_ellipsoid(self, shift_dist=2.5, noOutput=False,
     self.nAtoms = len(self.NP)
     
     if not noOutput:
-        # Calculating the two ratios (Major/Intermediate and Major/Minor)
-        # This reflects the full 3D shape (Cylindrical vs Spheroidal)
-
         centertxt("Truncating the nanoparticle using a shape-adaptive envelope", bgc='#007a7a', size='14', weight='bold')
         print(f"Shifted Truncation ({key}):")
         print(f"  - Envelope matched to particle length ({a*0.1:.2f} nm) and shape.")
         print(f"  - Aspect Ratios: a/b = {a/b:.2f} ; a/c = {a/c:.2f}")
+        if shift_dist == 0:
+            print(f"  - Shift: none (centered ellipsoid)")
+        elif shift_direction is None:
+            print(f"  - Shift: {shift_dist:.2f} Å along random direction "
+                  f"[{shift_vec[0]/shift_dist:+.4f} {shift_vec[1]/shift_dist:+.4f} {shift_vec[2]/shift_dist:+.4f}] (cart)")
+        else:
+            dir_str = f"[{shift_direction[0]} {shift_direction[1]} {shift_direction[2]}]"
+            print(f"  - Shift: {shift_dist:.2f} Å along {dir_str} ({axis_def}) "
+                  f"→ cart [{dir_cart[0]:+.4f} {dir_cart[1]:+.4f} {dir_cart[2]:+.4f}]")
         print(f"  - Atoms removed: {old_count - self.nAtoms}. self.NP updated.")
-    
+        # JMol command for the shifted ellipsoid
+        # Axes vectors = evecs[:,i] * half-axis_i, centered on new_center
+        # Note: new_center is in the frame BEFORE recentering — need to correct
+        # for the recentering applied to self.NP after peeling
+        com_shift = self.NP.get_center_of_mass()  # ≈ 0 after recentering
+        jmol_center = new_center - com_shift        # correct for recentering
+        v1 = evecs[:, 0] * a
+        v2 = evecs[:, 1] * b
+        v3 = evecs[:, 2] * c
+        key_cmd = key.replace(" ", "_")
+        jmol_cmd = (
+            f"ellipsoid ID {key_cmd}_shifted_el AXES "
+            f"{{{v1[0]:.6f} {v1[1]:.6f} {v1[2]:.6f}}} "
+            f"{{{v2[0]:.6f} {v2[1]:.6f} {v2[2]:.6f}}} "
+            f"{{{v3[0]:.6f} {v3[1]:.6f} {v3[2]:.6f}}}; "
+            f"ellipsoid ID {key_cmd}_shifted_el CENTER "
+            f"{{{jmol_center[0]:.3f} {jmol_center[1]:.3f} {jmol_center[2]:.3f}}}; "
+            f"color ${key_cmd}_shifted_el [xAA4444] translucent 0.4;"
+        )
+        print(f"\n  [Jmol Command to visualize the shifted ellipsoid]:")
+        print(f"  {jmol_cmd}")
+        
     # Sync Metadata and Clean Stale Data !!!
     self._flush_stale_data(shape_update="_peeled_ellipsoid")
     self.is_optimized = False
     
     # --- Resolve parameters ---
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation=skipChiralityCalculation,
+            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+            skipFacetInfo=skipFacetInfo,
+            thresholdCoreSurface=thresholdCoreSurface,
+            noOutput=noOutput,
+            is_optimized=False)
+
+def remove_plane(self, direction, axis_def='hkl', tol=0.5,
+                 noOutput=False,
+                 postAnalyzis=None,
+                 skipChiralityCalculation=None,
+                 skipSymmetryAnalyzis=None,
+                 skipFacetInfo=None,
+                 thresholdCoreSurface=None):
+    """
+    Remove the outermost atomic plane in a given direction.
+
+    Finds atoms that lie in the plane perpendicular to the given direction
+    and located at the maximum projected distance (i.e. the outermost layer),
+    then removes them from self.NP.
+
+    Args:
+        direction (array-like): Direction of the plane normal, given as
+            Miller indices [h, k, l] (axis_def='hkl') or Cartesian
+            [x, y, z] (axis_def='cart').
+        axis_def (str): 'hkl' (default) or 'cart'.
+        tol (float): Tolerance in Å to define the thickness of the outermost
+            plane. Atoms within tol of the maximum projected distance are
+            removed. Default is 0.5 Å (well below typical Rnn ~ 2.5-2.9 Å).
+        noOutput (bool): If True, suppresses output messages. Default is False.
+        postAnalyzis (bool): If True, runs propPostMake(). Default None → self.postAnalyzis.
+        skipChiralityCalculation (bool): Default None → self.skipChiralityCalculation.
+        skipSymmetryAnalyzis (bool): Default None → self.skipSymmetryAnalyzis.
+        skipFacetInfo (bool): Default None → self.skipFacetInfo.
+        thresholdCoreSurface (float): Default None → self.thresholdCoreSurface.
+
+    Returns:
+        None. Updates self.NP in place.
+
+    Example:
+        # Remove the top (111) plane
+        NP.remove_plane(direction=[1, 1, 1], axis_def='hkl')
+
+        # Remove the topmost plane along +z in Cartesian
+        NP.remove_plane(direction=[0, 0, 1], axis_def='cart')
+
+        # Remove the face triangulaire tournée vers +z d'un icosaèdre
+        NP.remove_plane(direction=[0.3568, 0., 0.9342], axis_def='cart')
+    """
+    import numpy as np
+
+    if not noOutput:
+        centertxt("Removing outermost atomic plane", bgc='#007a7a', size='14', weight='bold')
+
+    # 1. Identify source structure
+    if self.is_optimized and hasattr(self, 'NP_opt'):
+        target_atoms = self.NP_opt
+        status = "optimized structure"
+    else:
+        target_atoms = self.NP
+        status = "initial structure"
+
+    # 2. Convert direction to Cartesian unit vector
+    if axis_def == 'hkl':
+        if not hasattr(self, 'Gstar') or self.Gstar is None:
+            print(f"  Warning: axis_def='hkl' requires a Crystal object "
+                  f"with Gstar — falling back to axis_def='cart'.")
+            axis_def = 'cart'
+            dir_cart = np.array(direction, dtype=float)
+        else:
+            from .crystals import lattice_cart
+            dir_cart = lattice_cart(self, [direction], Bravais2cart=True,
+                                    printV=not noOutput)[0]
+    else:
+        dir_cart = np.array(direction, dtype=float)
+
+    dir_cart = dir_cart / np.linalg.norm(dir_cart)
+
+    # 3. Project all atoms onto the direction
+    pos = target_atoms.get_positions()
+    projections = pos @ dir_cart          # signed distance along direction (N,)
+
+    # 4. Identify the outermost plane
+    proj_max = projections.max()
+    mask_plane = projections >= proj_max - tol    # atoms in the outermost plane
+    mask_keep  = ~mask_plane                      # atoms to keep
+
+    n_removed = np.count_nonzero(mask_plane)
+
+    if not noOutput:
+        centertxt(
+            f"Removing outermost plane along [{dir_cart[0]:+.4f} "
+            f"{dir_cart[1]:+.4f} {dir_cart[2]:+.4f}] — source: {status}",
+            bgc='#cbcbcb', size='12', fgc='b', weight='bold',
+        )
+        print(f"  - Direction input   : {direction} ({axis_def})")
+        print(f"  - Cartesian unit vec: [{dir_cart[0]:+.4f} {dir_cart[1]:+.4f} {dir_cart[2]:+.4f}]")
+        print(f"  - Max projection    : {proj_max:.4f} Å")
+        print(f"  - Tolerance         : {tol:.4f} Å")
+        print(f"  - Atoms removed     : {n_removed} (outermost plane)")
+        print(f"  - Atoms remaining   : {np.count_nonzero(mask_keep)}")
+        
+        # --- JMol command to visualize the removed plane ---
+        # Build a square polygon centered on proj_max * dir_cart,
+        # lying in the plane perpendicular to dir_cart.
+        # Size is set to the largest transverse extent of the NP.
+        cog = target_atoms.get_center_of_mass()
+        plane_center = cog + proj_max * dir_cart
+ 
+        # Two orthogonal vectors spanning the plane
+        arbitrary = np.array([1, 0, 0]) if abs(dir_cart[0]) < 0.9 else np.array([0, 1, 0])
+        e1 = arbitrary - np.dot(arbitrary, dir_cart) * dir_cart
+        e1 /= np.linalg.norm(e1)
+        e2 = np.cross(dir_cart, e1)
+ 
+        # Half-size = largest transverse distance from center to any atom
+        transverse = pos - (projections[:, np.newaxis] * dir_cart)
+        half_size = np.linalg.norm(transverse - cog, axis=1).max() * 1.2  # 20% margin
+ 
+        # Four corners of the polygon
+        p1 = plane_center + half_size * ( e1 + e2)
+        p2 = plane_center + half_size * ( e1 - e2)
+        p3 = plane_center + half_size * (-e1 - e2)
+        p4 = plane_center + half_size * (-e1 + e2)
+ 
+        jmol_cmd = (
+            f"draw removed_plane POLYGON 4 "
+            f"{{{p1[0]:.3f} {p1[1]:.3f} {p1[2]:.3f}}} "
+            f"{{{p2[0]:.3f} {p2[1]:.3f} {p2[2]:.3f}}} "
+            f"{{{p3[0]:.3f} {p3[1]:.3f} {p3[2]:.3f}}} "
+            f"{{{p4[0]:.3f} {p4[1]:.3f} {p4[2]:.3f}}} "
+            f"color yellow translucent 0.5;"
+        )
+        print(f"\n  [Jmol Command to visualize the removed plane]:")
+        print(f"  {jmol_cmd}")
+        
+    # 5. Update structure
+    old_count = len(target_atoms)
+    self.NP = target_atoms[mask_keep]
+    self.NP.positions -= self.NP.get_center_of_mass()
+    self.nAtoms = len(self.NP)
+
+    # 6. Flush stale data
+    self._flush_stale_data(shape_update="_remove_plane")
+    self.is_optimized = False
+
+    # 7. Resolve postAnalyzis parameters
     if postAnalyzis is None:
         postAnalyzis = getattr(self, 'postAnalyzis', True)
     if skipChiralityCalculation is None:

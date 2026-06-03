@@ -902,3 +902,62 @@ def _flush_stale_data(self, shape_update=None):
     for attr in attrs_to_clean:
         if hasattr(self, attr):
             delattr(self, attr)
+
+def listOf_Attributes_Methods(obj, maxlen=70, show_methods=False):
+    """
+    List attributes of a pyNanoMatBuilder object using dir(), split into
+    data attributes that are set, those that are None/empty, and (optionally)
+    methods. Large objects are summarized.
+    """
+    import numpy as np
+    import pyNanoMatBuilder.utils as pyNMBu   # adjust to your layout
+
+    def describe(v):
+        if isinstance(v, np.ndarray):
+            return f"ndarray  shape={v.shape}  dtype={v.dtype}"
+        if v.__class__.__name__ == "Atoms":
+            return f"Atoms    {v.get_chemical_formula()}  (N={len(v)})"
+        if isinstance(v, dict):
+            return f"dict     keys={list(v.keys())}"
+        if isinstance(v, (list, tuple)) and len(v) > 8:
+            return f"{type(v).__name__:8s} len={len(v)}"
+        s = repr(v)
+        return s if len(s) <= maxlen else s[:maxlen] + " ..."
+
+    def is_empty(v):
+        if v is None:
+            return True
+        if isinstance(v, (list, tuple)) and len(v) == 0:
+            return True
+        if isinstance(v, np.ndarray) and v.size == 0:
+            return True
+        return False
+
+    # dir() minus dunders; getattr each name, classify
+    data_set, data_none, methods = {}, {}, []
+    for name in dir(obj):
+        if name.startswith("__"):
+            continue
+        try:
+            v = getattr(obj, name)
+        except Exception:
+            continue
+        if callable(v):
+            methods.append(name)
+        elif is_empty(v):
+            data_none[name] = v
+        else:
+            data_set[name] = v
+
+    pyNMBu.centerTitle("Attributes that are set (not None)")
+    for k in sorted(data_set):
+        print(f"  {k:30s} : {describe(data_set[k])}")
+
+    pyNMBu.centerTitle("Attributes that are None or empty")
+    for k in sorted(data_none):
+        print(f"  {k:30s} : {describe(data_none[k])}")
+
+    if show_methods:
+        pyNMBu.centerTitle("Methods")
+        for k in sorted(methods):
+            print(f"  {k}")

@@ -1589,7 +1589,7 @@ class eOhM(JohnsonNP):
 
         # --- Mirror reflection ---
         symPlane = np.array([0, 0, 1, 0])
-        ReflectionAtoms = pyNMBu.reflection(symPlane, c, True)
+        ReflectionAtoms = pyNMBu.reflection(symPlane, c, False)
         c.extend(ReflectionAtoms)
         self.nAtoms += len(ReflectionAtoms)
         

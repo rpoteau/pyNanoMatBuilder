@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.13.0 documentation</title>
+  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.14.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="canonical" href="https://pynanomatbuilder.readthedocs.io/modules.html" />
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=1019fba8"></script>
+      <script src="_static/documentation_options.js?v=9e420a66"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -675,6 +675,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.core.faces_to_planes"><code class="docutils literal notranslate"><span class="pre">faces_to_planes()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.core.round_to_Miller"><code class="docutils literal notranslate"><span class="pre">round_to_Miller()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.core.kDTreeCN"><code class="docutils literal notranslate"><span class="pre">kDTreeCN()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.core.listOf_Attributes_Methods"><code class="docutils literal notranslate"><span class="pre">listOf_Attributes_Methods()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyNanoMatBuilder.utils.geometry">Geometry Tools (geometry.py)</a><ul>
@@ -713,6 +714,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.coreSurface"><code class="docutils literal notranslate"><span class="pre">coreSurface()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.peel_by_coordination"><code class="docutils literal notranslate"><span class="pre">peel_by_coordination()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.peel_by_shifted_ellipsoid"><code class="docutils literal notranslate"><span class="pre">peel_by_shifted_ellipsoid()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.remove_plane"><code class="docutils literal notranslate"><span class="pre">remove_plane()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.clip_to_sphere"><code class="docutils literal notranslate"><span class="pre">clip_to_sphere()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.plot_npr_triangle"><code class="docutils literal notranslate"><span class="pre">plot_npr_triangle()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.applyTwist"><code class="docutils literal notranslate"><span class="pre">applyTwist()</span></code></a></li>
@@ -752,6 +754,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.io.ciflist"><code class="docutils literal notranslate"><span class="pre">ciflist()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.io.write"><code class="docutils literal notranslate"><span class="pre">write()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.io.writexyz"><code class="docutils literal notranslate"><span class="pre">writexyz()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.io.read"><code class="docutils literal notranslate"><span class="pre">read()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.io.create_data_csv"><code class="docutils literal notranslate"><span class="pre">create_data_csv()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.io.imageNameWithPathway"><code class="docutils literal notranslate"><span class="pre">imageNameWithPathway()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.io.plotImageInPropFunction"><code class="docutils literal notranslate"><span class="pre">plotImageInPropFunction()</span></code></a></li>
@@ -800,6 +803,7 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.print_atomic_radii"><code class="docutils literal notranslate"><span class="pre">print_atomic_radii()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.effective_diameter"><code class="docutils literal notranslate"><span class="pre">effective_diameter()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.compare_effective_diameters"><code class="docutils literal notranslate"><span class="pre">compare_effective_diameters()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyNanoMatBuilder.utils.external_pgm">External programs (external_pgm.py)</a><ul>
@@ -6995,6 +6999,14 @@ bool: True if all indices are within tolerance for all planes.</p>
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.core.listOf_Attributes_Methods">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.core.</span></span><span class="sig-name descname"><span class="pre">listOf_Attributes_Methods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxlen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">70</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_methods</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.core.listOf_Attributes_Methods" title="Link to this definition"></a></dt>
+<dd><p>List attributes of a pyNanoMatBuilder object using dir(), split into
+data attributes that are set, those that are None/empty, and (optionally)
+methods. Large objects are summarized.</p>
+</dd></dl>
+
 </section>
 <section id="module-pyNanoMatBuilder.utils.geometry">
 <span id="geometry-tools-geometry-py"></span><h2>Geometry Tools (geometry.py)<a class="headerlink" href="#module-pyNanoMatBuilder.utils.geometry" title="Link to this heading"></a></h2>
@@ -7827,7 +7839,7 @@ nearest neighbor.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.peel_by_shifted_ellipsoid">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">peel_by_shifted_ellipsoid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.peel_by_shifted_ellipsoid" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">peel_by_shifted_ellipsoid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shift_direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_def</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hkl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.peel_by_shifted_ellipsoid" title="Link to this definition"></a></dt>
 <dd><p>Truncate the nanoparticle using a shape-adaptive envelope shifted in a
 random direction.</p>
 <p>This method simulates asymmetric growth or partial dissolution by shifting
@@ -7844,10 +7856,52 @@ self.is_optimized is reset to False.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>shift_dist</strong> (<em>float</em>) – The distance to shift the envelope (in Angstroms).
 2.5 A corresponds to approximately one atomic layer.</p></li>
+<li><p><strong>shift_direction</strong> (<em>array-like</em>) – Direction of the shift. If None, a random
+direction is used. Can be given as Miller indices [u,v,w]
+(axis_def=’hkl’) or Cartesian [x,y,z] (axis_def=’cart’).</p></li>
+<li><p><strong>axis_def</strong> (<em>str</em>) – ‘hkl’ (default) or ‘cart’.</p></li>
 <li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output messages.</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.remove_plane">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">remove_plane</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_def</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hkl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.remove_plane" title="Link to this definition"></a></dt>
+<dd><p>Remove the outermost atomic plane in a given direction.</p>
+<p>Finds atoms that lie in the plane perpendicular to the given direction
+and located at the maximum projected distance (i.e. the outermost layer),
+then removes them from self.NP.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>direction</strong> (<em>array-like</em>) – Direction of the plane normal, given as
+Miller indices [h, k, l] (axis_def=’hkl’) or Cartesian
+[x, y, z] (axis_def=’cart’).</p></li>
+<li><p><strong>axis_def</strong> (<em>str</em>) – ‘hkl’ (default) or ‘cart’.</p></li>
+<li><p><strong>tol</strong> (<em>float</em>) – Tolerance in Å to define the thickness of the outermost
+plane. Atoms within tol of the maximum projected distance are
+removed. Default is 0.5 Å (well below typical Rnn ~ 2.5-2.9 Å).</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output messages. Default is False.</p></li>
+<li><p><strong>postAnalyzis</strong> (<em>bool</em>) – If True, runs propPostMake(). Default None → self.postAnalyzis.</p></li>
+<li><p><strong>skipChiralityCalculation</strong> (<em>bool</em>) – Default None → self.skipChiralityCalculation.</p></li>
+<li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – Default None → self.skipSymmetryAnalyzis.</p></li>
+<li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – Default None → self.skipFacetInfo.</p></li>
+<li><p><strong>thresholdCoreSurface</strong> (<em>float</em>) – Default None → self.thresholdCoreSurface.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None. Updates self.NP in place.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p># Remove the top (111) plane
+NP.remove_plane(direction=[1, 1, 1], axis_def=’hkl’)</p>
+<p># Remove the topmost plane along +z in Cartesian
+NP.remove_plane(direction=[0, 0, 1], axis_def=’cart’)</p>
+<p># Remove the face triangulaire tournée vers +z d’un icosaèdre
+NP.remove_plane(direction=[0.3568, 0., 0.9342], axis_def=’cart’)</p>
 </dd></dl>
 
 <dl class="py function">
@@ -8754,6 +8808,46 @@ Automatically creates the parent directories if they do not exist.
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.io.read">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.io.</span></span><span class="sig-name descname"><span class="pre">read</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.io.read" title="Link to this definition"></a></dt>
+<dd><p>Unified read function for pyNanoMatBuilder, symmetric to <cite>write</cite>.</p>
+<p>Routes the input to the appropriate reader based on the file extension.
+Atomic structures are read via ASE; Jmol scripts are returned as raw text.
+For .xyz files, the pyNMB composition header (line 2 of each frame) is
+recovered and attached to atoms.info.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>str</em>) – Path to the input file (e.g., ‘coords/np.xyz’).</p></li>
+<li><p><strong>index</strong> (<em>int</em><em>, </em><em>slice</em><em>, or </em><em>str</em><em>, </em><em>optional</em>) – Frame selector for multi-frame
+files, passed through to ASE. Examples: 0 (first), -1 (last),
+‘:’ (all frames as a list), ‘::2’ (every other frame). If None,
+ASE’s default is used (last frame for trajectories).</p></li>
+<li><p><strong>**kwargs</strong> – Additional arguments passed to the underlying ASE read
+function (e.g., ‘format’).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>ase.Atoms for a single structure, or list[ase.Atoms] when index
+selects multiple frames.</p></li>
+<li><p>str for Jmol script files (.script, .spt).</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p>For .xyz, the composition header is parsed into a dict when possible
+(atoms.info[‘pyNMB_composition’]); the raw line is always kept in
+atoms.info[‘pyNMB_header’].</p></li>
+<li><p>Raises FileNotFoundError if the file does not exist.</p></li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.io.create_data_csv">
 <span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.io.</span></span><span class="sig-name descname"><span class="pre">create_data_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_of_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_of_csvfiles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.io.create_data_csv" title="Link to this definition"></a></dt>
 <dd><p>Extract dictionaries from XYZ/CSV files and create new CSV files.</p>
@@ -9506,8 +9600,78 @@ diameter correction: D_core = D_SAXS - 2 * r_atom.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.effective_diameter">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">effective_diameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">structure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'optimized'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vertices'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.effective_diameter" title="Link to this definition"></a></dt>
-<dd><p>Returns the volume-equivalent diameter from the ellipsoid analysis, in Å.</p>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">effective_diameter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">structure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'optimized'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vertices'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rms'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_feret</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.effective_diameter" title="Link to this definition"></a></dt>
+<dd><p>Returns the effective diameter of the nanoparticle in Å.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>structure</strong> (<em>str</em>) – ‘optimized’ (default) or ‘initial’.</p></li>
+<li><p><strong>mode</strong> (<em>str</em>) – Ellipsoid mode used when method requires the ellipsoid
+analysis — ‘vertices’ (default), ‘all’, or ‘planes’.
+Ignored when method=’feret’ or method=’rg’.</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – <p>How to compute the scalar diameter:
+- ‘feret’: Mean Feret diameter, averaged over</p>
+<blockquote>
+<div><p>n_feret random orientations. The Feret diameter along a
+direction n is the maximum projected extent of the NP.
+Most geometry-independent and physically meaningful —
+directly comparable to TEM image analysis.
+Works for any shape (sphere, icosahedron, nanorod, etc.).</p>
+</div></blockquote>
+<ul>
+<li><p>’rg’: D = 2*sqrt(5/3)*Rg, where Rg is computed from the
+actual atomic positions. Consistent with the Guinier
+approximation used in SAXS. Exact for a solid uniform
+sphere; approximate for other shapes.</p></li>
+<li><p>’rms’ (defaulkt): D = 2*sqrt((a²+b²+c²)/3) from ellipsoid semi-axes.
+Consistent with Guinier for a uniform solid ellipsoid.</p></li>
+<li><p>’volume’: D = 2*(abc)^(1/3). Diameter of the sphere with
+the same volume as the ellipsoid.</p></li>
+<li><p>’arithmetic’: D = 2*(a+b+c)/3. Arithmetic mean of the
+ellipsoid semi-axes.</p></li>
+<li><p>’surface’: D based on Knud Thomsen surface area
+approximation (error &lt; 1.06%).</p></li>
+<li><p>’radius’: smallest ellipsoid axis D3 — for nanorods,
+returns the transverse diameter 2R.</p></li>
+<li><p>’length’: largest ellipsoid axis D1 — for nanorods,
+returns the axial length L.</p></li>
+</ul>
+</p></li>
+<li><p><strong>n_feret</strong> (<em>int</em>) – Number of random orientations for method=’feret’.
+Default is 2000. Use 5000+ for highly asymmetric shapes.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Effective diameter in Å.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.compare_effective_diameters">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">compare_effective_diameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nmb_object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_feret</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.compare_effective_diameters" title="Link to this definition"></a></dt>
+<dd><p>Compare all effective diameter computation methods for a pyNanoMatBuilder NP.</p>
+<p>Displays a pivot table with all combinations of method × mode × structure,
+in nm. Methods ‘feret’ and ‘rg’ are computed directly from atomic positions
+and do not depend on the ellipsoid mode. All other methods (‘rms’, ‘volume’,
+‘arithmetic’, ‘surface’) are computed from the ellipsoid semi-axes and are
+evaluated for each of the three ellipsoid modes (‘vertices’, ‘all’, ‘planes’).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nmb_object</strong> – A pyNanoMatBuilder object with NP and optionally NP_opt.</p></li>
+<li><p><strong>n_feret</strong> (<em>int</em>) – Number of random orientations for method=’feret’.
+Default is 1000.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns:</p>
+<p class="rubric">Example</p>
+<p>compare_effective_diameters(ico)
+compare_effective_diameters(ico, n_feret=5000)</p>
 </dd></dl>
 
 </section>

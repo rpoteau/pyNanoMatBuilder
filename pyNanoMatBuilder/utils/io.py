@@ -342,6 +342,97 @@ def writexyz(filename: str,
     with open(filename, wa) as file:
         file.write(line2write)
 
+def read(filename: str, index=None, **kwargs):
+    """
+    Unified read function for pyNanoMatBuilder, symmetric to `write`.
+
+    Routes the input to the appropriate reader based on the file extension.
+    Atomic structures are read via ASE; Jmol scripts are returned as raw text.
+    For .xyz files, the pyNMB composition header (line 2 of each frame) is
+    recovered and attached to atoms.info.
+
+    Args:
+        filename (str): Path to the input file (e.g., 'coords/np.xyz').
+        index (int, slice, or str, optional): Frame selector for multi-frame
+            files, passed through to ASE. Examples: 0 (first), -1 (last),
+            ':' (all frames as a list), '::2' (every other frame). If None,
+            ASE's default is used (last frame for trajectories).
+        **kwargs: Additional arguments passed to the underlying ASE read
+            function (e.g., 'format').
+
+    Returns:
+        - ase.Atoms for a single structure, or list[ase.Atoms] when index
+          selects multiple frames.
+        - str for Jmol script files (.script, .spt).
+
+    Note:
+        - For .xyz, the composition header is parsed into a dict when possible
+          (atoms.info['pyNMB_composition']); the raw line is always kept in
+          atoms.info['pyNMB_header'].
+        - Raises FileNotFoundError if the file does not exist.
+    """
+    import ast
+
+    file_path = Path(filename)
+    if not file_path.exists():
+        raise FileNotFoundError(f"{filename} not found.")
+
+    extension = file_path.suffix.lower()
+
+    # Jmol script files — return raw text (symmetric to write)
+    if extension in [".script", ".spt"]:
+        with open(file_path, 'r') as f:
+            return f.read()
+
+    # Atomic structures — delegate to ASE
+    if index is not None:
+        atoms = ase_io.read(file_path, index=index, **kwargs)
+    else:
+        atoms = ase_io.read(file_path, **kwargs)
+
+    # Recover the pyNMB composition header for .xyz files
+    if extension == ".xyz":
+        headers = _read_xyz_headers(file_path)
+        frames = atoms if isinstance(atoms, list) else [atoms]
+        for j, frame in enumerate(frames):
+            comment = headers[j] if j < len(headers) else None
+            if comment is None:
+                continue
+            frame.info['pyNMB_header'] = comment
+            try:
+                parsed = ast.literal_eval(comment)
+                if isinstance(parsed, dict):
+                    frame.info['pyNMB_composition'] = parsed
+            except (ValueError, SyntaxError):
+                pass  # header wasn't a dict literal — keep the raw string only
+
+    return atoms
+
+def _read_xyz_headers(file_path):
+    """
+    Extract the comment line (line 2 of each frame) from a multi-frame XYZ file.
+
+    Args:
+        file_path (Path): Path to the .xyz file.
+
+    Returns:
+        list[str]: The comment line of each frame, in order.
+    """
+    headers = []
+    with open(file_path, 'r') as f:
+        lines = f.readlines()
+    i = 0
+    n = len(lines)
+    while i < n:
+        try:
+            natoms = int(lines[i].strip())
+        except (ValueError, IndexError):
+            break
+        if i + 1 < n:
+            headers.append(lines[i + 1].strip())
+        i += natoms + 2  # natoms line + comment line + natoms coord lines
+    return headers
+
 def create_data_csv(path_of_files, path_of_csvfiles, noOutput):
     """
     Extract dictionaries from XYZ/CSV files and create new CSV files.

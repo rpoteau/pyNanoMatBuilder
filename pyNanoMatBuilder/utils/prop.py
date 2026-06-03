@@ -436,7 +436,8 @@ def calculate_rg(model: Atoms,
         center = np.mean(positions, axis=0)
         sq_dist = np.sum((positions - center)**2, axis=1)
         rg = np.sqrt(np.mean(sq_dist))
-        rg /= 10 # angstrom to nm
+        
+    rg /= 10 # angstrom to nm
 
     if not noOutput:
         print(f" Rg = {rg:.1f} nm")
@@ -1200,6 +1201,227 @@ def _update_sasview_dims_from_spheres(self, noOutput):
 #                         f"color ${key_cmd}_el [x919191] translucent 0.3;")
 #             print("\n  [Jmol Command to visualize the ellipsoid]:")
 #             print(f"  {jmol_cmd}")
+# def get_ellipsoid_analysis(self, noOutput=False, mode='vertices'):
+#     """
+#     Perform a Principal Component Analysis (PCA) to calculate the best-fitting
+#     ellipsoid of a nanoparticle, using three different sets of points.
+
+#     The analysis automatically selects between 'initial structure' and
+#     'optimized structure' based on the current state of the object.
+
+#     Args:
+#         noOutput (bool): If True, suppresses printed summaries and Jmol
+#             command generation. Defaults to False.
+#         mode (str): Defines which atoms are used for PCA and scaling:
+#             - 'vertices' (default): PCA and scaling on convex hull vertices.
+#               Gives the circumscribed ellipsoid — ellipsoid contains all atoms.
+#               Verified to exactly match core-to-core dimensions measured in JMol.
+#               Recommended for SAXS diameter comparison and for
+#               peel_by_shifted_ellipsoid().
+#             - 'planes': Weighted PCA on face centers of the ConvexHull built
+#               on surface atoms (weighted by face area), scaled by projection of
+#               surface atoms excluding hull vertices. Gives a slightly smaller
+#               ellipsoid than 'vertices' — useful as a lower bound estimate.
+#             - 'all': PCA on all atoms of the structure. Gives an intermediate
+#               result between 'surface' and 'vertices'. Useful to evaluate the
+#               influence of the atomic density distribution on the ellipsoid axes.
+
+#     Returns:
+#         dict: Stored in self.ellipsoid[key] with the following fields:
+#             - "status" (str): 'initial envelope' or 'optimized envelope'.
+#             - "mode"   (str): the mode used for this calculation.
+#             - "D1", "D2", "D3" (float): major, intermediate and minor
+#               diameters in Å, sorted in descending order.
+#             - "volume"      (float): ellipsoid volume in Å³.
+#             - "surface"     (float): ellipsoid surface area in Å²,
+#               computed via Knud Thomsen's approximation (error < 1.06%).
+#             - "asphericity" (float): D1/D3 ratio (1.0 for a perfect sphere).
+
+#     Raises:
+#         ValueError: If fewer than 4 surface atoms are found (coreSurface()
+#             has not been run), or if an unknown mode is requested.
+
+#     Notes:
+#         - The Jmol command to visualize the ellipsoid is printed when
+#           noOutput=False, using the AXES and CENTER keywords.
+#         - Results are stored under self.ellipsoid['initial structure'] or
+#           self.ellipsoid['optimized structure'] and overwritten on each call.
+#         - Use effective_diameter() to get the volume-equivalent diameter in Å.
+#     """
+#     import numpy as np
+#     if not hasattr(self, 'ellipsoid'):
+#         self.ellipsoid = {}
+        
+#     # 1. Select the correct structure
+#     if self.is_optimized and hasattr(self, 'vertices_opt'):
+#         target_atoms = self.NP_opt
+#         hull_indices = self.vertices_opt
+#         equations    = getattr(self, 'equations_opt', None)
+#         surface_mask = getattr(self, 'surfaceAtoms_opt', None)
+#         status = "optimized envelope"
+#         key    = "optimized structure"
+#     else:
+#         target_atoms = self.NP
+#         hull_indices = self.vertices
+#         equations    = getattr(self, 'equations', None)
+#         surface_mask = getattr(self, 'surfaceAtoms', None)
+#         status = "initial envelope"
+#         key    = "initial structure"
+
+#     # 2. Check that coreSurface() has been run
+#     if surface_mask is None or np.count_nonzero(surface_mask) < 4:
+#         raise ValueError(f"No surface atoms found for {status}. "
+#                          "Please run coreSurface() before this analysis.")
+
+#     # 3. Select projection points depending on mode and do PCA
+#     if mode == 'vertices':
+#         from scipy.spatial import ConvexHull
+#         pos = target_atoms.get_positions()
+#         hull = ConvexHull(pos)
+#         hull_indices = hull.vertices
+#         proj_pts = pos[hull_indices]
+#         center  = target_atoms.get_center_of_mass()
+#         proj_c  = proj_pts - center
+#         S       = (proj_c.T @ proj_c) / len(proj_c)
+#         jmol_center = center
+
+#     elif mode == 'all':
+#         # PCA on all atoms — gives the overall extent of the structure
+#         proj_pts = target_atoms.get_positions()
+#         center   = proj_pts.mean(axis=0)
+#         jmol_center = center
+#         proj_c   = proj_pts - center
+#         S        = (proj_c.T @ proj_c) / len(proj_c)            
+
+#     elif mode == 'planes':
+#         from scipy.spatial import ConvexHull as _ConvexHull
+#         from scipy.spatial import KDTree
+
+#         surface_pts = target_atoms.get_positions()[surface_mask]
+
+#         # --- Isotropy test on surface atoms ---
+#         def _inertia_evals(pts):
+#             I = np.zeros((3, 3))
+#             for p in pts:
+#                 I[0,0] += p[1]**2 + p[2]**2
+#                 I[1,1] += p[0]**2 + p[2]**2
+#                 I[2,2] += p[0]**2 + p[1]**2
+#                 I[0,1] -= p[0]*p[1]
+#                 I[0,2] -= p[0]*p[2]
+#                 I[1,2] -= p[1]*p[2]
+#             I[1,0]=I[0,1]; I[2,0]=I[0,2]; I[2,1]=I[1,2]
+#             ev = np.linalg.eigvalsh(I)
+#             return ev / ev.max()
+
+#         surface_pts_c = surface_pts - surface_pts.mean(axis=0)
+#         ev_norm  = _inertia_evals(surface_pts_c)
+#         isotropy = ev_norm.min() / ev_norm.max()
+#         tol_isotropy = 0.02  # 2% tolerance
+
+#         # --- Weighted PCA on face centers → axes ---
+#         hull_sa = _ConvexHull(surface_pts)
+#         face_areas, face_centers = [], []
+#         for simplex in hull_sa.simplices:
+#             p1 = surface_pts[simplex[0]]
+#             p2 = surface_pts[simplex[1]]
+#             p3 = surface_pts[simplex[2]]
+#             area = 0.5 * np.linalg.norm(np.cross(p2 - p1, p3 - p1))
+#             face_areas.append(area)
+#             face_centers.append((p1 + p2 + p3) / 3)
+#         face_areas   = np.array(face_areas)
+#         face_centers = np.array(face_centers)
+#         weights      = face_areas / face_areas.sum()
+#         center = (face_centers * weights[:, np.newaxis]).sum(axis=0)
+#         jmol_center = center
+#         proj_c = face_centers - center
+#         S = np.zeros((3, 3))
+#         for i, fc in enumerate(proj_c):
+#             S += weights[i] * np.outer(fc, fc)
+
+#     else:
+#         raise ValueError(f"Unknown mode '{mode}'. Choose 'vertices', 'all' or 'surface'.")
+
+#     evals, evecs = np.linalg.eigh(S)
+#     idx     = np.argsort(evals)[::-1]
+#     evals   = evals[idx]
+#     evecs   = evecs[:, idx]
+
+
+#     # 5. Scale
+#     if mode == 'vertices':
+#         # PCA axes from hull vertices, half-axes from ALL atoms
+#         # → guaranteed circumscribed ellipsoid even for asymmetric NPs
+#         all_proj = (pos - center) @ evecs
+#         a = np.max(np.abs(all_proj[:, 0]))
+#         b = np.max(np.abs(all_proj[:, 1]))
+#         c = np.max(np.abs(all_proj[:, 2]))
+#         max_dist = np.max(np.linalg.norm(pos - center, axis=1))
+
+#     elif mode == 'all':
+#         max_dist     = np.max(np.linalg.norm(proj_c, axis=1))
+#         scale_factor = max_dist / np.sqrt(evals[0])
+#         a_ev, b_ev, c_ev = scale_factor * np.sqrt(evals)
+#         a_pr = np.max(np.abs(proj_c @ evecs[:, 0]))
+#         b_pr = np.max(np.abs(proj_c @ evecs[:, 1]))
+#         c_pr = np.max(np.abs(proj_c @ evecs[:, 2]))
+#         a = max(a_ev, a_pr)
+#         b = max(b_ev, b_pr)
+#         c = max(c_ev, c_pr)
+#         max_dist = max_dist
+
+#     elif mode == 'planes':
+#         if isotropy > 1 - tol_isotropy:
+#             # Isotropic — force equal axes = max distance of face centers
+#             max_dist = np.max(np.linalg.norm(proj_c, axis=1))
+#             a = b = c = max_dist
+#         else:
+#             # Anisotropic — project face centers onto PCA axes
+#             a = np.max(np.abs(proj_c @ evecs[:, 0]))
+#             b = np.max(np.abs(proj_c @ evecs[:, 1]))
+#             c = np.max(np.abs(proj_c @ evecs[:, 2]))
+#             max_dist = np.max(np.linalg.norm(proj_c, axis=1))
+        
+#     # 6. Physical Properties
+#     a, b, c = sorted([a, b, c], reverse=True)
+#     volume = (4/3) * np.pi * a * b * c
+#     p = 1.6075
+#     surface_area = 4 * np.pi * (
+#         ((a*b)**p + (a*c)**p + (b*c)**p) / 3
+#     )**(1/p)
+
+#     # 7. Results Dictionary
+#     D1, D2, D3 = 2*a, 2*b, 2*c
+#     self.ellipsoid[key] = {
+#         "status":      status,
+#         "mode":        mode,
+#         "D1":          D1,
+#         "D2":          D2,
+#         "D3":          D3,
+#         "volume":      volume,
+#         "surface":     surface_area,
+#         "asphericity": D1 / D3 if c > 0 else 1.0
+#     }
+
+#     if not noOutput:
+#         results = self.ellipsoid[key]
+#         centertxt(f"Ellipsoid Analysis — {mode} ({status})",
+#                   bgc='#007a7a', size='14', weight='bold')
+#         print(f"  - Dimensions (Å): {results['D1']:.2f} x {results['D2']:.2f} x {results['D3']:.2f}")
+#         print(f"  - Volume: {results['volume']/1000:.2f} nm³")
+#         print(f"  - Surface: {results['surface']/100:.2f} nm²")
+#         print(f"  - Asphericity: {results['asphericity']:.2f}")
+#         print(f"  - Max Radius found: {max_dist/10:.3f} nm")
+#         v1, v2, v3 = evecs[:,0]*a, evecs[:,1]*b, evecs[:,2]*c
+#         key_cmd = key.replace(" ", "_")
+#         jmol_cmd = (f"ellipsoid ID {key_cmd}_el AXES "
+#                     f"{{{v1[0]:.6f} {v1[1]:.6f} {v1[2]:.6f}}} "
+#                     f"{{{v2[0]:.6f} {v2[1]:.6f} {v2[2]:.6f}}} "
+#                     f"{{{v3[0]:.6f} {v3[1]:.6f} {v3[2]:.6f}}}; "
+#                     f"ellipsoid ID {key_cmd}_el CENTER "
+#                     f"{{{jmol_center[0]:.3f} {jmol_center[1]:.3f} {jmol_center[2]:.3f}}}; "
+#                     f"color ${key_cmd}_el [x919191] translucent 0.3;")
+#         print("\n  [Jmol Command to visualize the ellipsoid]:")
+#         print(f"  {jmol_cmd}")
 def get_ellipsoid_analysis(self, noOutput=False, mode='vertices'):
     """
     Perform a Principal Component Analysis (PCA) to calculate the best-fitting
@@ -1406,7 +1628,6 @@ def get_ellipsoid_analysis(self, noOutput=False, mode='vertices'):
                     f"color ${key_cmd}_el [x919191] translucent 0.3;")
         print("\n  [Jmol Command to visualize the ellipsoid]:")
         print(f"  {jmol_cmd}")
-
             
 def external_facets_info(self, mode='auto', noOutput=False):
     """
@@ -1657,13 +1878,13 @@ def external_facets_info(self, mode='auto', noOutput=False):
         if useWulff:
                     
             if has_energies:
-                header = (f"{'Plane (hkl)':<22} {'d / nm':>8} {'e_input':>9} "
+                header = (f"{'Plane (hkl)':<25} {'d / nm':>8} {'e_input':>9} "
                           f"{'e_rel':>10} {'Area (nm²)':>15}")
             else:
-                header = (f"{'Plane (hkl)':<22} {'d / nm':>8} {'D_input / nm':>9} "
+                header = (f"{'Plane (hkl)':<25} {'d / nm':>8} {'D_input / nm':>9} "
                           f"{'e_rel':>10} {'Area (nm²)':>15}")
         else:
-            header = (f"{'Plane (hkl)':<22} {'d / nm':>8} "
+            header = (f"{'Plane (hkl)':<25} {'d / nm':>8} "
                       f"{'e_rel':>10} {'Area (nm²)':>15}")
 
         print(f"\n{'─'*len(header)}")
@@ -1681,17 +1902,17 @@ def external_facets_info(self, mode='auto', noOutput=False):
                     input_str = f"{expanded_energies[i]:9.3f}"
                 else:
                     input_str = f"{expanded_sizes[i]:9.3f}"
-                print(f"  {label:<18} {distances[i]/10:8.2f}   {input_str}   "
-                      f"{e_relative[i]:8.3f}   {area_str:>12}")
+                print(f"  {label:<24} {distances[i]/10:8.2f}   "
+                  f"{e_relative[i]:8.3f}   {area_str:>12}")
             else:
                 m = miller_indexes[i]
                 if m is not None:
                     label = f"({int(m[0]):2d} {int(m[1]):2d} {int(m[2]):2d})"
                 else:
                     nn = planes[i, :3]
-                    label = f"[{nn[0]:+.2f} {nn[1]:+.2f} {nn[2]:+.2f}]"
-                print(f"  {label:<18} {distances[i]/10:8.2f}   "
-                      f"{e_relative[i]:8.3f}   {area_str:>12}")
+                    label = f"[{nn[0]:+.3f} {nn[1]:+.3f} {nn[2]:+.3f}]"
+                print(f"  {label:<24} {distances[i]/10:8.2f}   "
+                  f"{e_relative[i]:8.3f}   {area_str:>12}")
 
         print(f"{'─'*len(header)}")
         if n_absent > 0:
@@ -2077,10 +2298,210 @@ def print_atomic_radii(element_symbol):
 
     return AtomicRadii(el, ionic_list)
 
-def effective_diameter(self, structure='optimized', mode='vertices'):
-    """Returns the volume-equivalent diameter from the ellipsoid analysis, in Å."""
+def effective_diameter(self, structure='optimized', mode='vertices',
+                       method='rms', n_feret=2000):
+    """
+    Returns the effective diameter of the nanoparticle in Å.
+
+    Args:
+        structure (str): 'optimized' (default) or 'initial'.
+        mode (str): Ellipsoid mode used when method requires the ellipsoid
+            analysis — 'vertices' (default), 'all', or 'planes'.
+            Ignored when method='feret' or method='rg'.
+        method (str): How to compute the scalar diameter:
+            - 'feret': Mean Feret diameter, averaged over
+              n_feret random orientations. The Feret diameter along a
+              direction n is the maximum projected extent of the NP.
+              Most geometry-independent and physically meaningful —
+              directly comparable to TEM image analysis.
+              Works for any shape (sphere, icosahedron, nanorod, etc.).
+            - 'rg': D = 2*sqrt(5/3)*Rg, where Rg is computed from the
+              actual atomic positions. Consistent with the Guinier
+              approximation used in SAXS. Exact for a solid uniform
+              sphere; approximate for other shapes.
+            - 'rms' (defaulkt): D = 2*sqrt((a²+b²+c²)/3) from ellipsoid semi-axes.
+              Consistent with Guinier for a uniform solid ellipsoid.
+            - 'volume': D = 2*(abc)^(1/3). Diameter of the sphere with
+              the same volume as the ellipsoid.
+            - 'arithmetic': D = 2*(a+b+c)/3. Arithmetic mean of the
+              ellipsoid semi-axes.
+            - 'surface': D based on Knud Thomsen surface area
+              approximation (error < 1.06%).
+            - 'radius': smallest ellipsoid axis D3 — for nanorods,
+              returns the transverse diameter 2R.
+            - 'length': largest ellipsoid axis D1 — for nanorods,
+              returns the axial length L.
+        n_feret (int): Number of random orientations for method='feret'.
+            Default is 2000. Use 5000+ for highly asymmetric shapes.
+
+    Returns:
+        float: Effective diameter in Å.
+    """
+    import numpy as np
+
+    # --- method='feret': computed directly from atomic positions ---
+    if method == 'feret':
+        if structure == 'optimized' and getattr(self, 'NP_opt', None) is not None:
+            pos = self.NP_opt.get_positions()
+        else:
+            pos = self.NP.get_positions()
+
+        # Center positions
+        pos = pos - pos.mean(axis=0)
+
+        # Random unit vectors on the sphere (reproducible)
+        rng = np.random.default_rng(seed=42)
+        xyz = rng.standard_normal((n_feret, 3))
+        xyz /= np.linalg.norm(xyz, axis=1, keepdims=True)
+
+        # Max projected extent along each direction
+        projections = pos @ xyz.T                              # (n_atoms, n_feret)
+        feret = projections.max(axis=0) - projections.min(axis=0)  # (n_feret,)
+
+        return float(feret.mean())   # Å
+
+    # --- method='rg': from atomic Rg ---
+    if method == 'rg':
+        rg_attr = 'Rg_opt' if (structure == 'optimized' 
+                                and getattr(self, 'is_optimized', False)) else 'Rg'
+        rg = getattr(self, rg_attr, None)
+        if rg is None:
+            raise ValueError(f"Rg not available for '{structure}' structure. "
+                             f"Run propPostMake() first.")
+        return 2 * np.sqrt(5/3) * rg * 10   # nm → Å
+
+    # --- All other methods: require ellipsoid analysis ---
     key = 'optimized structure' if structure == 'optimized' else 'initial structure'
     if key not in self.ellipsoid or self.ellipsoid[key].get('mode') != mode:
         self.get_ellipsoid_analysis(noOutput=True, mode=mode)
     e = self.ellipsoid[key]
-    return (e['D1'] * e['D2'] * e['D3']) ** (1/3)  # Å
+    a, b, c = e['D1']/2, e['D2']/2, e['D3']/2
+
+    if method == 'rms':
+        # Consistent with Guinier for a uniform solid ellipsoid
+        return 2 * np.sqrt((a**2 + b**2 + c**2) / 3)
+
+    elif method == 'volume':
+        # Sphere of same volume
+        return 2 * (a * b * c) ** (1/3)
+
+    elif method == 'arithmetic':
+        # Arithmetic mean of semi-axes
+        return 2 * (a + b + c) / 3
+
+    elif method == 'surface':
+        # Sphere of same surface area (Knud Thomsen approximation)
+        p = 1.6075
+        return 2 * (((a*b)**p + (a*c)**p + (b*c)**p) / 3) ** (1 / (2*p))
+
+    elif method == 'radius':
+        # Transverse diameter — for nanorods (polydispersity on R)
+        return e['D3']
+
+    elif method == 'length':
+        # Axial length — for nanorods (polydispersity on L)
+        return e['D1']
+
+    else:
+        raise ValueError(
+            f"Unknown method '{method}'. Choose from: "
+            f"'feret', 'rg', 'rms', 'volume', 'arithmetic', 'surface', "
+            f"'radius', 'length'."
+        )
+
+def compare_effective_diameters(nmb_object, n_feret=2000):
+    """
+    Compare all effective diameter computation methods for a pyNanoMatBuilder NP.
+
+    Displays a pivot table with all combinations of method × mode × structure,
+    in nm. Methods 'feret' and 'rg' are computed directly from atomic positions
+    and do not depend on the ellipsoid mode. All other methods ('rms', 'volume',
+    'arithmetic', 'surface') are computed from the ellipsoid semi-axes and are
+    evaluated for each of the three ellipsoid modes ('vertices', 'all', 'planes').
+
+    Args:
+        nmb_object: A pyNanoMatBuilder object with NP and optionally NP_opt.
+        n_feret (int): Number of random orientations for method='feret'.
+            Default is 1000.
+
+    Returns:
+
+    Example:
+        compare_effective_diameters(ico)
+        compare_effective_diameters(ico, n_feret=5000)
+    """
+    import pandas as pd
+    import numpy as np
+
+    methods_no_mode = ['feret', 'rg']
+    methods_with_mode = ['rms', 'volume', 'arithmetic', 'surface']
+    modes = ['vertices', 'all', 'planes']
+    structures = ['initial', 'optimized']
+
+    rows = []
+    for structure in structures:
+        # Skip optimized if NP_opt is not available
+        if structure == 'optimized' and getattr(nmb_object, 'NP_opt', None) is None:
+            continue
+
+        for method in methods_no_mode:
+            try:
+                D = nmb_object.effective_diameter(
+                    structure=structure, method=method, n_feret=n_feret
+                ) / 10  # Å → nm
+                rows.append({
+                    'method'   : method,
+                    'mode'     : '—',
+                    'structure': structure,
+                    'D (nm)'   : round(D, 4),
+                })
+            except Exception as e:
+                rows.append({
+                    'method'   : method,
+                    'mode'     : '—',
+                    'structure': structure,
+                    'D (nm)'   : f"error: {e}",
+                })
+
+        for method in methods_with_mode:
+            for mode in modes:
+                try:
+                    D = nmb_object.effective_diameter(
+                        structure=structure, mode=mode,
+                        method=method, n_feret=n_feret
+                    ) / 10  # Å → nm
+                    rows.append({
+                        'method'   : method,
+                        'mode'     : mode,
+                        'structure': structure,
+                        'D (nm)'   : round(D, 4),
+                    })
+                except Exception as e:
+                    rows.append({
+                        'method'   : method,
+                        'mode'     : mode,
+                        'structure': structure,
+                        'D (nm)'   : f"error: {e}",
+                    })
+
+    df = pd.DataFrame(rows)
+
+    # Pivot table: rows = (method, mode), columns = structure
+    pivot = df.pivot_table(
+        index=['method', 'mode'],
+        columns='structure',
+        values='D (nm)',
+        aggfunc='first'
+    )
+
+    # Reorder rows: methods_no_mode first, then methods_with_mode × modes
+    row_order = (
+        [(m, '—') for m in methods_no_mode] +
+        [(m, mo) for m in methods_with_mode for mo in modes]
+    )
+    pivot = pivot.reindex([r for r in row_order if r in pivot.index])
+    pivot.columns.name = None
+    pivot.index.names = ['method', 'mode']
+
+    display(pivot)
+    return pivot

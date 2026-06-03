@@ -158,6 +158,7 @@ pyNanoMatBuilder/resources/cif_database/cod1000041-NaCl.cif
 pyNanoMatBuilder/resources/cif_database/cod1539039-Fe_beta.cif
 pyNanoMatBuilder/resources/cif_database/cod1539039-Mn_beta.cif
 pyNanoMatBuilder/resources/cif_database/cod5000217-Fe_bcc.cif
+pyNanoMatBuilder/resources/cif_database/cod9004229-FeCo_bcc.cif
 pyNanoMatBuilder/resources/cif_database/cod9008459-Ag_fcc.cif
 pyNanoMatBuilder/resources/cif_database/cod9008463-Au_fcc.cif
 pyNanoMatBuilder/resources/cif_database/cod9008466-Co_fcc.cif
@@ -179,7 +180,6 @@ pyNanoMatBuilder/resources/css/BrainHalfHalf.base64
 pyNanoMatBuilder/resources/css/BrainHalfHalf.png
 pyNanoMatBuilder/resources/css/BrainHalfHalf.svg
 pyNanoMatBuilder/resources/css/visualID.css
-pyNanoMatBuilder/resources/figs/.directory
 pyNanoMatBuilder/resources/figs/InoD-C.png
 pyNanoMatBuilder/resources/figs/InoD.base64
 pyNanoMatBuilder/resources/figs/InoD.png
@@ -290,6 +290,8 @@ pyNanoMatBuilder/resources/figs/tbp-C.png
 pyNanoMatBuilder/resources/figs/tbp.base64
 pyNanoMatBuilder/resources/figs/tbp.png
 pyNanoMatBuilder/resources/figs/tbp.xyz
+pyNanoMatBuilder/resources/figs/thh210WS-C.png
+pyNanoMatBuilder/resources/figs/thh210WS.xyz
 pyNanoMatBuilder/resources/figs/tpt-C.png
 pyNanoMatBuilder/resources/figs/tpt.base64
 pyNanoMatBuilder/resources/figs/tpt.png
@@ -324,6 +326,9 @@ pyNanoMatBuilder/resources/figs/ttrbccrDDWS.xyz
 pyNanoMatBuilder/resources/figs/ttrbccrddWS.png
 pyNanoMatBuilder/resources/figs/ttrbccrddWS.script
 pyNanoMatBuilder/resources/figs/ttrbccrddWS.xyz
+pyNanoMatBuilder/resources/figs/tzh211WS-C.png
+pyNanoMatBuilder/resources/figs/tzh211WS.script
+pyNanoMatBuilder/resources/figs/tzh211WS.xyz
 pyNanoMatBuilder/resources/figs/underConstruction-C.png
 pyNanoMatBuilder/resources/figs/underConstruction.png
 pyNanoMatBuilder/resources/figs/underConstruction.svg
@@ -349,6 +354,14 @@ pyNanoMatBuilder/resources/figs/CSG/moveto.dat
 pyNanoMatBuilder/resources/figs/CSG/sphere-C.png
 pyNanoMatBuilder/resources/figs/CSG/sphere.png
 pyNanoMatBuilder/resources/figs/CSG/sphere.xyz
+pyNanoMatBuilder/resources/figs/octopod/FeCo_4_arm.xyz
+pyNanoMatBuilder/resources/figs/octopod/FeCo_8_arm.xyz
+pyNanoMatBuilder/resources/figs/octopod/FeCo_one_arm.script
+pyNanoMatBuilder/resources/figs/octopod/FeCo_one_arm.xyz
+pyNanoMatBuilder/resources/figs/octopod/FeCo_one_armCS.xyz
+pyNanoMatBuilder/resources/figs/octopod/FeCo_one_armSlices.script
+pyNanoMatBuilder/resources/figs/octopod/octopod-C.png
+pyNanoMatBuilder/resources/figs/octopod/octopod.png
 pyNanoMatBuilder/resources/svg/Logo-Universite-Toulouse-n-2023.png
 pyNanoMatBuilder/resources/svg/Logo-institutionnel-couleur-Uonly.svg
 pyNanoMatBuilder/resources/svg/Python_logo_and_wordmark.svg.png

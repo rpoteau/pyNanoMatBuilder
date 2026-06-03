@@ -1,4 +1,5 @@
 # everything is imported from the subfiles
+from .animations import *
 from .core import *
 from .prop import *
 from .symmetry import *

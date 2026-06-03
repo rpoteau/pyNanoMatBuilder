@@ -194,7 +194,7 @@ def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1, noOutput=Fa
         centerTitle(f"{nrj_txt} & {opt_txt} algorithms for geometry optimization")
 
     if CALC == 'EMT':
-        model = self.NP
+        model = self.NP.copy()
         full_diagnosticsEMT(model, verbose=False)
         model.set_pbc(False)
         model.calc = EMT()
