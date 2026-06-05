@@ -5,6 +5,201 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
+## [0.15.0] - "pentatwinned NPs"
+
+### Added
+
+- **`pentaPrism` in `otherNPs.py`**, new class:
+
+    Generates a bare pentagonal prism — the {100}-faceted shaft of a
+    pentatwinned decahedron, with no caps (they are neither built nor
+    removed). Adapted from ASE's Decahedron construction: five FCC segments
+    are stacked around the 5-fold axis, but the conical cap term is dropped
+    and the ABAB stacking is preserved through the parity of the ring index
+    (even-n rings on "full" layers at z = k·b, odd-n rings on "interleaved"
+    layers at z = k·b + b/2). The two ends terminate on identical full layers,
+    so the prism is symmetric (no narrow-vs-wide cap). Intended as a starting
+    body to be faceted into bipyramid models; the caps then emerge from the
+    chosen truncation. The user specifies physical dimensions (diameter,
+    height) and Rnn, which are mapped to the integer ring/layer counts whose
+    realised dimensions best match the request. Coordinate generation is fully
+    vectorised (NumPy cartesian product of in-plane ring sites with z-levels),
+    so even multi-million-atom prisms are built in well under a second.
+    ```python
+    from pyNanoMatBuilder import otherNPs as oNP
+    prism = oNP.pentaPrism("Au", Rnn=2.937, diameter=30, height=60,
+                           skipSymmetryAnalyzis=True, noOutput=False)
+    ```
+    
+- **`clip_to_ellipsoid()` in `utils/geometry.py`**, new clipping method:
+
+    Keeps only atoms within an axis-aligned ellipsoid centred on the centre
+    of mass — the generalisation of `clip_to_sphere`. Takes the three full
+    diameters (nm) along x, y, z; an atom is kept when
+    (x/a)² + (y/b)² + (z/c)² ≤ 1 with (a, b, c) = diameters/2. Equal diameters
+    reproduce a sphere. Useful to give an elongated body a smooth
+    prolate/oblate envelope. A thin wrapper is exposed on `pyNMBcore`.
+    ```python
+    rod.clip_to_ellipsoid(diameters_nm=[4.0, 4.0, 15.0])
+    ```
+
+- **`clip_to_cylinder()` in `utils/geometry.py`**, new clipping method:
+
+    Keeps only atoms within a cylinder of given diameter around an axis
+    through the centre of mass — the infinite-length analogue of
+    `clip_to_sphere`. An atom is kept when its radial distance to the axis is
+    ≤ diameter/2. Takes the diameter in nm (consistent with
+    `clip_to_ellipsoid`) and the cylinder axis (Cartesian, default z). Useful
+    to give an elongated structure a smooth circular cross-section, e.g.
+    turning the pentagonal shaft into a round rod before capping it into a
+    capsule. A thin wrapper is exposed on `pyNMBcore`.
+    ```python
+    rod.clip_to_cylinder(diameter_nm=4.0, axis=[0, 0, 1])
+    ```
+
+- **`clip_to_cone()` in `utils/geometry.py`**, new clipping method:
+
+    Clips atoms against a single general cone defined by its base centre, its
+    apex, and its width — the width given EITHER as the base radius OR as the
+    full apex angle (`R = L·tan(apex_angle/2)`), whichever a measurement
+    provides. `keep='inside'`/`'outside'` selects which side to retain.
+    `tip_sphere_radius_nm` optionally rounds the apex end with a sphere
+    inscribed tangentially in the cone (smooth join: straight generatrix up to
+    the tangency circle, then a spherical cap). The surface is a smooth
+    (atomically stepped) cone, not crystallographically faceted. Apply per end
+    (clip a half on z=0, then `replicate_by_reflection`) to build a symmetric
+    double cone. A thin wrapper is exposed on `pyNMBcore`.
+    ```python
+    cone.clip_to_cone(base_center_nm=[0,0,0], apex_nm=[0,0,15.0],
+                      apex_angle_deg=32.0, tip_sphere_radius_nm=2.0,
+                      keep='inside')
+    ```
+
+- **`align_to_plane()` in `utils/geometry.py`**, new positioning method:
+
+    Pure translation (no rotation, no atom removal) that moves the structure
+    along a chosen axis so its lowest atomic plane lands at a target value
+    (default 0). Handy to seat the base of a cone, bipyramid or any clipped
+    shape on a reference plane before reflection or export.
+    ```python
+    cone.align_to_plane(axis=[0, 0, 1], target=0.0)
+    ```
+
+- **`round_tip_in_direction()` in `utils/geometry.py`**, new rounding method:
+
+    Rounds one tip of a rod/prism by carving a hemispherical cap tangent to
+    the outermost atom in a given direction. The algorithm finds the atom with
+    the largest projection on `direction`, places the cap sphere so its pole
+    touches that atom (tangent), with the centre receded by the cap radius
+    along the direction, and removes the atoms on the advanced side that fall
+    outside the sphere — leaving a rounded dome. The direction is given as
+    Miller indices (`axis_def='hkl'`) or Cartesian (`axis_def='cart'`), like
+    `remove_plane`. `use_axis_center` places the sphere centre on the NP's
+    central axis (default) or directly behind the outermost atom. Call twice
+    (with `d` and `-d`) to round both ends.
+    ```python
+    # Hemispherical caps tangent to the side facets, both ends
+    rod.round_tip_in_direction(direction=[0, 0, 1],  diameter_nm=10.0, axis_def='cart')
+    rod.round_tip_in_direction(direction=[0, 0, -1], diameter_nm=10.0, axis_def='cart')
+    ```
+
+- **`ptnr` in `otherNPs.py`**, new class:
+
+    Pentatwinned nano-objects (pentatwinned nanorods and related morphologies)
+    built from a bare `pentaPrism` and shaped by CSG operations. The morphology
+    is selected with the `shape` argument; for each shape the class sizes the
+    required starting prism from the target dimensions, builds it internally
+    (composition — it uses `pentaPrism`, it does not inherit from it), applies
+    the relevant rotation / slicing / clipping, and exposes the result as its
+    own `self.NP`, following the usual `pyNMBcore` contract. Morphology-specific
+    parameters default to a "not specified" sentinel: each shape applies its
+    own default for the parameters it uses, warns about those it ignores, and
+    raises if a required one is missing (pedagogical parameter checking).
+    Available shapes: `'bipyramid'`, `'walled_bipyramid'`, `'double_cone'`,
+    `'rod'` (with optional `bevel` and `round_tips` flags), `'ellipsoid'`, and
+    `'capsule'`. Three static helpers (`height_for_sharp_tip`,
+    `bipyramid_height`, `waist_distance_for_tilted_facet`) encapsulate the
+    geometry specific to these objects, including the recurring cos(36°)
+    factor that relates the circumscribed radius to the {100} face apothem.
+    ```python
+    from pyNanoMatBuilder import otherNPs as oNP
+    bipy = oNP.ptnr(element="Au", Rnn=2.937, shape="bipyramid",
+                    diameter=10.0, angle_deg=15.793, noOutput=False)
+    ```
+
+### Changed
+- **`applySlicing()` in `utils/csg.py`**, new in-plane orientation keys
+  (`'startVec'`, `'startAngle'`, `'refVec'`) for `'angle'` mode:
+
+    The in-plane reference direction (the "meridian" from which the tilt is
+    applied) can now be set explicitly, via ONE of:
+    - `'startVec'` (array-like): direction given as a vector. Only its
+      component perpendicular to `rotAxis` is used, so it need not be
+      orthogonal to `rotAxis`, but must not be collinear with it.
+    - `'startAngle'` (float): azimuth in degrees around `rotAxis`, measured
+      from `'refVec'`. `'refVec'` (array-like, optional) defines the 0°
+      azimuth (projected onto the plane perpendicular to `rotAxis`, must not
+      be collinear with it); it defaults to an arbitrary perpendicular.
+    - neither: an arbitrary perpendicular direction is used (previous default).
+
+    `'startVec'` and `'startAngle'` are mutually exclusive (a clear error is
+    raised if both are given, or if `'refVec'` is given without
+    `'startAngle'`). Together with `nRot` and the tilt `'angle'` (added in
+    0.14.0), these keys make it easy to place a faceted belt at a chosen
+    orientation — e.g. tilted facets that trim the edges of a polyhedron.
+    ```python
+    # A belt of 5 tilted facets, meridian set by an explicit azimuth
+    # from the +x reference direction
+    NP.applySlicing(
+        planes=[
+            {'angle': 15.793, 'startAngle': 0, 'refVec': [1, 0, 0],
+             'rotAxis': [0, 0, 1], 'nRot': 5, 'distance': d,
+             'delete': 'above', 'modeP': 'OR'},
+        ],
+        distance_unit='nm',
+    )
+    ```
+    which is equivalent to:
+    ```python
+    # A belt of 5 tilted facets, meridian set by an explicit start vector
+    # along +x
+    NP.applySlicing(
+        planes=[
+            {'angle': 15.793, 'startVec': [1, 0, 0],
+             'rotAxis': [0, 0, 1], 'nRot': 5, 'distance': d,
+             'delete': 'above', 'modeP': 'OR'},
+        ],
+        distance_unit='nm',
+    )
+    ```
+- **`saveCoords_DrawJmol()`**: added the `widthLines` parameter (default
+    `None`). When set, overrides the default edge line width (0.2) used by the
+    `facettes345ptlight` Jmol script, letting the user control the thickness of
+    the drawn facet edges. Left at `None`, the rendering is unchanged.
+
+### Fixed
+
+- **`saveCoords_DrawJmol()`**: the Jmol script is now written to a file and
+    loaded via `-s` instead of being passed inline via `-ij`. This avoids the
+    "Argument list too long" shell error on highly faceted structures, where
+    the inline script (thousands of draw commands) exceeded the system command
+    -length limit.
+
+### Documentation
+
+- **`pyNMB-examples.ipynb`**. New section: **Shape Engineering**:
+    Complete overview of all atomic shape sculpting functions available in
+    pyNanoMatBuilder, organized in five families (planar sculpting, volume
+    clipping, tip shaping, surface peeling, symmetry operations) with one
+    working example per function. Includes a note explaining that these
+    primitives are also used internally by higher-level classes such as
+    `ptnr` (pentatwinned nanorods), with a table mapping each morphology
+    to the functions it relies on.
+- **`pyNMB-examples.ipynb`**. New **Pentatwinned nanorods** subsection,
+    with worked examples for every `ptnr` morphology: bipyramid, ellipsoid,
+    walled bipyramid, double cone, pentaprism with round tips, beveled
+    pentaprism, beveled pentaprism with round tips, and capsule.
+  
 ## [0.14.0] - "csg ops, polydispersity, animations.py"
 
 ### Added

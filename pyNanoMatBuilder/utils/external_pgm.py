@@ -47,7 +47,8 @@ def check_jmol():
     return True
     
 def saveCoords_DrawJmol(asemol, prefix, scriptJ="", boundaries=False, noOutput=True,
-                        user_output_dir="figs", cpk=0, wireframe=0.05, saveXYZ=True):
+                        user_output_dir="figs", cpk=0, wireframe=0.05, saveXYZ=True,
+                        widthLines=None):
     """
     Save coordinates and generate a Jmol visualization.
 
@@ -61,6 +62,8 @@ def saveCoords_DrawJmol(asemol, prefix, scriptJ="", boundaries=False, noOutput=T
         cpk (float): CPK radius for atom display.
         wireframe (float): Wireframe thickness.
         saveXYZ (bool): If True, saves the .xyz file.
+        widthLines (float): If not None, overrides the default line width
+            (0.2) used by the facettes345ptlight script for drawing edges.
     """
     path2Jmol = Path(data.pyNMBvar.path2Jmol)
     jar_file = path2Jmol / "JmolData.jar"
@@ -111,11 +114,26 @@ def saveCoords_DrawJmol(asemol, prefix, scriptJ="", boundaries=False, noOutput=T
         "set specularPower 80; set antialiasdisplay; set background [xf1f2f3]; "
         f"set zShade ON; set zShadePower 1; write image pngt 1024 1024 '{output_png}';"
     )
+    
+    if widthLines is not None:
+        jmolscript = jmolscript.replace("width 0.2", f"width {widthLines}")
+        
+    # jmolcmd = (
+    #     f"java -Xmx512m -jar {path2Jmol}/JmolData.jar {fxyz} "
+    #     f"-ij '{jmolscript}' >/dev/null "  
+    # )
+
+    # write the Jmol script to a file (avoids "Argument list too long"
+    # when the script contains thousands of draw commands)
+    script_file = user_output_dir / f"{prefix}_tmp.spt"
+    with open(script_file, "w") as f:
+        f.write(jmolscript)
 
     jmolcmd = (
         f"java -Xmx512m -jar {path2Jmol}/JmolData.jar {fxyz} "
-        f"-ij '{jmolscript}' >/dev/null "  
+        f"-s '{script_file}' >/dev/null "
     )
+    
     if not noOutput:
         print(f"Saving to: {output_png}")
         print(jmolcmd)

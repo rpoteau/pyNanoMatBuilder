@@ -76,6 +76,13 @@ def applySlicing(self,
                 perpendicular to rotAxis is used, so it need not be orthogonal
                 to rotAxis — but it must not be collinear with it. If omitted,
                 an arbitrary perpendicular direction is chosen.
+            'startAngle' (float, optional): Azimuth in degrees, around rotAxis,
+                of the in-plane reference direction, measured from 'refVec'.
+                Mutually exclusive with 'startVec' (error if both are given).
+            'refVec' (array-like, optional): Direction defining the 0° azimuth
+                for 'startAngle'. Only its component perpendicular to rotAxis is
+                used; must not be collinear with rotAxis. Only valid together
+                with 'startAngle'. Defaults to an arbitrary perpendicular.
             'modeP' (str): Logical combination of planes within this group.
                 'OR'  — atom removed if condemned by ANY plane in the group.
                         Default when side='above'. Use for faceting.
@@ -203,32 +210,52 @@ def applySlicing(self,
             rot_axis = rot_axis / np.linalg.norm(rot_axis)
             angle_deg = plane_def['angle']
 
-            # Reference direction in the plane perpendicular to rotAxis:
-            # user-provided 'startVec' if given, else an arbitrary choice.
-            if 'startVec' in plane_def:
-                start = np.array(plane_def['startVec'], dtype=float)
-                if np.linalg.norm(start) < 1e-12:
-                    raise ValueError("'startVec' must be a non-zero vector.")
-                start = start / np.linalg.norm(start)
-                # keep only the component perpendicular to rotAxis
-                perp = start - np.dot(start, rot_axis) * rot_axis
-                if np.linalg.norm(perp) < 1e-8:
+            def _project_perp(vec, name):
+                """Component of `vec` perpendicular to rot_axis, normalized."""
+                v = np.array(vec, dtype=float)
+                if np.linalg.norm(v) < 1e-12:
+                    raise ValueError(f"'{name}' must be a non-zero vector.")
+                v = v / np.linalg.norm(v)
+                p = v - np.dot(v, rot_axis) * rot_axis
+                if np.linalg.norm(p) < 1e-8:
                     raise ValueError(
-                        "'startVec' is collinear with 'rotAxis'; it has no "
-                        "component in the plane perpendicular to the axis. "
-                        "Choose a startVec not parallel to rotAxis.")
+                        f"'{name}' is collinear with 'rotAxis'; it has no "
+                        f"component in the plane perpendicular to the axis.")
+                return p / np.linalg.norm(p)
+
+            # In-plane reference direction (the "meridian"), defined by ONE of:
+            #   - 'startVec'  : given directly as a vector
+            #   - 'startAngle': azimuth (deg) around rotAxis from 'refVec'
+            #                   (refVec defaults to an arbitrary perpendicular)
+            #   - neither     : arbitrary perpendicular (previous default)
+            if 'startVec' in plane_def and 'startAngle' in plane_def:
+                raise ValueError(
+                    "Provide either 'startVec' or 'startAngle', not both.")
+
+            if 'startVec' in plane_def:
+                perp = _project_perp(plane_def['startVec'], 'startVec')
+            elif 'startAngle' in plane_def:
+                if 'refVec' in plane_def:
+                    ref = _project_perp(plane_def['refVec'], 'refVec')
+                else:
+                    arbitrary = np.array([1, 0, 0]) if abs(rot_axis[0]) < 0.9 \
+                                else np.array([0, 1, 0])
+                    ref = np.cross(rot_axis, arbitrary)
+                    ref = ref / np.linalg.norm(ref)
+                perp = rotationMolAroundAxis(ref, plane_def['startAngle'], rot_axis)
                 perp = perp / np.linalg.norm(perp)
             else:
+                if 'refVec' in plane_def:
+                    raise ValueError(
+                        "'refVec' is only meaningful together with "
+                        "'startAngle'.")
                 arbitrary = np.array([1, 0, 0]) if abs(rot_axis[0]) < 0.9 \
                             else np.array([0, 1, 0])
                 perp = np.cross(rot_axis, arbitrary)
                 perp = perp / np.linalg.norm(perp)
 
-            # 'angle' is now a TILT measured from the plane perpendicular to
-            # rotAxis: 0° -> radial normal (vertical facet), >0° tilts the
-            # normal towards +rotAxis (e.g. a bipyramid side facet). The tilt
-            # is performed around an axis orthogonal to (rotAxis, perp).
-            tilt_axis = np.cross(rot_axis, perp)
+            # Tilt the meridian towards +rotAxis by 'angle' (0° = radial).
+            tilt_axis = np.cross(perp, rot_axis)
             tilt_axis = tilt_axis / np.linalg.norm(tilt_axis)
             n = rotationMolAroundAxis(perp, angle_deg, tilt_axis)
             n = n / np.linalg.norm(n)

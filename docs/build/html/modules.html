@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.14.0 documentation</title>
+  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.15.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="canonical" href="https://pynanomatbuilder.readthedocs.io/modules.html" />
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=9e420a66"></script>
+      <script src="_static/documentation_options.js?v=ef97403f"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -574,6 +574,23 @@
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.otherNPs.fcctpt.prop"><code class="docutils literal notranslate"><span class="pre">fcctpt.prop()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.otherNPs.pentaPrism"><code class="docutils literal notranslate"><span class="pre">pentaPrism</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.otherNPs.pentaPrism.nFaces4"><code class="docutils literal notranslate"><span class="pre">pentaPrism.nFaces4</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.otherNPs.pentaPrism.nFaces5"><code class="docutils literal notranslate"><span class="pre">pentaPrism.nFaces5</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.otherNPs.pentaPrism.nVertices"><code class="docutils literal notranslate"><span class="pre">pentaPrism.nVertices</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.otherNPs.pentaPrism.nEdges"><code class="docutils literal notranslate"><span class="pre">pentaPrism.nEdges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.otherNPs.pentaPrism.coords"><code class="docutils literal notranslate"><span class="pre">pentaPrism.coords()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.otherNPs.pentaPrism.prop"><code class="docutils literal notranslate"><span class="pre">pentaPrism.prop()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.otherNPs.ptnr"><code class="docutils literal notranslate"><span class="pre">ptnr</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.otherNPs.ptnr.height_for_sharp_tip"><code class="docutils literal notranslate"><span class="pre">ptnr.height_for_sharp_tip()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.otherNPs.ptnr.bipyramid_height"><code class="docutils literal notranslate"><span class="pre">ptnr.bipyramid_height()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.otherNPs.ptnr.waist_distance_for_tilted_facet"><code class="docutils literal notranslate"><span class="pre">ptnr.waist_distance_for_tilted_facet()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.otherNPs.ptnr.coords"><code class="docutils literal notranslate"><span class="pre">ptnr.coords()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.otherNPs.ptnr.prop"><code class="docutils literal notranslate"><span class="pre">ptnr.prop()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -715,7 +732,11 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.peel_by_coordination"><code class="docutils literal notranslate"><span class="pre">peel_by_coordination()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.peel_by_shifted_ellipsoid"><code class="docutils literal notranslate"><span class="pre">peel_by_shifted_ellipsoid()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.remove_plane"><code class="docutils literal notranslate"><span class="pre">remove_plane()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.round_tip_in_direction"><code class="docutils literal notranslate"><span class="pre">round_tip_in_direction()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.clip_to_sphere"><code class="docutils literal notranslate"><span class="pre">clip_to_sphere()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.clip_to_ellipsoid"><code class="docutils literal notranslate"><span class="pre">clip_to_ellipsoid()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.clip_to_cone"><code class="docutils literal notranslate"><span class="pre">clip_to_cone()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.clip_to_cylinder"><code class="docutils literal notranslate"><span class="pre">clip_to_cylinder()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.plot_npr_triangle"><code class="docutils literal notranslate"><span class="pre">plot_npr_triangle()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.applyTwist"><code class="docutils literal notranslate"><span class="pre">applyTwist()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.apply_rotation"><code class="docutils literal notranslate"><span class="pre">apply_rotation()</span></code></a></li>
@@ -724,6 +745,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.replicate_by_rotation"><code class="docutils literal notranslate"><span class="pre">replicate_by_rotation()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.replicate_by_reflection"><code class="docutils literal notranslate"><span class="pre">replicate_by_reflection()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.remove_duplicates"><code class="docutils literal notranslate"><span class="pre">remove_duplicates()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.align_to_plane"><code class="docutils literal notranslate"><span class="pre">align_to_plane()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.z_height_nm"><code class="docutils literal notranslate"><span class="pre">z_height_nm()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyNanoMatBuilder.utils.crystals">Crystal &amp; Wulff Utilities (crystals.py)</a><ul>
@@ -6209,6 +6232,209 @@ and adjusting the coordinates based on the twin and truncation planes.</p>
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.otherNPs.pentaPrism">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.otherNPs.</span></span><span class="sig-name descname"><span class="pre">pentaPrism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">element</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Au'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rnn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.937</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diameter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.otherNPs.pentaPrism" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pyNMBcore</span></code></p>
+<p>Bare pentagonal prism: the {100}-faceted shaft of a pentatwinned
+decahedron, generated directly (no caps are built or removed).</p>
+<p>Adapted from ASE’s Decahedron construction: five sheared FCC segments
+are stacked around the 5-fold axis (closing the 7.356° disclination
+deficit), but the conical cap term (h - n) is replaced by a constant
+axial height, yielding a straight pentagonal cylinder with vertical
+{100} side facets and flat terminations. Intended as a starting body to
+be faceted into bipyramid models; the caps then emerge from the chosen
+truncation rather than being pre-built.</p>
+<p>The user specifies physical dimensions (diameter, height) and the
+nearest-neighbour distance Rnn; these are mapped to the integer ring and
+layer counts of the underlying construction by picking the counts whose
+realised dimensions best match the request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>element</strong> (<em>str</em>) – chemical element (e.g. ‘Au’).</p></li>
+<li><p><strong>Rnn</strong> (<em>float</em>) – nearest-neighbour distance in Å.</p></li>
+<li><p><strong>diameter</strong> (<em>float</em>) – target circumscribed diameter of the pentagonal
+section, in nm.</p></li>
+<li><p><strong>height</strong> (<em>float</em>) – target height along the 5-fold axis, in nm.</p></li>
+<li><p><strong>postAnalyzis</strong> (<em>bool</em>) – If True, prints additional NP information
+(e.g., cell parameters, moments of inertia,
+inscribed/circumscribed sphere diameters, etc.).</p></li>
+<li><p><strong>aseView</strong> (<em>bool</em>) – If True, enables visualization of the NP using ASE.</p></li>
+<li><p><strong>thresholdCoreSurface</strong> (<em>float</em>) – Precision threshold for core/surface
+differentiation (distance threshold for retaining atoms).</p></li>
+<li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – If False, performs an atomic
+structure analysis using pymatgen.</p></li>
+<li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – <p>If True, skips the automatic computation of
+external facet areas and relative energies in propPostMake.
+Useful for shapes without flat facets (spheres, ellipsoids) or
+for large NPs where the computation is slow. Default is False.
+The analysis can always be run manually afterwards:</p>
+<blockquote>
+<div><p>NP.external_facets_info(mode=’auto’, noOutput=False)</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>jmolCrystalShape</strong> (<em>bool</em>) – If True, generates a JMOL script
+for visualization.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If False, prints details about the NP structure.</p></li>
+<li><p><strong>calcPropOnly</strong> (<em>bool</em>) – If False, generates the atomic structure
+of the NP.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.otherNPs.pentaPrism.nFaces4">
+<span class="sig-name descname"><span class="pre">nFaces4</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></span><a class="headerlink" href="#pyNanoMatBuilder.otherNPs.pentaPrism.nFaces4" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.otherNPs.pentaPrism.nFaces5">
+<span class="sig-name descname"><span class="pre">nFaces5</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></span><a class="headerlink" href="#pyNanoMatBuilder.otherNPs.pentaPrism.nFaces5" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.otherNPs.pentaPrism.nVertices">
+<span class="sig-name descname"><span class="pre">nVertices</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></span><a class="headerlink" href="#pyNanoMatBuilder.otherNPs.pentaPrism.nVertices" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.otherNPs.pentaPrism.nEdges">
+<span class="sig-name descname"><span class="pre">nEdges</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">15</span></span><a class="headerlink" href="#pyNanoMatBuilder.otherNPs.pentaPrism.nEdges" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.otherNPs.pentaPrism.coords">
+<span class="sig-name descname"><span class="pre">coords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">noOutput</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.otherNPs.pentaPrism.coords" title="Link to this definition"></a></dt>
+<dd><p>Generate the prism coordinates.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.otherNPs.pentaPrism.prop">
+<span class="sig-name descname"><span class="pre">prop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.otherNPs.pentaPrism.prop" title="Link to this definition"></a></dt>
+<dd><p>Display nanoparticle properties.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.otherNPs.ptnr">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.otherNPs.</span></span><span class="sig-name descname"><span class="pre">ptnr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">element</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Au'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rnn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.937</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'bipyramid'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diameter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle_deg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_wall</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_nm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tip_sphere_radius_nm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bevel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">round_tips</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.otherNPs.ptnr" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pyNMBcore</span></code></p>
+<p>ptnr, aka Pentatwinned nano-rods (bipyramid, walled bipyramid, double cone,
+rod, ellipsoid, capsule) built from a bare pentagonal prism
+(pentaPrism) and shaped by CSG operations.</p>
+<p>The morphology is chosen with the <cite>shape</cite> argument. For each shape the
+class sizes the required starting prism from the target dimensions, builds
+it internally (composition — a pentaPrism instance), applies the relevant
+rotation / slicing / clipping, and exposes the result as its own self.NP,
+following the usual pyNMBcore contract.</p>
+<p>Morphology-specific parameters default to None (= “not specified”); each
+shape applies its own default for the ones it uses, warns about the ones
+it ignores, and raises if a required one is missing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>element</strong> (<em>str</em>) – chemical element (e.g. ‘Au’).</p></li>
+<li><p><strong>Rnn</strong> (<em>float</em>) – nearest-neighbour distance in Å.</p></li>
+<li><p><strong>shape</strong> (<em>str</em>) – one of ‘bipyramid’, ‘walled_bipyramid’, ‘double_cone’,
+‘rod’, ‘ellipsoid’, ‘capsule’.</p></li>
+<li><p><strong>diameter</strong> (<em>float</em>) – circumscribed waist/section diameter, in nm.</p></li>
+<li><p><strong>angle_deg</strong> (<em>float</em>) – facet tilt from the equatorial plane, in degrees
+(‘bipyramid’, ‘walled_bipyramid’). Default 15.793°.</p></li>
+<li><p><strong>h_wall</strong> (<em>float</em>) – vertical-wall height in nm (‘walled_bipyramid’,
+required).</p></li>
+<li><p><strong>height</strong> (<em>float</em>) – total length in nm (‘double_cone’, ‘rod’,
+‘ellipsoid’). If None, derived from the shape.</p></li>
+<li><p><strong>cut_nm</strong> (<em>float</em>) – tip truncation depth in nm (‘bipyramid’,
+‘walled_bipyramid’); 0 = sharp tips.</p></li>
+<li><p><strong>bevel</strong> (<em>bool</em>) – for shape=’rod’, bevel the 5 vertical edges
+(pentagon → decagon). Default False.</p></li>
+<li><p><strong>round_tips</strong> (<em>bool</em>) – for shape=’rod’, round both ends with
+hemispherical caps. Default False.</p></li>
+<li><p><strong>tip_sphere_radius_nm</strong> (<em>float</em>) – rounded-tip cap radius (‘double_cone’).</p></li>
+<li><p><strong>edge_factor</strong> (<em>float</em>) – beveling distance as a fraction of the
+circumscribed radius (‘rod’ with bevel=True). Default 0.9.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<dl class="simple">
+<dt>bipy = oNP.ptnr(element=”Au”, Rnn=2.937,</dt><dd><p>shape=”bipyramid”, diameter=10.0,
+oOutput=False)</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>postAnalyzis</strong> (<em>bool</em>) – If True, prints additional NP information
+(e.g., cell parameters, moments of inertia,
+inscribed/circumscribed sphere diameters, etc.).</p></li>
+<li><p><strong>aseView</strong> (<em>bool</em>) – If True, enables visualization of the NP using ASE.</p></li>
+<li><p><strong>thresholdCoreSurface</strong> (<em>float</em>) – Precision threshold for core/surface
+differentiation (distance threshold for retaining atoms).</p></li>
+<li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – If False, performs an atomic
+structure analysis using pymatgen.</p></li>
+<li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – <p>If True, skips the automatic computation of
+external facet areas and relative energies in propPostMake.
+Useful for shapes without flat facets (spheres, ellipsoids) or
+for large NPs where the computation is slow. Default is False.
+The analysis can always be run manually afterwards:</p>
+<blockquote>
+<div><p>NP.external_facets_info(mode=’auto’, noOutput=False)</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>jmolCrystalShape</strong> (<em>bool</em>) – If True, generates a JMOL script
+for visualization.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If False, prints details about the NP structure.</p></li>
+<li><p><strong>calcPropOnly</strong> (<em>bool</em>) – If False, generates the atomic structure
+of the NP.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.otherNPs.ptnr.height_for_sharp_tip">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">height_for_sharp_tip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diameter_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle_deg</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.otherNPs.ptnr.height_for_sharp_tip" title="Link to this definition"></a></dt>
+<dd><p>Starting-prism height for a sharp-tipped bipyramid of given waist
+diameter: L = diameter / tan(angle). The aspect ratio L/diameter =
+1/tan(angle) is fixed by the facet angle alone (≈3.54 for 15.793°).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.otherNPs.ptnr.bipyramid_height">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">bipyramid_height</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diameter_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle_deg</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.otherNPs.ptnr.bipyramid_height" title="Link to this definition"></a></dt>
+<dd><p>Real tip-to-tip height of the faceted bipyramid:
+H = diameter · cos(36°) / tan(angle).</p>
+<p>Differs from height_for_sharp_tip by cos(36°): after the 18° rotation
+the inclined facets meet the {100} FACES (at the apothem
+diameter/2·cos36°), not the vertices, so they converge lower. This is
+the height measured on the final object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.otherNPs.ptnr.waist_distance_for_tilted_facet">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">waist_distance_for_tilted_facet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prism</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle_deg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_vec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1,</span> <span class="pre">0,</span> <span class="pre">0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_diameter_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rad_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.otherNPs.ptnr.waist_distance_for_tilted_facet" title="Link to this definition"></a></dt>
+<dd><p>Orthogonal distance, along the tilted facet normal, of the cutting
+plane that passes through a real equatorial atom row of <cite>prism</cite>.
+Anchoring on an actual row (not a theoretical value) keeps the {115}
+steps regular. Returns the distance in nm for
+applySlicing(distance_unit=’nm’).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.otherNPs.ptnr.coords">
+<span class="sig-name descname"><span class="pre">coords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">noOutput</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.otherNPs.ptnr.coords" title="Link to this definition"></a></dt>
+<dd><p>Build the starting prism for the chosen shape, shape it, and store
+the result as self.NP.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.otherNPs.ptnr.prop">
+<span class="sig-name descname"><span class="pre">prop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.otherNPs.ptnr.prop" title="Link to this definition"></a></dt>
+<dd><p>Display nanoparticle properties.</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 </section>
 <section id="utilities-utils">
@@ -7905,6 +8131,52 @@ NP.remove_plane(direction=[0.3568, 0., 0.9342], axis_def=’cart’)</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.round_tip_in_direction">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">round_tip_in_direction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diameter_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_def</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hkl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_axis_center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.round_tip_in_direction" title="Link to this definition"></a></dt>
+<dd><p>Round one tip by carving a hemispherical cap tangent to the outermost
+atom in a given direction.</p>
+<p>The algorithm finds the atom with the largest projection on <cite>direction</cite>,
+places the cap sphere so its pole touches that atom (tangent), with the
+centre receded by the cap radius along <cite>direction</cite>. All atoms on the
+advanced side of the centre plane that fall outside the sphere are
+removed, leaving a rounded dome.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>direction</strong> (<em>array-like</em>) – cap direction, as Miller indices [h,k,l]
+(axis_def=’hkl’) or Cartesian [x,y,z] (axis_def=’cart’).</p></li>
+<li><p><strong>diameter_nm</strong> (<em>float</em>) – diameter of the capping sphere in nm
+(radius = diameter/2).</p></li>
+<li><p><strong>axis_def</strong> (<em>str</em>) – ‘hkl’ (default) or ‘cart’.</p></li>
+<li><p><strong>use_axis_center</strong> (<em>bool</em>) – if True (default), the sphere centre is placed
+on the NP’s central axis (transverse position = centre of mass),
+at the receded height. If False, it is placed directly behind the
+outermost atom (centre = outermost_atom - radius*direction), which
+centres the cap on that atom rather than on the axis.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is True.</p></li>
+<li><p><strong>postAnalyzis</strong> (<em>bool</em>) – Default None → self.postAnalyzis.</p></li>
+<li><p><strong>skipChiralityCalculation</strong></p></li>
+<li><p><strong>skipSymmetryAnalyzis</strong></p></li>
+<li><p><strong>skipFacetInfo</strong></p></li>
+</ul>
+</dd>
+</dl>
+<p>:param :
+:param thresholdCoreSurface: Default None → corresponding self attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None. Updates self.NP in place.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p># Round the +z end of a rod with a 10 nm cap
+rod.round_tip_in_direction(direction=[0,0,1], diameter_nm=10.0,</p>
+<blockquote>
+<div><p>axis_def=’cart’)</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.clip_to_sphere">
 <span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">clip_to_sphere</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.clip_to_sphere" title="Link to this definition"></a></dt>
 <dd><p>Keep only atoms within a sphere of given radius from the center of mass.
@@ -7929,6 +8201,97 @@ envelope.</p>
 <p class="rubric">Example</p>
 <p># Clip nanostar arms to a 10 nm sphere
 nanostar.clip_to_sphere(radius_nm=10.0)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.clip_to_ellipsoid">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">clip_to_ellipsoid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diameters_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.clip_to_ellipsoid" title="Link to this definition"></a></dt>
+<dd><p>Keep only atoms within an axis-aligned ellipsoid centred on the centre
+of mass. Generalises clip_to_sphere: an atom at (x, y, z) relative to the
+centre is kept when (x/a)² + (y/b)² + (z/c)² ≤ 1, where (a, b, c) are the
+semi-axes, i.e. half of the diameters supplied. Useful to give an
+elongated structure a smooth prolate/oblate envelope (e.g. turning the
+pentagonal shaft into a rounded spindle).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>diameters_nm</strong> (<em>array-like</em>) – three full diameters along x, y, z in nm
+(the ellipsoid’s extent on each axis). Pass equal values for a
+sphere.</p></li>
+<li><p><strong>...</strong></p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p># Prolate envelope: 4 nm wide, 15 nm long along z
+rod.clip_to_ellipsoid(diameters_nm=[4.0, 4.0, 15.0])</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.clip_to_cone">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">clip_to_cone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_center_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apex_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_radius_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apex_angle_deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tip_sphere_radius_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'inside'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recenter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.clip_to_cone" title="Link to this definition"></a></dt>
+<dd><p>Clip atoms against a single, general cone defined by its base centre,
+its apex, and its width — the latter given EITHER as the base radius OR
+as the full apex angle (whichever the measurement provides). The cone
+axis runs from base centre to apex; the allowed radius decreases linearly
+from the base value to 0 at the apex. The surface is “round” (smooth
+cone), atomically stepped rather than crystallographically faceted.</p>
+<p>Apply per end (with the union approach) to taper a shaft; for a symmetric
+double cone, prefer clip_to_double_cone.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_center_nm</strong> (<em>array-like</em>) – centre of the base disc, in nm.</p></li>
+<li><p><strong>apex_nm</strong> (<em>array-like</em>) – cone apex, in nm. Axis and height are
+(apex - base_center); the height L sets the angle/radius link.</p></li>
+<li><p><strong>base_radius_nm</strong> (<em>float</em><em>, </em><em>optional</em>) – radius of the base disc, in nm.
+Mutually exclusive with apex_angle_deg.</p></li>
+<li><p><strong>apex_angle_deg</strong> (<em>float</em><em>, </em><em>optional</em>) – FULL apex angle (between opposite
+generatrices), in degrees. The base radius is then
+R = L * tan(apex_angle_deg / 2). Mutually exclusive with
+base_radius_nm.</p></li>
+<li><p><strong>tip_sphere_radius_nm</strong> (<em>float</em>) – if &gt; 0, round the apex end with a
+sphere of this radius, inscribed tangentially in the cone (smooth
+join). The cone follows its straight generatrix up to the tangency
+circle, then closes with the spherical cap. 0 (default) gives a
+sharp tip. Must be small enough that the sphere fits before the
+virtual apex.</p></li>
+<li><p><strong>keep</strong> (<em>str</em>) – ‘inside’ or ‘outside’. See note on the truncated domain
+(atoms outside the base/apex span are treated as outside).</p></li>
+<li><p><strong>recenter</strong> (<em>bool</em>) – recentre on the COM after clipping. Default True.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – suppress output. Default True.</p></li>
+<li><p><strong>...</strong> (<em>postAnalyzis etc. as usual</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None. Updates self.NP in place.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p># Width given as a measured 32° full apex angle
+rod.clip_to_cone(base_center_nm=[0,0,0], apex_nm=[0,0,15.0],</p>
+<blockquote>
+<div><p>apex_angle_deg=32.0, keep=’inside’)</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.clip_to_cylinder">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">clip_to_cylinder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diameter_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,</span> <span class="pre">0,</span> <span class="pre">1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.clip_to_cylinder" title="Link to this definition"></a></dt>
+<dd><p>Keep only atoms within a cylinder of given diameter around an axis through
+the centre of mass. The infinite-length analogue of clip_to_sphere: an
+atom is kept when its radial distance to the axis is ≤ diameter/2. Useful
+to give an elongated structure a smooth circular cross-section (e.g.
+turning the pentagonal shaft into a round rod before capping it into a
+capsule).
+:param diameter_nm: cylinder diameter in nm.
+:type diameter_nm: float
+:param axis: cylinder axis (Cartesian). Default (0, 0, 1) = z.
+:type axis: array-like
+:param …:</p>
+<p class="rubric">Example</p>
+<p># Round shaft, 4 nm in diameter, along z
+rod.clip_to_cylinder(diameter_nm=4.0, axis=[0, 0, 1])</p>
 </dd></dl>
 
 <dl class="py function">
@@ -8195,6 +8558,57 @@ arm.replicate_by_reflection(plane=[1,1,1], plane_def=’hkl’)</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>None. Updates self.NP in place.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.align_to_plane">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">align_to_plane</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0,</span> <span class="pre">0,</span> <span class="pre">1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.align_to_plane" title="Link to this definition"></a></dt>
+<dd><p>Translate the structure along an axis so that its lowest atomic plane
+(the atoms with the smallest projection on <cite>axis</cite>) lands at <cite>target</cite>.</p>
+<p>Pure translation — no rotation, no atom removal. Useful to seat the base
+of a cone, bipyramid or any clipped shape on a reference plane (e.g.
+z = 0) before further operations or export.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>axis</strong> (<em>array-like</em>) – direction along which to align, in Cartesian.
+Default (0, 0, 1) = z. Need not be normalized.</p></li>
+<li><p><strong>target</strong> (<em>float</em>) – target coordinate (in Å) for the lowest plane along
+<cite>axis</cite>. Default 0.0 (lowest atoms placed at the origin of <cite>axis</cite>).</p></li>
+<li><p><strong>tol</strong> (<em>float</em>) – half-thickness (Å) used only for reporting how many atoms
+make up the lowest plane. Default 0.1 Å.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is True.</p></li>
+<li><p><strong>postAnalyzis</strong> (<em>bool</em>) – If True, runs propPostMake(). Default None → self.postAnalyzis.</p></li>
+<li><p><strong>skipChiralityCalculation</strong> (<em>bool</em>) – Default None → self.skipChiralityCalculation.</p></li>
+<li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – Default None → self.skipSymmetryAnalyzis.</p></li>
+<li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – Default None → self.skipFacetInfo.</p></li>
+<li><p><strong>thresholdCoreSurface</strong> (<em>float</em>) – Default None → self.thresholdCoreSurface.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None. Updates self.NP in place.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p># Seat the bottom of a double cone on z = 0
+cone.align_to_plane(axis=[0, 0, 1], target=0.0)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.z_height_nm">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">z_height_nm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">NP</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.z_height_nm" title="Link to this definition"></a></dt>
+<dd><p>Real extent of a structure along z, in nm: z.max() - z.min().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>NP</strong> – pyNMB object.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>height along z in nm.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
@@ -9684,7 +10098,7 @@ compare_effective_diameters(ico, n_feret=5000)</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.external_pgm.saveCoords_DrawJmol">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">saveCoords_DrawJmol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asemol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scriptJ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundaries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'figs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wireframe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saveXYZ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.saveCoords_DrawJmol" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">saveCoords_DrawJmol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">asemol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scriptJ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundaries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'figs'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cpk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wireframe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saveXYZ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">widthLines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.saveCoords_DrawJmol" title="Link to this definition"></a></dt>
 <dd><p>Save coordinates and generate a Jmol visualization.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -9698,6 +10112,8 @@ compare_effective_diameters(ico, n_feret=5000)</p>
 <li><p><strong>cpk</strong> (<em>float</em>) – CPK radius for atom display.</p></li>
 <li><p><strong>wireframe</strong> (<em>float</em>) – Wireframe thickness.</p></li>
 <li><p><strong>saveXYZ</strong> (<em>bool</em>) – If True, saves the .xyz file.</p></li>
+<li><p><strong>widthLines</strong> (<em>float</em>) – If not None, overrides the default line width
+(0.2) used by the facettes345ptlight script for drawing edges.</p></li>
 </ul>
 </dd>
 </dl>

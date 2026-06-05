@@ -1836,6 +1836,128 @@ def remove_plane(self, direction, axis_def='hkl', tol=0.5,
             noOutput=noOutput,
             is_optimized=False)
 
+def round_tip_in_direction(self, direction, diameter_nm, axis_def='hkl',
+                           use_axis_center=True, noOutput=True,
+                           postAnalyzis=None,
+                           skipChiralityCalculation=None,
+                           skipSymmetryAnalyzis=None,
+                           skipFacetInfo=None,
+                           thresholdCoreSurface=None):
+    """
+    Round one tip by carving a hemispherical cap tangent to the outermost
+    atom in a given direction.
+
+    The algorithm finds the atom with the largest projection on `direction`,
+    places the cap sphere so its pole touches that atom (tangent), with the
+    centre receded by the cap radius along `direction`. All atoms on the
+    advanced side of the centre plane that fall outside the sphere are
+    removed, leaving a rounded dome.
+
+    Args:
+        direction (array-like): cap direction, as Miller indices [h,k,l]
+            (axis_def='hkl') or Cartesian [x,y,z] (axis_def='cart').
+        diameter_nm (float): diameter of the capping sphere in nm
+            (radius = diameter/2).
+        axis_def (str): 'hkl' (default) or 'cart'.
+        use_axis_center (bool): if True (default), the sphere centre is placed
+            on the NP's central axis (transverse position = centre of mass),
+            at the receded height. If False, it is placed directly behind the
+            outermost atom (centre = outermost_atom - radius*direction), which
+            centres the cap on that atom rather than on the axis.
+        noOutput (bool): If True, suppresses output. Default is True.
+        postAnalyzis (bool): Default None → self.postAnalyzis.
+        skipChiralityCalculation, skipSymmetryAnalyzis, skipFacetInfo,
+        thresholdCoreSurface: Default None → corresponding self attribute.
+
+    Returns:
+        None. Updates self.NP in place.
+
+    Example:
+        # Round the +z end of a rod with a 10 nm cap
+        rod.round_tip_in_direction(direction=[0,0,1], diameter_nm=10.0,
+                                   axis_def='cart')
+    """
+    import numpy as np
+
+    if not noOutput:
+        centertxt("Rounding tip with a tangent spherical cap",
+                  bgc='#007a7a', size='14', weight='bold')
+        chrono = timer()
+        chrono.chrono_start()
+
+    # direction → Cartesian unit vector (same logic as remove_plane)
+    if axis_def == 'hkl':
+        if not hasattr(self, 'Gstar') or self.Gstar is None:
+            print(f"  Warning: axis_def='hkl' requires a Crystal object with "
+                  f"Gstar — falling back to axis_def='cart'.")
+            axis_def = 'cart'
+            d = np.array(direction, dtype=float)
+        else:
+            from .crystals import lattice_cart
+            d = lattice_cart(self, [direction], Bravais2cart=True,
+                             printV=not noOutput)[0]
+    else:
+        d = np.array(direction, dtype=float)
+    d = d / np.linalg.norm(d)
+
+    r = diameter_nm * 10 / 2.0                  # nm → Å, radius
+
+    pos = self.NP.get_positions()
+    cog = self.NP.get_center_of_mass()
+    proj = pos @ d
+    i_out = np.argmax(proj)                     # outermost atom along d
+    pole = pos[i_out]                           # tangency point (3D)
+
+    if use_axis_center:
+        # centre on the central axis, at the receded height
+        pole_proj = proj[i_out]
+        center = cog - (cog @ d) * d + (pole_proj - r) * d
+    else:
+        # centre directly behind the outermost atom
+        center = pole - r * d
+
+    center_proj = center @ d
+    dist = np.linalg.norm(pos - center, axis=1)
+    beyond = proj > center_proj                 # advanced side of centre plane
+    remove = beyond & (dist > r)
+
+    old_count = len(self.NP)
+    self.NP = self.NP[~remove]
+    self.NP.positions -= self.NP.get_center_of_mass()
+    self.nAtoms = len(self.NP)
+    self.cog = self.NP.get_center_of_mass()
+
+    if not noOutput:
+        print(f"  - Direction: {direction} ({axis_def}) → "
+              f"[{d[0]:+.4f} {d[1]:+.4f} {d[2]:+.4f}]")
+        print(f"  - Cap diameter {diameter_nm:.2f} nm "
+              f"(centre {'on axis' if use_axis_center else 'behind tip atom'})")
+        print(f"  - Removed {old_count - self.nAtoms} atoms.")
+        print(f"  - {self.nAtoms} atoms remaining. self.NP updated.")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+
+    self._flush_stale_data(shape_update="_rounded_tip")
+    self.is_optimized = False
+
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation=skipChiralityCalculation,
+            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+            skipFacetInfo=skipFacetInfo,
+            thresholdCoreSurface=thresholdCoreSurface,
+            noOutput=noOutput,
+            is_optimized=False)
+
 def clip_to_sphere(self, radius_nm, noOutput=True,
                    postAnalyzis=None,
                    skipChiralityCalculation=None,
@@ -1913,6 +2035,299 @@ def clip_to_sphere(self, radius_nm, noOutput=True,
             noOutput=noOutput,
             is_optimized=False)
 
+def clip_to_ellipsoid(self, diameters_nm, noOutput=True,
+                      postAnalyzis=None,
+                      skipChiralityCalculation=None,
+                      skipSymmetryAnalyzis=None,
+                      skipFacetInfo=None,
+                      thresholdCoreSurface=None):
+    """
+    Keep only atoms within an axis-aligned ellipsoid centred on the centre
+    of mass. Generalises clip_to_sphere: an atom at (x, y, z) relative to the
+    centre is kept when (x/a)² + (y/b)² + (z/c)² ≤ 1, where (a, b, c) are the
+    semi-axes, i.e. half of the diameters supplied. Useful to give an
+    elongated structure a smooth prolate/oblate envelope (e.g. turning the
+    pentagonal shaft into a rounded spindle).
+
+    Args:
+        diameters_nm (array-like): three full diameters along x, y, z in nm
+            (the ellipsoid's extent on each axis). Pass equal values for a
+            sphere.
+        ...
+    Example:
+        # Prolate envelope: 4 nm wide, 15 nm long along z
+        rod.clip_to_ellipsoid(diameters_nm=[4.0, 4.0, 15.0])
+    """
+    import numpy as np
+    if not noOutput:
+        centertxt("Clipping to ellipsoid", bgc='#007a7a', size='14', weight='bold')
+        chrono = timer()
+        chrono.chrono_start()
+
+    abc = np.asarray(diameters_nm, dtype=float) * 10.0 / 2   # nm → Å, converted to semi-axes
+    if abc.shape != (3,) or np.any(abc <= 0):
+        raise ValueError("diameters_nm must be three positive values (a, b, c).")
+
+    pos = self.NP.get_positions()
+    cog = self.NP.get_center_of_mass()
+    rel = pos - cog
+    mask = np.sum((rel / abc) ** 2, axis=1) <= 1.0
+    old_count = len(self.NP)
+    self.NP = self.NP[mask]
+    self.NP.positions -= self.NP.get_center_of_mass()
+    self.nAtoms = len(self.NP)
+    self.cog = self.NP.get_center_of_mass()
+
+    if not noOutput:
+        print(f"  - Diameters: {2*abc[0]/10:.2f} × {2*abc[1]/10:.2f} × {2*abc[2]/10:.2f} nm")
+        print(f"  - Removed {old_count - self.nAtoms} atoms.")
+        print(f"  - {self.nAtoms} atoms remaining. self.NP updated.")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+
+    self._flush_stale_data(shape_update="_clipped_ellipsoid")
+    self.is_optimized = False
+
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation=skipChiralityCalculation,
+            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+            skipFacetInfo=skipFacetInfo,
+            thresholdCoreSurface=thresholdCoreSurface,
+            noOutput=noOutput,
+            is_optimized=False)
+
+def clip_to_cone(self, base_center_nm, apex_nm,
+                 base_radius_nm=None, apex_angle_deg=None,
+                 tip_sphere_radius_nm=0.0,
+                 keep='inside', recenter=True, noOutput=True,
+                 postAnalyzis=None,
+                 skipChiralityCalculation=None,
+                 skipSymmetryAnalyzis=None,
+                 skipFacetInfo=None,
+                 thresholdCoreSurface=None):
+    """
+    Clip atoms against a single, general cone defined by its base centre,
+    its apex, and its width — the latter given EITHER as the base radius OR
+    as the full apex angle (whichever the measurement provides). The cone
+    axis runs from base centre to apex; the allowed radius decreases linearly
+    from the base value to 0 at the apex. The surface is "round" (smooth
+    cone), atomically stepped rather than crystallographically faceted.
+
+    Apply per end (with the union approach) to taper a shaft; for a symmetric
+    double cone, prefer clip_to_double_cone.
+
+    Args:
+        base_center_nm (array-like): centre of the base disc, in nm.
+        apex_nm (array-like): cone apex, in nm. Axis and height are
+            (apex - base_center); the height L sets the angle/radius link.
+        base_radius_nm (float, optional): radius of the base disc, in nm.
+            Mutually exclusive with apex_angle_deg.
+        apex_angle_deg (float, optional): FULL apex angle (between opposite
+            generatrices), in degrees. The base radius is then
+            R = L * tan(apex_angle_deg / 2). Mutually exclusive with
+            base_radius_nm.
+        tip_sphere_radius_nm (float): if > 0, round the apex end with a
+            sphere of this radius, inscribed tangentially in the cone (smooth
+            join). The cone follows its straight generatrix up to the tangency
+            circle, then closes with the spherical cap. 0 (default) gives a
+            sharp tip. Must be small enough that the sphere fits before the
+            virtual apex.
+        keep (str): 'inside' or 'outside'. See note on the truncated domain
+            (atoms outside the base/apex span are treated as outside).
+        recenter (bool): recentre on the COM after clipping. Default True.
+        noOutput (bool): suppress output. Default True.
+        ... (postAnalyzis etc. as usual)
+
+    Returns:
+        None. Updates self.NP in place.
+
+    Example:
+        # Width given as a measured 32° full apex angle
+        rod.clip_to_cone(base_center_nm=[0,0,0], apex_nm=[0,0,15.0],
+                         apex_angle_deg=32.0, keep='inside')
+    """
+    import numpy as np
+    if keep not in ('inside', 'outside'):
+        raise ValueError("keep must be 'inside' or 'outside'.")
+    if (base_radius_nm is None) == (apex_angle_deg is None):
+        raise ValueError("Provide exactly one of base_radius_nm or "
+                         "apex_angle_deg.")
+
+    if not noOutput:
+        centertxt("Clipping to cone", bgc='#007a7a', size='14', weight='bold')
+        chrono = timer()
+        chrono.chrono_start()
+
+    C = np.asarray(base_center_nm, dtype=float) * 10.0      # nm → Å
+    A = np.asarray(apex_nm, dtype=float) * 10.0
+    axis = A - C
+    L = np.linalg.norm(axis)
+    if L < 1e-9:
+        raise ValueError("apex and base_center coincide; cone has no height.")
+    u = axis / L
+
+    if base_radius_nm is not None:
+        if base_radius_nm <= 0:
+            raise ValueError("base_radius_nm must be > 0.")
+        R = base_radius_nm * 10.0
+    else:
+        if not (0 < apex_angle_deg < 180):
+            raise ValueError("apex_angle_deg must be in (0, 180).")
+        R = L * np.tan(np.radians(apex_angle_deg) / 2.0)    # full angle → R
+
+    r_tip = tip_sphere_radius_nm * 10.0
+    if r_tip < 0 or r_tip >= R:
+        raise ValueError("tip_sphere_radius_nm must be in [0, base radius).")
+
+    pos = self.NP.get_positions()
+    rel = pos - C
+    t = rel @ u
+    radial = np.linalg.norm(rel - np.outer(t, u), axis=1)
+
+    r_sph = tip_sphere_radius_nm * 10.0
+    if r_sph < 0:
+        raise ValueError("tip_sphere_radius_nm must be >= 0.")
+
+    if r_sph == 0:
+        # sharp cone (original behaviour)
+        r_allowed = R * (1.0 - t / L)
+        inside = (t >= 0) & (t <= L) & (radial <= r_allowed)
+    else:
+        alpha = np.arctan(R / L)                      # cone half-angle
+        d = r_sph / np.sin(alpha)                     # apex → sphere centre
+        t_center = L - d                              # centre position along axis
+        t_tan = t_center + r_sph * np.sin(alpha)      # tangency circle
+        if t_center <= 0:
+            raise ValueError("tip_sphere_radius_nm too large for this cone "
+                             "(sphere centre would fall below the base).")
+        # straight cone below the tangency circle
+        cone_part = (t >= 0) & (t <= t_tan) & (radial <= R * (1.0 - t / L))
+        # spherical cap above it
+        dist_to_centre = np.sqrt(radial**2 + (t - t_center)**2)
+        cap_part = (t > t_tan) & (dist_to_centre <= r_sph)
+        inside = cone_part | cap_part
+
+    mask = inside if keep == 'inside' else ~inside
+
+    old_count = len(self.NP)
+    self.NP = self.NP[mask]
+    if recenter and len(self.NP) > 0:
+        self.NP.positions -= self.NP.get_center_of_mass()
+    self.nAtoms = len(self.NP)
+    self.cog = self.NP.get_center_of_mass() if len(self.NP) > 0 else np.zeros(3)
+
+    if not noOutput:
+        full_angle = np.degrees(2 * np.arctan(R / L))
+        tip_info = (f"rounded tip r {tip_sphere_radius_nm:.2f} nm"
+                    if r_sph > 0 else "sharp tip")
+        print(f"  - Base Ø {2*R/10:.2f} nm, height to virtual apex {L/10:.2f} nm "
+              f"(full angle {full_angle:.2f}°, {tip_info})")
+        print(f"  - keep = '{keep}'")
+        print(f"  - Removed {old_count - self.nAtoms} atoms.")
+        print(f"  - {self.nAtoms} atoms remaining. self.NP updated.")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+
+    self._flush_stale_data(shape_update="_clipped_cone")
+    self.is_optimized = False
+
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation=skipChiralityCalculation,
+            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+            skipFacetInfo=skipFacetInfo,
+            thresholdCoreSurface=thresholdCoreSurface,
+            noOutput=noOutput,
+            is_optimized=False)
+        
+def clip_to_cylinder(self, diameter_nm, axis=(0, 0, 1), noOutput=True,
+                     postAnalyzis=None,
+                     skipChiralityCalculation=None,
+                     skipSymmetryAnalyzis=None,
+                     skipFacetInfo=None,
+                     thresholdCoreSurface=None):
+    """
+    Keep only atoms within a cylinder of given diameter around an axis through
+    the centre of mass. The infinite-length analogue of clip_to_sphere: an
+    atom is kept when its radial distance to the axis is ≤ diameter/2. Useful
+    to give an elongated structure a smooth circular cross-section (e.g.
+    turning the pentagonal shaft into a round rod before capping it into a
+    capsule).
+    Args:
+        diameter_nm (float): cylinder diameter in nm.
+        axis (array-like): cylinder axis (Cartesian). Default (0, 0, 1) = z.
+        ...
+    Example:
+        # Round shaft, 4 nm in diameter, along z
+        rod.clip_to_cylinder(diameter_nm=4.0, axis=[0, 0, 1])
+    """
+    import numpy as np
+    if not noOutput:
+        centertxt("Clipping to cylinder", bgc='#007a7a', size='14', weight='bold')
+        chrono = timer()
+        chrono.chrono_start()
+    r = diameter_nm * 10.0 / 2                    # nm → Å, radius
+    if r <= 0:
+        raise ValueError("diameter_nm must be a positive value.")
+    u = np.asarray(axis, dtype=float)
+    u = u / np.linalg.norm(u)
+    pos = self.NP.get_positions()
+    cog = self.NP.get_center_of_mass()
+    rel = pos - cog
+    axial = (rel @ u)[:, None] * u                # component along the axis
+    radial = np.linalg.norm(rel - axial, axis=1)  # distance to the axis
+    mask = radial <= r
+    old_count = len(self.NP)
+    self.NP = self.NP[mask]
+    self.NP.positions -= self.NP.get_center_of_mass()
+    self.nAtoms = len(self.NP)
+    self.cog = self.NP.get_center_of_mass()
+    if not noOutput:
+        print(f"  - Diameter: {2*r/10:.2f} nm, "
+              f"axis [{u[0]:+.3f} {u[1]:+.3f} {u[2]:+.3f}]")
+        print(f"  - Removed {old_count - self.nAtoms} atoms.")
+        print(f"  - {self.nAtoms} atoms remaining. self.NP updated.")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+    self._flush_stale_data(shape_update="_clipped_cylinder")
+    self.is_optimized = False
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation=skipChiralityCalculation,
+            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+            skipFacetInfo=skipFacetInfo,
+            thresholdCoreSurface=thresholdCoreSurface,
+            noOutput=noOutput,
+            is_optimized=False)
+    
 def plot_npr_triangle(self=None, is_optimized: bool = False, save_path: str = None, 
                       external_data: dict = None, color_by: str = 'Rg', color: str='viridis'):
     """
@@ -2880,3 +3295,101 @@ def remove_duplicates(self, tol=0.1, noOutput=None):
         print(f"  - Removed {n_before - self.nAtoms} duplicate atoms.")
         print(f"  - {self.nAtoms} atoms remaining. self.NP updated.")
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+
+def align_to_plane(self, axis=(0, 0, 1), target=0.0, tol=0.1, noOutput=True,
+                   postAnalyzis=None,
+                   skipChiralityCalculation=None,
+                   skipSymmetryAnalyzis=None,
+                   skipFacetInfo=None,
+                   thresholdCoreSurface=None):
+    """
+    Translate the structure along an axis so that its lowest atomic plane
+    (the atoms with the smallest projection on `axis`) lands at `target`.
+
+    Pure translation — no rotation, no atom removal. Useful to seat the base
+    of a cone, bipyramid or any clipped shape on a reference plane (e.g.
+    z = 0) before further operations or export.
+
+    Args:
+        axis (array-like): direction along which to align, in Cartesian.
+            Default (0, 0, 1) = z. Need not be normalized.
+        target (float): target coordinate (in Å) for the lowest plane along
+            `axis`. Default 0.0 (lowest atoms placed at the origin of `axis`).
+        tol (float): half-thickness (Å) used only for reporting how many atoms
+            make up the lowest plane. Default 0.1 Å.
+        noOutput (bool): If True, suppresses output. Default is True.
+        postAnalyzis (bool): If True, runs propPostMake(). Default None → self.postAnalyzis.
+        skipChiralityCalculation (bool): Default None → self.skipChiralityCalculation.
+        skipSymmetryAnalyzis (bool): Default None → self.skipSymmetryAnalyzis.
+        skipFacetInfo (bool): Default None → self.skipFacetInfo.
+        thresholdCoreSurface (float): Default None → self.thresholdCoreSurface.
+
+    Returns:
+        None. Updates self.NP in place.
+
+    Example:
+        # Seat the bottom of a double cone on z = 0
+        cone.align_to_plane(axis=[0, 0, 1], target=0.0)
+    """
+    import numpy as np
+
+    if not noOutput:
+        centertxt("Aligning lowest plane to target", bgc='#007a7a', size='14', weight='bold')
+        chrono = timer()
+        chrono.chrono_start()
+
+    u = np.asarray(axis, dtype=float)
+    u = u / np.linalg.norm(u)
+
+    pos = self.NP.get_positions()
+    proj = pos @ u                       # signed position along axis
+    proj_min = proj.min()
+
+    # translation that brings the lowest plane to `target` along u
+    shift = (target - proj_min) * u
+    self.NP.set_positions(pos + shift)
+    self.cog = self.NP.get_center_of_mass()
+
+    if not noOutput:
+        n_plane = np.count_nonzero(proj <= proj_min + tol)
+        print(f"  - Axis: [{u[0]:+.4f} {u[1]:+.4f} {u[2]:+.4f}]")
+        print(f"  - Lowest plane was at {proj_min:.3f} Å → moved to {target:.3f} Å")
+        print(f"  - Shift applied: {np.linalg.norm(shift):.3f} Å")
+        print(f"  - {n_plane} atom(s) in the lowest plane (within {tol} Å)")
+        print(f"  - {self.nAtoms} atoms. self.NP updated.")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+
+    self._flush_stale_data(shape_update="_aligned_plane")
+    self.is_optimized = False
+
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation=skipChiralityCalculation,
+            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+            skipFacetInfo=skipFacetInfo,
+            thresholdCoreSurface=thresholdCoreSurface,
+            noOutput=noOutput,
+            is_optimized=False)
+
+def z_height_nm(NP):
+    """
+    Real extent of a structure along z, in nm: z.max() - z.min().
+
+    Args:
+        NP: pyNMB object.
+
+    Returns:
+        float: height along z in nm.
+    """
+    z = NP.NP.get_positions()[:, 2]
+    return (z.max() - z.min()) / 10.0

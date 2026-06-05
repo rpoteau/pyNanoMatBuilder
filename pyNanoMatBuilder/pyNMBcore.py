@@ -188,6 +188,26 @@ class pyNMBcore:
                                          skipFacetInfo=skipFacetInfo,
                                          thresholdCoreSurface=thresholdCoreSurface)
 
+    def align_to_plane(self, axis=(0, 0, 1), target=0.0, tol=0.1, noOutput=None,
+                       postAnalyzis=None,
+                       skipChiralityCalculation=None,
+                       skipSymmetryAnalyzis=None,
+                       skipFacetInfo=None,
+                       thresholdCoreSurface=None):
+        """
+        Translate the structure so its lowest atomic plane along `axis` lands
+        at `target`. See utils.geometry.align_to_plane for full documentation.
+        """
+        from .utils.geometry import align_to_plane
+        if noOutput is None: noOutput = self.noOutput
+        return align_to_plane(self, axis=axis, target=target, tol=tol,
+                             noOutput=noOutput,
+                             postAnalyzis=postAnalyzis,
+                             skipChiralityCalculation=skipChiralityCalculation,
+                             skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                             skipFacetInfo=skipFacetInfo,
+                             thresholdCoreSurface=thresholdCoreSurface)
+    
     def remove_plane(self, direction, axis_def='hkl', tol=0.5,
                      noOutput=None,
                      postAnalyzis=None,
@@ -215,7 +235,31 @@ class pyNMBcore:
                             skipChiralityCalculation=skipChiralityCalculation,
                             skipSymmetryAnalyzis=skipSymmetryAnalyzis,
                             skipFacetInfo=skipFacetInfo,
-                            thresholdCoreSurface=thresholdCoreSurface)    
+                            thresholdCoreSurface=thresholdCoreSurface)  
+        
+    def round_tip_in_direction(self, direction, diameter_nm, axis_def='hkl',
+                               use_axis_center=True, noOutput=None,
+                               postAnalyzis=None,
+                               skipChiralityCalculation=None,
+                               skipSymmetryAnalyzis=None,
+                               skipFacetInfo=None,
+                               thresholdCoreSurface=None):
+        """
+        Round one tip with a hemispherical cap tangent to the outermost atom
+        in a given direction. See utils.geometry.round_tip_in_direction for
+        full documentation.
+        """
+        from .utils.geometry import round_tip_in_direction
+        if noOutput is None: noOutput = self.noOutput
+        return round_tip_in_direction(self, direction, diameter_nm,
+                                     axis_def=axis_def,
+                                     use_axis_center=use_axis_center,
+                                     noOutput=noOutput,
+                                     postAnalyzis=postAnalyzis,
+                                     skipChiralityCalculation=skipChiralityCalculation,
+                                     skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                                     skipFacetInfo=skipFacetInfo,
+                                     thresholdCoreSurface=thresholdCoreSurface)
     
     def clip_to_sphere(self, radius_nm, noOutput=None,
                            postAnalyzis=None,
@@ -236,6 +280,72 @@ class pyNMBcore:
                                   skipSymmetryAnalyzis=skipSymmetryAnalyzis,
                                   skipFacetInfo=skipFacetInfo,
                                   thresholdCoreSurface=thresholdCoreSurface)
+
+    def clip_to_ellipsoid(self, diameters_nm, noOutput=None,
+                          postAnalyzis=None,
+                          skipChiralityCalculation=None,
+                          skipSymmetryAnalyzis=None,
+                          skipFacetInfo=None,
+                          thresholdCoreSurface=None):
+        """
+        Keep only atoms within an axis-aligned ellipsoid centred on the
+        center of mass. See utils.geometry.clip_to_ellipsoid for full
+        documentation.
+        """
+        from .utils.geometry import clip_to_ellipsoid
+        if noOutput is None: noOutput = self.noOutput
+        return clip_to_ellipsoid(self, diameters_nm,
+                                 noOutput=noOutput,
+                                 postAnalyzis=postAnalyzis,
+                                 skipChiralityCalculation=skipChiralityCalculation,
+                                 skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                                 skipFacetInfo=skipFacetInfo,
+                                 thresholdCoreSurface=thresholdCoreSurface)
+
+    def clip_to_cylinder(self, diameter_nm, axis=(0, 0, 1), noOutput=None,
+                         postAnalyzis=None,
+                         skipChiralityCalculation=None,
+                         skipSymmetryAnalyzis=None,
+                         skipFacetInfo=None,
+                         thresholdCoreSurface=None):
+        """
+        Keep only atoms within a cylinder of given diameter around an axis
+        through the centre of mass. See utils.geometry.clip_to_cylinder for
+        full documentation.
+        """
+        from .utils.geometry import clip_to_cylinder
+        if noOutput is None: noOutput = self.noOutput
+        return clip_to_cylinder(self, diameter_nm, axis=axis,
+                               noOutput=noOutput,
+                               postAnalyzis=postAnalyzis,
+                               skipChiralityCalculation=skipChiralityCalculation,
+                               skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                               skipFacetInfo=skipFacetInfo,
+                               thresholdCoreSurface=thresholdCoreSurface)
+    
+    def clip_to_cone(self, base_center_nm, apex_nm, base_radius_nm=None,
+                     apex_angle_deg=None, tip_sphere_radius_nm=0.0, 
+                     keep='inside', recenter=True, noOutput=None,
+                     postAnalyzis=None,
+                     skipChiralityCalculation=None,
+                     skipSymmetryAnalyzis=None,
+                     skipFacetInfo=None,
+                     thresholdCoreSurface=None):
+        """
+        Clip atoms against a single general cone (base disc + apex).
+        See utils.geometry.clip_to_cone for full documentation.
+        """
+        from .utils.geometry import clip_to_cone
+        if noOutput is None: noOutput = self.noOutput
+        return clip_to_cone(self, base_center_nm, apex_nm, base_radius_nm, apex_angle_deg,
+                            tip_sphere_radius_nm,
+                            keep=keep, recenter=recenter,
+                            noOutput=noOutput,
+                            postAnalyzis=postAnalyzis,
+                            skipChiralityCalculation=skipChiralityCalculation,
+                            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                            skipFacetInfo=skipFacetInfo,
+                            thresholdCoreSurface=thresholdCoreSurface)
     
     def _flush_stale_data(self, shape_update=None):
         """

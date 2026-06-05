@@ -237,6 +237,8 @@ pyNanoMatBuilder/resources/figs/dicoTdWS.xyz
 pyNanoMatBuilder/resources/figs/ellipsoid-C.png
 pyNanoMatBuilder/resources/figs/ellipsoid.base64
 pyNanoMatBuilder/resources/figs/ellipsoid.png
+pyNanoMatBuilder/resources/figs/eohj-C.png
+pyNanoMatBuilder/resources/figs/eohjM-C.png
 pyNanoMatBuilder/resources/figs/fccOh-C.png
 pyNanoMatBuilder/resources/figs/fccOh.base64
 pyNanoMatBuilder/resources/figs/fccOh.png
@@ -265,6 +267,7 @@ pyNanoMatBuilder/resources/figs/ico-C.png
 pyNanoMatBuilder/resources/figs/ico.base64
 pyNanoMatBuilder/resources/figs/ico.png
 pyNanoMatBuilder/resources/figs/ico.xyz
+pyNanoMatBuilder/resources/figs/ohj-C.png
 pyNanoMatBuilder/resources/figs/pbpy-C.png
 pyNanoMatBuilder/resources/figs/pbpy.base64
 pyNanoMatBuilder/resources/figs/pbpy.png
@@ -360,14 +363,20 @@ pyNanoMatBuilder/resources/figs/octopod/FeCo_one_arm.script
 pyNanoMatBuilder/resources/figs/octopod/FeCo_one_arm.xyz
 pyNanoMatBuilder/resources/figs/octopod/FeCo_one_armCS.xyz
 pyNanoMatBuilder/resources/figs/octopod/FeCo_one_armSlices.script
+pyNanoMatBuilder/resources/figs/octopod/arm-C.png
+pyNanoMatBuilder/resources/figs/octopod/arm.png
 pyNanoMatBuilder/resources/figs/octopod/octopod-C.png
 pyNanoMatBuilder/resources/figs/octopod/octopod.png
+pyNanoMatBuilder/resources/figs/slices/cube_X-C.png
+pyNanoMatBuilder/resources/figs/slices/cube_X.xyz
 pyNanoMatBuilder/resources/svg/Logo-Universite-Toulouse-n-2023.png
 pyNanoMatBuilder/resources/svg/Logo-institutionnel-couleur-Uonly.svg
 pyNanoMatBuilder/resources/svg/Python_logo_and_wordmark.svg.png
 pyNanoMatBuilder/resources/svg/__init__.py
 pyNanoMatBuilder/resources/svg/bccrdd.spt
 pyNanoMatBuilder/resources/svg/bccrdd.xyz
+pyNanoMatBuilder/resources/svg/csg_operations.png
+pyNanoMatBuilder/resources/svg/csg_operations.svg
 pyNanoMatBuilder/resources/svg/logo-C.png
 pyNanoMatBuilder/resources/svg/logo.png
 pyNanoMatBuilder/resources/svg/logo2-C.png
@@ -381,6 +390,7 @@ pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_banner.svg
 pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_logo.png
 pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_logo.svg
 pyNanoMatBuilder/utils/__init__.py
+pyNanoMatBuilder/utils/animations.py
 pyNanoMatBuilder/utils/core.py
 pyNanoMatBuilder/utils/crystals.py
 pyNanoMatBuilder/utils/csg.py
@@ -395,6 +405,7 @@ pyNanoMatBuilder/utils/symmetry.py
 pyNanoMatBuilder/utils/utils.py.org
 pyNanoMatBuilder/utils/utils.py.tmp
 pyNanoMatBuilder/utils/.ipynb_checkpoints/__init__-checkpoint.py
+pyNanoMatBuilder/utils/.ipynb_checkpoints/animations-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/core-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/crystals-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/csg-checkpoint.py
