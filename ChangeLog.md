@@ -5,6 +5,8 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
+## [0.15.1] - "README.md"
+
 ## [0.15.0] - "pentatwinned NPs"
 
 ### Added

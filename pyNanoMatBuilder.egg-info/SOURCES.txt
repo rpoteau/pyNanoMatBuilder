@@ -212,6 +212,7 @@ pyNanoMatBuilder/resources/figs/bccrddWS.xyz
 pyNanoMatBuilder/resources/figs/bch-C.png
 pyNanoMatBuilder/resources/figs/bch.png
 pyNanoMatBuilder/resources/figs/bch.xyz
+pyNanoMatBuilder/resources/figs/capsule-C.png
 pyNanoMatBuilder/resources/figs/cube-C.png
 pyNanoMatBuilder/resources/figs/cube.base64
 pyNanoMatBuilder/resources/figs/cube.png
@@ -230,6 +231,7 @@ pyNanoMatBuilder/resources/figs/cuboWS.script
 pyNanoMatBuilder/resources/figs/cuboWS.xyz
 pyNanoMatBuilder/resources/figs/cylinder-C.png
 pyNanoMatBuilder/resources/figs/cylinder.xyz
+pyNanoMatBuilder/resources/figs/dcone-C.png
 pyNanoMatBuilder/resources/figs/dicoTdWS-C.png
 pyNanoMatBuilder/resources/figs/dicoTdWS.png
 pyNanoMatBuilder/resources/figs/dicoTdWS.script
@@ -237,6 +239,7 @@ pyNanoMatBuilder/resources/figs/dicoTdWS.xyz
 pyNanoMatBuilder/resources/figs/ellipsoid-C.png
 pyNanoMatBuilder/resources/figs/ellipsoid.base64
 pyNanoMatBuilder/resources/figs/ellipsoid.png
+pyNanoMatBuilder/resources/figs/ellipsoidPT-C.png
 pyNanoMatBuilder/resources/figs/eohj-C.png
 pyNanoMatBuilder/resources/figs/eohjM-C.png
 pyNanoMatBuilder/resources/figs/fccOh-C.png
@@ -268,6 +271,8 @@ pyNanoMatBuilder/resources/figs/ico.base64
 pyNanoMatBuilder/resources/figs/ico.png
 pyNanoMatBuilder/resources/figs/ico.xyz
 pyNanoMatBuilder/resources/figs/ohj-C.png
+pyNanoMatBuilder/resources/figs/pbipy-C.png
+pyNanoMatBuilder/resources/figs/pbipyW-C.png
 pyNanoMatBuilder/resources/figs/pbpy-C.png
 pyNanoMatBuilder/resources/figs/pbpy.base64
 pyNanoMatBuilder/resources/figs/pbpy.png
@@ -335,6 +340,7 @@ pyNanoMatBuilder/resources/figs/tzh211WS.xyz
 pyNanoMatBuilder/resources/figs/underConstruction-C.png
 pyNanoMatBuilder/resources/figs/underConstruction.png
 pyNanoMatBuilder/resources/figs/underConstruction.svg
+pyNanoMatBuilder/resources/figs/uptnr-C.png
 pyNanoMatBuilder/resources/figs/wire-C.png
 pyNanoMatBuilder/resources/figs/wire.xyz
 pyNanoMatBuilder/resources/figs/.ipynb_checkpoints/bccrdd-C-checkpoint.png
