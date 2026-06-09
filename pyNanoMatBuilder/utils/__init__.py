@@ -9,6 +9,7 @@ from .energy import *
 from .external_pgm import *
 from .geometry import *
 from .io import *
+from .local_descriptors import *
 from .parallel import *
 from .polydispersity import *
 

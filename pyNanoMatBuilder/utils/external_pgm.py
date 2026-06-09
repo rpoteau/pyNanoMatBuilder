@@ -656,3 +656,69 @@ def defSlicingPlanesForJMol(self,
         print(cmd)
 
     return cmd
+
+def defLocalOrderColorForJMol(self, descriptor='cnp', l=6, color='turbo',
+                              is_optimized=None, noOutput=True):
+    """
+    Generate a Jmol command that writes a per-atom local-order descriptor
+    (CNP or Steinhardt q_l) into an atom property and colours the atoms by it.
+
+    The descriptor must already be stored on the object (self.cnp / self.q{l},
+    with the _opt suffix for the optimized structure). Run
+    common_neighbour_parameter() or steinhardt_q() first.
+
+    Args:
+        descriptor (str): 'cnp' (default) or 'q' for Steinhardt q_l.
+        l (int): Harmonic degree for descriptor='q'. Default 6.
+        color (str): Jmol colour scheme name. Default 'turbo'.
+            (color schemes known by Jmol: batlow,cividis,kry,thermal,viridis,inferno,magma,plasma,turbo)
+        is_optimized (bool or None): Target structure. None -> self.is_optimized.
+        noOutput (bool): If True, suppresses output. Default is True.
+
+    Returns:
+        str: Jmol command string (also stored in self.jMol_{descriptor}
+            (e.g. self.jMol_cnp, self.jMol_q6, with the _opt suffix for the optimized structure) ).
+    """
+    if is_optimized is None:
+        is_optimized = getattr(self, 'is_optimized', False)
+    use_opt = is_optimized and getattr(self, 'NP_opt', None) is not None
+    suffix = "_opt" if use_opt else ""
+
+    if descriptor == 'cnp':
+        attr = f"cnp{suffix}"
+        prop_name = "cnp"
+        label = "CNP (Å²)"
+    elif descriptor == 'q':
+        attr = f"q{l}{suffix}"
+        prop_name = f"q{l}"
+        label = f"q{l}"
+    else:
+        raise ValueError(f"descriptor must be 'cnp' or 'q', got '{descriptor}'.")
+
+    values = getattr(self, attr, None)
+    if values is None:
+        print(f"{bg.LIGHTYELLOWB}Warning: self.{attr} not found. "
+              f"Run the descriptor first (common_neighbour_parameter / "
+              f"steinhardt_q).{bg.OFF}")
+        return ""
+
+    values = np.asarray(values)
+    vmin, vmax = float(values.min()), float(values.max())
+    if vmax - vmin < 1e-9:          # all atoms identical (e.g. perfect core)
+        vmax = vmin + 1e-9
+
+    data_str = " ".join(f"{v:.4f}" for v in values)
+    cmd = (f"data \"property_{prop_name}\"\n"
+           f"{data_str}\n"
+           f"end \"property_{prop_name}\"; "
+           f"color atoms property_{prop_name} \"{color}\" "
+           f"range {vmin:.4f} {vmax:.4f};")
+
+    setattr(self, f"jMol_{prop_name}{suffix}", cmd)
+
+    if not noOutput:
+        print(f"  [Jmol command to colour atoms by {label}]:")
+        print(f"  (range {vmin:.4f} – {vmax:.4f})")
+        print(f"  {cmd}")
+
+    return cmd

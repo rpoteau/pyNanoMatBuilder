@@ -2443,15 +2443,16 @@ def _applyRotationRodrigues(positions, axis_cart, angles_deg):
     return rotated
 
 def applyTwist(self,
-                 axis: [0,0,1],
-                 axis_def: str = 'hkl',
-                 rate: float = 1.0,
-                 profile: str = 'linear',
-                 custom_profile=None,
-                 pitch: float = None,
-                 helix_radius: float = None,
-                 chirality = 'RH',
-                 noOutput: bool = False,
+                axis: [0,0,1],
+                axis_def: str = 'hkl',
+                rate: float = 1.0,
+                depth_nm: float = 0.0,
+                profile: str = 'linear',
+                custom_profile=None,
+                pitch: float = None,
+                helix_radius: float = None,
+                chirality = 'RH',
+                noOutput: bool = False,
                 ):
     """
     Apply a Twist to the atomic positions of a NP along a given crystallographic axis.
@@ -2484,6 +2485,17 @@ def applyTwist(self,
             ``helix`` — not used.
             ``custom`` — scaling factor applied to custom_profile(z, L).
             Default is 1.0.
+        depth_nm (float): Depth of the twisted surface cap, in nm, measured
+            inward from the OUTERMOST atomic plane along the twist axis.
+            Only atoms within this cap are twisted; deeper atoms (the core)
+            stay fixed. The twist angle grows from 0 at the cap boundary
+            (continuous junction with the unrotated core) to its full value
+            at the surface, following the chosen `profile` and `rate`.
+            SPECIAL VALUE: depth_nm = 0.0 (default) means NO depth limit —
+            the whole object is twisted (the original behaviour). A small
+            positive value (e.g. 0.5 nm) twists only a thin surface cap.
+            Used to apply a per-facet surface twist by calling applyTwist
+            once per facet, with axis = the facet normal.
         profile (str): Twist profile along the axis. Options:
             ``linear`` — angle(z) = rate * z.
             ``sinusoidal`` — angle(z) = rate * sin(2π * z / L).
@@ -2612,6 +2624,31 @@ def applyTwist(self,
 
     # --- Total length of NP along axis ---
     L = proj.max() - proj.min()
+
+    # --- Optional surface-cap restriction (per-facet twist) ---
+    # depth_nm = 0.0 is a sentinel meaning "no limit": twist the whole object
+    # (original behaviour). A positive depth_nm twists only the outer cap of
+    # that thickness along the axis, leaving the core untouched. The angle is
+    # referenced to the cap boundary so it grows from 0 (continuous join with
+    # the core) to its full value at the surface.
+    if depth_nm and depth_nm > 0.0:
+        if profile == 'helix':
+            raise ValueError("depth_nm is not compatible with profile='helix' "
+                             "(which bends the whole wire, not a surface cap).")
+        depth_ang = depth_nm * 10.0                 # nm -> Å
+        surface_level = proj.max()                  # outermost plane along axis
+        boundary = surface_level - depth_ang        # inner edge of the cap
+        cap_mask = proj >= boundary
+        # reference proj to the cap boundary: 0 at the boundary, depth_ang at
+        # the surface; clamp deeper atoms to 0 so they receive zero angle.
+        proj = np.where(cap_mask, proj - boundary, 0.0)
+        # recompute the effective length used by L-dependent profiles
+        L = depth_ang
+        if not noOutput:
+            n_cap = int(np.count_nonzero(cap_mask))
+            print(f"  Surface-cap twist: depth = {depth_nm:.3f} nm "
+                  f"({depth_ang:.2f} Å), {n_cap} atoms in the cap "
+                  f"(core left untwisted).")
     
     # Inter-slice bond stretching check
     radial = np.linalg.norm(
@@ -2717,12 +2754,19 @@ def applyTwist(self,
 
         if not noOutput:
             centertxt("Twist analysis", bgc='#007a7a', size='14', weight='bold')
+            cap_str = (f" (surface cap, depth = {depth_nm:.3f} nm)"
+                       if depth_nm and depth_nm > 0.0 else "")
             centertxt(
-                f"Applying {chiral_str} '{profile}' Twist along axis {axis} on the {status}",
+                f"Applying {chiral_str} '{profile}' Twist along axis {axis} "
+                f"on the {status}{cap_str}",
                 bgc='#cbcbcb', size='12', fgc='b', weight='bold',
             )
             print(f"  Cartesian axis          : {axis_cart}")
-            print(f"  NP length along axis    : {L:.2f} Å")
+            if depth_nm and depth_nm > 0.0:
+                print(f"  Twisted cap depth       : {L:.2f} Å "
+                      f"({depth_nm:.3f} nm)  [core left untwisted]")
+            else:
+                print(f"  NP length along axis    : {L:.2f} Å")
             print(f"  Max radial distance     : {R_max:.2f} Å")
             print(f"  rate                    : {rate} °/Å")
             print(f"  max angle               : {np.max(np.abs(angles)):.2f}°")
@@ -2961,6 +3005,192 @@ def apply_reflection(self, plane, plane_def='hkl', noOutput=True,
             noOutput=noOutput,
             is_optimized=False)
 
+def apply_translation(self, vector, vector_def='cart', units='nm', noOutput=True,
+                      postAnalyzis=None, skipChiralityCalculation=None,
+                      skipSymmetryAnalyzis=None, skipFacetInfo=None,
+                      thresholdCoreSurface=None):
+    """
+    Translate self.NP by a vector. Also updates all truncation planes
+    (orientation unchanged, only their distance d to the origin shifts).
+
+    Args:
+        vector (array-like): Translation vector, as Miller indices [h,k,l]
+            (vector_def='hkl', direction only — magnitude set by `units` and
+            the vector norm) or Cartesian [x,y,z] (vector_def='cart').
+        vector_def (str): 'cart' (default) or 'hkl'. With 'hkl' the direction
+            is converted to a Cartesian unit direction and scaled by the
+            vector's norm interpreted in `units`.
+        units (str): 'nm' (default) or 'angstrom'/'A'. Unit of the vector
+            components (cart) or of the scaling length (hkl).
+        noOutput (bool): If True, suppresses output. Default is True.
+        postAnalyzis (bool): Default None → self.postAnalyzis.
+        skipChiralityCalculation (bool): Default None → self.skipChiralityCalculation.
+        skipSymmetryAnalyzis (bool): Default None → self.skipSymmetryAnalyzis.
+        skipFacetInfo (bool): Default None → self.skipFacetInfo.
+        thresholdCoreSurface (float): Default None → self.thresholdCoreSurface.
+
+    Returns:
+        None. Updates self.NP in place.
+
+    Example:
+        # Move the cube 4 nm up along z
+        cube.apply_translation([0, 0, 4], vector_def='cart', units='nm')
+
+        # Shift by 5 Å along the [1,1,0] crystallographic direction
+        NP.apply_translation([1, 1, 0], vector_def='hkl', units='A')
+    """
+    from .crystals import lattice_cart
+    import numpy as np
+
+    if not noOutput:
+        centertxt("Translating the nanoparticle", bgc='#007a7a', size='14', weight='bold')
+        chrono = timer()
+        chrono.chrono_start()
+
+    vector = np.array(vector, dtype=float)
+
+    # unit scaling: convert the supplied magnitude to Å
+    if units in ('nm',):
+        scale = 10.0
+    elif units in ('A', 'angstrom', 'Angstrom', 'ang'):
+        scale = 1.0
+    else:
+        raise ValueError(f"units must be 'nm' or 'angstrom', got '{units}'.")
+
+    if vector_def == 'hkl':
+        if not hasattr(self, 'Gstar'):
+            raise AttributeError("vector_def='hkl' requires a Crystal object with Gstar.")
+        # direction in Cartesian, then scaled by the hkl vector norm * units
+        dir_cart = lattice_cart(self, [vector], Bravais2cart=True, printV=not noOutput)[0]
+        dir_cart = dir_cart / np.linalg.norm(dir_cart)
+        t = dir_cart * (np.linalg.norm(vector) * scale)
+    else:  # 'cart'
+        t = vector * scale
+
+    # --- Translate atoms ---
+    self.NP.set_positions(self.NP.get_positions() + t)
+    self.cog = self.NP.get_center_of_mass()
+
+    # --- Update truncation planes: normal unchanged, d shifts by -n·t ---
+    # A plane n·x + d = 0 translated by t becomes n·x + (d - n·t) = 0.
+    for attr in ['trPlanes', 'trPlanes_Wulff', 'trPlanes_Slices', 'trPlanes_opt']:
+        planes = getattr(self, attr, None)
+        if planes is not None:
+            new_planes = []
+            for p in np.array(planes):
+                n = p[:3]
+                d_new = p[3] - np.dot(n, t)
+                new_planes.append(np.append(n, d_new))
+            setattr(self, attr, np.array(new_planes))
+
+    # --- Flush stale data ---
+    self._flush_stale_data(shape_update="_translated")
+    self.is_optimized = False
+
+    if not noOutput:
+        print(f"  - Translation by {vector} ({vector_def}, {units})")
+        print(f"  - Cartesian shift: [{t[0]:+.4f} {t[1]:+.4f} {t[2]:+.4f}] Å")
+        print(f"  - {self.nAtoms} atoms. self.NP updated.")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+
+    # --- Resolve propPostMake parameters ---
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation=skipChiralityCalculation,
+            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+            skipFacetInfo=skipFacetInfo,
+            thresholdCoreSurface=thresholdCoreSurface,
+            noOutput=noOutput,
+            is_optimized=False)
+
+def center(self, noOutput=True, postAnalyzis=None,
+           skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
+           skipFacetInfo=None, thresholdCoreSurface=None):
+    """
+    Recenter self.NP on its center of mass (move the COM to the origin).
+    Also updates all truncation planes accordingly (their normals are
+    unchanged; only their distance d shifts).
+ 
+    Equivalent to a translation by -center_of_mass, exposed as a dedicated
+    method because it is the most common framing operation.
+ 
+    Args:
+        noOutput (bool): If True, suppresses output. Default is True.
+        postAnalyzis (bool): If True, runs propPostMake(). Default None → self.postAnalyzis.
+        skipChiralityCalculation (bool): Default None → self.skipChiralityCalculation.
+        skipSymmetryAnalyzis (bool): Default None → self.skipSymmetryAnalyzis.
+        skipFacetInfo (bool): Default None → self.skipFacetInfo.
+        thresholdCoreSurface (float): Default None → self.thresholdCoreSurface.
+ 
+    Returns:
+        None. Updates self.NP in place.
+ 
+    Example:
+        # Recenter after a sequence of edits done with recenter=False
+        cube.center()
+    """
+    import numpy as np
+ 
+    if not noOutput:
+        centertxt("Recentering on the center of mass", bgc='#007a7a',
+                  size='14', weight='bold')
+ 
+    com = self.NP.get_center_of_mass()
+    self.NP.positions -= com
+    self.cog = self.NP.get_center_of_mass()
+ 
+    # --- Update truncation planes: normal unchanged, d shifts by +n·com ---
+    # Translating by t = -com turns n·x + d = 0 into n·x + (d - n·t) = 0,
+    # i.e. d_new = d + n·com.
+    for attr in ['trPlanes', 'trPlanes_Wulff', 'trPlanes_Slices', 'trPlanes_opt']:
+        planes = getattr(self, attr, None)
+        if planes is not None:
+            new_planes = []
+            for p in np.array(planes):
+                n = p[:3]
+                d_new = p[3] + np.dot(n, com)
+                new_planes.append(np.append(n, d_new))
+            setattr(self, attr, np.array(new_planes))
+ 
+    self._flush_stale_data(shape_update="_centered")
+    self.is_optimized = False
+ 
+    if not noOutput:
+        print(f"  - Shifted COM from [{com[0]:+.4f} {com[1]:+.4f} {com[2]:+.4f}] Å "
+              f"to the origin.")
+        print(f"  - {self.nAtoms} atoms. self.NP updated.")
+ 
+    # --- Resolve propPostMake parameters ---
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+ 
+    if postAnalyzis:
+        self.propPostMake(
+            skipChiralityCalculation=skipChiralityCalculation,
+            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+            skipFacetInfo=skipFacetInfo,
+            thresholdCoreSurface=thresholdCoreSurface,
+            noOutput=noOutput,
+            is_optimized=False)
 
 def rotate_to_align(self, axis, target_axis=[0,0,1], axis_def='hkl',
                     noOutput=True, postAnalyzis=None,
@@ -3393,3 +3623,185 @@ def z_height_nm(NP):
     """
     z = NP.NP.get_positions()[:, 2]
     return (z.max() - z.min()) / 10.0
+
+import numpy as np
+
+
+def _parse_jmol_ranges(ranges_str, natoms):
+    """Parse a Jmol-style 1-based selection string into a set of 0-based
+    indices. Accepts ranges 'a-b' and single atoms 'a', comma-separated.
+    Example: '1-20,55,90,100-147'."""
+    selected = set()
+    if ranges_str is None:
+        return selected
+    for token in str(ranges_str).split(','):
+        token = token.strip()
+        if not token:
+            continue
+        if '-' in token:
+            a, b = token.split('-')
+            a, b = int(a), int(b)
+            if a < 1 or b < 1 or a > natoms or b > natoms:
+                raise ValueError(f"range '{token}' out of bounds (1..{natoms}).")
+            if a > b:
+                a, b = b, a
+            selected.update(range(a - 1, b))          # 1-based inclusive -> 0-based
+        else:
+            i = int(token)
+            if i < 1 or i > natoms:
+                raise ValueError(f"index {i} out of bounds (1..{natoms}).")
+            selected.add(i - 1)
+    return selected
+
+
+def delete(self,
+           elements=None,
+           indices=None,
+           ranges: str = None,
+           mode: str = 'delete',
+           recenter: bool = True,
+           noOutput: bool = False,
+           postAnalyzis: bool = None,
+           skipChiralityCalculation: bool = None,
+           skipSymmetryAnalyzis: bool = None,
+           skipFacetInfo: bool = None,
+           thresholdCoreSurface: float = None):
+    """
+    Remove or keep atoms of self.NP by element, 1-based index list, and/or
+    1-based Jmol range string. Selection is by any combination of:
+    - elements : symbol or list of symbols, e.g. "Au" or ["Au", "Ag"]
+    - indices  : 1-based index or list, e.g. 5 or [3, 7, 12] (Jmol convention)
+    - ranges   : Jmol-style string, e.g. "1-20,55,90,100-147"
+    The three selections are UNIONED into the set of "designated" atoms.
+
+    Args:
+        self: pyNMBcore object. self.NP is modified in place.
+        elements (str or list): chemical symbol(s) to select. Accepts a
+            single symbol ('Au') or a list (['Au', 'Ag']).
+        indices (int or list): 1-based atom index/indices to select. Accepts
+            a single index (5) or a list ([3, 7, 12]).
+        ranges (str): Jmol-style 1-based selection, e.g. '1-20,55,100-147'
+            (inclusive ranges 'a-b' and single atoms, comma-separated).
+        mode (str): 'delete' (remove designated atoms, keep the rest) or
+            'keep' (keep only the designated atoms). Default 'delete'.
+        recenter (bool): If True, recenters self.NP on its center of mass
+            afterwards (default). Set to False when chaining several edits
+            in a fixed reference frame; recenter manually once at the end:
+            NP.NP.positions -= NP.NP.get_center_of_mass()
+        noOutput (bool): If True, suppresses output. Default is False.
+        postAnalyzis (bool): If True, prints additional NP information.
+        skipChiralityCalculation (bool): If True, skips the calculation of
+            the OPD (Osipov-Pickup-Dunmur) chirality index.
+        skipSymmetryAnalyzis (bool): If True, skips the symmetry analysis.
+        skipFacetInfo (bool): If True, skips the external-facet info calculation.
+        thresholdCoreSurface (float): Threshold used to distinguish core from
+            surface atoms.
+
+    Note:
+        indices and ranges follow the Jmol convention (first atom = 1).
+        The three selectors (elements, indices, ranges) are UNIONED.
+        Updates self.NP, self.nAtoms and self.cog in place. Does not return.
+    """
+    if not noOutput:
+        centertxt("CSG delete", bgc="#cbcbcb", size="12",
+                  fgc="b", weight="bold")
+
+    if mode not in ('delete', 'keep'):
+        raise ValueError(f"mode must be 'delete' or 'keep', got '{mode}'.")
+
+    natoms = len(self.NP)
+    symbols = np.array(self.NP.get_chemical_symbols())
+
+    # --- build the designated set (union of the three selectors) ----------
+    designated = set()
+
+    if elements:
+        # accept a single symbol ("Au") as well as a list (["Au", "Ag"])
+        if isinstance(elements, str):
+            elements = [elements]
+        wanted = set(elements)
+        designated.update(np.nonzero(np.isin(symbols, list(wanted)))[0].tolist())
+        unknown = wanted - set(symbols.tolist())
+        if unknown and not noOutput:
+            print(f"  Note: element(s) {sorted(unknown)} not present in the "
+                  f"structure.")
+
+    if indices:
+        # accept a single index (5) as well as a list ([3, 7, 12])
+        if isinstance(indices, int):
+            indices = [indices]
+        for i in indices:
+            if i < 1 or i > natoms:
+                raise ValueError(f"index {i} out of bounds (1..{natoms}).")
+            designated.add(i - 1)                     # 1-based -> 0-based
+
+    if ranges:
+        designated.update(_parse_jmol_ranges(ranges, natoms))
+
+    # --- nothing selected: guard against accidental wipe ------------------
+    if not designated:
+        if not noOutput:
+            print("  Note: no atoms selected; structure left unchanged.")
+        return
+
+    designated = np.array(sorted(designated), dtype=int)
+
+    # --- resolve which atoms to KEEP --------------------------------------
+    if mode == 'delete':
+        keep_mask = np.ones(natoms, dtype=bool)
+        keep_mask[designated] = False
+    else:  # mode == 'keep'
+        keep_mask = np.zeros(natoms, dtype=bool)
+        keep_mask[designated] = True
+
+    n_before = natoms
+    self.NP = self.NP[keep_mask]
+    self.nAtoms = len(self.NP)
+
+    if not noOutput:
+        n_designated = len(designated)
+        n_changed = (n_before - self.nAtoms) if mode == 'delete' else self.nAtoms
+        verb = "removed" if mode == 'delete' else "kept"
+        print(f"  {n_designated} atoms designated, {n_before} -> "
+              f"{self.nAtoms} atoms ({verb} {n_changed}).")
+
+    # --- Invalidate old truncation planes (shape has changed) -------------
+    self.trPlanes       = None
+    self.trPlanes_Wulff = None
+    self.trPlanes_opt   = None
+
+    # --- Recenter at origin -----------------------------------------------
+    if recenter and self.nAtoms > 0:
+        self.NP.positions -= self.NP.get_center_of_mass()
+
+    self.cog = (self.NP.get_center_of_mass() if self.nAtoms > 0
+                else np.zeros(3))
+
+    if mode == "delete":
+        self._flush_stale_data(shape_update="_delete")
+    else:
+        self._flush_stale_data(shape_update="_keep")
+    self.is_optimized = False
+
+    # --- Resolve parameters (same pattern as union_with) ------------------
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+
+    if postAnalyzis and self.nAtoms > 0:
+        self.propPostMake(
+            skipChiralityCalculation = skipChiralityCalculation,
+            skipSymmetryAnalyzis     = skipSymmetryAnalyzis,
+            skipFacetInfo            = skipFacetInfo,
+            thresholdCoreSurface     = thresholdCoreSurface,
+            noOutput                 = noOutput,
+            is_optimized             = False,
+        )
+

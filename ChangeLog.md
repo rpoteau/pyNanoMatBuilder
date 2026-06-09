@@ -5,7 +5,216 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
-## [0.15.1] - "README.md"
+## [0.16.0] - "README.md, examples for article, Local-order descriptors (CNP, Steinhardt) and selection by order type"
+
+### Added
+
+- **`recenter` (bool) parameter to the CSG functions `union_with`, `cut_by`,
+    `intersect_with`, and `flush_inlay_with` (default `True`)**. When `False`,
+    the structure is no longer recentered on its center of mass after the
+    operation, preserving the reference frame across successive CSG calls.
+    This mirrors the existing `recenter` option of `applySlicing` and is
+    required when applying the same operation repeatedly with `cogB` positions
+    defined in a fixed frame (e.g. punching all 12 vertices of an icosahedron,
+    or decorating all faces of a polyhedron). Recenter manually once at the end:
+    `NP.NP.positions -= NP.NP.get_center_of_mass()`.
+    Or set `recenter` to `True` at the last operation.
+
+- **New `delete()` method (utils.edit + pyNMBcore wrapper) for versatile atom
+  removal or selection**. Atoms are designated by any combination of three
+  selectors, which are unioned:
+    - `elements`: a chemical symbol or list of symbols (e.g. "Au" or
+    ["Au", "Ag"]);
+    - `indices`: a 1-based atom index or list (e.g. 5 or [3, 7, 12]);
+    - `ranges`: a Jmol-style 1-based selection string with inclusive ranges
+        and single atoms (e.g. "1-20,55,100-147").
+    - `mode='delete'` removes the designated atoms (keeps the rest); `mode='keep'`
+          keeps only the designated atoms. Indices and ranges follow the Jmol
+          convention (first atom = 1) and are converted to 0-based internally.
+          Honours the `recenter` option and forwards the standard post-analysis
+          arguments, consistent with the CSG operations. An empty selection in
+          'delete' mode leaves the structure unchanged (with a warning) rather than
+          wiping it.
+
+- **New `apply_translation()` method (utils.geometry + pyNMBcore wrapper)**,
+    completing the set of rigid transformations alongside `apply_rotation` and
+    `apply_reflection`. Translates self.NP by a vector given in Cartesian
+    [x,y,z] (`vector_def='cart'`) or as a crystallographic direction [h,k,l]
+    (`vector_def='hkl'`), with the magnitude expressed in nm (default) or
+    angstrom via `units`. Truncation planes are updated consistently: their
+    normals are unchanged and only their distance d shifts (a plane n·x + d = 0
+    translated by t becomes n·x + (d - n·t) = 0).
+
+- **A local-order analysis suite (utils.prop, utils.external_pgm + pyNMBcore
+    wrappers): two per-atom descriptors that complement the binary core/surface
+    split of `coreSurface()` by grading local disorder continuously — including
+    internal defects (twin planes, stacking faults) that the convex hull cannot
+    see — together with their visualization, population grouping and selection
+    helpers.**
+    - **`common_neighbour_parameter(Rnn, ...)`**: the Common Neighbour
+        Parameter Q_i of Tsuzuki et al.
+        (Comput. Phys. Commun. 177 (2007) 518, doi: 10.1016/j.cpc.2007.05.018),
+        a centrosymmetry measure that is ~0 in a perfect FCC core and grows at
+        surfaces, edges, vertices and twin planes. Stored as `self.cnp` /
+        `self.cnp_mean` (and `_opt` variants).
+    - **`steinhardt_q(Rnn, l=6, ...)`**: the rotationally invariant
+        bond-orientational order parameter q_l of Steinhardt et al
+        (Phys. Rev. B 28 (1983) 784, doi: 10.1103/PhysRevB.28.784),
+        which discriminates FCC (q6≈0.575), HCP (0.485), BCC (0.511) and
+        icosahedral (0.663) local order. Use `l=4` to help separate FCC from
+        HCP. Stored as `self.q{l}` / `self.q{l}_mean` (and `_opt` variants).
+    - **Both run in Numba-parallelized kernels (`_cnp_kernel`, `_steinhardt_kernel`)**
+        built on a flattened CSR neighbour list, with a pure-Python fallback when
+        Numba is unavailable (~×30 speedup measured on a 2255-atom octahedron).
+        The neighbour cutoff `Rnn` is an explicit argument (typically ~1.2-1.3 ×
+        the nearest-neighbour distance, read from the first `rdf()` peak); the
+        spherical harmonics are computed in place (no SciPy dependency inside the
+        kernel), compatible with scipy ≥ 1.15 where `sph_harm` was removed. These
+        are on-demand analyses, deliberately NOT wired into `propPostMake`.
+    - **`plot_local_order(descriptor='cnp'|'q', ...)`** — a two-panel figure:
+        a histogram of the descriptor distribution (bars coloured by value) next
+        to a PCA 2D projection of the atoms coloured by the same descriptor, both
+        sharing the colormap used for the Jmol view. For the genuine 3D view, the
+        matching Jmol command is stored on the object (see below).
+    - **`local_order_populations(descriptor='cnp'|'q', ...)`** — groups atoms by
+        their (rounded) descriptor value into indexed populations, each printed
+        with a colour swatch matching the colormap and its atom count and fraction.
+        Each value cluster corresponds to a crystallographically equivalent set of
+        atoms (core, twin plane, facet, edge, vertex). Returns `(values, counts)`.
+    - **`select_by_local_order(indices, descriptor='cnp'|'q', ...)`** — builds a
+        sub-structure from one or more populations identified by their index in
+        `local_order_populations()`. Accepts a single index or a list (e.g. `5` or
+        `[0, 5]`). Non-destructive: `self.NP` is left untouched and the selected
+        atoms are copied into `self.NP_select` (with the boolean mask in
+        `self.NP_select_mask`, and `_opt` variants for the optimized structure).
+        The `decimals` argument must match the one used in
+        `local_order_populations()`.
+    - **`defLocalOrderColorForJMol(descriptor='cnp'|'q', ...)`** — generates a
+        Jmol command that writes the per-atom descriptor into an atom property and
+        colours the atoms by it (using Jmol's `data "..." ... end` block syntax).
+        Called automatically at the end of `common_neighbour_parameter` /
+        `steinhardt_q` when `store=True`, and stored as `self.jMol_cnp` /
+        `self.jMol_q{l}` (and `_opt` variants), one independent attribute per
+        descriptor. Colormaps shared by matplotlib and Jmol (`viridis`, `inferno`,
+        `plasma`, `magma`, `turbo`) keep the histogram, scatter, population table
+        and 3D view on a single consistent colour scale.
+    - **All new derived attributes** (`cnp`, `q4`, `q6` families, `jMol_*`,
+        `NP_select` / `NP_select_mask`, and their `_opt` variants) are declared in
+        `__init__` and cleared by `_flush_stale_data`, so local-order results are
+        correctly invalidated after any geometry change.
+    - **Steinhardt $(q_4, q_6)$ map (`plot_q4q6_map`, utils.prop + pyNMBcore
+        wrapper)** — a 2D classification plot positioning each atom in the
+        $(q_4, q_6)$ plane against the ideal crystalline reference points (FCC, BCC,
+        HCP, ICO, and optionally SC), so that local environments can be read at a
+        glance: core atoms land on their lattice point while surface, twin and edge
+        atoms drift away. Reference values are tabulated from ten Wolde, Ruiz-Montero
+        & Frenkel, J. Chem. Phys. 104, 9932 (1996). Key options:
+        - `aggregate=True` (default) groups atoms sharing the same $(q_4, q_6)$ value
+            into a single marker whose area and colour encode the atom count —
+            essential for crystalline NPs where many atoms overplot at identical
+            values (e.g. the FCC core of an icosahedron). `aggregate=False` draws one
+            dot per atom, suited to disordered/optimized structures.
+        - `sc_domain=False` (default) omits the simple-cubic reference and tightens
+            the x-range on the FCC/BCC/HCP/ICO region where metallic NPs live;
+            `sc_domain=True` includes SC and widens the view.
+        - Ideal references are drawn as hollow rings so that single-atom populations
+            (e.g. the icosahedral centre) remain visible inside them.
+        - Requires `self.q4` and `self.q6`; computes them on the fly from a given
+        `Xnn` cutoff if absent.
+    - **`compare_q4q6_map(objects, ...)` (utils.local_descriptors, standalone)** —
+        a small-multiples comparison of the Steinhardt $(q_4, q_6)$ maps of several
+        nanoparticles: one mini-panel per object, all sharing identical axes and the
+        same ideal reference rings (FCC, BCC, HCP, ICO, optionally SC), so the
+        local-order signatures of different morphologies can be compared side by side
+        rather than overplotted on a single crowded chart. Each panel uses the
+        aggregated representation of `plot_q4q6_map` (one marker per $(q_4, q_6)$
+        value, area and colour encoding the atom count, blue colormap). Grid layout
+        is set via `nrows` / `ncols`; `same_count=False` (default) normalises each
+        panel to its own largest population to compare *patterns* regardless of NP
+        size, while `same_count=True` uses a common count scale across panels.
+        Distinguishes at a glance a single-crystal FCC octahedron (one tight cluster
+        on FCC) from a multiply-twinned icosahedron (large HCP component from the
+        `…ABA…` twin planes) or a pentatwinned decahedron. Reference values from
+        ten Wolde, Ruiz-Montero & Frenkel, J. Chem. Phys. 104, 9932 (1996).
+
+### Changed
+
+- **`optimize()` now supports the ASE **EAM** calculator in addition to EMT**,
+    selected via `calculator='EAM'`. This lifts the previous limitation where
+    only EMT-parameterized elements (Al, Cu, Ag, Au, Ni, Pd, Pt) could be
+    relaxed, and in particular enables optimization of structures containing
+    elements absent from EMT (e.g. Co, Fe, and other transition metals) provided
+    a suitable EAM potential file is supplied. Two new arguments control it:
+    `eam_potential` (path to the EAM potential file, required when
+    calculator='EAM') and `eam_form` (explicit file format 'eam', 'alloy', or
+    'fs'; auto-detected from the file content when left as None). The EMT path
+    is unchanged and remains the default, so existing calls are unaffected.
+
+- **`optimize()`: added export of intermediate geometries during optimization via two new optional arguments (both default `None`)**:
+
+    - `traj_file`: saves all steps to an ASE binary trajectory (`trajectory` arg of `QuasiNewton`).
+    - `xyz_file`: appends each step to a multi-frame `.xyz` via an optimizer observer; any existing file is overwritten. Directly compatible with `utils/io.py:read()` and `frames_to_movie()`.
+    - Example:
+        
+        ```python
+        np.optimize(calculator='EAM', eam_potential='Au.eam',
+                    traj_file='opt.traj', xyz_file='opt.xyz')
+        ```
+
+- **`optimize()`: added an optional printed report (shown when `noOutput=False`)**:
+    - *Optimization details* block before the run: calculator, optimizer, atom count, target output files, and initial energy / energy-per-atom / max residual force.
+    - *Optimization summary* block after the run: final energy / energy-per-atom / max residual force vs. the force threshold.
+  
+### Fixed
+
+- **`custom.css` (Jupyter)** — Added a broad font-family rule for JupyterLab-rendered
+    elements (`.jp-RenderedHTMLCommon`, `.jp-RenderedMarkdown`, `.jp-Cell`) so notebook
+    text falls back to the named sans-serif stack (Verdana → DejaVu Sans → …) instead of
+    inheriting the browser's `system-ui` resolution. Prevents serif rendering on machines
+    where Chrome's default ("Standard") font is set to a serif family.
+
+### Documentation
+- **`pyNMB-tutorials.ipynb` now includes two advanced examples that will be
+    introduced in the article submitted to present pyNanoMatBuilder to the nano
+    community**. Both combine several advanced operations to build atomistic models
+    that correspond to no Platonic, Archimedean, Catalan, or Johnson solid, and
+    serve as the two structures of the article's lead figure:
+    - **Icosahedron decorated with Ino decahedra on its 12 vertices.** A regular
+        silver icosahedron core with a gold Ino decahedron grafted onto each of its
+        12 vertices (tips pointing outward), producing a 12-pointed star. The
+        construction exploits the shared five-fold twinning origin of icosahedra and
+        decahedra (common apex half-angle 58.28 deg and azimuth 54 deg mod 72 deg)
+        to mate the pentagonal crowns point to point, five against five. The
+        bimetallic coloring allows the decahedra to be later removed by element.
+    - **Chiral dumbbell: two engraved cubes clamping a twisted cobalt wire.** Two
+        gold cubes, each carved with an X-shaped groove (via `applySlicing`) and
+        given a same-handed surface twist (via `applyTwist` with a `depth_nm`
+        surface cap), positioned so their grooves clamp a hexagonal cobalt nanowire
+        from both ends. Reflecting one twisted cube through z = 0 flips its
+        handedness back so both cubes end up same-handed, making the whole assembly
+        chiral (quantifiable through a non-zero OPD index). The components are
+        merged with `union_with(mode='atoms')` for a clean penetrating Au/Co
+        interface; a gold-only version is also produced with `delete(elements="Co")`.
+
+- **`pyNMB-examples.ipynb` now includes a new "Local order descriptors"
+    section** illustrating the per-atom analysis tools end to end:
+    - **CNP on a regular silver icosahedron.** Computes the Common Neighbour
+        Parameter, displays its distribution and PCA projection
+        (`plot_local_order`), tabulates the colour-coded atom populations
+        (`local_order_populations`), exports the turbo-coloured Jmol command, and
+        selects the internal twin planes by population index
+        (`select_by_local_order`).
+    - **Steinhardt $q_6$ on a gold pentatwinned capsule.** Same workflow applied
+        to the bond-orientational order parameter, isolating the five twin domains
+        and their boundaries.
+    - **Steinhardt $(q_4, q_6)$ reference comparison.** Builds ≈ 3 nm spherical
+        nanoparticles for the three common bulk lattices (Au FCC, Ru HCP, Fe BCC)
+        plus a five-fold-twinned Au icosahedron, and compares their local-order
+        signatures as small multiples (`compare_q4q6_map`), showing how a
+        single-crystal sphere clusters on its lattice point while the icosahedron
+        spreads across the ICO, FCC and HCP references — its twin planes appearing
+        near HCP because a twin boundary in an FCC stacking is locally an `…ABA…`
+        environment.
 
 ## [0.15.0] - "pentatwinned NPs"
 

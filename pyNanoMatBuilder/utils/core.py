@@ -897,6 +897,15 @@ def _flush_stale_data(self, shape_update=None):
         'vol_Hull', 'vol_Hull_opt',
         'area_Hull', 'area_Hull_opt',
         'opd_index', 'opd_index_opt',
+        'cnp', 'cnp_opt', 'cnp_mean', 'cnp_mean_opt',
+        'q4', 'q4_opt', 'q4_mean', 'q4_mean_opt',
+        'q6', 'q6_opt', 'q6_mean', 'q6_mean_opt',
+        'jMol_cnp', 'jMol_cnp_opt',
+        'jMol_q4', 'jMol_q4_opt',
+        'jMol_q6', 'jMol_q6_opt',
+        'NP_select', 'NP_select_opt',
+        'NP_select_mask', 'NP_select_mask_opt',
+        '_local_order_decimals',
     ]
     
     for attr in attrs_to_clean:

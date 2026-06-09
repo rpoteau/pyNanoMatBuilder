@@ -2505,3 +2505,4 @@ def compare_effective_diameters(nmb_object, n_feret=2000):
 
     display(pivot)
     return pivot
+

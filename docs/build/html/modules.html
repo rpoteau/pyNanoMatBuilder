@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.15.1 documentation</title>
+  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.16.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="canonical" href="https://pynanomatbuilder.readthedocs.io/modules.html" />
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=4befc426"></script>
+      <script src="_static/documentation_options.js?v=7de89ed4"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -741,12 +741,15 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.applyTwist"><code class="docutils literal notranslate"><span class="pre">applyTwist()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.apply_rotation"><code class="docutils literal notranslate"><span class="pre">apply_rotation()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.apply_reflection"><code class="docutils literal notranslate"><span class="pre">apply_reflection()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.apply_translation"><code class="docutils literal notranslate"><span class="pre">apply_translation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.center"><code class="docutils literal notranslate"><span class="pre">center()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.rotate_to_align"><code class="docutils literal notranslate"><span class="pre">rotate_to_align()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.replicate_by_rotation"><code class="docutils literal notranslate"><span class="pre">replicate_by_rotation()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.replicate_by_reflection"><code class="docutils literal notranslate"><span class="pre">replicate_by_reflection()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.remove_duplicates"><code class="docutils literal notranslate"><span class="pre">remove_duplicates()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.align_to_plane"><code class="docutils literal notranslate"><span class="pre">align_to_plane()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.z_height_nm"><code class="docutils literal notranslate"><span class="pre">z_height_nm()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.delete"><code class="docutils literal notranslate"><span class="pre">delete()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyNanoMatBuilder.utils.crystals">Crystal &amp; Wulff Utilities (crystals.py)</a><ul>
@@ -838,6 +841,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defHelixShapeForJMol"><code class="docutils literal notranslate"><span class="pre">defHelixShapeForJMol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defSlabShapeForJMol"><code class="docutils literal notranslate"><span class="pre">defSlabShapeForJMol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defSlicingPlanesForJMol"><code class="docutils literal notranslate"><span class="pre">defSlicingPlanesForJMol()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defLocalOrderColorForJMol"><code class="docutils literal notranslate"><span class="pre">defLocalOrderColorForJMol()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -8302,7 +8306,7 @@ rod.clip_to_cylinder(diameter_nm=4.0, axis=[0, 0, 1])</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.applyTwist">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">applyTwist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_def</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'hkl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pitch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">helix_radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chirality</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RH'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.applyTwist" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">applyTwist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="p"><span class="pre">[</span></span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_def</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'hkl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth_nm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_profile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pitch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">helix_radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chirality</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RH'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.applyTwist" title="Link to this definition"></a></dt>
 <dd><p>Apply a Twist to the atomic positions of a NP along a given crystallographic axis.</p>
 <p>Each atomic plane perpendicular to the Twist axis is rotated by an angle
 that depends on its position along the axis, according to the chosen profile.
@@ -8338,6 +8342,17 @@ tensor (Gstar). Use for Crystal NPs built by pyNanoMatBuilder.</p>
 <code class="docutils literal notranslate"><span class="pre">helix</span></code> — not used.
 <code class="docutils literal notranslate"><span class="pre">custom</span></code> — scaling factor applied to custom_profile(z, L).
 Default is 1.0.</p></li>
+<li><p><strong>depth_nm</strong> (<em>float</em>) – Depth of the twisted surface cap, in nm, measured
+inward from the OUTERMOST atomic plane along the twist axis.
+Only atoms within this cap are twisted; deeper atoms (the core)
+stay fixed. The twist angle grows from 0 at the cap boundary
+(continuous junction with the unrotated core) to its full value
+at the surface, following the chosen <cite>profile</cite> and <cite>rate</cite>.
+SPECIAL VALUE: depth_nm = 0.0 (default) means NO depth limit —
+the whole object is twisted (the original behaviour). A small
+positive value (e.g. 0.5 nm) twists only a thin surface cap.
+Used to apply a per-facet surface twist by calling applyTwist
+once per facet, with axis = the facet normal.</p></li>
 <li><p><strong>profile</strong> (<em>str</em>) – Twist profile along the axis. Options:
 <code class="docutils literal notranslate"><span class="pre">linear</span></code> — angle(z) = rate * z.
 <code class="docutils literal notranslate"><span class="pre">sinusoidal</span></code> — angle(z) = rate * sin(2π * z / L).
@@ -8457,6 +8472,69 @@ d is the signed distance from the origin. Default is 0.</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.apply_translation">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">apply_translation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vector_def</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cart'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.apply_translation" title="Link to this definition"></a></dt>
+<dd><p>Translate self.NP by a vector. Also updates all truncation planes
+(orientation unchanged, only their distance d to the origin shifts).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vector</strong> (<em>array-like</em>) – Translation vector, as Miller indices [h,k,l]
+(vector_def=’hkl’, direction only — magnitude set by <cite>units</cite> and
+the vector norm) or Cartesian [x,y,z] (vector_def=’cart’).</p></li>
+<li><p><strong>vector_def</strong> (<em>str</em>) – ‘cart’ (default) or ‘hkl’. With ‘hkl’ the direction
+is converted to a Cartesian unit direction and scaled by the
+vector’s norm interpreted in <cite>units</cite>.</p></li>
+<li><p><strong>units</strong> (<em>str</em>) – ‘nm’ (default) or ‘angstrom’/’A’. Unit of the vector
+components (cart) or of the scaling length (hkl).</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is True.</p></li>
+<li><p><strong>postAnalyzis</strong> (<em>bool</em>) – Default None → self.postAnalyzis.</p></li>
+<li><p><strong>skipChiralityCalculation</strong> (<em>bool</em>) – Default None → self.skipChiralityCalculation.</p></li>
+<li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – Default None → self.skipSymmetryAnalyzis.</p></li>
+<li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – Default None → self.skipFacetInfo.</p></li>
+<li><p><strong>thresholdCoreSurface</strong> (<em>float</em>) – Default None → self.thresholdCoreSurface.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None. Updates self.NP in place.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p># Move the cube 4 nm up along z
+cube.apply_translation([0, 0, 4], vector_def=’cart’, units=’nm’)</p>
+<p># Shift by 5 Å along the [1,1,0] crystallographic direction
+NP.apply_translation([1, 1, 0], vector_def=’hkl’, units=’A’)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.center">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">center</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.center" title="Link to this definition"></a></dt>
+<dd><p>Recenter self.NP on its center of mass (move the COM to the origin).
+Also updates all truncation planes accordingly (their normals are
+unchanged; only their distance d shifts).</p>
+<p>Equivalent to a translation by -center_of_mass, exposed as a dedicated
+method because it is the most common framing operation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is True.</p></li>
+<li><p><strong>postAnalyzis</strong> (<em>bool</em>) – If True, runs propPostMake(). Default None → self.postAnalyzis.</p></li>
+<li><p><strong>skipChiralityCalculation</strong> (<em>bool</em>) – Default None → self.skipChiralityCalculation.</p></li>
+<li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – Default None → self.skipSymmetryAnalyzis.</p></li>
+<li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – Default None → self.skipFacetInfo.</p></li>
+<li><p><strong>thresholdCoreSurface</strong> (<em>float</em>) – Default None → self.thresholdCoreSurface.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None. Updates self.NP in place.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p># Recenter after a sequence of edits done with recenter=False
+cube.center()</p>
 </dd></dl>
 
 <dl class="py function">
@@ -8611,6 +8689,50 @@ cone.align_to_plane(axis=[0, 0, 1], target=0.0)</p>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.delete">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ranges</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'delete'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recenter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.delete" title="Link to this definition"></a></dt>
+<dd><p>Remove or keep atoms of self.NP by element, 1-based index list, and/or
+1-based Jmol range string. Selection is by any combination of:
+- elements : symbol or list of symbols, e.g. “Au” or [“Au”, “Ag”]
+- indices  : 1-based index or list, e.g. 5 or [3, 7, 12] (Jmol convention)
+- ranges   : Jmol-style string, e.g. “1-20,55,90,100-147”
+The three selections are UNIONED into the set of “designated” atoms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – pyNMBcore object. self.NP is modified in place.</p></li>
+<li><p><strong>elements</strong> (<em>str</em><em> or </em><em>list</em>) – chemical symbol(s) to select. Accepts a
+single symbol (‘Au’) or a list ([‘Au’, ‘Ag’]).</p></li>
+<li><p><strong>indices</strong> (<em>int</em><em> or </em><em>list</em>) – 1-based atom index/indices to select. Accepts
+a single index (5) or a list ([3, 7, 12]).</p></li>
+<li><p><strong>ranges</strong> (<em>str</em>) – Jmol-style 1-based selection, e.g. ‘1-20,55,100-147’
+(inclusive ranges ‘a-b’ and single atoms, comma-separated).</p></li>
+<li><p><strong>mode</strong> (<em>str</em>) – ‘delete’ (remove designated atoms, keep the rest) or
+‘keep’ (keep only the designated atoms). Default ‘delete’.</p></li>
+<li><p><strong>recenter</strong> (<em>bool</em>) – If True, recenters self.NP on its center of mass
+afterwards (default). Set to False when chaining several edits
+in a fixed reference frame; recenter manually once at the end:
+NP.NP.positions -= NP.NP.get_center_of_mass()</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is False.</p></li>
+<li><p><strong>postAnalyzis</strong> (<em>bool</em>) – If True, prints additional NP information.</p></li>
+<li><p><strong>skipChiralityCalculation</strong> (<em>bool</em>) – If True, skips the calculation of
+the OPD (Osipov-Pickup-Dunmur) chirality index.</p></li>
+<li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – If True, skips the symmetry analysis.</p></li>
+<li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – If True, skips the external-facet info calculation.</p></li>
+<li><p><strong>thresholdCoreSurface</strong> (<em>float</em>) – Threshold used to distinguish core from
+surface atoms.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>indices and ranges follow the Jmol convention (first atom = 1).
+The three selectors (elements, indices, ranges) are UNIONED.
+Updates self.NP, self.nAtoms and self.cog in place. Does not return.</p>
+</div>
 </dd></dl>
 
 </section>
@@ -9380,28 +9502,51 @@ directory and recreate it. Default is False.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.energy.optimize">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.energy.</span></span><span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calculator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'EMT'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'QN'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fthreshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.energy.optimize" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.energy.</span></span><span class="sig-name descname"><span class="pre">optimize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calculator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'EMT'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'QN'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fthreshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traj_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xyz_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eam_potential</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eam_form</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.energy.optimize" title="Link to this definition"></a></dt>
 <dd><p>Optimize the geometry of an atomic system using various energy calculators and geometry optimization algorithms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>ase.Atoms</em>) – Atomic system to optimize.</p></li>
-<li><p><strong>saveCoords</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, saves the optimized coordinates.</p></li>
-<li><p><strong>pathway</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to save the trajectory and final structure.</p></li>
-<li><p><strong>fthreshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Convergence threshold for forces (in eV/Å).</p></li>
-<li><p><strong>noOutput</strong> (<em>bool</em>) – if True, do not print the properties of the final geometry (default is False)</p></li>
+<li><p><strong>calculator</strong> (<em>str</em><em>, </em><em>optional</em>) – Energy calculator to use. Supported values are ‘EMT’
+(ase EMT calculator) and ‘EAM’ (ase EAM calculator). Default is ‘EMT’.</p></li>
+<li><p><strong>optimizer</strong> (<em>str</em><em>, </em><em>optional</em>) – Geometry optimization algorithm. Supported value is ‘QN’
+(ase Quasi Newton). Default is ‘QN’.</p></li>
+<li><p><strong>fthreshold</strong> (<em>float</em><em>, </em><em>optional</em>) – Convergence threshold for forces (in eV/Å). Default is 0.1.</p></li>
+<li><p><strong>traj_file</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em>, </em><em>optional</em>) – Path to an ASE trajectory file (.traj,
+binary format) in which all intermediate geometries of the optimization are saved.
+If None, no trajectory is written. Default is None.</p></li>
+<li><p><strong>xyz_file</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em>, </em><em>optional</em>) – Path to a multi-frame .xyz file in which all
+intermediate geometries are appended at each optimization step (via an observer
+attached to the optimizer). Any existing file at this path is overwritten. If None,
+no xyz file is written. Default is None.</p></li>
+<li><p><strong>eam_potential</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to the EAM potential file. Required when
+calculator=’EAM’, ignored otherwise. Default is None.</p></li>
+<li><p><strong>eam_form</strong> (<em>str</em><em>, </em><em>optional</em>) – Explicit EAM file format (‘eam’, ‘alloy’, or ‘fs’). If None,
+ASE auto-detects the format from the file content. Only used when calculator=’EAM’.
+Default is None.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, do not print the title banner nor the properties of
+the final geometry. Default is False.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="simple">
 <dt>Creates:</dt><dd><p>self.NP_opt (ase.Atoms): Optimized atomic model.</p>
 </dd>
-<dt>The following properties are also created, by calling propPostMake()</dt><dd><p>self.cog_opt
+<dt>The following properties are also created, by calling propPostMake():</dt><dd><p>self.cog_opt
 self.vertices_opt
 self.simplices_opt
 self.neighbors_opt
 self.equations_opt
-jMolCS_opt</p>
+self.jMolCS_opt</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong> – If the requested calculator or optimizer is not supported, if calculator=’EAM’
+    but no eam_potential is provided, or if the potential does not cover all elements in the model.</p></li>
+<li><p><strong>FileNotFoundError</strong> – If calculator=’EAM’ and the eam_potential file does not exist.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -10262,6 +10407,38 @@ one per plane. If None, a default palette is used.</p></li>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Jmol command string.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.external_pgm.defLocalOrderColorForJMol">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">defLocalOrderColorForJMol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descriptor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cnp'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'turbo'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_optimized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.defLocalOrderColorForJMol" title="Link to this definition"></a></dt>
+<dd><p>Generate a Jmol command that writes a per-atom local-order descriptor
+(CNP or Steinhardt q_l) into an atom property and colours the atoms by it.</p>
+<p>The descriptor must already be stored on the object (self.cnp / self.q{l},
+with the _opt suffix for the optimized structure). Run
+common_neighbour_parameter() or steinhardt_q() first.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>descriptor</strong> (<em>str</em>) – ‘cnp’ (default) or ‘q’ for Steinhardt q_l.</p></li>
+<li><p><strong>l</strong> (<em>int</em>) – Harmonic degree for descriptor=’q’. Default 6.</p></li>
+<li><p><strong>color</strong> (<em>str</em>) – Jmol colour scheme name. Default ‘turbo’.
+(color schemes known by Jmol: batlow,cividis,kry,thermal,viridis,inferno,magma,plasma,turbo)</p></li>
+<li><p><strong>is_optimized</strong> (<em>bool</em><em> or </em><em>None</em>) – Target structure. None -&gt; self.is_optimized.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Jmol command string (also stored in self.jMol_{descriptor}</dt><dd><p>(e.g. self.jMol_cnp, self.jMol_q6, with the _opt suffix for the optimized structure) ).</p>
+</dd>
+</dl>
+</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>

@@ -277,6 +277,7 @@ pyNanoMatBuilder/resources/figs/pbpy-C.png
 pyNanoMatBuilder/resources/figs/pbpy.base64
 pyNanoMatBuilder/resources/figs/pbpy.png
 pyNanoMatBuilder/resources/figs/pbpy.xyz
+pyNanoMatBuilder/resources/figs/pnmbAvailableStructures.pdf
 pyNanoMatBuilder/resources/figs/pnmbAvailableStructures.png
 pyNanoMatBuilder/resources/figs/pnmbAvailableStructures.svg
 pyNanoMatBuilder/resources/figs/pppd-C.png

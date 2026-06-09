@@ -107,7 +107,14 @@ def applySlicing(self,
             NP.NP.positions -= NP.NP.get_center_of_mass()
         noOutput (bool): If True, suppresses all printed output.
             Default is False.
-
+        postAnalyzis (bool): If True, prints additional NP information.
+        skipChiralityCalculation (bool): If True, skips the calculation of
+            the OPD (Osipov-Pickup-Dunmur) chirality index.
+        skipSymmetryAnalyzis (bool): If True, skips the symmetry analysis.
+        skipFacetInfo (bool): If True, skips the external-facet info calculation.
+        thresholdCoreSurface (float): Threshold used to distinguish core from
+            surface atoms.
+            
     Note:
         Updates self.NP, self.nAtoms and self.cog in place.
         self.trPlanes_Slices is updated with all applied truncation planes.
@@ -463,6 +470,7 @@ def cut_by(self,
             rotB=None,
             mode: str = 'hull',
             threshold: float = 0.8,
+            recenter: bool=True,
             noOutput: bool = False,
             postAnalyzis: bool = None,
             skipChiralityCalculation: bool = None,
@@ -501,7 +509,20 @@ def cut_by(self,
         mode (str): 'hull' (default) or 'atoms'.
         threshold (float): Only for mode='atoms'. Atoms of A closer than
             threshold * Rnn_A to any atom of B are removed. Default is 0.8.
+        recenter (bool): If True, recenters self.NP on its center of mass
+            after slicing (default). Set to False when calling applySlicing
+            multiple times in sequence (e.g. applying the same pattern on
+            all 6 faces of a cube) to avoid shifting the reference frame
+            between calls. In that case, recenter manually once at the end:
+            NP.NP.positions -= NP.NP.get_center_of_mass()
         noOutput (bool): If True, suppresses output. Default is False.
+        postAnalyzis (bool): If True, prints additional NP information.
+        skipChiralityCalculation (bool): If True, skips the calculation of
+            the OPD (Osipov-Pickup-Dunmur) chirality index.
+        skipSymmetryAnalyzis (bool): If True, skips the symmetry analysis.
+        skipFacetInfo (bool): If True, skips the external-facet info calculation.
+        thresholdCoreSurface (float): Threshold used to distinguish core from
+            surface atoms.
 
     Note:
         Updates self.NP, self.nAtoms and self.cog in place.
@@ -616,7 +637,8 @@ def cut_by(self,
     self.trPlanes_Wulff = None
     self.trPlanes_opt   = None
     # --- Recenter at origin ---
-    self.NP.positions -= self.NP.get_center_of_mass()
+    if recenter:
+        self.NP.positions -= self.NP.get_center_of_mass()
 
     # --- Update attributes ---
     self.nAtoms = len(self.NP)
@@ -656,12 +678,13 @@ def union_with(self,
                 rotB=None,
                 mode: str = 'hull',
                 threshold: float = 0.8,
-                 noOutput: bool = False,
-                 postAnalyzis: bool = None,
-                 skipChiralityCalculation: bool = None,
-                 skipSymmetryAnalyzis: bool = None,
-                 skipFacetInfo: bool = None,
-                 thresholdCoreSurface: float = None,
+                recenter: bool=True,
+                noOutput: bool = False,
+                postAnalyzis: bool = None,
+                skipChiralityCalculation: bool = None,
+                skipSymmetryAnalyzis: bool = None,
+                skipFacetInfo: bool = None,
+                thresholdCoreSurface: float = None,
              ):
     """
     Add NP_B to self.NP (object A), removing overlapping atoms closer
@@ -687,7 +710,20 @@ def union_with(self,
         mode (str): 'hull' (default) or 'atoms'.
         threshold (float): Atoms of A closer than threshold * Rnn_A to any
             atom of B are removed before merging. Default is 0.8.
+        recenter (bool): If True, recenters self.NP on its center of mass
+            after slicing (default). Set to False when calling applySlicing
+            multiple times in sequence (e.g. applying the same pattern on
+            all 6 faces of a cube) to avoid shifting the reference frame
+            between calls. In that case, recenter manually once at the end:
+            NP.NP.positions -= NP.NP.get_center_of_mass()
         noOutput (bool): If True, suppresses output. Default is False.
+        postAnalyzis (bool): If True, prints additional NP information.
+        skipChiralityCalculation (bool): If True, skips the calculation of
+            the OPD (Osipov-Pickup-Dunmur) chirality index.
+        skipSymmetryAnalyzis (bool): If True, skips the symmetry analysis.
+        skipFacetInfo (bool): If True, skips the external-facet info calculation.
+        thresholdCoreSurface (float): Threshold used to distinguish core from
+            surface atoms.
 
     Note:
         Updates self.NP, self.nAtoms and self.cog in place.
@@ -783,7 +819,8 @@ def union_with(self,
     self.trPlanes_Wulff = None
     self.trPlanes_opt   = None
     # --- Recenter at origin ---
-    self.NP.positions -= self.NP.get_center_of_mass()
+    if recenter: 
+        self.NP.positions -= self.NP.get_center_of_mass()
     
     self.cog    = self.NP.get_center_of_mass()
     self._flush_stale_data(shape_update="_plus")
@@ -821,6 +858,7 @@ def intersect_with(self,
                     rotB=None,
                     mode: str = 'hull',
                     threshold: float = 0.8,
+                    recenter: bool=True,
                     noOutput: bool = False,
                     postAnalyzis: bool = None,
                     skipChiralityCalculation: bool = None,
@@ -854,7 +892,20 @@ def intersect_with(self,
         mode (str): 'hull' (default) or 'atoms'.
         threshold (float): Only for mode='atoms'. Atoms of A closer than
             threshold * Rnn_A to any atom of B are kept. Default is 0.8.
+        recenter (bool): If True, recenters self.NP on its center of mass
+            after slicing (default). Set to False when calling applySlicing
+            multiple times in sequence (e.g. applying the same pattern on
+            all 6 faces of a cube) to avoid shifting the reference frame
+            between calls. In that case, recenter manually once at the end:
+            NP.NP.positions -= NP.NP.get_center_of_mass()
         noOutput (bool): If True, suppresses output. Default is False.
+        postAnalyzis (bool): If True, prints additional NP information.
+        skipChiralityCalculation (bool): If True, skips the calculation of
+            the OPD (Osipov-Pickup-Dunmur) chirality index.
+        skipSymmetryAnalyzis (bool): If True, skips the symmetry analysis.
+        skipFacetInfo (bool): If True, skips the external-facet info calculation.
+        thresholdCoreSurface (float): Threshold used to distinguish core from
+            surface atoms.
 
     Note:
         Updates self.NP, self.nAtoms and self.cog in place.
@@ -954,7 +1005,8 @@ def intersect_with(self,
     self.trPlanes_Wulff = None
     self.trPlanes_opt   = None
     # --- Recenter at origin ---
-    self.NP.positions -= self.NP.get_center_of_mass()
+    if recenter:
+        self.NP.positions -= self.NP.get_center_of_mass()
 
     # --- Update attributes ---
     self.nAtoms = len(self.NP)
@@ -994,6 +1046,7 @@ def flush_inlay_with(self,
                     rotB=None,
                     mode: str = 'hull',
                     threshold: float = 0.8,
+                    recenter: bool=True,
                     noOutput: bool = False,
                     postAnalyzis: bool = None,
                     skipChiralityCalculation: bool = None,
@@ -1030,7 +1083,20 @@ def flush_inlay_with(self,
         mode (str): 'hull' (default) or 'atoms'.
         threshold (float): Distance threshold in units of Rnn for overlap
             detection and deduplication. Default is 0.8.
+        recenter (bool): If True, recenters self.NP on its center of mass
+            after slicing (default). Set to False when calling applySlicing
+            multiple times in sequence (e.g. applying the same pattern on
+            all 6 faces of a cube) to avoid shifting the reference frame
+            between calls. In that case, recenter manually once at the end:
+            NP.NP.positions -= NP.NP.get_center_of_mass()
         noOutput (bool): If True, suppresses output. Default is False.
+        postAnalyzis (bool): If True, prints additional NP information.
+        skipChiralityCalculation (bool): If True, skips the calculation of
+            the OPD (Osipov-Pickup-Dunmur) chirality index.
+        skipSymmetryAnalyzis (bool): If True, skips the symmetry analysis.
+        skipFacetInfo (bool): If True, skips the external-facet info calculation.
+        thresholdCoreSurface (float): Threshold used to distinguish core from
+            surface atoms.
 
     Note:
         Updates self.NP, self.nAtoms and self.cog in place.
@@ -1137,7 +1203,8 @@ def flush_inlay_with(self,
 
     # --- Update attributes ---
     self.NP       = merged
-    self.NP.positions -= self.NP.get_center_of_mass()
+    if recenter:
+        self.NP.positions -= self.NP.get_center_of_mass()
 
     self.nAtoms   = len(self.NP)
     self.cog      = self.NP.get_center_of_mass()

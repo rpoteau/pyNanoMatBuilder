@@ -65,6 +65,17 @@ class pyNMBcore:
         self.area_Hull = None
         self.opd_index = None
         self.shape = None
+        self.cnp = None
+        self.cnp_mean = None
+        self.q4 = None
+        self.q4_mean = None
+        self.q6 = None
+        self.q6_mean = None
+        self.jMol_cnp = None
+        self.jMol_q4 = None
+        self.jMol_q6 = None
+        self.NP_select = None
+        self.NP_select_mask = None
 
         self.NP_opt = None
         self.NPcs_opt = None
@@ -85,10 +96,23 @@ class pyNMBcore:
         self.vol_Hull_opt = None
         self.area_Hull_opt = None
         self.opd_opt = None
+        self.cnp_opt = None
+        self.cnp_mean_opt = None
+        self.q4_opt = None
+        self.q4_mean_opt = None
+        self.q6_opt = None
+        self.q6_mean_opt = None
+        self.jMol_cnp_opt = None
+        self.jMol_q4_opt = None
+        self.jMol_q6_opt = None
+        self.NP_select_opt = None
+        self.NP_select_mask_opt = None
         
         self.ellipsoid = {} #two keys: "initial structure" or "optimized structure"
 
         self.chirality = "achiral"
+
+        self._local_order_decimals = None
 
         self.trPlanes_Wulff = None
         self.trPlanes_Slices = None
@@ -99,7 +123,10 @@ class pyNMBcore:
         self.Gstar = None
         self.ucMatrix = None
         
-    def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1, noOutput=False):
+    def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1,
+                 traj_file=None, xyz_file=None,
+                 eam_potential=None, eam_form=None, 
+                 noOutput=False):
         """
         Optimize the NP geometry using an ASE calculator.
         See utils/energy.optimize for full documentation.
@@ -111,7 +138,7 @@ class pyNMBcore:
             noOutput (bool):if True, do not print the properties of the final geometry (default is False).
         """
         from .utils.energy import optimize
-        return optimize(self, calculator, optimizer, fthreshold, noOutput)
+        return optimize(self, calculator, optimizer, fthreshold, traj_file, xyz_file, eam_potential, eam_form, noOutput)
     
     def _update_sasview_dims_from_spheres(self, noOutput = None):
         """
@@ -419,7 +446,8 @@ class pyNMBcore:
             color=color
         )
 
-    def applyTwist(self, axis=[0,0,1], axis_def='hkl', rate: float = 1.0, 
+    def applyTwist(self, axis=[0,0,1], axis_def='hkl', rate: float = 1.0,
+                 depth_nm: float = 0.0,
                  profile: str = 'linear', custom_profile=None,
                  pitch: float = None, helix_radius: float = None,
                  chirality: str = 'RH',
@@ -430,27 +458,34 @@ class pyNMBcore:
     
         Args:
             axis (array-like): Twist axis in crystallographic [h, k, l] or
-                               Cartesian [x, y, z] coordinates depending on axis_def.
+                Cartesian [x, y, z] coordinates depending on axis_def.
             axis_def (str): Coordinate system of axis: 'hkl' (default) or 'cart'.
             rate (float): Twist rate in degrees per Å (linear, helical), peak
-                          amplitude in degrees (sinusoidal, gaussian), or scaling
-                          factor (custom). Not used for 'helix'. Default is 1.0.
+                amplitude in degrees (sinusoidal, gaussian), or scaling
+                factor (custom). Not used for 'helix'. Default is 1.0.
+            depth_nm (float): Thickness (nm) of the twisted surface cap,
+                measured inward from the outermost plane along the
+                axis. Only the cap is twisted; the core stays fixed,
+                with the angle growing from 0 at the cap boundary to
+                full value at the surface. depth_nm = 0.0 (default)
+                = no limit (whole object twisted). Small positive
+                values give a per-facet surface twist.
             profile (str): Twist profile: 'linear', 'sinusoidal', 'gaussian',
-                           'helical', 'helix', or 'custom'. Default is 'linear'.
+                'helical', 'helix', or 'custom'. Default is 'linear'.
             custom_profile (callable, optional): User-defined function f(z, L) -> float,
-                           required when profile='custom'.
+                required when profile='custom'.
             pitch (float, optional): Helix pitch in Å/turn, required when
-                           profile='helical' or 'helix'.
+                profile='helical' or 'helix'.
             helix_radius (float, optional): Radius of the helical path in Å,
-                           required when profile='helix'.
+                required when profile='helix'.
             chirality (str): Handedness of the Twist or helix: 'RH' (Right-Handed,
-                         default) or 'LH' (Left-Handed, mirror image).
+                default) or 'LH' (Left-Handed, mirror image).
             noOutput (bool): If True, suppresses output. Default is self.noOutput.
         """
         from .utils.geometry import applyTwist
         if noOutput is None:
             noOutput = self.noOutput
-        applyTwist(self, axis, axis_def, rate, profile, custom_profile, pitch, helix_radius, chirality, noOutput)
+        applyTwist(self, axis, axis_def, rate, depth_nm, profile, custom_profile, pitch, helix_radius, chirality, noOutput)
 
     def defHelixShapeForJMol(self, n_rings=50, n_sides=12, noOutput=True):
         """
@@ -631,14 +666,14 @@ class pyNMBcore:
                             skipFacetInfo=skipFacetInfo,
                             thresholdCoreSurface=thresholdCoreSurface)
 
-    def cut_by(self, NP_B, cogB=None, rotB=None, mode='hull', threshold=0.8,
+    def cut_by(self, NP_B, cogB=None, rotB=None, mode='hull', threshold=0.8, recenter=True,
                noOutput=None, postAnalyzis=None, skipChiralityCalculation=None,
                skipSymmetryAnalyzis=None, skipFacetInfo=None, thresholdCoreSurface=None):
         """Cut self.NP by NP_B — keeps atoms of A outside B. See utils.csg.cut_by for full documentation."""
         from .utils.csg import cut_by
         if noOutput is None: noOutput = self.noOutput
         return cut_by(self, NP_B, cogB=cogB, rotB=rotB, mode=mode,
-                      threshold=threshold, noOutput=noOutput,
+                      threshold=threshold, recenter=recenter, noOutput=noOutput,
                       postAnalyzis=postAnalyzis,
                       skipChiralityCalculation=skipChiralityCalculation,
                       skipSymmetryAnalyzis=skipSymmetryAnalyzis,
@@ -646,14 +681,14 @@ class pyNMBcore:
                       thresholdCoreSurface=thresholdCoreSurface)
 
 
-    def union_with(self, NP_B, cogB=None, rotB=None, mode='hull', threshold=0.8,
+    def union_with(self, NP_B, cogB=None, rotB=None, mode='hull', threshold=0.8, recenter=True,
                    noOutput=None, postAnalyzis=None, skipChiralityCalculation=None,
                    skipSymmetryAnalyzis=None, skipFacetInfo=None, thresholdCoreSurface=None):
         """Union of self.NP and NP_B — keeps all atoms of A and B. See utils.csg.union_with for full documentation."""
         from .utils.csg import union_with
         if noOutput is None: noOutput = self.noOutput
         return union_with(self, NP_B, cogB=cogB, rotB=rotB, mode=mode,
-                          threshold=threshold, noOutput=noOutput,
+                          threshold=threshold, recenter=recenter, noOutput=noOutput,
                           postAnalyzis=postAnalyzis,
                           skipChiralityCalculation=skipChiralityCalculation,
                           skipSymmetryAnalyzis=skipSymmetryAnalyzis,
@@ -661,14 +696,14 @@ class pyNMBcore:
                           thresholdCoreSurface=thresholdCoreSurface)
     
     
-    def intersect_with(self, NP_B, cogB=None, rotB=None, mode='hull', threshold=0.8,
+    def intersect_with(self, NP_B, cogB=None, rotB=None, mode='hull', threshold=0.8, recenter=True,
                        noOutput=None, postAnalyzis=None, skipChiralityCalculation=None,
                        skipSymmetryAnalyzis=None, skipFacetInfo=None, thresholdCoreSurface=None):
         """Intersection of self.NP and NP_B — keeps atoms inside both. See utils.csg.intersect_with for full documentation."""
         from .utils.csg import intersect_with
         if noOutput is None: noOutput = self.noOutput
         return intersect_with(self, NP_B, cogB=cogB, rotB=rotB, mode=mode,
-                              threshold=threshold, noOutput=noOutput,
+                              threshold=threshold, recenter=recenter, noOutput=noOutput,
                               postAnalyzis=postAnalyzis,
                               skipChiralityCalculation=skipChiralityCalculation,
                               skipSymmetryAnalyzis=skipSymmetryAnalyzis,
@@ -676,14 +711,14 @@ class pyNMBcore:
                               thresholdCoreSurface=thresholdCoreSurface)
     
     
-    def flush_inlay_with(self, NP_B, cogB=None, rotB=None, mode='hull', threshold=0.8,
+    def flush_inlay_with(self, NP_B, cogB=None, rotB=None, mode='hull', threshold=0.8, recenter=True,
                          noOutput=None, postAnalyzis=None, skipChiralityCalculation=None,
                          skipSymmetryAnalyzis=None, skipFacetInfo=None, thresholdCoreSurface=None):
         """Flush inlay of NP_B into self.NP. See utils.csg.flush_inlay_with for full documentation."""
         from .utils.csg import flush_inlay_with
         if noOutput is None: noOutput = self.noOutput
         return flush_inlay_with(self, NP_B, cogB=cogB, rotB=rotB, mode=mode,
-                                threshold=threshold, noOutput=noOutput,
+                                threshold=threshold, recenter=recenter, noOutput=noOutput,
                                 postAnalyzis=postAnalyzis,
                                 skipChiralityCalculation=skipChiralityCalculation,
                                 skipSymmetryAnalyzis=skipSymmetryAnalyzis,
@@ -762,7 +797,25 @@ class pyNMBcore:
                                 skipSymmetryAnalyzis=skipSymmetryAnalyzis,
                                 skipFacetInfo=skipFacetInfo,
                                 thresholdCoreSurface=thresholdCoreSurface)
-    
+    def apply_translation(self, vector, vector_def='cart', units='nm',
+                          noOutput=None, postAnalyzis=None,
+                          skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
+                          skipFacetInfo=None, thresholdCoreSurface=None):
+        """
+        Translate self.NP by a vector (Cartesian or crystallographic direction).
+        Also updates all truncation planes. See utils.geometry.apply_translation
+        for full documentation.
+        """
+        from .utils.geometry import apply_translation
+        if noOutput is None:
+            noOutput = self.noOutput
+        apply_translation(self, vector, vector_def=vector_def, units=units,
+                          noOutput=noOutput, postAnalyzis=postAnalyzis,
+                          skipChiralityCalculation=skipChiralityCalculation,
+                          skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                          skipFacetInfo=skipFacetInfo,
+                          thresholdCoreSurface=thresholdCoreSurface)
+        
     def rotate_to_align(self, axis, target_axis=[0,0,1], axis_def='hkl',
                         noOutput=True, postAnalyzis=None,
                         skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
@@ -807,6 +860,19 @@ class pyNMBcore:
                                        skipFacetInfo=skipFacetInfo,
                                        thresholdCoreSurface=thresholdCoreSurface)
 
+    def center(self, noOutput=None, postAnalyzis=None,
+               skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
+               skipFacetInfo=None, thresholdCoreSurface=None):
+        """Recenter self.NP on its center of mass. See utils.geometry.center."""
+        from .utils.geometry import center
+        if noOutput is None:
+            noOutput = self.noOutput
+        center(self, noOutput=noOutput, postAnalyzis=postAnalyzis,
+               skipChiralityCalculation=skipChiralityCalculation,
+               skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+               skipFacetInfo=skipFacetInfo,
+               thresholdCoreSurface=thresholdCoreSurface)
+
     def remove_duplicates(self, tol=0.1, noOutput=None):
         """
         Remove duplicate atoms from self.NP — atoms closer than tol Å are
@@ -822,6 +888,23 @@ class pyNMBcore:
         from .utils.geometry import remove_duplicates
         if noOutput is None: noOutput = self.noOutput
         return remove_duplicates(self, tol=tol, noOutput=noOutput)
+
+    def delete(self, elements=None, indices=None, ranges=None, mode='delete',
+               recenter=None, noOutput=None, postAnalyzis=None,
+               skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
+               skipFacetInfo=None, thresholdCoreSurface=None):
+        """Remove or keep atoms by element, 1-based index list, and/or Jmol
+        range string. See utils.edit.delete for full documentation."""
+        from .utils.geometry import delete
+        if noOutput is None: noOutput = self.noOutput
+        if recenter is None: recenter = True
+        return delete(self, elements=elements, indices=indices, ranges=ranges,
+                      mode=mode, recenter=recenter, noOutput=noOutput,
+                      postAnalyzis=postAnalyzis,
+                      skipChiralityCalculation=skipChiralityCalculation,
+                      skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                      skipFacetInfo=skipFacetInfo,
+                      thresholdCoreSurface=thresholdCoreSurface)
 
 ######################################### load external file
     @classmethod
@@ -913,3 +996,75 @@ class pyNMBcore:
             is_optimized=False,
         )
         return instance
+
+    # ------------------------------------------------------------------ #
+    #  Local-order descriptors (CNP, Steinhardt q_l)                      #
+    #  Thin wrappers — on-demand analysis, NOT wired into propPostMake.   #
+    # ------------------------------------------------------------------ #
+    def common_neighbour_parameter(self, Xnn, noOutput=None,
+                                   store=True, is_optimized=None):
+        """Per-atom Common Neighbour Parameter (CNP). See utils.prop.common_neighbour_parameter."""
+        from .utils.local_descriptors import common_neighbour_parameter
+        if noOutput is None:
+            noOutput = self.noOutput
+        return common_neighbour_parameter(self, Xnn, noOutput=noOutput,
+                                          store=store, is_optimized=is_optimized)
+
+    def steinhardt_q(self, Xnn, l=6, noOutput=None, store=True,
+                     is_optimized=None):
+        """Per-atom Steinhardt bond-orientational order q_l. See utils.prop.steinhardt_q."""
+        from .utils.local_descriptors import steinhardt_q
+        if noOutput is None:
+            noOutput = self.noOutput
+        return steinhardt_q(self, Xnn, l=l, noOutput=noOutput,
+                            store=store, is_optimized=is_optimized)
+
+    def plot_local_order(self, descriptor='cnp', Xnn=None, l=6,
+                         is_optimized=None, save_path=None, color='turbo',
+                         bins=50, noOutput=None):
+        """Histogram + per-atom colour map of a local-order descriptor. See utils.prop.plot_local_order."""
+        from .utils.local_descriptors import plot_local_order
+        if noOutput is None:
+            noOutput = self.noOutput
+        return plot_local_order(self, descriptor=descriptor, Xnn=Xnn, l=l,
+                               is_optimized=is_optimized, save_path=save_path,
+                               color=color, bins=bins, noOutput=noOutput)
+
+    def defLocalOrderColorForJMol(self, descriptor='cnp', l=6, color='turbo',
+                                  is_optimized=None, noOutput=None):
+        """Jmol command colouring atoms by a local-order descriptor. See utils.external_pgm.defLocalOrderColorForJMol."""
+        from .utils.external_pgm import defLocalOrderColorForJMol
+        if noOutput is None:
+            noOutput = self.noOutput
+        return defLocalOrderColorForJMol(self, descriptor=descriptor, l=l,
+                                         color=color, is_optimized=is_optimized,
+                                         noOutput=noOutput)
+
+    def local_order_populations(self, descriptor='cnp', l=6, decimals=1,
+                                color='turbo', is_optimized=None, noOutput=None):
+        """Group atoms by local-order descriptor value into indexed, coloured populations. See utils.prop.local_order_populations."""
+        from .utils.local_descriptors import local_order_populations
+        if noOutput is None:
+            noOutput = self.noOutput
+        return local_order_populations(self, descriptor=descriptor, l=l,
+                                       decimals=decimals, color=color,
+                                       is_optimized=is_optimized, noOutput=noOutput)
+
+    def select_by_local_order(self, indices, descriptor='cnp', l=6,
+                              is_optimized=None, noOutput=None):
+        """Build self.NP_select from one or more local-order populations by index. See utils.prop.select_by_local_order."""
+        from .utils.local_descriptors import select_by_local_order
+        if noOutput is None:
+            noOutput = self.noOutput
+        return select_by_local_order(self, indices, descriptor=descriptor, l=l,
+                                     is_optimized=is_optimized, noOutput=noOutput)
+
+    def plot_q4q6_map(self, Xnn=None, is_optimized=None, save_path=None,
+                      aggregate=True, decimals=3, sc_domain=False, noOutput=None):
+        """Plot the Steinhardt (q4,q6) map: ideal references + per-atom data. See utils.prop.plot_q4q6_map."""
+        from .utils.local_descriptors import plot_q4q6_map
+        if noOutput is None:
+            noOutput = self.noOutput
+        return plot_q4q6_map(self, Xnn=Xnn, is_optimized=is_optimized,
+                             save_path=save_path, aggregate=aggregate,
+                             decimals=decimals, sc_domain=sc_domain, noOutput=noOutput)

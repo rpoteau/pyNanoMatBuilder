@@ -149,72 +149,142 @@ def optimizeEMT(model: Atoms, saveCoords=True, pathway="./coords/model", fthresh
     chrono.chrono_show()
     return model
 
-def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1, noOutput=False):
+def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1,
+             traj_file=None, xyz_file=None,
+             eam_potential=None, eam_form=None, noOutput=False):
     """
     Optimize the geometry of an atomic system using various energy calculators and geometry optimization algorithms.
 
     Args:
-        model (ase.Atoms): Atomic system to optimize.
-        saveCoords (bool, optional): If True, saves the optimized coordinates.
-        pathway (str, optional): Path to save the trajectory and final structure.
-        fthreshold (float, optional): Convergence threshold for forces (in eV/Å).
-        noOutput (bool):if True, do not print the properties of the final geometry (default is False)
+        calculator (str, optional): Energy calculator to use. Supported values are 'EMT'
+            (ase EMT calculator) and 'EAM' (ase EAM calculator). Default is 'EMT'.
+        optimizer (str, optional): Geometry optimization algorithm. Supported value is 'QN'
+            (ase Quasi Newton). Default is 'QN'.
+        fthreshold (float, optional): Convergence threshold for forces (in eV/Å). Default is 0.1.
+        traj_file (str or pathlib.Path, optional): Path to an ASE trajectory file (.traj,
+            binary format) in which all intermediate geometries of the optimization are saved.
+            If None, no trajectory is written. Default is None.
+        xyz_file (str or pathlib.Path, optional): Path to a multi-frame .xyz file in which all
+            intermediate geometries are appended at each optimization step (via an observer
+            attached to the optimizer). Any existing file at this path is overwritten. If None,
+            no xyz file is written. Default is None.
+        eam_potential (str, optional): Path to the EAM potential file. Required when
+            calculator='EAM', ignored otherwise. Default is None.
+        eam_form (str, optional): Explicit EAM file format ('eam', 'alloy', or 'fs'). If None,
+            ASE auto-detects the format from the file content. Only used when calculator='EAM'.
+            Default is None.
+        noOutput (bool, optional): If True, do not print the title banner nor the properties of
+            the final geometry. Default is False.
 
     Creates:
         self.NP_opt (ase.Atoms): Optimized atomic model.
 
-    The following properties are also created, by calling propPostMake()
+    The following properties are also created, by calling propPostMake():
         self.cog_opt
         self.vertices_opt
         self.simplices_opt
         self.neighbors_opt
         self.equations_opt
-        jMolCS_opt
+        self.jMolCS_opt
+
+    Raises:
+        ValueError: If the requested calculator or optimizer is not supported, if calculator='EAM'
+            but no eam_potential is provided, or if the potential does not cover all elements in the model.
+        FileNotFoundError: If calculator='EAM' and the eam_potential file does not exist.
     """
-    from ase.io import write
-    from ase import Atoms
-    from ase.calculators.emt import EMT
+
     CALC = calculator.upper()
     OPT = optimizer.upper()
+
     if CALC == 'EMT':
         from ase.calculators.emt import EMT
         nrj = EMT()
-        nrj_txt = "ase EMT calculator" 
+        nrj_txt = "ase EMT calculator"
+    elif CALC == 'EAM':
+        from ase.calculators.eam import EAM
+        if eam_potential is None:
+            raise ValueError("calculator='EAM' requires eam_potential=<path to file>.")
+        if not os.path.isfile(eam_potential):
+            raise FileNotFoundError(f"EAM potential file not found: {eam_potential}")
+        eam_kwargs = {'potential': eam_potential}
+        if eam_form is not None:
+            eam_kwargs['form'] = eam_form
+        nrj = EAM(**eam_kwargs)
+        nrj_txt = f"ase EAM calculator ({os.path.basename(eam_potential)})"
     else:
         raise ValueError(f"Calculator '{calculator}' is not yet supported.")
+
     if OPT == 'QN':
         from ase.optimize import QuasiNewton
-        opt = QuasiNewton
         opt_txt = "ase Quasi Newton"
     else:
-        raise ValueError(f"'{optimizer}' geometry optimizer is not yet supported.")    
+        raise ValueError(f"'{optimizer}' geometry optimizer is not yet supported.")
+
     chrono = timer()
     chrono.chrono_start()
     if not noOutput:
-        centerTitle(f"{nrj_txt} & {opt_txt} algorithms for geometry optimization")
+        centerTitle(f"Geometry optimization")
+        centertxt(
+            "Optimization details", bgc='#007a7a', size='14', weight='bold'
+        )
+        n_atoms = len(self.NP)
+        print(f" - Calculator                 : {nrj_txt}")
+        print(f" - Optimizer                  : {opt_txt}")
+        print(f" - Number of atoms            : {n_atoms}")
+        if traj_file is not None:
+            print(f" - Trajectory will be saved to: {traj_file}")
+        if xyz_file is not None:
+            print(f" - XYZ frames will be saved to: {xyz_file}")
+    model = self.NP.copy()
+    model.set_pbc(False)
+    model.calc = nrj
+    e_initial = model.get_potential_energy()
+    fmax_initial = np.sqrt((model.get_forces()**2).sum(axis=1).max())
+    if not noOutput:
+        print(f" - Initial potential energy   : {e_initial:.1f} eV")
+        print(f" - Energy per atom            : {e_initial / n_atoms:.2f} eV/atom")
+        print(f" - Max residual force         : {fmax_initial:.2f} eV/Å  (threshold {fthreshold})")
+        print()
 
-    if CALC == 'EMT':
-        model = self.NP.copy()
-        full_diagnosticsEMT(model, verbose=False)
-        model.set_pbc(False)
-        model.calc = EMT()
-        model.get_potential_energy()
-    if OPT == "QN":
-        dyn = QuasiNewton(model, trajectory=None)
+
+    if OPT == 'QN':
+        dyn = QuasiNewton(model, trajectory=traj_file)
+        if xyz_file is not None:
+            from ase.io import write
+            from pathlib import Path
+            xyz_path = Path(xyz_file)
+            xyz_path.unlink(missing_ok=True)
+            def dump_xyz(atoms=model, fname=str(xyz_path)):
+                write(fname, atoms, append=True)
+            dyn.attach(dump_xyz, interval=1)
+        if not noOutput:
+            centertxt(
+                "Geometry optimization...", bgc='#007a7a', size='14', weight='bold'
+            )
         dyn.run(fmax=fthreshold)
+
+    if not noOutput:
+        print()
+        centertxt(
+            "Optimization summary", bgc='#007a7a', size='14', weight='bold'
+        )
+        e_final = model.get_potential_energy()
+        fmax_final = np.sqrt((model.get_forces()**2).sum(axis=1).max())
+        print(f" - Final potential energy     : {e_final:.1f} eV")
+        print(f" - Energy per atom            : {e_final / n_atoms:.2f} eV/atom")
+        print(f" - Max residual force         : {fmax_final:.2f} eV/Å  (threshold {fthreshold})")
 
     self.NP_opt = model
     self.shape += '_opt'
     self.is_optimized = True
     self.cog_opt = self.NP_opt.get_center_of_mass()
-    
-    self.propPostMake(skipChiralityCalculation=self.skipChiralityCalculation,
-                      skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
-                      skipFacetInfo=self.skipFacetInfo, 
-                      thresholdCoreSurface=self.thresholdCoreSurface,
-                      noOutput=noOutput, is_optimized=True)
-    
+    self.propPostMake(
+        skipChiralityCalculation=self.skipChiralityCalculation,
+        skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
+        skipFacetInfo=self.skipFacetInfo,
+        thresholdCoreSurface=self.thresholdCoreSurface,
+        noOutput=noOutput, is_optimized=True,
+    )
+
     chrono.chrono_stop(hdelay=False)
     chrono.chrono_show()
-
-
