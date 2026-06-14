@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.16.0 documentation</title>
+  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.17.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="canonical" href="https://pynanomatbuilder.readthedocs.io/modules.html" />
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=7de89ed4"></script>
+      <script src="_static/documentation_options.js?v=0c3dd48d"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -729,9 +729,11 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.truncateAbovePlanes"><code class="docutils literal notranslate"><span class="pre">truncateAbovePlanes()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.returnPointsThatLieInPlanes"><code class="docutils literal notranslate"><span class="pre">returnPointsThatLieInPlanes()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.coreSurface"><code class="docutils literal notranslate"><span class="pre">coreSurface()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.coreSurface_cnp"><code class="docutils literal notranslate"><span class="pre">coreSurface_cnp()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.peel_by_coordination"><code class="docutils literal notranslate"><span class="pre">peel_by_coordination()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.peel_by_shifted_ellipsoid"><code class="docutils literal notranslate"><span class="pre">peel_by_shifted_ellipsoid()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.remove_plane"><code class="docutils literal notranslate"><span class="pre">remove_plane()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.coreSurface_combined"><code class="docutils literal notranslate"><span class="pre">coreSurface_combined()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.round_tip_in_direction"><code class="docutils literal notranslate"><span class="pre">round_tip_in_direction()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.clip_to_sphere"><code class="docutils literal notranslate"><span class="pre">clip_to_sphere()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.clip_to_ellipsoid"><code class="docutils literal notranslate"><span class="pre">clip_to_ellipsoid()</span></code></a></li>
@@ -842,6 +844,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defSlabShapeForJMol"><code class="docutils literal notranslate"><span class="pre">defSlabShapeForJMol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defSlicingPlanesForJMol"><code class="docutils literal notranslate"><span class="pre">defSlicingPlanesForJMol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defLocalOrderColorForJMol"><code class="docutils literal notranslate"><span class="pre">defLocalOrderColorForJMol()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defCarvePreviewForJMol"><code class="docutils literal notranslate"><span class="pre">defCarvePreviewForJMol()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -8040,6 +8043,81 @@ initial structure (NP) or the relaxed structure (NP_opt).</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.coreSurface_cnp">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">coreSurface_cnp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff_cnp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rnn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_frac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_optimized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.coreSurface_cnp" title="Link to this definition"></a></dt>
+<dd><p>Core/surface classification from the Common Neighbour Parameter (CNP),
+as a structural alternative to the convex-hull coreSurface().</p>
+<p>Instead of asking “does this atom lie on the outer envelope?” (a geometric
+test that requires convexity), this labels as <em>surface</em> every atom whose
+local environment departs from a perfect centrosymmetric core, i.e. whose
+CNP exceeds a threshold. Because the criterion is purely local, it is
+robust to NON-CONVEX shapes (nanostars, octopods, concave junctions,
+bimetallic interfaces) where the convex hull wrongly buries exposed atoms.</p>
+<p>Note that the CNP criterion is <em>structural</em>, not geometric: it flags atoms
+with a perturbed neighbourhood, which typically includes the outermost
+one or two atomic layers, not only the geometric envelope. The two views
+are complementary.</p>
+<p>The threshold separating buried atoms (core + internal twin planes, low
+CNP) from exposed atoms (surface / edges / vertices, high CNP) can be:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>given explicitly (<cite>threshold</cite>, in Å²), or</p></li>
+<li><p>given as a fraction of the CNP range (<cite>threshold_frac</cite>), or</p></li>
+<li><p>found automatically (default) as the midpoint of the widest gap
+between the low-CNP cluster and the high-CNP surface populations.</p></li>
+</ul>
+</div></blockquote>
+<p>Because core and twin atoms are both buried and share low CNP, this keeps
+twins on the CORE side; only genuinely exposed atoms are labelled surface.
+Inspect the populations with local_order_populations(descriptor=’cnp’)
+first and, if the automatic cut misses the physical gap, set <cite>threshold</cite>
+by hand — you can see where the separation lies.
+CNP scales with cutoff_cnp^2, so an absolute threshold is not portable
+across cutoffs; the automatic gap or the fractional threshold are preferred.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – pyNMBcore instance.</p></li>
+<li><p><strong>cutoff_cnp</strong> (<em>float</em><em> or </em><em>None</em>) – neighbour cutoff in Å for the CNP. If None
+(default), it is set to 1.3 * Rnn, where Rnn is taken from the <cite>Rnn</cite>
+argument or, if that is also None, estimated automatically from the
+structure (median nearest-neighbour distance). Should stay within
+~1.2-1.4 * Rnn so the cutoff captures the FIRST coordination shell
+only; larger values mix outer shells and smear the CNP into a
+continuum, breaking the core/surface separation.</p></li>
+<li><p><strong>Rnn</strong> (<em>float</em><em> or </em><em>None</em>) – true nearest-neighbour distance in Å. Used to set
+cutoff_cnp when that is None, and to warn if cutoff_cnp is too large.
+If None it is estimated from the structure.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em><em> or </em><em>None</em>) – explicit CNP cut in Å². Overrides the rest.</p></li>
+<li><p><strong>threshold_frac</strong> (<em>float</em><em> or </em><em>None</em>) – cut at threshold_frac*(cnp.max()),
+used if <cite>threshold</cite> is None.</p></li>
+<li><p><strong>store</strong> (<em>bool</em>) – if True, store the boolean surface mask as
+self.surfaceAtoms_cnp (or _opt) and the threshold used as
+self.cnp_core_threshold. Default True.</p></li>
+<li><p><strong>is_optimized</strong> (<em>bool</em><em> or </em><em>None</em>) – target structure; None -&gt; self.is_optimized.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – if True, suppress output. Default False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>(surfaceAtoms, threshold) — boolean array (True = surface) and</dt><dd><p>the CNP threshold (Å²) actually used.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Note: the CNP assumes a near-equilibrium lattice. On a non-optimized /</dt><dd><p>strained structure the core CNP spreads into a low continuum instead of a
+sharp zero peak, which can cause over-detection of surface atoms; prefer the
+hull criterion there, or optimize() the structure first.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.peel_by_coordination">
 <span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">peel_by_coordination</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_peeling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.peel_by_coordination" title="Link to this definition"></a></dt>
 <dd><p>Remove surface atoms with low coordination numbers to simulate truncation or
@@ -8132,6 +8210,62 @@ NP.remove_plane(direction=[1, 1, 1], axis_def=’hkl’)</p>
 NP.remove_plane(direction=[0, 0, 1], axis_def=’cart’)</p>
 <p># Remove the face triangulaire tournée vers +z d’un icosaèdre
 NP.remove_plane(direction=[0.3568, 0., 0.9342], axis_def=’cart’)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.coreSurface_combined">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">coreSurface_combined</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff_cnp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rnn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_frac</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_CoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_optimized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.coreSurface_combined" title="Link to this definition"></a></dt>
+<dd><p>Core/surface classification combining the convex-hull and CNP criteria:
+an atom is labelled SURFACE if EITHER method flags it as surface (logical
+OR). This is the conservative choice — each method covers the other’s blind
+spot:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>the convex hull misses atoms exposed inside concavities (it buries
+them as ‘core’ because they are not on the outer envelope);</p></li>
+<li><p>the CNP can miss a surface atom whose local environment is unusually
+ordered (e.g. a perfectly flat dense facet with a low CNP).</p></li>
+</ul>
+</div></blockquote>
+<p>Taking the union recovers both populations.</p>
+<p>For non-convex shapes (nanostars, octopods, concave junctions, bimetallic
+interfaces) this is more reliable than either method alone.</p>
+<p>The hull mask is reused from self.surfaceAtoms (or _opt) if already present
+(e.g. after propPostMake); it is only recomputed when missing. The CNP mask
+is likewise reused from self.cnp if available. The cutoff and Rnn are
+auto-resolved by coreSurface_cnp when not supplied.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – pyNMBcore instance.</p></li>
+<li><p><strong>cutoff_cnp</strong> (<em>float</em><em> or </em><em>None</em>) – CNP neighbour cutoff in Å. If None, set to
+1.3·Rnn with Rnn taken from the argument or auto-estimated.</p></li>
+<li><p><strong>Rnn</strong> (<em>float</em><em> or </em><em>None</em>) – true nearest-neighbour distance, used to set
+cutoff_cnp when it is None and to warn if cutoff_cnp is too large.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em><em> or </em><em>None</em>) – explicit CNP cut (Å²), passed to
+coreSurface_cnp.</p></li>
+<li><p><strong>threshold_frac</strong> (<em>float</em><em> or </em><em>None</em>) – fractional CNP cut, passed to
+coreSurface_cnp.</p></li>
+<li><p><strong>threshold_CoreSurface</strong> (<em>float</em>) – hull plane tolerance, used only if the
+hull mask must be (re)computed here. Default 1e-3.</p></li>
+<li><p><strong>store</strong> (<em>bool</em>) – if True, store the combined mask as
+self.surfaceAtoms_combined (or _opt). Default True.</p></li>
+<li><p><strong>is_optimized</strong> (<em>bool</em><em> or </em><em>None</em>) – target structure; None -&gt; self.is_optimized.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – if True, suppress output. Default False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>(surfaceAtoms, n_hull_only, n_cnp_only, n_both) — the combined</dt><dd><p>boolean surface mask and a breakdown of where the two methods
+agreed or disagreed.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -8233,7 +8367,7 @@ rod.clip_to_ellipsoid(diameters_nm=[4.0, 4.0, 15.0])</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.clip_to_cone">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">clip_to_cone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_center_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apex_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_radius_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apex_angle_deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tip_sphere_radius_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'inside'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recenter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.clip_to_cone" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">clip_to_cone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_center_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apex_nm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_radius_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apex_angle_deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tip_sphere_radius_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'inside'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_opposite_side</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recenter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.clip_to_cone" title="Link to this definition"></a></dt>
 <dd><p>Clip atoms against a single, general cone defined by its base centre,
 its apex, and its width — the latter given EITHER as the base radius OR
 as the full apex angle (whichever the measurement provides). The cone
@@ -8262,6 +8396,12 @@ sharp tip. Must be small enough that the sphere fits before the
 virtual apex.</p></li>
 <li><p><strong>keep</strong> (<em>str</em>) – ‘inside’ or ‘outside’. See note on the truncated domain
 (atoms outside the base/apex span are treated as outside).</p></li>
+<li><p><strong>keep_opposite_side</strong> (<em>bool</em>) – if True, atoms on the far side of the base
+plane (t &lt; 0, opposite the apex) are left untouched instead of
+being removed. Used to build a symmetric double cone with two
+successive calls (apex up, then apex down): each call shapes its
+own half-space and preserves the other. Default False (single cone:
+everything outside the base/apex span is removed).</p></li>
 <li><p><strong>recenter</strong> (<em>bool</em>) – recentre on the COM after clipping. Default True.</p></li>
 <li><p><strong>noOutput</strong> (<em>bool</em>) – suppress output. Default True.</p></li>
 <li><p><strong>...</strong> (<em>postAnalyzis etc. as usual</em>)</p></li>
@@ -9742,7 +9882,7 @@ Units of the moments of inertia are angstrom**2.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>atoms</strong> (<em>ase.Atoms</em>) – The system to analyze.</p></li>
+<li><p><strong>model</strong> (<em>ase.Atoms</em>) – The system to analyze.</p></li>
 <li><p><strong>mass_weighted</strong> (<em>bool</em>) – If True, weights by atomic mass.
 If False, calculates geometric Rg.</p></li>
 <li><p><strong>noOutput</strong> (<em>bool</em>) – If False, prints a formatted summary.</p></li>
@@ -9939,7 +10079,7 @@ facet. 0.0 if absent from the reduced hull.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.propPostMake">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">propPostMake</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_optimized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.propPostMake" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">propPostMake</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_optimized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coreSurfaceMethod</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'combined'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.propPostMake" title="Link to this definition"></a></dt>
 <dd><p>Compute and store various post-construction
 properties of the nanoparticle.</p>
 <p>This function calculates moments of inertia
@@ -9956,6 +10096,17 @@ core and surface atoms.</p>
 to distinguish core and surface atoms.</p></li>
 <li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses
 output messages.</p></li>
+<li><p><strong>is_optimized</strong> (<em>bool</em>) – If True, target the optimized structure (NP_opt)
+and store results under the _opt suffix; otherwise target NP.</p></li>
+<li><p><strong>coreSurfaceMethod</strong> (<em>str</em>) – Criterion used to build the surfaceAtoms mask.
+‘hull’ (default): convex-hull envelope test, the historical
+behaviour. ‘cnp’: structural criterion from the Common Neighbour
+Parameter, robust to non-convex shapes (concavities the hull
+buries). ‘combined’: union of both (an atom is surface if either
+method flags it). The convex hull is computed in all cases, since
+vertices/simplices/neighbors/equations are always derived from it;
+coreSurfaceMethod only changes which mask is stored as
+self.surfaceAtoms.</p></li>
 </ul>
 </dd>
 </dl>
@@ -10436,6 +10587,44 @@ common_neighbour_parameter() or steinhardt_q() first.</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><dl class="simple">
 <dt>Jmol command string (also stored in self.jMol_{descriptor}</dt><dd><p>(e.g. self.jMol_cnp, self.jMol_q6, with the _opt suffix for the optimized structure) ).</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.external_pgm.defCarvePreviewForJMol">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">defCarvePreviewForJMol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">B_copies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'xff3030'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">translucency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">80</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.defCarvePreviewForJMol" title="Link to this definition"></a></dt>
+<dd><p>Generate a Jmol command to visualize the carving patterns placed by
+systematic_carve_by(preview=True), as translucent polygons outlining the
+convex hull of each placed pattern copy.</p>
+<p>For each placed copy of B, the faces of its convex hull are drawn as
+translucent polygons with their edges, so the exact volume that would be
+removed is visible as a clean solid — legible regardless of B’s atomic
+spacing (i.e. even when scale &gt; 1 spreads the marker atoms apart). This is
+the mode=’hull’ companion to the ‘No’ marker atoms stored in
+self.NP_preview; in mode=’atoms’ the marker atoms already show B’s true
+(possibly concave) shape and no polygons are produced.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>B_copies</strong> (<em>list</em><em> of </em><em>ndarray</em>) – list of (N,3) arrays, the placed atomic
+positions of each pattern copy (one per carved face).</p></li>
+<li><p><strong>color</strong> (<em>str</em>) – hex colour of the polygons/edges (default ‘xff3030’, red).</p></li>
+<li><p><strong>translucency</strong> (<em>int</em>) – polygon translucency in percent (0=opaque,
+100=fully translucent). Default 80.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Jmol command string. The caller (systematic_carve_by or</dt><dd><p>systematic_stellate_by) stores it in its own attribute
+(self.jMolCarvePreview or self.jMolStellationPreview).</p>
 </dd>
 </dl>
 </p>

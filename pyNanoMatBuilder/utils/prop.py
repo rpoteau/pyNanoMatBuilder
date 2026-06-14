@@ -27,7 +27,7 @@ from .core import (pyNMB_location, get_resource_path, timer, RAB, Rbetween2Point
                    )
 from .core import centertxt, centerTitle, fg, bg, hl, color
 from .parallel import njit, prange
-from .geometry import coreSurface, setdAsNegative
+from .geometry import coreSurface, coreSurface_combined, coreSurface_cnp, setdAsNegative
 from .symmetry import MolSym
 from .external_pgm import defCrystalShapeForJMol
 
@@ -410,7 +410,7 @@ def calculate_rg(model: Atoms,
     Calculates the radius of gyration for an ASE Atoms object.
     
     Args:
-        atoms (ase.Atoms): The system to analyze.
+        model (ase.Atoms): The system to analyze.
         mass_weighted (bool): If True, weights by atomic mass. 
                               If False, calculates geometric Rg.
         noOutput (bool): If False, prints a formatted summary.
@@ -440,7 +440,7 @@ def calculate_rg(model: Atoms,
     rg /= 10 # angstrom to nm
 
     if not noOutput:
-        print(f" Rg = {rg:.1f} nm")
+        print(f" Rg = {rg:.2f} nm")
 
     return rg
 
@@ -1924,7 +1924,7 @@ def external_facets_info(self, mode='auto', noOutput=False):
 #------------------------------------------------------------------------------------------------------------------------
 
 def propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis, skipFacetInfo,
-                 thresholdCoreSurface, noOutput, is_optimized=False):
+                 thresholdCoreSurface, noOutput, is_optimized=False, coreSurfaceMethod="combined"):
     """
     Compute and store various post-construction
     properties of the nanoparticle.
@@ -1942,6 +1942,17 @@ def propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis, skipFacet
             to distinguish core and surface atoms.
         noOutput (bool): If True, suppresses
             output messages.
+        is_optimized (bool): If True, target the optimized structure (NP_opt)
+            and store results under the _opt suffix; otherwise target NP.
+        coreSurfaceMethod (str): Criterion used to build the surfaceAtoms mask.
+            'hull' (default): convex-hull envelope test, the historical
+            behaviour. 'cnp': structural criterion from the Common Neighbour
+            Parameter, robust to non-convex shapes (concavities the hull
+            buries). 'combined': union of both (an atom is surface if either
+            method flags it). The convex hull is computed in all cases, since
+            vertices/simplices/neighbors/equations are always derived from it;
+            coreSurfaceMethod only changes which mask is stored as
+            self.surfaceAtoms.
 
     Attributes:
         moi (numpy.ndarray): Moment of inertia tensor.
@@ -1998,10 +2009,21 @@ def propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis, skipFacet
         MolSym(target_np, noOutput=noOutput)
         
     # Core/surface
+    # Core/surface
     (
-        [v, s, n, e], 
-        surfaceAtoms
+        [v, s, n, e],
+        surf_hull
     ) = coreSurface(self, thresholdCoreSurface, noOutput=noOutput)
+
+    if coreSurfaceMethod == 'hull':
+        surfaceAtoms = surf_hull
+    elif coreSurfaceMethod == 'cnp':
+        surfaceAtoms, _ = coreSurface_cnp(self, is_optimized=is_optimized, noOutput=noOutput)
+    elif coreSurfaceMethod == 'combined':
+        surf_cnp, _ = coreSurface_cnp(self, is_optimized=is_optimized, noOutput=noOutput)
+        surfaceAtoms = np.asarray(surf_hull, dtype=bool) | np.asarray(surf_cnp, dtype=bool)
+    else:
+        raise ValueError(f"coreSurfaceMethod must be 'hull', 'cnp' or 'combined', got '{coreSurfaceMethod}'.")
 
     # Map hull properties to self.vertices / self.vertices_opt, etc.
     setattr(self, f"vertices{suffix}", v)

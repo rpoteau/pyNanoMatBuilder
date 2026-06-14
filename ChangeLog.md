@@ -5,6 +5,224 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
+## [0.17.0] - "debug ptnr (core/shell mismatch) & carving/stellating"
+
+### Added
+
+- **`interface_distance_histogram(elemA, elemB, Rnn, ...)` in
+    utils.csg.py + pyNMBcore wrapper** — analyses the interface
+    between two chemical species in a bimetallic structure (e.g. useful after
+    `union_with` on a core/shell object) by histogramming the cross-species
+    nearest-neighbour distances: for every atom of species A the distance to its
+    nearest B atom is computed, and vice-versa. The distribution should peak at
+    the expected contact distance `Rnn`; a peak shifted below it reveals
+    interpenetrating pieces (overlapping atoms), a peak above reveals a gap. The
+    function reports the closest cross-species distance, the number of interface
+    atoms (within `contact_frac`·Rnn, default 1.2) and the number of overlapping
+    atoms (within `overlap_frac`·Rnn, default 0.85, highlighted as a red zone on
+    the plot), and returns the per-atom distance arrays for further processing. The
+    figure can be saved via `save_path` (.png or .svg). Useful to verify the
+    quality of a bimetallic junction and to flag overlaps that the merge may
+    have introduced.
+    Useful to verify the quality of a bimetallic junction and to flag overlaps
+    that the merge may have introduced.
+
+- **CNP-based core/surface classification, as a structural complement to the
+    convex-hull `coreSurface()` (utils.geometry + a new `coreSurfaceMethod`
+    option in `propPostMake`)**:
+    - **`coreSurface_cnp(cutoff_cnp=None, ...)`** labels as surface every atom
+        whose Common Neighbour Parameter exceeds a threshold. Being a purely
+        local criterion, it is robust to NON-CONVEX shapes (nanostars, octopods,
+        concave junctions, bimetallic interfaces) where the convex hull wrongly
+        buries atoms exposed inside concavities. The cutoff and the
+        nearest-neighbour distance Rnn are auto-estimated when not supplied
+        (Rnn from the median nearest-neighbour distance, cutoff = 1.3·Rnn), with
+        a warning if the cutoff reaches beyond the first coordination shell. The
+        core/surface threshold defaults to the midpoint of the widest gap in the
+        low-CNP region — which keeps buried atoms (FCC core + internal twin
+        planes) on the core side and labels only genuinely exposed atoms as
+        surface — and can also be given explicitly or as a fraction of the CNP
+        range. A diagnostic detects a strained / non-optimized or dilated
+        structure (core CNP smeared into a low continuum rather than a sharp zero
+        peak) and automatically falls back to the hull criterion with a warning,
+        since the CNP over-detects surface atoms in that regime.
+    - **`coreSurface_combined(...)`** runs both criteria and unions their masks
+        (an atom is surface if EITHER method flags it), so each method covers the
+        other's blind spot; it reuses the stored hull and CNP masks when already
+        available, and reports where the two disagree, in particular the count
+        of concave-exposed atoms the hull buried. **This is now the default in pyNMB**
+    - **`propPostMake` gains a `coreSurfaceMethod` argument**.
+        <span style="color:red">⚠️ **Breaking default change: it now defaults to
+        'combined' (hull ∪ CNP) instead of the previous pure-hull
+        behaviour.**</span> 'hull' and 'cnp' are also available. The convex hull
+        is computed in all cases (vertices / simplices / neighbors / equations
+        are always derived from it); the option only changes the stored
+        `surfaceAtoms` mask. Because 'combined' (and 'cnp') compute the CNP at
+        every construction, the surface mask now also captures internal defects
+        and concave-exposed atoms. <span style="color:red">⚠️ **Pass
+        `coreSurfaceMethod='hull'` to recover the previous
+        behaviour.**</span>
+
+- **Carving and stellating convex NPs**
+
+    - **`systematic_carve_by(NP_B, ...)` in utils.csg.py + pyNMBcore wrapper** —
+        systematically carves every face of the convex hull of an object A with an
+        arbitrary pyNMB object B used as a carving pattern (an "emporte-pièce"),
+        turning the whole library into a pattern bank. For each hull face an
+        oriented, positioned copy of B is placed and its volume subtracted (CSG),
+        hollowing a cavity whose shape is that of B and is independent of the face
+        shape (a triangular pit can be carved into a pentagonal face). Patterns are
+        anchored on each face's first edge for inter-face coherence, with a free
+        `phase_deg` azimuthal rotation.
+        - **Two carving modes**. `mode='hull'` (default) removes A atoms inside the
+            convex hull of the placed B — fast and exact, but B is reduced to its
+            convex envelope. `mode='atoms'` removes A atoms within `threshold`·Rnn
+            of any atom of B, so it respects CONCAVE patterns (cross, star, ring);
+            `scale` is ignored in this mode (it would space B's atoms apart and
+            leave gaps) and B must be built at the target size — a warning is issued
+            if `scale ≠ 1`.
+        - **Penetration axis and sense**. `carve_axis` is an axis OF B, expressed in
+            B's own frame, aligned onto each face normal. When left None it is
+            derived from `axis_through='vertex' | 'edge' | 'face'`, selecting the
+            symmetry direction of B that drives it vertex-first (pointed pit),
+            edge-first (wedge pit) or face-first (flat-bottomed pit); among
+            equivalents the one best aligned with B's principal inertia axis is
+            chosen (or the first, if isotropic). `lead='apex' | 'base'` sets which
+            end of B leads the penetration (sparser pointed end vs denser flat end);
+            it has little effect on an 'edge' axis. A FALLBACK cascade handles a
+            degenerate B hull (flat/linear) or an ill-defined element type, reporting
+            each fallback used.
+        - **Signed depth**. `depth_nm` is the SIGNED distance between B's leading
+            inner tip and A's centre of gravity along the inward normal: 0 puts the
+            tip at the centre, positive keeps it between surface and centre, negative
+            pushes it past the centre (through-cavities). None places it half-way.
+        - **Non-destructive preview** (`preview=True`): builds `self.NP_preview`
+            without touching `self.NP`. In `mode='hull'` it stores A alone and sets
+            `self.jMolCarvePreview` (via `external_pgm.defCarvePreviewForJMol`, see
+            below) to a Jmol command outlining each placed pattern's hull as
+            translucent polygons — legible even at `scale > 1`. In `mode='atoms'` it
+            stores A plus the pattern copies as marker 'No' atoms (tracing B's true,
+            possibly concave shape) and leaves `self.jMolCarvePreview` None.
+        - The result is non-convex: the changelog note recommends
+            `coreSurfaceMethod='cnp'` or `'combined'` to classify core/surface
+            correctly on the carved concavities (ties in with the new CNP criterion).
+    
+    - **`systematic_stellate_by(NP_B, ...)` in utils.csg.py + pyNMBcore wrapper** —
+        the additive counterpart of `systematic_carve_by`: instead of subtracting B
+        from every face, it ADDS an oriented copy of B on each face of A's convex
+        hull (via `union_with`), raising a relief outward and producing
+        stellation-like and studded morphologies (e.g. icosahedron stellations).
+        Both functions share the same placement machinery (`axis_through`, `lead`,
+        `scale`, `phase_deg`, `mode`, `threshold`) and helpers; only the boolean
+        operation differs — stellate UNIONS, carve SUBTRACTS.
+        - **Placement**. `lead` defaults to `'base'` here (vs `'apex'` for carve):
+            for a stellation the dense base of B is seated on the face and the point
+            sticks out. New `seat_on_face` parameter (default True) ignores
+            `depth_nm` and seats B's leading end exactly on each face plane, so B
+            protrudes outward — the natural stellation placement; set it False to
+            position B manually with the signed `depth_nm` (same convention as
+            carve).
+        - **Merge via `union_with`**. Each face calls `union_with` with a per-face
+            `rotB` (axis-angle) and `cogB` (nm), with `recenter=False`; the structure
+            is recentred once at the end (as recommended for applying a pattern over
+            all faces). `union_with`'s overlap removal cleans the interface where
+            each piece joins A. The lattice of B is generally NOT registered with A,
+            so each raised piece joins through an interface — fine for a geometric
+            object, not a single crystal.
+        - **Non-destructive preview** (`preview=True`): same scheme as carve.
+            `mode='hull'` stores A alone and sets `self.jMolStellationPreview` (via
+            `defCarvePreviewForJMol`) to the translucent hull outlines of the placed
+            patterns; `mode='atoms'` stores A plus the copies as marker 'No' atoms.
+    
+    - **`defCarvePreviewForJMol(B_copies, color, translucency, ...)` in
+        utils.external_pgm.py** — shared preview helper for both
+        `systematic_carve_by` and `systematic_stellate_by` in `mode='hull'`: draws
+        the convex hull of each placed pattern copy as translucent polygons with
+        their edges, following the same conventions as `defSlicingPlanesForJMol` /
+        `defSlabShapeForJMol`. It RETURNS the Jmol command string; the caller stores
+        it in its own attribute (`self.jMolCarvePreview` for carve,
+        `self.jMolStellationPreview` for stellate) so the two operations never
+        overwrite each other's preview.
+    
+    - **`pnmbAvailableStructures.svg` graphical abstract updated**: added a panel
+        illustrating `systematic_carve_by` and `systematic_stellate_by` (octahedron
+        carved by / stellated by a tetrahedron).
+
+  
+### Fixed
+
+- **`reduceHullFacets()` in `utils/geometry.py`**: two robustness fixes for
+  facet analysis of re-read structures:
+  - **Idempotence**: the function now always recomputes the convex hull
+    equations from the current atomic positions instead of reading a
+    possibly-already-reduced `self.trPlanes`. Previously, calling it twice
+    in a row (e.g. by `defCrystalShapeForJMol()` then
+    `external_facets_info()` within `propPostMake()`) fed the second call a
+    corrupted plane set, producing spurious facets (e.g. 43 facets instead
+    of 20 for a re-read icosahedron).
+  - **Degenerate corners**: near-duplicate vertices produced by
+    `HalfspaceIntersection` at corners where more than three planes meet
+    (e.g. the 5-plane apices of an icosahedron) are now merged via a
+    KDTree before the convex hull is rebuilt. With exact theoretical planes
+    (Wulff construction) these duplicates were perfectly superimposed and
+    silently collapsed by `ConvexHull`; with the slightly noisier planes of
+    a re-read structure they were offset by ~1e-10 Å, kept as distinct
+    vertices, and broke the face connectivity used by the coplanar-facet
+    merging step. The KDTree merge fixes both cases.
+
+    As a result, `external_facets_info()` now returns the correct facets and
+    areas for structures loaded via `from_file()`, matching the output
+    obtained directly from the generating class (e.g. `regIco`).
+
+### Changed
+
+- **`plot_local_order()` in `utils.local_descriptors.py`**, in the call to
+    `defLocalOrderColorForJMol`, `noOutput=noOuput` replaced with `noOutput=True`
+- **`clip_to_cone()`**: new `keep_opposite_side` parameter (default False).
+    When True, atoms on the far side of the base plane are left untouched, so
+    two successive calls (apex up, then apex down) build a symmetric double
+    cone in place — no half-cone reflection, no union, and the lattice stays
+    registered with the source prism (no stacking fault at the waist). The
+    base-plane tolerance is signed to keep the median layer exactly once. The
+    thin wrapper on `pyNMBcore` is updated to expose the new parameter.
+- **`ptnr` `double_cone` shape, lattice-preserving construction.** The
+    `double_cone` morphology is now built **in place** by two successive
+    `clip_to_cone` calls on a single prism — the first with the apex pointing
+    up, the second with the apex pointing down, both with
+    `keep_opposite_side=True` so that each call only carves its own half-space
+    and leaves the other untouched. This replaces the previous construction,
+    which clipped a single half-cone, re-seated it on the base plane
+    (`align_to_plane`), then mirrored it (`replicate_by_reflection`). The old
+    sequence translated and reflected the lattice, desynchronising it from the
+    generating prism: the non-integer z-shift and the mirror introduced a
+    stacking fault at the waist, and the resulting lattice no longer coincided
+    with that of the other morphologies (which all derive directly from the
+    same prism). The new two-clip approach never moves or reflects the atoms —
+    it only masks them — so the lattice stays exactly that of the generating
+    prism. The waist is a clean shared layer (the signed base-plane tolerance
+    keeps the median layer exactly once, attributed to a single cone), and the
+    double-cone core is now registered atom-for-atom with bipyramid, ellipsoid
+    and capsule cores of the same Rnn — a prerequisite for building aligned
+    core-shell objects.
+- **`render_frames_jmol` in `utils.animation.py`**:
+    - now accepts an explicit `xyz_files` list as an
+        alternative to the `prefix`/`n_frames` scheme. The PNG stem is taken from
+        each file's own stem, lifting the zero-padded 2-digit naming requirement.
+        Bare filenames are resolved against `input_dir`; already-qualified or
+        absolute paths are respected as-is.
+    - fixed Jmol `eval ERROR` on `load` when `input_dir != output_dir`:
+        `saveCoords_DrawJmol` loads the `.xyz` from `user_output_dir`, so
+        `render_frames_jmol` now forwards `saveXYZ=True` to ensure the frame is
+        written where Jmol reads it.
+- **`pyNMBcore.__init__` / `_flush_stale_data`**: new attributes
+    `self.NP_preview`, `self.jMolCarvePreview` and `self.jMolStellationPreview`
+    (all None by default), cleared on every geometry change.
+    `systematic_carve_by` and `systematic_stellate_by` set `is_optimized=False`
+    after the operation, since removing or adding atoms invalidates any prior
+    optimized state.
+
+- **Article section of `pyNMB-tutorials.ipynb` moved in a new `pyNMB-Article.ipynb` notebook**
+  
 ## [0.16.0] - "README.md, examples for article, Local-order descriptors (CNP, Steinhardt) and selection by order type"
 
 ### Added

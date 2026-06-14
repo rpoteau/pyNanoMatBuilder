@@ -1235,3 +1235,887 @@ def flush_inlay_with(self,
             noOutput                 = noOutput,
             is_optimized             = False,
         )
+
+def interface_distance_histogram(self, elemA, elemB, Rnn,
+                                 overlap_frac=0.85, contact_frac=1.2,
+                                 bins=60, is_optimized=None,
+                                 save_path=None, noOutput=False):
+    """
+    Histogram of cross-species nearest-neighbour distances at the interface
+    between two chemical species, to assess how cleanly two pieces were joined
+    (e.g. after union_with on a bimetallic core/shell object) and to flag
+    overlapping atoms produced by the merge.
+
+    For every atom of species A the distance to its nearest atom of species B
+    is computed (and vice-versa). The distribution should peak at the expected
+    contact distance Rnn: a peak shifted BELOW Rnn means the two pieces
+    interpenetrate (overlapping atoms), a peak shifted ABOVE means a gap.
+
+    Args:
+        self: pyNMBcore instance holding a bimetallic self.NP (or self.NP_opt).
+        elemA, elemB (str): the two chemical symbols of the interface
+            (e.g. 'Au', 'Ag').
+        Rnn (float): expected first-neighbour contact distance in Å, drawn as
+            the ideal-contact reference line.
+        overlap_frac (float): atoms closer than overlap_frac*Rnn to the other
+            species are counted as overlapping. Default 0.85.
+        contact_frac (float): atoms within contact_frac*Rnn of the other
+            species are counted as interface atoms. Default 1.2.
+        bins (int): histogram bins. Default 60.
+        is_optimized (bool or None): target structure. None -> self.is_optimized.
+        save_path (str): if given, saves the figure (.png or .svg).
+        noOutput (bool): if True, suppresses the printed summary. Default False.
+
+    Returns:
+        dict: {'d_A_to_B', 'd_B_to_A' (arrays, Å),
+               'n_overlap', 'n_interface' (int),
+               'd_min' (float, Å)}.
+    """
+    import numpy as np
+    from scipy.spatial import cKDTree
+    import matplotlib
+    import matplotlib.pyplot as plt
+
+    if is_optimized is None:
+        is_optimized = getattr(self, 'is_optimized', False)
+    use_opt = is_optimized and getattr(self, 'NP_opt', None) is not None
+    atoms = self.NP_opt if use_opt else self.NP
+    status = "optimized structure" if use_opt else "initial structure"
+
+    pos  = atoms.get_positions()
+    elem = np.array(atoms.get_chemical_symbols())
+    A = pos[elem == elemA]
+    B = pos[elem == elemB]
+    if len(A) == 0 or len(B) == 0:
+        raise ValueError(f"need both {elemA} ({len(A)}) and {elemB} "
+                         f"({len(B)}) present in the structure.")
+
+    d_A_to_B, _ = cKDTree(B).query(A, k=1)
+    d_B_to_A, _ = cKDTree(A).query(B, k=1)
+    d_all = np.concatenate([d_A_to_B, d_B_to_A])
+
+    overlap_thr = overlap_frac * Rnn
+    contact_thr = contact_frac * Rnn
+    n_overlap   = int(np.count_nonzero(d_all < overlap_thr))
+    n_interface = int(np.count_nonzero(d_all < contact_thr))
+    d_min = float(d_all.min())
+
+    # shared bin edges so both series have identical bar widths
+    bin_edges = np.histogram_bin_edges(d_all, bins=bins)
+
+    if not noOutput:
+        centertxt(f"{elemA}/{elemB} interface analysis ({status})",
+                  bgc='#007a7a', size='14', weight='bold')
+        print(f" - Closest {elemA}-{elemB} distance : {d_min:.2f} Å")
+        print(f" - Ideal contact (Rnn)        : {Rnn:.2f} Å")
+        print(f" - Interface atoms (<{contact_frac:.1f}·Rnn) : {n_interface}")
+        print(f" - Overlapping atoms (<{overlap_frac:.2f}·Rnn = "
+              f"{overlap_thr:.2f} Å) : {n_overlap}")
+        if n_overlap:
+            print(f"   ⚠ {n_overlap} atoms interpenetrate — consider "
+                  f"remove_duplicates() or a small gap before union_with().")
+
+    fig, ax = plt.subplots(figsize=(9, 5.5))
+    ax.hist(d_A_to_B, bins=bin_edges, alpha=0.6, color='#d4af37',
+            edgecolor='black', label=f'{elemA} → nearest {elemB}')
+    ax.hist(d_B_to_A, bins=bin_edges, alpha=0.6, color='#b0b0b0',
+            edgecolor='black', label=f'{elemB} → nearest {elemA}')
+    ax.axvline(Rnn, color='green', ls='--', lw=2, label='Rnn (ideal contact)')
+    ax.axvline(overlap_thr, color='crimson', ls=':', lw=2,
+               label=f'overlap < {overlap_thr:.2f} Å')
+    ax.axvspan(0, overlap_thr, color='crimson', alpha=0.08)
+    ax.set_xlabel('cross-species nearest-neighbour distance (Å)',
+                  fontsize=13, fontweight='bold')
+    ax.set_ylabel('number of atoms', fontsize=13, fontweight='bold')
+    ax.set_title(f'{elemA}/{elemB} interface — {n_interface} interface atoms, '
+                 f'{n_overlap} overlapping ({status})',
+                 fontsize=13, fontweight='bold')
+    ax.legend(prop={'weight': 'bold'})
+    ax.grid(True, linestyle=':', alpha=0.5)
+    ax.set_xlim(left=0)
+    for tk in ax.get_xticklabels() + ax.get_yticklabels():
+        tk.set_fontweight('bold')
+
+    plt.tight_layout()
+    if save_path:
+        if save_path.lower().endswith('.svg'):
+            matplotlib.rcParams['svg.fonttype'] = 'none'
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        if not noOutput:
+            print(f" - Plot saved to: {save_path}")
+    plt.show()
+
+    return {'d_A_to_B': d_A_to_B, 'd_B_to_A': d_B_to_A,
+            'n_overlap': n_overlap, 'n_interface': n_interface,
+            'd_min': d_min}
+
+
+######################################## systematic carve_by 
+
+def _silhouette_ref_edge(pos_B, carve_axis):
+    """
+    Orthogonal projection of B's atoms along carve_axis → 2D convex hull
+    (the silhouette). Returns the first silhouette edge as a 3D unit vector,
+    used as B's azimuthal reference for coherent face alignment.
+    """
+    import numpy as np
+    from scipy.spatial import ConvexHull
+    u = np.asarray(carve_axis, float); u = u / np.linalg.norm(u)
+    arb = np.array([1., 0, 0]) if abs(u[0]) < 0.9 else np.array([0, 1., 0])
+    e1 = arb - (arb @ u) * u; e1 /= np.linalg.norm(e1)
+    e2 = np.cross(u, e1)
+    P = np.column_stack([pos_B @ e1, pos_B @ e2])
+    hull = ConvexHull(P)
+    poly = P[hull.vertices]
+    edge = poly[1] - poly[0]
+    edge3d = edge[0] * e1 + edge[1] * e2
+    return edge3d / np.linalg.norm(edge3d)
+
+
+def _faces_of_A(pos_A):
+    """
+    Convex hull of A, coplanar simplices grouped into faces. For each face,
+    return its outward unit normal n, its distance D to the centre, its
+    centroid, and a reference edge (first edge of its ordered vertex polygon)
+    used to align the carving pattern coherently across faces.
+    """
+    import numpy as np
+    from scipy.spatial import ConvexHull
+    hull = ConvexHull(pos_A)
+    faces = {}
+    for simplex, eq in zip(hull.simplices, hull.equations):
+        nrm = eq[:3] / np.linalg.norm(eq[:3])
+        D = -eq[3] / np.linalg.norm(eq[:3])
+        key = tuple(np.round(nrm, 3))
+        faces.setdefault(key, {'n': nrm, 'D': D, 'verts': set()})
+        faces[key]['verts'].update(simplex.tolist())
+    out = []
+    for f in faces.values():
+        if f['D'] <= 0:
+            continue
+        V = pos_A[list(f['verts'])]
+        c = V.mean(0)
+        n = f['n']
+        rel = V - c
+        rel = rel - np.outer(rel @ n, n)
+        a0 = rel[0] / np.linalg.norm(rel[0])
+        b0 = np.cross(n, a0)
+        ang = np.arctan2(rel @ b0, rel @ a0)
+        Vs = V[np.argsort(ang)]
+        ref_edge = Vs[1] - Vs[0]
+        ref_edge /= np.linalg.norm(ref_edge)
+        out.append({'n': n, 'D': f['D'], 'center': c, 'ref_edge': ref_edge})
+    return out
+
+
+def _symmetry_directions(pos_B, kind):
+    """
+    Candidate axis directions of B (from its hull centroid ~ origin) toward a
+    vertex, an edge midpoint, or a face centroid, depending on `kind`. Returns
+    None if B's convex hull is degenerate (flat/linear) or if the requested
+    element type yields no usable (non-zero) direction.
+    """
+    import numpy as np
+    from scipy.spatial import ConvexHull
+    try:
+        hb = ConvexHull(pos_B)
+    except Exception:
+        return None                              # degenerate B (flat/linear)
+    c = pos_B.mean(0)
+    if kind == 'vertex':
+        dirs = pos_B[hb.vertices] - c
+    elif kind == 'face':
+        dirs = np.array([pos_B[s].mean(0) - c for s in hb.simplices])
+    elif kind == 'edge':
+        edges = set()
+        for s in hb.simplices:
+            for a, b in ((s[0], s[1]), (s[1], s[2]), (s[0], s[2])):
+                edges.add((min(a, b), max(a, b)))
+        dirs = np.array([0.5 * (pos_B[a] + pos_B[b]) - c for a, b in edges])
+    else:
+        raise ValueError("axis_through must be 'vertex', 'edge' or 'face'.")
+    n = np.linalg.norm(dirs, axis=1, keepdims=True)
+    good = (n > 1e-6).ravel()
+    if not np.any(good):
+        return None                              # all directions ill-defined
+    return dirs[good] / n[good]
+
+
+def _resolve_carve_axis(pos_B, carve_axis, axis_through, lead):
+    """
+    Resolve the carving axis (an axis OF B, in B's own frame, that will be
+    aligned onto each face normal of A) and its SENSE so the chosen end of B
+    leads the penetration. Returns (axis, fallback_msgs).
+
+    Resolution when carve_axis is None:
+      1. take B's `axis_through` directions ('vertex'|'edge'|'face'); among
+         equivalents, pick the one best aligned with B's principal inertia
+         axis (or the first, if B's inertia is isotropic);
+      2. FALLBACK cascade if the requested type is geometrically ill-defined:
+         try the other element types, then B's inertia axis, then [0,0,1];
+      3. each fallback used is reported in fallback_msgs.
+
+    Sense (`lead`): the sparser end of B along the axis is the 'apex' (a point),
+    the denser end is the 'base' (a face). lead='apex' sends the apex inward;
+    lead='base' sends the base inward. On an 'edge' axis the two ends are
+    usually symmetric, so `lead` then has little effect.
+    """
+    import numpy as np
+    msgs = []
+
+    if carve_axis is None:
+        order = {'edge':   ['edge', 'vertex', 'face'],
+                 'vertex': ['vertex', 'edge', 'face'],
+                 'face':   ['face', 'vertex', 'edge']}[axis_through]
+        dirs, used = None, None
+        for k in order:
+            dirs = _symmetry_directions(pos_B, k)
+            if dirs is not None:
+                used = k
+                break
+        if dirs is None:
+            # no usable element direction at all → inertia, then arbitrary
+            try:
+                cov = (pos_B.T @ pos_B) / len(pos_B)
+                ev, evec = np.linalg.eigh(cov)
+                if ev.max() - ev.min() > 1e-3 * ev.max():
+                    msgs.append("no usable element direction on B → "
+                                "fell back to its principal inertia axis.")
+                    axis = evec[:, np.argmax(ev)]
+                else:
+                    raise ValueError
+            except Exception:
+                msgs.append("B is degenerate → fell back to arbitrary axis "
+                            "[0,0,1].")
+                axis = np.array([0, 0, 1.])
+        else:
+            if used != axis_through:
+                msgs.append(f"axis_through='{axis_through}' ill-defined on B "
+                            f"→ used '{used}' instead.")
+            cov = (pos_B.T @ pos_B) / len(pos_B)
+            ev, evec = np.linalg.eigh(cov)
+            if ev.max() - ev.min() > 1e-3 * ev.max():
+                axis = dirs[np.argmax(np.abs(dirs @ evec[:, np.argmax(ev)]))]
+            else:
+                axis = dirs[0]
+    else:
+        axis = np.asarray(carve_axis, float)
+    axis = axis / np.linalg.norm(axis)
+
+    proj = pos_B @ axis
+    span = proj.max() - proj.min()
+    tol = 0.02 * span if span > 0 else 1e-6
+    n_hi = int(np.sum(proj > proj.max() - tol))
+    n_lo = int(np.sum(proj < proj.min() + tol))
+    apex_at_hi = n_hi <= n_lo
+    if lead == 'apex':
+        if apex_at_hi:
+            axis = -axis
+    elif lead == 'base':
+        if not apex_at_hi:
+            axis = -axis
+    else:
+        raise ValueError(f"lead must be 'apex' or 'base', got '{lead}'.")
+    return axis, msgs
+
+
+def _estimate_Rnn_local(coords):
+    """Median nearest-neighbour distance of a point set (Å)."""
+    import numpy as np
+    from scipy.spatial import cKDTree
+    if len(coords) < 2:
+        return 0.0
+    d, _ = cKDTree(coords).query(coords, k=2)
+    return float(np.median(d[:, 1]))
+
+
+def systematic_carve_by(self, NP_B, carve_axis=None, axis_through='vertex',
+                        lead='apex', depth_nm=None, scale=1.0, phase_deg=0.0,
+                        mode='hull', threshold=0.8,
+                        preview=False, recenter=True,
+                        noOutput=False, postAnalyzis=None,
+                        skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
+                        skipFacetInfo=None, thresholdCoreSurface=None):
+    """
+    Systematically carve every face of self.NP (object A) with an arbitrary
+    pyNMB object B used as the carving pattern (an "emporte-pièce"). For each
+    face found on A's convex hull, an oriented, positioned copy of B is placed
+    on the face and its volume is subtracted (CSG), hollowing a cavity in the
+    shape of B.
+
+    Because B is any pyNMB object, the whole library becomes a pattern bank.
+    The cavity orientation is anchored on each face's first edge for inter-face
+    coherence, plus a free phase_deg rotation, and is INDEPENDENT of the face
+    shape — a triangular pit can be carved into a pentagonal face.
+
+    Two carving modes:
+      - mode='hull' (default): atoms of A inside the CONVEX HULL of the placed
+        B are removed. Fast and geometrically exact, but B is reduced to its
+        convex envelope — a concave B (cross, star, ring) carves its filled
+        outline, not its true shape. `scale` is honoured here (the hull scales
+        cleanly).
+      - mode='atoms': atoms of A within threshold*Rnn of any atom of B are
+        removed. Respects ANY shape of B, including concave ones, because it
+        follows B's actual atoms. `scale` is IGNORED in this mode (scaling
+        would space B's atoms apart and leave gaps) — build B at the target
+        size instead.
+
+    After carving, the shape is non-convex: use coreSurfaceMethod='cnp' or
+    'combined' for a correct core/surface classification of the result.
+
+    Args:
+        self: pyNMBcore object (A). Modified in place (unless preview=True).
+        NP_B: pyNMBcore object (B). The carving pattern. Never modified.
+        carve_axis (array-like or None): an axis OF B, expressed in B's OWN
+            frame, that gets aligned onto each face normal of A — so it becomes
+            the direction along which B sinks into that face. None (default)
+            picks it automatically from `axis_through` (see below). A given
+            vector is taken in B's frame and overrides axis_through; its sense
+            is still set by `lead`.
+        axis_through (str): when carve_axis is None, which symmetry direction of
+            B (in B's frame) becomes the penetration axis: 'vertex' (default)
+            drives B vertex-first (a pointed pit), 'edge' edge-first (a
+            wedge/dihedral pit), 'face' face-first (a flat-bottomed pit). Among
+            equivalent directions, the one best aligned with B's principal
+            inertia axis is chosen (or the first, if B's inertia is isotropic).
+            If the requested type is geometrically ill-defined for B (e.g.
+            'edge' on a near-sphere) or B's hull is degenerate (flat/linear),
+            a fallback cascade is used (other element types, then B's inertia
+            axis, then [0,0,1]) and a Note is printed.
+        lead (str): which end of B leads the penetration. 'apex' (default): the
+            sparser, pointed end enters first; 'base': the denser, flat end.
+            Has little effect on an 'edge' axis (its two ends are symmetric).
+        depth_nm (float or None): SIGNED distance, in nm, between B's leading
+            (inner) tip and A's centre of gravity, along the inward normal. 0
+            puts the inner tip at A's centre; positive keeps it between surface
+            and centre (shallower); negative pushes it past the centre
+            (through-cavities). None (default) = half-way to the centre.
+        scale (float): scale factor applied to B. Honoured in mode='hull',
+            IGNORED in mode='atoms'. Default 1.0.
+        phase_deg (float): extra azimuthal rotation of B about the face normal.
+        mode (str): 'hull' (default) or 'atoms'. See above.
+        threshold (float): mode='atoms' only — atoms of A within threshold*Rnn
+            of any atom of B are removed. Rnn is the larger of A's and B's
+            nearest-neighbour distances, so the capture stays gap-free.
+            Default 0.8.
+        preview (bool): if True, DO NOT carve. In mode='hull', build
+            self.NP_preview = A alone (real species) and set self.jMolCarvePreview
+            (via external_pgm.defCarvePreviewForJMol) to a Jmol command drawing
+            each placed B's hull as translucent polygons — the exact removed
+            volume, clear even when scale > 1 (no marker atoms, which would only
+            clutter the view). In mode='atoms', build self.NP_preview = A +
+            placed copies of B as marker 'No' atoms (whose large radius keeps
+            them bonded in Jmol) tracing B's true, possibly concave shape, and
+            set self.jMolCarvePreview = None. self.NP is left untouched in both
+            cases.
+        recenter (bool): recentre on the COM after carving. Default True.
+        noOutput (bool): suppress output. Default False.
+        postAnalyzis, skip*: standard post-analysis controls (None -> self.*).
+
+    Returns:
+        None. Updates self.NP in place, or self.NP_preview if preview=True.
+
+    Example:
+        # Convex pattern (tetrahedron), hull mode, scale honoured
+        octa.systematic_carve_by(td, depth_nm=0.0, scale=2, lead='apex')
+
+        # Concave pattern (a cross), atoms mode, build B at target size
+        cross = pNP.... # a cross-shaped pyNMB object at the right size
+        cube.systematic_carve_by(cross, depth_nm=0.0, mode='atoms')
+
+        # Preview either before committing
+        octa.systematic_carve_by(td, depth_nm=0.0, scale=2, preview=True)
+        pyNMBu.write("coords/preview.xyz", octa.NP_preview)
+    """
+    import numpy as np
+    from scipy.spatial import ConvexHull, Delaunay, cKDTree
+    from scipy.spatial.transform import Rotation
+    from ase import Atoms
+
+    if mode not in ('hull', 'atoms'):
+        raise ValueError(f"mode must be 'hull' or 'atoms', got '{mode}'.")
+
+    if not noOutput:
+        title = ("Preview: carving pattern placement"
+                 if preview else "Systematic face carving by a pattern object")
+        centertxt(title, bgc='#007a7a', size='14', weight='bold')
+        chrono = timer(); chrono.chrono_start()
+
+    # --- source structure of A -------------------------------------------
+    if self.is_optimized and getattr(self, 'NP_opt', None) is not None:
+        target_atoms = self.NP_opt
+        status = "optimized structure"
+    else:
+        target_atoms = self.NP
+        status = "initial structure"
+    pos_A = target_atoms.get_positions()
+    cog_A = target_atoms.get_center_of_mass()
+    pos_A_c = pos_A - cog_A                       # A centred: cog at origin
+
+    # --- scale handling depends on mode ----------------------------------
+    eff_scale = float(scale)
+    if mode == 'atoms' and abs(eff_scale - 1.0) > 1e-9:
+        if not noOutput:
+            print(f"{bg.LIGHTYELLOWB}Warning: scale is ignored in "
+                  f"mode='atoms' (scaling would space B's atoms apart and "
+                  f"leave gaps). Build B at the target size. Using "
+                  f"scale=1.{bg.OFF}")
+        eff_scale = 1.0
+
+    # --- pattern B: centred, scaled --------------------------------------
+    pos_B = NP_B.NP.get_positions().copy()
+    pos_B = pos_B - pos_B.mean(0)
+    pos_B = pos_B * eff_scale
+
+    carve_axis, axis_msgs = _resolve_carve_axis(pos_B, carve_axis,
+                                                axis_through, lead)
+    if axis_msgs and not noOutput:
+        for m in axis_msgs:
+            print(f"{bg.LIGHTYELLOWB}Note: {m}{bg.OFF}")
+    ref_edge_B = _silhouette_ref_edge(pos_B, carve_axis)
+
+    # capture radius for mode='atoms' (larger of A's and B's Rnn)
+    if mode == 'atoms':
+        Rnn_A = getattr(self, 'Rnn', None) or _estimate_Rnn_local(pos_A_c)
+        Rnn_B = _estimate_Rnn_local(pos_B)
+        cutoff = threshold * max(Rnn_A, Rnn_B)
+
+    # depth: inner (leading) tip relative to A's cog
+    if depth_nm is None:
+        faces_tmp = _faces_of_A(pos_A_c)
+        Dmin = min(f['D'] for f in faces_tmp) if faces_tmp else 0.0
+        depth_ang = 0.5 * Dmin
+    else:
+        depth_ang = depth_nm * 10.0              # nm -> Å (signed)
+
+    # --- faces of A -------------------------------------------------------
+    faces = _faces_of_A(pos_A_c)
+    if len(faces) == 0:
+        if not noOutput:
+            print("  No faces found — nothing to do.")
+        return
+
+    phase = float(phase_deg)
+    B_copies = []
+    remove = np.zeros(len(pos_A_c), dtype=bool)
+
+    for f in faces:
+        R, _ = Rotation.align_vectors(
+            np.array([f['n'], f['ref_edge']]),
+            np.array([carve_axis, ref_edge_B]))
+        Bp = (R.as_matrix() @ pos_B.T).T
+        if phase != 0.0:
+            Rp = Rotation.from_rotvec(np.radians(phase) * f['n']).as_matrix()
+            Bp = (Rp @ Bp.T).T
+        proj = Bp @ f['n']
+        inner = proj.min()
+        Bp = Bp + (depth_ang - inner) * f['n']
+
+        if preview:
+            B_copies.append(Bp.copy())
+            continue
+
+        if mode == 'hull':
+            try:
+                hb = ConvexHull(Bp)
+                dl = Delaunay(Bp[hb.vertices])
+                remove |= dl.find_simplex(pos_A_c) >= 0
+            except Exception:
+                continue
+        else:  # mode == 'atoms'
+            d, _ = cKDTree(Bp).query(pos_A_c)
+            remove |= d < cutoff
+
+    # --- preview branch ---------------------------------------------------
+    if preview:
+        symbols_A = target_atoms.get_chemical_symbols()
+        if mode == 'hull':
+            # hull mode: the translucent polygons show the exact carving
+            # volume — clean even when scale > 1. Adding 'No' atoms would only
+            # clutter the view (and they spread apart with scale), so
+            # NP_preview holds A alone and the patterns live in the script.
+            self.NP_preview = Atoms(symbols=list(symbols_A), positions=pos_A_c)
+            from .external_pgm import defCarvePreviewForJMol
+            self.jMolCarvePreview = defCarvePreviewForJMol(
+                self, B_copies, color="xff3030", noOutput=True)
+        else:
+            # atoms mode: the 'No' marker atoms ARE the representation — they
+            # trace B's true (possibly concave) shape. No polygons.
+            all_pos = [pos_A_c]
+            all_sym = list(symbols_A)
+            for Bp in B_copies:
+                all_pos.append(Bp)
+                all_sym += ['No'] * len(Bp)     # No: large radius, bonds shown
+            self.NP_preview = Atoms(symbols=all_sym,
+                                    positions=np.vstack(all_pos))
+            self.jMolCarvePreview = None
+        if not noOutput:
+            print(f"  - Source        : {status}")
+            print(f"  - Mode          : '{mode}'")
+            print(f"  - Faces         : {len(faces)} "
+                  f"({len(B_copies)} pattern copies placed)")
+            print(f"  - carve_axis    : [{carve_axis[0]:+.3f} "
+                  f"{carve_axis[1]:+.3f} {carve_axis[2]:+.3f}]  lead='{lead}'")
+            print(f"  - Inner tip at  : {depth_ang/10:.2f} nm from cog")
+            if mode == 'hull':
+                print(f"  - Stored as     : self.NP_preview (A only) and "
+                      f"self.jMolCarvePreview (pattern hull outlines).")
+                print(f"    self.NP untouched. To inspect in Jmol:")
+                print(f"      pyNMBu.write('preview.xyz', NP.NP_preview)")
+                print(f"      pyNMBu.write('preview.script', "
+                      f"NP.jMolCarvePreview)")
+                print(f"      then in Jmol, load preview.xyz and run: "
+                      f"script './preview.script'")
+            else:
+                print(f"  - Stored as     : self.NP_preview (A + B as 'No', "
+                      f"showing B's true shape). No hull outline in atoms mode.")
+                print(f"    self.NP untouched. To inspect in Jmol:")
+                print(f"      pyNMBu.write('preview.xyz', NP.NP_preview)")
+            chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+        return
+
+    # --- carving branch ---------------------------------------------------
+    keep = ~remove
+    old_count = len(pos_A_c)
+    n_removed = int(np.count_nonzero(remove))
+
+    if n_removed == 0 and not noOutput:
+        print(f"{bg.LIGHTYELLOWB}Warning: no atoms carved — check depth_nm, "
+              f"scale, lead, mode, or carve_axis (B may not reach into "
+              f"A).{bg.OFF}")
+    if n_removed == old_count:
+        print(f"{bg.DARKREDB}ERROR: all atoms would be removed — operation "
+              f"cancelled. Reduce scale/threshold or adjust depth_nm.{bg.OFF}")
+        return
+
+    symbols = target_atoms.get_chemical_symbols()
+    self.NP = Atoms(symbols=[symbols[i] for i in np.where(keep)[0]],
+                    positions=pos_A[keep])
+    if recenter and len(self.NP) > 0:
+        self.NP.positions -= self.NP.get_center_of_mass()
+    self.nAtoms = len(self.NP)
+    self.cog = self.NP.get_center_of_mass()
+
+    self.trPlanes = None
+    self.trPlanes_Wulff = None
+    self.trPlanes_opt = None
+
+    if not noOutput:
+        print(f"  - Source        : {status}")
+        print(f"  - Mode          : '{mode}'"
+              + (f" (scale {eff_scale:.2f})" if mode == 'hull'
+                 else f" (threshold {threshold:.2f}·Rnn = {cutoff:.2f} Å)"))
+        print(f"  - Pattern B     : {len(pos_B)} atoms")
+        print(f"  - carve_axis    : [{carve_axis[0]:+.3f} {carve_axis[1]:+.3f} "
+              f"{carve_axis[2]:+.3f}]  lead='{lead}'")
+        print(f"  - Faces carved  : {len(faces)}")
+        print(f"  - Inner tip at  : {depth_ang/10:.2f} nm from cog, "
+              f"phase {phase:.0f}°")
+        print(f"  - Atoms removed : {n_removed} "
+              f"({100*n_removed/old_count:.0f} %)")
+        print(f"  - {self.nAtoms} atoms remaining. self.NP updated.")
+        print(f"  Tip: the result is concave — use coreSurfaceMethod='cnp' "
+              f"or 'combined' for a correct core/surface split.")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+
+    self._flush_stale_data(shape_update="_systematic_carve")
+    self.is_optimized = False
+
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+    if postAnalyzis and self.nAtoms > 0:
+        self.propPostMake(
+            skipChiralityCalculation=skipChiralityCalculation,
+            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+            skipFacetInfo=skipFacetInfo,
+            thresholdCoreSurface=thresholdCoreSurface,
+            noOutput=noOutput, is_optimized=False)
+
+###############################################################
+
+def systematic_stellate_by(self, NP_B, carve_axis=None, axis_through='vertex',
+                           lead='base', depth_nm=None, seat_on_face=True,
+                           scale=1.0, phase_deg=0.0, mode='hull', threshold=0.8,
+                           preview=False, recenter=True,
+                           noOutput=False, postAnalyzis=None,
+                           skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
+                           skipFacetInfo=None, thresholdCoreSurface=None):
+    """
+    Systematically raise a relief on every face of self.NP (object A) by ADDING
+    an arbitrary pyNMB object B on each face (the additive counterpart of
+    systematic_carve_by). For each face of A's convex hull, an oriented,
+    positioned copy of B is merged onto the face with union_with, growing a
+    point/relief outward — producing stellation-like and studded morphologies.
+
+    This is the "+" sibling of systematic_carve_by (which subtracts). Both share
+    the same placement machinery (axis_through, lead, depth_nm/seat_on_face,
+    scale, phase_deg); only the boolean operation differs: stellate UNIONS B,
+    carve SUBTRACTS it. The lattice of B is generally NOT registered with A, so
+    each raised piece joins A through an interface (assumed, cleaned by
+    union_with's overlap removal) — fine for a geometric object.
+
+    Args:
+        self: pyNMBcore object (A). Modified in place (unless preview=True).
+        NP_B: pyNMBcore object (B). The relief pattern. Never modified.
+        carve_axis (array-like or None): an axis OF B, in B's own frame, aligned
+            onto each face normal of A. None (default) → derived from
+            axis_through. A given vector overrides axis_through; its sense is
+            still set by `lead`.
+        axis_through (str): when carve_axis is None, which symmetry direction of
+            B becomes the penetration axis: 'vertex' (default), 'edge' or 'face'.
+        lead (str): which end of B leads (goes inward, toward A's core). For a
+            stellation you usually want the BASE seated on the face and the apex
+            pointing OUT, so the default here is 'base' (note: differs from
+            carve's 'apex' default). 'apex' would sink the point into A instead.
+        depth_nm (float or None): SIGNED distance (nm) between B's leading inner
+            tip and A's centre of gravity, along the inward normal. Same
+            convention as systematic_carve_by. Ignored when seat_on_face=True.
+            None places the tip half-way to the centre.
+        seat_on_face (bool): if True (default), ignore depth_nm and seat B's
+            leading end exactly on each face plane, so B sits on the surface and
+            protrudes outward (the natural stellation placement). Set False to
+            control the position manually with depth_nm.
+        scale (float): scale factor applied to B. Honoured in mode='hull',
+            ignored in mode='atoms'. Default 1.0.
+        phase_deg (float): azimuthal rotation of B about the face normal, deg.
+        mode (str): passed to union_with — 'hull' (default) or 'atoms'.
+        threshold (float): passed to union_with — atoms of A within
+            threshold*Rnn of B are removed before merging. Default 0.8.
+        preview (bool): if True, DO NOT add. In mode='hull', build
+            self.NP_preview = A alone and set self.jMolStellationPreview (via
+            external_pgm.defCarvePreviewForJMol) to a Jmol command drawing
+            each placed B's hull as translucent polygons (the exact relief
+            volume, clear even when scale > 1). In mode='atoms', build
+            self.NP_preview = A + placed copies of B as marker 'No' atoms
+            (tracing B's true, possibly concave shape) and set
+            self.jMolStellationPreview = None. self.NP is left untouched in both
+            cases.
+        recenter (bool): recentre on the COM once at the end. Default True.
+        noOutput (bool): suppress output. Default False.
+        postAnalyzis, skip*: standard post-analysis controls (None -> self.*).
+
+    Returns:
+        None. Updates self.NP in place (via union_with per face), or
+        self.NP_preview if preview=True.
+
+    Example:
+        # Small-triambic-like relief: a low tetrahedron raised point-out on
+        # every face of an icosahedron
+        ico.systematic_stellate_by(td, axis_through='vertex', lead='base',
+                                   seat_on_face=True, scale=1.0)
+    """
+    import numpy as np
+    from scipy.spatial.transform import Rotation
+    from ase import Atoms
+
+    if mode not in ('hull', 'atoms'):
+        raise ValueError(f"mode must be 'hull' or 'atoms', got '{mode}'.")
+
+    if not noOutput:
+        title = ("Preview: stellation pattern placement"
+                 if preview else "Systematic face stellation by a pattern object")
+        centertxt(title, bgc='#007a7a', size='14', weight='bold')
+        chrono = timer(); chrono.chrono_start()
+
+    # --- source structure of A -------------------------------------------
+    if self.is_optimized and getattr(self, 'NP_opt', None) is not None:
+        target_atoms = self.NP_opt
+        status = "optimized structure"
+    else:
+        target_atoms = self.NP
+        status = "initial structure"
+    pos_A = target_atoms.get_positions()
+    cog_A = target_atoms.get_center_of_mass()
+    pos_A_c = pos_A - cog_A                       # A centred: cog at origin
+
+    # --- scale handling (same rule as carve) -----------------------------
+    eff_scale = float(scale)
+    if mode == 'atoms' and abs(eff_scale - 1.0) > 1e-9:
+        if not noOutput:
+            print(f"{bg.LIGHTYELLOWB}Warning: scale is ignored in "
+                  f"mode='atoms'. Build B at the target size. Using "
+                  f"scale=1.{bg.OFF}")
+        eff_scale = 1.0
+
+    # --- pattern B: centred, scaled --------------------------------------
+    pos_B = NP_B.NP.get_positions().copy()
+    pos_B = pos_B - pos_B.mean(0)
+    pos_B = pos_B * eff_scale
+
+    carve_axis, axis_msgs = _resolve_carve_axis(pos_B, carve_axis,
+                                                axis_through, lead)
+    if axis_msgs and not noOutput:
+        for m in axis_msgs:
+            print(f"{bg.LIGHTYELLOWB}Note: {m}{bg.OFF}")
+    ref_edge_B = _silhouette_ref_edge(pos_B, carve_axis)
+
+    # --- faces of A -------------------------------------------------------
+    faces = _faces_of_A(pos_A_c)
+    if len(faces) == 0:
+        if not noOutput:
+            print("  No faces found — nothing to do.")
+        return
+
+    # default depth (only used when seat_on_face is False)
+    if depth_nm is None:
+        Dmin = min(f['D'] for f in faces) if faces else 0.0
+        depth_ang_default = 0.5 * Dmin
+    else:
+        depth_ang_default = depth_nm * 10.0
+
+    phase = float(phase_deg)
+
+    # --- per face: compute rotB (axis-angle) and cogB (nm) ----------------
+    # We reproduce union_with's internal placement exactly:
+    #   union_with does pos_B_centered -> rotate(rotB) -> + cogB_ang
+    # So rotB must be the same rotation R we use here, and cogB the final
+    # centre of the placed (rotated) B.
+    placements = []          # list of (rotB, cogB_nm)
+    B_copies = []            # for preview only
+    for f in faces:
+        R, _ = Rotation.align_vectors(
+            np.array([f['n'], f['ref_edge']]),
+            np.array([carve_axis, ref_edge_B]))
+        Rmat = R.as_matrix()
+        Bp = (Rmat @ pos_B.T).T
+        if phase != 0.0:
+            Rp = Rotation.from_rotvec(np.radians(phase) * f['n']).as_matrix()
+            Bp = (Rp @ Bp.T).T
+            Rmat = Rp @ Rmat            # fold phase into the rotation
+
+        # leading (inner) tip along the outward normal
+        proj = Bp @ f['n']
+        inner = proj.min()
+        if seat_on_face:
+            depth_ang = f['D']          # seat leading tip on this face's plane
+        else:
+            depth_ang = depth_ang_default
+        Bp = Bp + (depth_ang - inner) * f['n']
+
+        # express as rotB (axis-angle, B's own frame) + cogB (nm)
+        rotvec = Rotation.from_matrix(Rmat).as_rotvec()
+        ang = float(np.degrees(np.linalg.norm(rotvec)))
+        if np.linalg.norm(rotvec) > 1e-12:
+            ax = rotvec / np.linalg.norm(rotvec)
+        else:
+            ax = np.array([0.0, 0.0, 1.0])
+        rotB = [float(ax[0]), float(ax[1]), float(ax[2]), ang]
+        # cogB: union_with works in A's ORIGINAL (un-centred) frame, so add
+        # cog_A back; cogB is given in nm.
+        cogB_nm = ((Bp.mean(0) + cog_A) / 10.0).tolist()
+
+        placements.append((rotB, cogB_nm))
+        B_copies.append(Bp.copy())
+
+    # --- preview branch ---------------------------------------------------
+    if preview:
+        symbols_A = target_atoms.get_chemical_symbols()
+        seat_str = ("seated on each face" if seat_on_face
+                    else f"inner tip {depth_ang_default/10:.2f} nm from cog")
+        if mode == 'hull':
+            # hull mode: the translucent polygons show the exact relief volume,
+            # clean even when scale > 1. NP_preview holds A alone; the patterns
+            # live in the Jmol script.
+            self.NP_preview = Atoms(symbols=list(symbols_A), positions=pos_A_c)
+            from .external_pgm import defCarvePreviewForJMol
+            self.jMolStellationPreview = defCarvePreviewForJMol(
+                self, B_copies, color="x2a75ff", noOutput=True)
+        else:
+            # atoms mode: the 'No' marker atoms trace B's true (possibly
+            # concave) shape. No polygons.
+            all_pos = [pos_A_c]
+            all_sym = list(symbols_A)
+            for Bp in B_copies:
+                all_pos.append(Bp)
+                all_sym += ['No'] * len(Bp)     # No: large radius, bonds shown
+            self.NP_preview = Atoms(symbols=all_sym,
+                                    positions=np.vstack(all_pos))
+            self.jMolStellationPreview = None
+        if not noOutput:
+            print(f"  - Source        : {status}")
+            print(f"  - Mode          : '{mode}'")
+            print(f"  - Faces         : {len(faces)} "
+                  f"({len(B_copies)} pattern copies placed)")
+            print(f"  - carve_axis    : [{carve_axis[0]:+.3f} "
+                  f"{carve_axis[1]:+.3f} {carve_axis[2]:+.3f}]  lead='{lead}'")
+            print(f"  - Placement     : {seat_str}")
+            if mode == 'hull':
+                print(f"  - Stored as     : self.NP_preview (A only) and "
+                      f"self.jMolStellationPreview (pattern hull outlines).")
+                print(f"    self.NP untouched. To inspect in Jmol:")
+                print(f"      pyNMBu.write('preview.xyz', NP.NP_preview)")
+                print(f"      pyNMBu.write('preview.script', "
+                      f"NP.jMolStellationPreview)")
+                print(f"      then in Jmol, load preview.xyz and run: "
+                      f"script './preview.script'")
+            else:
+                print(f"  - Stored as     : self.NP_preview (A + B as 'No', "
+                      f"showing B's true shape). No hull outline in atoms mode.")
+                print(f"    self.NP untouched. To inspect in Jmol:")
+                print(f"      pyNMBu.write('preview.xyz', NP.NP_preview)")
+            chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+        return
+
+    # --- merge branch: one union_with per face, no recenter between -------
+    n_before = len(target_atoms)
+    for i, (rotB, cogB_nm) in enumerate(placements):
+        self.union_with(
+            NP_B, cogB=cogB_nm, rotB=rotB, mode=mode, threshold=threshold,
+            recenter=False, noOutput=True, postAnalyzis=False)
+
+    # recenter once at the end (as union_with's docstring recommends for
+    # sequential face-by-face application)
+    if recenter and len(self.NP) > 0:
+        self.NP.positions -= self.NP.get_center_of_mass()
+    self.nAtoms = len(self.NP)
+    self.cog = self.NP.get_center_of_mass()
+
+    self.trPlanes = None
+    self.trPlanes_Wulff = None
+    self.trPlanes_opt = None
+
+    if not noOutput:
+        n_added = self.nAtoms - n_before
+        print(f"  - Source        : {status}")
+        print(f"  - Mode          : '{mode}'"
+              + (f" (scale {eff_scale:.2f})" if mode == 'hull' else ""))
+        print(f"  - Pattern B     : {len(pos_B)} atoms")
+        print(f"  - carve_axis    : [{carve_axis[0]:+.3f} {carve_axis[1]:+.3f} "
+              f"{carve_axis[2]:+.3f}]  lead='{lead}'")
+        print(f"  - Faces raised  : {len(faces)}")
+        seat_str = ("seated on each face" if seat_on_face
+                    else f"inner tip {depth_ang_default/10:.2f} nm from cog")
+        print(f"  - Placement     : {seat_str}, phase {phase:.0f}°")
+        print(f"  - Net atoms added: {n_added} "
+              f"({n_before} -> {self.nAtoms})")
+        print(f"  - self.NP updated.")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+
+    self._flush_stale_data(shape_update="_systematic_stellate")
+    self.is_optimized = False
+
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+    if postAnalyzis and self.nAtoms > 0:
+        self.propPostMake(
+            skipChiralityCalculation=skipChiralityCalculation,
+            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+            skipFacetInfo=skipFacetInfo,
+            thresholdCoreSurface=thresholdCoreSurface,
+            noOutput=noOutput, is_optimized=False)

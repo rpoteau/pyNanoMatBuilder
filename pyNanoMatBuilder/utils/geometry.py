@@ -32,6 +32,7 @@ from .core import centertxt, centerTitle, fg, bg, hl, color
 from .crystals import lattice_cart, convertuvwh2hkld
 from .core import round_to_Miller
 from .core import kDTreeCN
+
 ######################################## Fill edges and facets
 
 def MakeFaceCoord(Rnn,f,coord,nAtomsOnFaces,coordFaceAt):
@@ -118,19 +119,27 @@ def reduceHullFacets(self,
     """
 
     from scipy.spatial import HalfspaceIntersection
-    from scipy.spatial import ConvexHull
+    from scipy.spatial import ConvexHull, cKDTree
     import scipy as sp
 
+    # --- Select source planes ---
+    # if useWulff and hasattr(self, 'trPlanes_Wulff') and self.trPlanes_Wulff is not None:
+    #     target_planes = np.array(self.trPlanes_Wulff)
+    #     status = "Wulff construction"
+    # elif self.is_optimized:
+    #     target_planes = np.array(self.trPlanes_opt)
+    #     status = "optimized structure"
+    # else:
+    #     target_planes = np.array(self.trPlanes)
+    #     status = "initial structure"
     # --- Select source planes ---
     if useWulff and hasattr(self, 'trPlanes_Wulff') and self.trPlanes_Wulff is not None:
         target_planes = np.array(self.trPlanes_Wulff)
         status = "Wulff construction"
-    elif self.is_optimized:
-        target_planes = np.array(self.trPlanes_opt)
-        status = "optimized structure"
     else:
-        target_planes = np.array(self.trPlanes)
-        status = "initial structure"
+        target_np = self.NP_opt if self.is_optimized else self.NP
+        target_planes = ConvexHull(target_np.get_positions()).equations
+        status = "optimized structure" if self.is_optimized else "initial structure"
 
     # Use current center of mass of remaining atoms as feasible point
     # self.cog may be stale if recenter=False was used in applySlicing
@@ -183,10 +192,23 @@ def reduceHullFacets(self,
     hs = HalfspaceIntersection(target_planes, feasible_point)
     
     vertices = hs.intersections
+    # Merge near-duplicate vertices produced by HalfspaceIntersection at
+    # degenerate corners where more than 3 planes meet (e.g. the 5-plane
+    # apices of an icosahedron). Without this, ConvexHull sees doubled
+    # vertices, breaks the face connectivity, and reduceFaces cannot merge
+    # the coplanar simplices back into the true faces.
+    from scipy.spatial import cKDTree
+    tree = cKDTree(vertices)
+    pairs = tree.query_pairs(r=0.1)   # < 0.1 Å apart → same corner
+    keep = np.ones(len(vertices), dtype=bool)
+    for i, j in pairs:
+        keep[max(i, j)] = False
+    vertices = vertices[keep]
+    
     hull = ConvexHull(vertices)
-
     faces = hull.simplices
     neighbours = hull.neighbors
+    
     if not noOutput:
         centertxt("Boundaries figure", bgc='#007a7a', size='14', weight='bold')
         centertxt(
@@ -1421,6 +1443,231 @@ def coreSurface(self,
     if not noOutput: chrono.chrono_stop(hdelay=False); chrono.chrono_show()
     return [hull.vertices, hull.simplices, hull.neighbors, hull.equations],surfaceAtoms
 
+def _estimate_Rnn(coords):
+    """
+    Estimate the nearest-neighbour distance Rnn as the median of each atom's
+    distance to its closest neighbour. Robust to surface atoms and small
+    relaxations (a plain min would be optimistic on relaxed structures).
+
+    Args:
+        coords (np.ndarray): (N, 3) positions.
+
+    Returns:
+        float: estimated Rnn in Å.
+    """
+    import numpy as np
+    from scipy.spatial import cKDTree
+    if len(coords) < 2:
+        return 0.0
+    d, _ = cKDTree(coords).query(coords, k=2)   # column 1 = nearest neighbour
+    return float(np.median(d[:, 1]))
+
+
+def coreSurface_cnp(self, cutoff_cnp=None, Rnn=None, threshold=None,
+                    threshold_frac=None, store=True, is_optimized=None,
+                    noOutput=False):
+    """
+    Core/surface classification from the Common Neighbour Parameter (CNP),
+    as a structural alternative to the convex-hull coreSurface().
+
+    Instead of asking "does this atom lie on the outer envelope?" (a geometric
+    test that requires convexity), this labels as *surface* every atom whose
+    local environment departs from a perfect centrosymmetric core, i.e. whose
+    CNP exceeds a threshold. Because the criterion is purely local, it is
+    robust to NON-CONVEX shapes (nanostars, octopods, concave junctions,
+    bimetallic interfaces) where the convex hull wrongly buries exposed atoms.
+
+    Note that the CNP criterion is *structural*, not geometric: it flags atoms
+    with a perturbed neighbourhood, which typically includes the outermost
+    one or two atomic layers, not only the geometric envelope. The two views
+    are complementary.
+
+    The threshold separating buried atoms (core + internal twin planes, low
+    CNP) from exposed atoms (surface / edges / vertices, high CNP) can be:
+      - given explicitly (`threshold`, in Å²), or
+      - given as a fraction of the CNP range (`threshold_frac`), or
+      - found automatically (default) as the midpoint of the widest gap
+        between the low-CNP cluster and the high-CNP surface populations.
+    Because core and twin atoms are both buried and share low CNP, this keeps
+    twins on the CORE side; only genuinely exposed atoms are labelled surface.
+    Inspect the populations with local_order_populations(descriptor='cnp')
+    first and, if the automatic cut misses the physical gap, set `threshold`
+    by hand — you can see where the separation lies.
+    CNP scales with cutoff_cnp^2, so an absolute threshold is not portable
+    across cutoffs; the automatic gap or the fractional threshold are preferred.
+
+    Args:
+        self: pyNMBcore instance.
+        cutoff_cnp (float or None): neighbour cutoff in Å for the CNP. If None
+            (default), it is set to 1.3 * Rnn, where Rnn is taken from the `Rnn`
+            argument or, if that is also None, estimated automatically from the
+            structure (median nearest-neighbour distance). Should stay within
+            ~1.2-1.4 * Rnn so the cutoff captures the FIRST coordination shell
+            only; larger values mix outer shells and smear the CNP into a
+            continuum, breaking the core/surface separation.
+        Rnn (float or None): true nearest-neighbour distance in Å. Used to set
+            cutoff_cnp when that is None, and to warn if cutoff_cnp is too large.
+            If None it is estimated from the structure.
+        threshold (float or None): explicit CNP cut in Å². Overrides the rest.
+        threshold_frac (float or None): cut at threshold_frac*(cnp.max()),
+            used if `threshold` is None.
+        store (bool): if True, store the boolean surface mask as
+            self.surfaceAtoms_cnp (or _opt) and the threshold used as
+            self.cnp_core_threshold. Default True.
+        is_optimized (bool or None): target structure; None -> self.is_optimized.
+        noOutput (bool): if True, suppress output. Default False.
+
+    Returns:
+        tuple: (surfaceAtoms, threshold) — boolean array (True = surface) and
+            the CNP threshold (Å²) actually used.
+
+    Note: the CNP assumes a near-equilibrium lattice. On a non-optimized /
+        strained structure the core CNP spreads into a low continuum instead of a
+        sharp zero peak, which can cause over-detection of surface atoms; prefer the
+        hull criterion there, or optimize() the structure first.
+
+    """
+    import numpy as np
+    from .local_descriptors import common_neighbour_parameter
+
+    if is_optimized is None:
+        is_optimized = getattr(self, 'is_optimized', False)
+    use_opt = is_optimized and getattr(self, 'NP_opt', None) is not None
+    suffix = "_opt" if use_opt else ""
+    status = "optimized structure" if use_opt else "initial structure"
+    target_atoms = self.NP_opt if use_opt else self.NP
+
+    if not noOutput:
+        centertxt("Core/Surface analysis (CNP criterion)",
+                  bgc='#007a7a', size='14', weight='bold')
+        chrono = timer(); chrono.chrono_start()
+
+    coords = np.ascontiguousarray(target_atoms.get_positions(),
+                                  dtype=np.float64)
+
+    # --- resolve the cutoff ----------------------------------------------
+    rnn_auto = None
+    if Rnn is None:
+        Rnn = _estimate_Rnn(coords)
+        rnn_auto = Rnn
+    if cutoff_cnp is None:
+        cutoff_cnp = 1.3 * Rnn
+
+    # warn if the cutoff reaches beyond the first coordination shell
+    if not noOutput and Rnn > 0 and cutoff_cnp > 1.45 * Rnn:
+        print(f"{bg.LIGHTYELLOWB}Warning: cutoff_cnp/Rnn = "
+              f"{cutoff_cnp / Rnn:.2f} is large. CNP is defined on the FIRST "
+              f"coordination shell; values smear into a continuum beyond "
+              f"~1.4. Use cutoff_cnp ≈ 1.3·Rnn.{bg.OFF}")
+
+    # reuse a stored CNP if present, else compute it
+    cnp = getattr(self, f"cnp{suffix}", None)
+    if cnp is None:
+        cnp = common_neighbour_parameter(self, cutoff_cnp, noOutput=True,
+                                         store=store,
+                                         is_optimized=is_optimized)
+    cnp = np.asarray(cnp)
+
+    # --- diagnostic: is the core well-formed? ----------------------------
+    # In a relaxed, compact crystal the core sits at CNP ~ 0 with a clean gap
+    # to the surface. A strained / non-optimized OR a dilated structure (large
+    # inter-layer spacing, so the cutoff misses true neighbours) smears the
+    # core into a low continuum (~0.5-4 Å²), which makes the CNP over-detect
+    # surface atoms. Detect that and fall back to the hull criterion.
+    frac_smear = float(np.mean((cnp >= 0.5) & (cnp < 4.0)))
+    if frac_smear > 0.10:
+        if not noOutput:
+            print(f"{bg.LIGHTYELLOWB}Warning: {100*frac_smear:.0f}% of atoms "
+                  f"have a low, non-zero CNP (0.5-4 Å²). The core is either "
+                  f"strained/non-optimized or the structure is dilated so the "
+                  f"cutoff misses true neighbours — in both cases the CNP "
+                  f"over-detects surface atoms. Falling back to the convex-hull "
+                  f"criterion. optimize() (or a compact structure) is needed to "
+                  f"use the CNP reliably.{bg.OFF}")
+        surf_hull = getattr(self, f"surfaceAtoms{suffix}", None)
+        if surf_hull is None:
+            _, surf_hull = coreSurface(self, noOutput=True)
+        surfaceAtoms = np.asarray(surf_hull, dtype=bool)
+        if store:
+            setattr(self, f"surfaceAtoms_cnp{suffix}", surfaceAtoms)
+            setattr(self, "cnp_core_threshold", None)
+        if not noOutput:
+            n_surf = int(np.count_nonzero(surfaceAtoms))
+            print(f" - Fell back to hull : {n_surf} surface atoms "
+                  f"({100*n_surf/surfaceAtoms.size:.1f} %)")
+            chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+        return surfaceAtoms, None
+
+    # --- determine the threshold -----------------------------------------
+    if threshold is not None:
+        thr = float(threshold)
+        thr_src = "explicit"
+    elif threshold_frac is not None:
+        thr = float(threshold_frac) * float(cnp.max())
+        thr_src = f"{threshold_frac:.3g}·max"
+    else:
+        thr = _cnp_largest_gap_threshold(cnp)
+        thr_src = "auto (largest gap)"
+
+    surfaceAtoms = cnp > thr
+    n_surf = int(np.count_nonzero(surfaceAtoms))
+    n_core = int(surfaceAtoms.size - n_surf)
+
+    if store:
+        setattr(self, f"surfaceAtoms_cnp{suffix}", surfaceAtoms)
+        setattr(self, "cnp_core_threshold", thr)
+
+    if not noOutput:
+        rnn_note = " (auto-estimated)" if rnn_auto is not None else ""
+        print(f" - Source            : {status}")
+        print(f" - Rnn               : {Rnn:.3f} Å{rnn_note}")
+        print(f" - Cutoff (cnp)      : {cutoff_cnp:.3f} Å")
+        print(f" - Threshold ({thr_src}) : {thr:.3f} Å²")
+        print(f" - Core atoms        : {n_core} "
+              f"({100*n_core/surfaceAtoms.size:.1f} %)")
+        print(f" - Surface atoms     : {n_surf} "
+              f"({100*n_surf/surfaceAtoms.size:.1f} %)")
+        print(f" - Stored as         : self.surfaceAtoms_cnp{suffix} "
+              f"(True = surface)")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+
+    return surfaceAtoms, thr
+
+def _cnp_largest_gap_threshold(values, decimals=1, core_quantile=0.6):
+    """
+    Automatic CNP core/surface threshold: the midpoint of the WIDEST gap
+    between consecutive CNP populations, searched in the lower part of the
+    value range only.
+
+    Rationale: core (CNP~0) and internal twin planes (low, non-zero CNP) form
+    a cluster of low values, well separated by a wide empty gap from the
+    surface / edge / vertex populations at high CNP. Placing the cut in that
+    gap keeps buried atoms (core + twins) on the core side and only the exposed
+    atoms on the surface side. The search is restricted to below
+    core_quantile of the range so the large gap before the rare high-CNP
+    vertex populations is not mistaken for the core/surface separation.
+
+    Args:
+        values (np.ndarray): per-atom CNP.
+        decimals (int): rounding to define populations. Default 1.
+        core_quantile (float): upper fraction of the value range within which
+            the gap is searched. Default 0.6.
+
+    Returns:
+        float: CNP threshold in Å².
+    """
+    import numpy as np
+    v = np.unique(np.round(values, decimals))
+    if len(v) < 2:
+        return float(values.max()) + 1e-9
+    vmin, vmax = v.min(), v.max()
+    cutoff = vmin + core_quantile * (vmax - vmin)
+    cand = v[v <= cutoff]
+    if len(cand) < 2:
+        cand = v
+    gaps = np.diff(cand)
+    k = int(np.argmax(gaps))
+    return float(0.5 * (cand[k] + cand[k + 1]))
 ################################################################
 
 def peel_by_coordination(self, threshold_peeling=6, Rmax=2.9, noOutput=False,
@@ -1836,6 +2083,108 @@ def remove_plane(self, direction, axis_def='hkl', tol=0.5,
             noOutput=noOutput,
             is_optimized=False)
 
+def coreSurface_combined(self, cutoff_cnp=None, Rnn=None, threshold=None,
+                         threshold_frac=None, threshold_CoreSurface=1e-3,
+                         store=True, is_optimized=None, noOutput=False):
+    """
+    Core/surface classification combining the convex-hull and CNP criteria:
+    an atom is labelled SURFACE if EITHER method flags it as surface (logical
+    OR). This is the conservative choice — each method covers the other's blind
+    spot:
+      - the convex hull misses atoms exposed inside concavities (it buries
+        them as 'core' because they are not on the outer envelope);
+      - the CNP can miss a surface atom whose local environment is unusually
+        ordered (e.g. a perfectly flat dense facet with a low CNP).
+    Taking the union recovers both populations.
+
+    For non-convex shapes (nanostars, octopods, concave junctions, bimetallic
+    interfaces) this is more reliable than either method alone.
+
+    The hull mask is reused from self.surfaceAtoms (or _opt) if already present
+    (e.g. after propPostMake); it is only recomputed when missing. The CNP mask
+    is likewise reused from self.cnp if available. The cutoff and Rnn are
+    auto-resolved by coreSurface_cnp when not supplied.
+
+    Args:
+        self: pyNMBcore instance.
+        cutoff_cnp (float or None): CNP neighbour cutoff in Å. If None, set to
+            1.3·Rnn with Rnn taken from the argument or auto-estimated.
+        Rnn (float or None): true nearest-neighbour distance, used to set
+            cutoff_cnp when it is None and to warn if cutoff_cnp is too large.
+        threshold (float or None): explicit CNP cut (Å²), passed to
+            coreSurface_cnp.
+        threshold_frac (float or None): fractional CNP cut, passed to
+            coreSurface_cnp.
+        threshold_CoreSurface (float): hull plane tolerance, used only if the
+            hull mask must be (re)computed here. Default 1e-3.
+        store (bool): if True, store the combined mask as
+            self.surfaceAtoms_combined (or _opt). Default True.
+        is_optimized (bool or None): target structure; None -> self.is_optimized.
+        noOutput (bool): if True, suppress output. Default False.
+
+    Returns:
+        tuple: (surfaceAtoms, n_hull_only, n_cnp_only, n_both) — the combined
+            boolean surface mask and a breakdown of where the two methods
+            agreed or disagreed.
+    """
+    import numpy as np
+
+    if is_optimized is None:
+        is_optimized = getattr(self, 'is_optimized', False)
+    use_opt = is_optimized and getattr(self, 'NP_opt', None) is not None
+    suffix = "_opt" if use_opt else ""
+    status = "optimized structure" if use_opt else "initial structure"
+
+    if not noOutput:
+        centertxt("Core/Surface analysis (hull ∪ CNP)",
+                  bgc='#007a7a', size='14', weight='bold')
+
+    # --- hull criterion: reuse the stored mask if available --------------
+    surf_hull = getattr(self, f"surfaceAtoms{suffix}", None)
+    if surf_hull is None:
+        # not computed yet (e.g. propPostMake not run) → compute it now.
+        # coreSurface targets NP/NP_opt via self.is_optimized, so it stays
+        # consistent with the suffix resolved above.
+        _, surf_hull = coreSurface(
+            threshold_CoreSurface=threshold_CoreSurface, noOutput=True)
+    surf_hull = np.asarray(surf_hull, dtype=bool)
+
+    # --- CNP criterion (reuses self.cnp if already stored) ---------------
+    surf_cnp, thr = coreSurface_cnp(
+        self, cutoff_cnp=cutoff_cnp, Rnn=Rnn, threshold=threshold,
+        threshold_frac=threshold_frac, store=store,
+        is_optimized=is_optimized, noOutput=True)
+    surf_cnp = np.asarray(surf_cnp, dtype=bool)
+
+    if surf_hull.shape != surf_cnp.shape:
+        raise ValueError(f"hull mask ({surf_hull.size}) and CNP mask "
+                         f"({surf_cnp.size}) differ in length — are both "
+                         f"computed on the same structure?")
+
+    # --- union ------------------------------------------------------------
+    surfaceAtoms = surf_hull | surf_cnp
+    n_both      = int(np.count_nonzero(surf_hull & surf_cnp))
+    n_hull_only = int(np.count_nonzero(surf_hull & ~surf_cnp))
+    n_cnp_only  = int(np.count_nonzero(surf_cnp & ~surf_hull))
+    n_surf      = int(np.count_nonzero(surfaceAtoms))
+
+    if store:
+        setattr(self, f"surfaceAtoms_combined{suffix}", surfaceAtoms)
+
+    if not noOutput:
+        n = surfaceAtoms.size
+        print(f" - Source              : {status}")
+        print(f" - Surface (hull ∪ CNP): {n_surf} ({100*n_surf/n:.1f} %)")
+        print(f" -   both methods agree: {n_both}")
+        print(f" -   hull only         : {n_hull_only} "
+              f"(flat facets the CNP missed)")
+        print(f" -   CNP only          : {n_cnp_only} "
+              f"(concave-exposed atoms the hull buried)")
+        print(f" - Stored as           : self.surfaceAtoms_combined{suffix} "
+              f"(True = surface)")
+
+    return surfaceAtoms, n_hull_only, n_cnp_only, n_both
+    
 def round_tip_in_direction(self, direction, diameter_nm, axis_def='hkl',
                            use_axis_center=True, noOutput=True,
                            postAnalyzis=None,
@@ -2109,7 +2458,8 @@ def clip_to_ellipsoid(self, diameters_nm, noOutput=True,
 def clip_to_cone(self, base_center_nm, apex_nm,
                  base_radius_nm=None, apex_angle_deg=None,
                  tip_sphere_radius_nm=0.0,
-                 keep='inside', recenter=True, noOutput=True,
+                 keep='inside', keep_opposite_side=False,
+                 recenter=True, noOutput=True,
                  postAnalyzis=None,
                  skipChiralityCalculation=None,
                  skipSymmetryAnalyzis=None,
@@ -2144,6 +2494,12 @@ def clip_to_cone(self, base_center_nm, apex_nm,
             virtual apex.
         keep (str): 'inside' or 'outside'. See note on the truncated domain
             (atoms outside the base/apex span are treated as outside).
+        keep_opposite_side (bool): if True, atoms on the far side of the base
+            plane (t < 0, opposite the apex) are left untouched instead of
+            being removed. Used to build a symmetric double cone with two
+            successive calls (apex up, then apex down): each call shapes its
+            own half-space and preserves the other. Default False (single cone:
+            everything outside the base/apex span is removed).
         recenter (bool): recentre on the COM after clipping. Default True.
         noOutput (bool): suppress output. Default True.
         ... (postAnalyzis etc. as usual)
@@ -2216,9 +2572,23 @@ def clip_to_cone(self, base_center_nm, apex_nm,
         dist_to_centre = np.sqrt(radial**2 + (t - t_center)**2)
         cap_part = (t > t_tan) & (dist_to_centre <= r_sph)
         inside = cone_part | cap_part
+        
+    # apex-side rule: keep the cone interior or exterior on the apex side
+    # Signed tolerance on the base-plane test. The boundary must lean toward the
+    # apex side so the median layer is claimed by the cone rule of THIS call
+    # (kept), not pushed to the opposite half-space. Sign follows the cone axis:
+    # apex up (u[2] > 0) -> tol = -1e-6 ; apex down (u[2] < 0) -> tol = +1e-6.
+    eps = 1e-6
+    tol = -eps if u[2] >= 0 else +eps
 
-    mask = inside if keep == 'inside' else ~inside
+    apex_side_keep = inside if keep == 'inside' else ~inside
 
+    if keep_opposite_side:
+        # apex side (t >= tol): apply the keep rule
+        # opposite side (t <  tol): keep all atoms untouched
+        mask = (t < tol) | (apex_side_keep & (t >= tol))
+    else:
+        mask = apex_side_keep
     old_count = len(self.NP)
     self.NP = self.NP[mask]
     if recenter and len(self.NP) > 0:

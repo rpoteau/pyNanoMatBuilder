@@ -722,3 +722,75 @@ def defLocalOrderColorForJMol(self, descriptor='cnp', l=6, color='turbo',
         print(f"  {cmd}")
 
     return cmd
+
+def defCarvePreviewForJMol(self,
+                           B_copies,
+                           color: str = 'xff3030',
+                           translucency: int = 80,
+                           noOutput: bool = True):
+    """
+    Generate a Jmol command to visualize the carving patterns placed by
+    systematic_carve_by(preview=True), as translucent polygons outlining the
+    convex hull of each placed pattern copy.
+
+    For each placed copy of B, the faces of its convex hull are drawn as
+    translucent polygons with their edges, so the exact volume that would be
+    removed is visible as a clean solid — legible regardless of B's atomic
+    spacing (i.e. even when scale > 1 spreads the marker atoms apart). This is
+    the mode='hull' companion to the 'No' marker atoms stored in
+    self.NP_preview; in mode='atoms' the marker atoms already show B's true
+    (possibly concave) shape and no polygons are produced.
+
+    Args:
+        B_copies (list of ndarray): list of (N,3) arrays, the placed atomic
+            positions of each pattern copy (one per carved face).
+        color (str): hex colour of the polygons/edges (default 'xff3030', red).
+        translucency (int): polygon translucency in percent (0=opaque,
+            100=fully translucent). Default 80.
+        noOutput (bool): If True, suppresses output. Default is True.
+
+    Returns:
+        str: Jmol command string. The caller (systematic_carve_by or
+            systematic_stellate_by) stores it in its own attribute
+            (self.jMolCarvePreview or self.jMolStellationPreview).
+    """
+    from scipy.spatial import ConvexHull
+
+    cmd = ""
+    fidx = 0
+    eidx = 0
+    for ic, Bp in enumerate(B_copies):
+        try:
+            hb = ConvexHull(Bp)
+        except Exception:
+            continue
+        # --- hull faces as translucent polygons ---
+        for simp in hb.simplices:
+            cmd += f"draw carvef{fidx} polygon ["
+            for at in simp:
+                p = Bp[at]
+                cmd += f"{{{p[0]:.4f},{p[1]:.4f},{p[2]:.4f}}},"
+            cmd += "]; "
+            fidx += 1
+        # --- hull edges as thin lines ---
+        edges = set()
+        for s in hb.simplices:
+            for a, b in ((s[0], s[1]), (s[1], s[2]), (s[0], s[2])):
+                edges.add((min(a, b), max(a, b)))
+        for a, b in edges:
+            p0, p1 = Bp[a], Bp[b]
+            cmd += f"draw carvee{eidx} ["
+            cmd += f"{{{p0[0]:.4f},{p0[1]:.4f},{p0[2]:.4f}}},"
+            cmd += f"{{{p1[0]:.4f},{p1[1]:.4f},{p1[2]:.4f}}},"
+            cmd += "] width 0.15; "
+            eidx += 1
+
+    cmd += f"color $carvef* translucent {translucency} [{color}]; "
+    cmd += f"color $carvee* [{color}]; "
+
+    if not noOutput:
+        print(f"Jmol command for {len(B_copies)} carving patterns "
+              f"({fidx} polygons):")
+        print(cmd)
+
+    return cmd

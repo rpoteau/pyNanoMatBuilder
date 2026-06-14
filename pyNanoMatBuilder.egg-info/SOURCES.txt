@@ -405,6 +405,7 @@ pyNanoMatBuilder/utils/energy.py
 pyNanoMatBuilder/utils/external_pgm.py
 pyNanoMatBuilder/utils/geometry.py
 pyNanoMatBuilder/utils/io.py
+pyNanoMatBuilder/utils/local_descriptors.py
 pyNanoMatBuilder/utils/parallel.py
 pyNanoMatBuilder/utils/polydispersity.py
 pyNanoMatBuilder/utils/prop.py
@@ -420,6 +421,7 @@ pyNanoMatBuilder/utils/.ipynb_checkpoints/energy-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/external_pgm-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/geometry-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/io-checkpoint.py
+pyNanoMatBuilder/utils/.ipynb_checkpoints/local_descriptors-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/parallel-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/polydispersity-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/prop-checkpoint.py

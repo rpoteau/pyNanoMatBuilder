@@ -738,6 +738,8 @@ class ptnr(pyNMBcore):
             ]
         prism.applySlicing(planes=planes, mode='OR', distance_unit='nm',
                            recenter=False, noOutput=noOutput)
+        prism.apply_rotation(angle_deg=-18, axis=[0, 0, 1], axis_def='cart',
+                     noOutput=noOutput, postAnalyzis=False)
         return prism
 
     def _build_walled_bipyramid(self, noOutput):
@@ -772,6 +774,9 @@ class ptnr(pyNMBcore):
                      'distance': H_real/2 - cut, 'delete': 'above'},
                 ],
                 mode='OR', distance_unit='nm', recenter=False, noOutput=noOutput)
+        
+        prism.apply_rotation(angle_deg=-18, axis=[0, 0, 1], axis_def='cart',
+                             noOutput=noOutput, postAnalyzis=False)
         return prism
 
     def _build_double_cone(self, noOutput):
@@ -800,14 +805,32 @@ class ptnr(pyNMBcore):
 
         prism = self._new_prism(self.diameter + 2 * margin_nm,
                                 H + 2 * margin_nm, noOutput)
+        # prism.clip_to_cone(
+        #     base_center_nm=[0, 0, 0], base_radius_nm=R,
+        #     apex_nm=[0, 0, L], tip_sphere_radius_nm=tip_r,
+        #     keep='inside', recenter=False, noOutput=noOutput, postAnalyzis=False)
+        # prism.align_to_plane(axis=[0, 0, 1], target=0.0,
+        #                      noOutput=noOutput, postAnalyzis=False)
+        # prism.replicate_by_reflection([0, 0, 1, 0], plane_def='cart',
+        #                               noOutput=noOutput, postAnalyzis=False)
+        # Build the double cone with two successive clips on the SAME object.
+        # Each clip shapes its own half-space (keep_opposite_side=True leaves the
+        # other half untouched), so no copy, no union, no waist deduplication —
+        # and the lattice stays exactly that of _new_prism (aligned with the
+        # bipyramid, no stacking fault at the waist).
+        # Top cone: apex up; cleans z >= 0, leaves z < 0 intact.
         prism.clip_to_cone(
             base_center_nm=[0, 0, 0], base_radius_nm=R,
             apex_nm=[0, 0, L], tip_sphere_radius_nm=tip_r,
-            keep='inside', recenter=False, noOutput=noOutput, postAnalyzis=False)
-        prism.align_to_plane(axis=[0, 0, 1], target=0.0,
-                             noOutput=noOutput, postAnalyzis=False)
-        prism.replicate_by_reflection([0, 0, 1, 0], plane_def='cart',
-                                      noOutput=noOutput, postAnalyzis=False)
+            keep='inside', keep_opposite_side=True,
+            recenter=False, noOutput=noOutput, postAnalyzis=False)
+        # Bottom cone: apex down; its apex side is now z <= 0, cleans it, leaves
+        # the already-built upper half-cone (z > 0) intact.
+        prism.clip_to_cone(
+            base_center_nm=[0, 0, 0], base_radius_nm=R,
+            apex_nm=[0, 0, -L], tip_sphere_radius_nm=tip_r,
+            keep='inside', keep_opposite_side=True,
+            recenter=False, noOutput=noOutput, postAnalyzis=False)
         return prism
 
     def _build_rod(self, noOutput):

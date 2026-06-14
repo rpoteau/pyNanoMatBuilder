@@ -118,6 +118,10 @@ class pyNMBcore:
         self.trPlanes_Slices = None
         self.WulffShape = None
         self.jMolSlices = None
+
+        self.NP_preview = None
+        self.jMolCarvePreview = None
+        self.jMolStellationPreview = None
         
         self.G = None
         self.Gstar = None
@@ -352,7 +356,8 @@ class pyNMBcore:
     
     def clip_to_cone(self, base_center_nm, apex_nm, base_radius_nm=None,
                      apex_angle_deg=None, tip_sphere_radius_nm=0.0, 
-                     keep='inside', recenter=True, noOutput=None,
+                     keep='inside',  keep_opposite_side=False,
+                     recenter=True, noOutput=None,
                      postAnalyzis=None,
                      skipChiralityCalculation=None,
                      skipSymmetryAnalyzis=None,
@@ -366,7 +371,8 @@ class pyNMBcore:
         if noOutput is None: noOutput = self.noOutput
         return clip_to_cone(self, base_center_nm, apex_nm, base_radius_nm, apex_angle_deg,
                             tip_sphere_radius_nm,
-                            keep=keep, recenter=recenter,
+                            keep=keep, keep_opposite_side=keep_opposite_side,
+                            recenter=recenter,
                             noOutput=noOutput,
                             postAnalyzis=postAnalyzis,
                             skipChiralityCalculation=skipChiralityCalculation,
@@ -388,7 +394,7 @@ class pyNMBcore:
 
     def propPostMake(self, skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
                      skipFacetInfo=None,
-                     thresholdCoreSurface=None, noOutput=None, is_optimized=None):
+                     thresholdCoreSurface=None, noOutput=None, is_optimized=None, coreSurfaceMethod=None):
         """
         Compute post-construction properties: MOI, NPR, Rg, core/surface,
         convex hull, inscribed/circumscribed spheres, ellipsoid, and JMol script.
@@ -405,6 +411,8 @@ class pyNMBcore:
                                           differentiation (default: self.thresholdCoreSurface).
             noOutput (bool): If True, suppresses output (default: self.noOutput).
             is_optimized (bool): If True, targets NP_opt (default: self.is_optimized).
+            coreSurfaceMethod (str): 'hull' (default), 'cnp', or 'combined'.
+                Criterion for the surfaceAtoms mask (default: self.coreSurfaceMethod).
         """
         from .utils.prop import propPostMake
         if skipChiralityCalculation is None: skipChiralityCalculation = self.skipChiralityCalculation
@@ -413,9 +421,10 @@ class pyNMBcore:
         if thresholdCoreSurface is None: thresholdCoreSurface = self.thresholdCoreSurface
         if noOutput is None: noOutput = self.noOutput
         if is_optimized is None: is_optimized = self.is_optimized
+        if coreSurfaceMethod is None: coreSurfaceMethod = 'combined'
         return propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis,
                             skipFacetInfo,
-                            thresholdCoreSurface, noOutput, is_optimized)
+                            thresholdCoreSurface, noOutput, is_optimized, coreSurfaceMethod)
 
     def plot_npr_triangle(self=None, is_optimized: bool = None, save_path: str = None, 
                       external_data: dict = None, color_by: str = 'Rg', color: str = 'viridis'):
@@ -725,6 +734,49 @@ class pyNMBcore:
                                 skipFacetInfo=skipFacetInfo,
                                 thresholdCoreSurface=thresholdCoreSurface)
 
+    def systematic_carve_by(self, NP_B, carve_axis=None, axis_through='vertex',
+                            lead='apex', depth_nm=None, scale=1.0, phase_deg=0.0,
+                            mode='hull', threshold=0.8,
+                            preview=False, recenter=True,
+                            noOutput=None, postAnalyzis=None,
+                            skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
+                            skipFacetInfo=None, thresholdCoreSurface=None):
+        """Carve every face of self.NP with the pattern object NP_B (emporte-pièce).
+        See utils.csg.systematic_carve_by for full documentation."""
+        from .utils.csg import systematic_carve_by
+        if noOutput is None: noOutput = self.noOutput
+        return systematic_carve_by(self, NP_B, carve_axis=carve_axis,
+                                   axis_through=axis_through, lead=lead,
+                                   depth_nm=depth_nm, scale=scale, phase_deg=phase_deg,
+                                   mode=mode, threshold=threshold,
+                                   preview=preview, recenter=recenter, noOutput=noOutput,
+                                   postAnalyzis=postAnalyzis,
+                                   skipChiralityCalculation=skipChiralityCalculation,
+                                   skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                                   skipFacetInfo=skipFacetInfo,
+                                   thresholdCoreSurface=thresholdCoreSurface)
+
+    def systematic_stellate_by(self, NP_B, carve_axis=None, axis_through='vertex',
+                               lead='base', depth_nm=None, seat_on_face=True,
+                               scale=1.0, phase_deg=0.0, mode='hull', threshold=0.8,
+                               preview=False, recenter=True,
+                               noOutput=None, postAnalyzis=None,
+                               skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
+                               skipFacetInfo=None, thresholdCoreSurface=None):
+        """Raise a relief on every face of self.NP by adding NP_B (stellation). See utils.csg.systematic_stellate_by."""
+        from .utils.csg import systematic_stellate_by
+        if noOutput is None: noOutput = self.noOutput
+        return systematic_stellate_by(self, NP_B, carve_axis=carve_axis,
+                                      axis_through=axis_through, lead=lead,
+                                      depth_nm=depth_nm, seat_on_face=seat_on_face,
+                                      scale=scale, phase_deg=phase_deg, mode=mode,
+                                      threshold=threshold, preview=preview, recenter=recenter,
+                                      noOutput=noOutput, postAnalyzis=postAnalyzis,
+                                      skipChiralityCalculation=skipChiralityCalculation,
+                                      skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                                      skipFacetInfo=skipFacetInfo,
+                                      thresholdCoreSurface=thresholdCoreSurface)
+    
     def copy(self):
         "Create and return a deep copy of any pyNanoMatBuilder system"
         from .utils.core import clone
@@ -1068,3 +1120,17 @@ class pyNMBcore:
         return plot_q4q6_map(self, Xnn=Xnn, is_optimized=is_optimized,
                              save_path=save_path, aggregate=aggregate,
                              decimals=decimals, sc_domain=sc_domain, noOutput=noOutput)
+
+    def interface_distance_histogram(self, elemA, elemB, Rnn,
+                                     overlap_frac=0.85, contact_frac=1.2,
+                                     bins=60, is_optimized=None,
+                                     save_path=None, noOutput=None):
+        """Histogram of cross-species nearest-neighbour distances at a bimetallic interface. See utils.local_descriptors.interface_distance_histogram."""
+        from .utils.csg import interface_distance_histogram
+        if noOutput is None:
+            noOutput = self.noOutput
+        return interface_distance_histogram(self, elemA, elemB, Rnn,
+                                            overlap_frac=overlap_frac,
+                                            contact_frac=contact_frac,
+                                            bins=bins, is_optimized=is_optimized,
+                                            save_path=save_path, noOutput=noOutput)

@@ -887,7 +887,8 @@ def _flush_stale_data(self, shape_update=None):
     attrs_to_clean = [
         'NP_opt', 'NPcs', 'NPcs_opt',
         'jMolCS', 'jMolCS_opt',
-        'jMolSlices',
+        'jMolSlices', 'jMolCarvePreview', 'jMolStellationPreview',
+        'NP_preview',
         'surfaceatoms', 'surfaceatoms_opt', 
         'surfaceAtoms', 'surfaceAtoms_opt', 
         'vertices', 'vertices_opt',
@@ -905,7 +906,7 @@ def _flush_stale_data(self, shape_update=None):
         'jMol_q6', 'jMol_q6_opt',
         'NP_select', 'NP_select_opt',
         'NP_select_mask', 'NP_select_mask_opt',
-        '_local_order_decimals',
+        '_local_order_decimals'
     ]
     
     for attr in attrs_to_clean:

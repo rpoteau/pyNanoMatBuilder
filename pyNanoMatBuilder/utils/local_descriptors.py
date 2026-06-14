@@ -27,7 +27,6 @@ from .core import (pyNMB_location, get_resource_path, timer, RAB, Rbetween2Point
                    )
 from .core import centertxt, centerTitle, fg, bg, hl, color
 from .parallel import njit, prange
-from .geometry import coreSurface, setdAsNegative
 from .symmetry import MolSym
 from .external_pgm import defCrystalShapeForJMol
 
@@ -565,7 +564,7 @@ def plot_local_order(self, descriptor='cnp', Xnn=None, l=6,
     # --- Jmol colour-mapping command (stored as attribute) ----------------
     from .external_pgm import defLocalOrderColorForJMol
     defLocalOrderColorForJMol(self, descriptor=descriptor, l=l, color=color,
-                              is_optimized=is_optimized, noOutput=noOutput)
+                              is_optimized=is_optimized, noOutput=True)
 
 def local_order_populations(self, descriptor='cnp', l=6, decimals=2,
                             color='turbo', is_optimized=None, noOutput=False):
