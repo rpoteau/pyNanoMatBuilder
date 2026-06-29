@@ -26,6 +26,7 @@ from .core import (pyNMB_location, get_resource_path, timer, RAB, Rbetween2Point
                    planeFittingLSF, AngleBetweenVV, signedAngleBetweenVV
                    )
 from .core import centertxt, centerTitle, fg, bg, hl, color
+from .core import _resolve_value_range
 from .parallel import njit, prange
 from .symmetry import MolSym
 from .external_pgm import defCrystalShapeForJMol
@@ -423,9 +424,33 @@ def steinhardt_q(self, Xnn, l=6, noOutput=False, store=True,
 
     return ql
 
+def _save_local_order_colorbar(vmin, vmax, color, label, save_path,
+                               width=0.4, height=6.0):
+    """
+    ...
+        width, height (float): figure size in inches of the standalone bar.
+            Lower `width` for a thinner bar (default 0.4 × 6.0).
+    """
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+
+    save_path = str(save_path)
+    if save_path.lower().endswith('.svg'):
+        mpl.rcParams['svg.fonttype'] = 'none'
+    fig, ax = plt.subplots(figsize=(width, height))
+    norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax)
+    cmap = mpl.colormaps[color]
+    cb = mpl.colorbar.ColorbarBase(ax, cmap=cmap, norm=norm,
+                                   orientation='vertical')
+    cb.set_label(label, size=13, weight='bold')
+    for tk in ax.get_yticklabels():
+        tk.set_fontweight('bold')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.close(fig)
+    
 def plot_local_order(self, descriptor='cnp', Xnn=None, l=6,
-                     is_optimized=None, save_path=None, color='turbo',
-                     bins=50, noOutput=False):
+                     is_optimized=None, save_img=None, color='turbo',
+                     bins=50, value_range=None, save_colorbar=None, noOutput=False):
     """
     Graphical analysis of a per-atom local-order descriptor (CNP or
     Steinhardt q_l): a histogram of the value distribution next to a
@@ -445,9 +470,19 @@ def plot_local_order(self, descriptor='cnp', Xnn=None, l=6,
             a ValueError is raised.
         l (int): Harmonic degree for descriptor='q'. Default 6.
         is_optimized (bool or None): Target structure. None -> self.is_optimized.
-        save_path (str): If given, saves the figure (.png or .svg).
+        save_img (str or Path): If given, saves the figure (.png or .svg).
         color (str): Matplotlib colormap name. Default 'turbo'.
         bins (int): Number of histogram bins. Default 50.
+        value_range (list of float or None): [vmin, vmax] colour-scale limits
+            in the descriptor's units (Å² for CNP). None (default) uses this
+            structure's own min/max. Pass the SAME value_range to several
+            structures to colour them on a common scale; a bound outside the
+            data is clamped to the data with a warning. Applies to both the
+            matplotlib figure and the generated Jmol colouring command.
+        save_colorbar (str or Path or None): if given, also export the colour
+            scale alone (a standalone vertical colorbar with the same colormap
+            and limits) to this file (.svg or .png). Useful as a shared legend
+            beside the Jmol renders, which carry no built-in scale.
         noOutput (bool): If True, suppresses the file-saved message and any
             on-the-fly descriptor output. Default is False.
 
@@ -476,7 +511,7 @@ def plot_local_order(self, descriptor='cnp', Xnn=None, l=6,
     # --- resolve attribute name and human-readable label ------------------
     if descriptor == 'cnp':
         attr = f"cnp{suffix}"
-        label = "CNP  (Å²)"
+        label = "CNP  / Å²"
         title = "Common Neighbour Parameter"
     elif descriptor == 'q':
         attr = f"q{l}{suffix}"
@@ -516,7 +551,7 @@ def plot_local_order(self, descriptor='cnp', Xnn=None, l=6,
     fig, (axh, axs) = plt.subplots(1, 2, figsize=(14, 6))
 
     cmap = matplotlib.colormaps[color]
-    vmin, vmax = float(values.min()), float(values.max())
+    vmin, vmax = _resolve_value_range(values, value_range, label=descriptor)
     span = (vmax - vmin) if (vmax - vmin) > 1e-9 else 1.0
     n_h, bins_h, patches = axh.hist(values, bins=bins, edgecolor='black',
                                     alpha=0.9)
@@ -535,7 +570,8 @@ def plot_local_order(self, descriptor='cnp', Xnn=None, l=6,
         tk.set_fontweight('bold')
 
     sc = axs.scatter(proj[:, 0] / 10, proj[:, 1] / 10, c=values, cmap=color,
-                     s=40, edgecolors='black', linewidth=0.3, alpha=0.9)
+                     s=40, edgecolors='black', linewidth=0.3, alpha=0.9,
+                     vmin=vmin, vmax=vmax)
     axs.set_xlabel("PC1 (nm)", fontsize=13, fontweight='bold')
     axs.set_ylabel("PC2 (nm)", fontsize=13, fontweight='bold')
     axs.set_title(f"{title}: 2D projection ({status})",
@@ -552,19 +588,25 @@ def plot_local_order(self, descriptor='cnp', Xnn=None, l=6,
         tk.set_fontweight('bold')
 
     plt.tight_layout()
-    if save_path:
-        if save_path.lower().endswith('.svg'):
+    if save_colorbar:
+        _save_local_order_colorbar(vmin, vmax, color, label, save_colorbar)
+        if not noOutput:
+            print(f"✅ Colour scale saved to: {save_colorbar}")
+    if save_img:
+        save_img = str(save_img)
+        if save_img.lower().endswith('.svg'):
             import matplotlib
             matplotlib.rcParams['svg.fonttype'] = 'none'
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.savefig(save_img, dpi=300, bbox_inches='tight')
         if not noOutput:
-            print(f"✅ Plot saved to: {save_path}")
+            print(f"✅ Plot saved to: {save_img}")
     plt.show()
 
     # --- Jmol colour-mapping command (stored as attribute) ----------------
     from .external_pgm import defLocalOrderColorForJMol
     defLocalOrderColorForJMol(self, descriptor=descriptor, l=l, color=color,
-                              is_optimized=is_optimized, noOutput=True)
+                              value_range=value_range, is_optimized=is_optimized,
+                              noOutput=True)
 
 def local_order_populations(self, descriptor='cnp', l=6, decimals=2,
                             color='turbo', is_optimized=None, noOutput=False):
@@ -728,7 +770,7 @@ def select_by_local_order(self, indices, descriptor='cnp', l=6,
         print(f" - {np.count_nonzero(mask)} atoms selected "
               f"out of {len(target)}. Stored as self.NP_select{suffix}.")
 
-def plot_q4q6_map(self, Xnn=None, is_optimized=None, save_path=None,
+def plot_q4q6_map(self, Xnn=None, is_optimized=None, save_img=None,
                   aggregate=True, decimals=3, sc_domain=False, noOutput=False):
     """
     Plot the Steinhardt (q4, q6) map: the five ideal crystalline reference
@@ -763,7 +805,7 @@ def plot_q4q6_map(self, Xnn=None, is_optimized=None, save_path=None,
         Xnn (float): Neighbour cutoff in Å, used only if q4/q6 must be
             computed here. Ignored if both are already stored.
         is_optimized (bool or None): Target structure. None -> self.is_optimized.
-        save_path (str): If given, saves the figure (.png or .svg).
+        save_img (str or Path): If given, saves the figure (.png or .svg).
         aggregate (bool): If True (default), group atoms by rounded (q4, q6)
             value and size each marker by its atom count. If False, draw one
             dot per atom.
@@ -857,18 +899,322 @@ def plot_q4q6_map(self, Xnn=None, is_optimized=None, save_path=None,
         tk.set_fontweight('bold')
 
     plt.tight_layout()
-    if save_path:
-        if save_path.lower().endswith('.svg'):
+    if save_img:
+        save_img = str(save_img)
+        if save_img.lower().endswith('.svg'):
             matplotlib.rcParams['svg.fonttype'] = 'none'
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.savefig(save_img, dpi=300, bbox_inches='tight')
         if not noOutput:
-            print(f"✅ Plot saved to: {save_path}")
+            print(f"✅ Plot saved to: {save_img}")
     plt.show()
     return q4, q6
 
+def q4q6_populations(self, Xnn=None, method='round', decimals=2,
+                     min_fraction=0.0, eps=None, min_samples=5,
+                     color='Blues', is_optimized=None, noOutput=False):
+    """
+    Group atoms by their Steinhardt (q4, q6) signature and report each main
+    population: an index, the cluster centre (q4, q6), a colour swatch, and the
+    atom count. This is the 2D counterpart of local_order_populations(): it
+    saves you from reading cluster coordinates off plot_q4q6_map() by eye. The
+    index of any row can be passed to select_by_q4q6_disk(cluster_index=...) to
+    extract that population.
+
+    Two grouping methods are available:
+
+      method='round'   — group atoms sharing the SAME rounded (q4, q6) value
+                         (to `decimals`). Exact and fast; ideal for clean
+                         crystalline NPs where equivalent atoms fall on
+                         identical values (FCC core, twin planes, facets).
+                         The analogue of local_order_populations() in 2D.
+
+      method='cluster' — spatially cluster nearby (q4, q6) points with DBSCAN,
+                         so a continuous cloud (e.g. a relaxed dodecahedron)
+                         is grouped into a few blobs rather than thousands of
+                         singletons. Requires scikit-learn. Points not assigned
+                         to any cluster (DBSCAN noise) are reported separately.
+
+    Requires self.q4 and self.q6 (and _opt variants for the optimized
+    structure). If absent and Xnn is given, both are computed on the fly.
+
+    Args:
+        Xnn (float): neighbour cutoff in Å, used only if q4/q6 must be computed.
+        method (str): 'round' (default) or 'cluster'. See above.
+        decimals (int): rounding for method='round'. Default 2.
+        min_fraction (float): only report populations holding at least this
+            fraction of the atoms (e.g. 0.1 for the >10% clusters). Default 0.0
+            (report all). Small populations are still counted in the total.
+        eps (float): DBSCAN neighbourhood radius for method='cluster', in
+            (q4, q6) units. If None, a value scaled to the data spread is used.
+        min_samples (int): DBSCAN min_samples for method='cluster'. Default 5.
+        color (str): matplotlib colormap for the swatches (matched to the
+            plot_q4q6_map 'Blues' count scale). Default 'Blues'.
+        is_optimized (bool or None): target structure. None -> self.is_optimized.
+        noOutput (bool): if True, suppresses the printed table. Default False.
+
+    Returns:
+        tuple: (centers, counts) where centers is an (M, 2) array of the
+            (q4, q6) cluster centres (their index is their row position, ready
+            for select_by_q4q6_disk(cluster_index=...)) and counts is the (M,)
+            atom count of each. Sorted by descending count.
+    """
+    import numpy as np
+    import matplotlib
+
+    # --- target structure --------------------------------------------------
+    if is_optimized is None:
+        is_optimized = getattr(self, 'is_optimized', False)
+    use_opt = is_optimized and getattr(self, 'NP_opt', None) is not None
+    suffix = "_opt" if use_opt else ""
+    status = "optimized structure" if use_opt else "initial structure"
+
+    # --- fetch or compute q4/q6 -------------------------------------------
+    q4 = getattr(self, f"q4{suffix}", None)
+    q6 = getattr(self, f"q6{suffix}", None)
+    if q4 is None or q6 is None:
+        if Xnn is None:
+            raise ValueError("q4/q6 not available. Run steinhardt_q(l=4) and "
+                             "steinhardt_q(l=6) first, or pass Xnn to compute "
+                             "them here.")
+        q4 = steinhardt_q(self, Xnn, l=4, noOutput=True, store=True,
+                          is_optimized=is_optimized)
+        q6 = steinhardt_q(self, Xnn, l=6, noOutput=True, store=True,
+                          is_optimized=is_optimized)
+    q4 = np.asarray(q4); q6 = np.asarray(q6)
+    total = len(q4)
+
+    # --- grouping ---------------------------------------------------------
+    if method == 'round':
+        pairs = np.round(np.column_stack([q4, q6]), decimals)
+        uniq, counts = np.unique(pairs, axis=0, return_counts=True)
+        centers = uniq
+        n_noise = 0
+        # remember grouping so select_by_q4q6_disk(cluster_index=) can reuse it
+        self._q4q6_pop_method = 'round'
+        self._q4q6_pop_decimals = decimals
+
+    elif method == 'cluster':
+        try:
+            from sklearn.cluster import DBSCAN
+        except ImportError:
+            raise ImportError("method='cluster' needs scikit-learn "
+                              "(pip install scikit-learn). Use method='round' "
+                              "otherwise.")
+        XY = np.column_stack([q4, q6])
+        if eps is None:
+            # scale the radius to the data spread on both axes
+            span = np.sqrt(((q4.max() - q4.min()) ** 2 +
+                            (q6.max() - q6.min()) ** 2))
+            eps = 0.02 * span if span > 1e-9 else 0.005
+        db = DBSCAN(eps=eps, min_samples=min_samples).fit(XY)
+        lab = db.labels_
+        centers_list = []; counts_list = []
+        for cl in sorted(set(lab) - {-1}):
+            m = lab == cl
+            centers_list.append([q4[m].mean(), q6[m].mean()])
+            counts_list.append(int(m.sum()))
+        centers = np.array(centers_list).reshape(-1, 2)
+        counts = np.array(counts_list, dtype=int)
+        n_noise = int(np.count_nonzero(lab == -1))
+        self._q4q6_pop_method = 'cluster'
+        self._q4q6_pop_eps = eps
+
+    else:
+        raise ValueError(f"method must be 'round' or 'cluster', got '{method}'.")
+
+    # --- sort by descending count, apply min_fraction ---------------------
+    if len(counts):
+        order = np.argsort(counts)[::-1]
+        centers = centers[order]; counts = counts[order]
+    keep = counts >= int(np.ceil(min_fraction * total))
+    centers_kept = centers[keep]; counts_kept = counts[keep]
+
+    # store the full (sorted) list for index-based selection
+    self._q4q6_pop_centers = centers
+    self._q4q6_pop_counts = counts
+
+    if not noOutput:
+        centertxt(f"(q4, q6) populations — method='{method}' ({status})",
+                  bgc='#007a7a', size='14', weight='bold')
+        cmap = matplotlib.colormaps[color]
+        cmax = counts.max() if len(counts) else 1
+        for i in np.where(keep)[0]:
+            c4, c6 = centers[i]
+            cnt = counts[i]
+            rgb = cmap(0.25 + 0.75 * (cnt / cmax))     # darker = larger
+            r, g, b = (int(255 * x) for x in rgb[:3])
+            swatch = f"\033[48;2;{r};{g};{b}m    \033[0m"
+            print(f" - [{i:2d}] {swatch} (q4, q6) = "
+                  f"({c4:6.3f}, {c6:6.3f})  →  {cnt:7d} atoms "
+                  f"({100 * cnt / total:5.1f} %)")
+        shown = int(keep.sum())
+        print(f" - {shown} population(s) shown of {len(counts)} "
+              f"(min_fraction={min_fraction:.2f}), {total} atoms total")
+        if n_noise:
+            print(f" - {n_noise} atoms unclustered (DBSCAN noise, "
+                  f"{100 * n_noise / total:.1f} %)")
+        print(f" - select with: "
+              f"NP.select_by_q4q6_disk(cluster_index=<i>)")
+
+    return centers_kept, counts_kept
+    
+def select_by_q4q6_disk(self, center=None, radius=None, cluster_index=None,
+                        Xnn=None, metric='euclidean',
+                        is_optimized=None, noOutput=False):
+    """
+    Build self.NP_select from the atoms whose (q4, q6) local-order signature
+    falls inside a disk of the Steinhardt map. This is the 2D counterpart of
+    select_by_local_order(): instead of picking a single rounded population, it
+    selects every atom lying within a circular region of the (q4, q6) plane —
+    e.g. the cluster sitting on the FCC reference, or the off-lattice trail of
+    a relaxed dodecahedron, as read off plot_q4q6_map().
+
+    The disk can be specified in two ways:
+
+      explicit       — pass center=(q4, q6) and radius. Selects every atom
+                       within `radius` of that point (see `metric`).
+
+      by index       — pass cluster_index=<i>, reusing a population listed by
+                       q4q6_populations() (which must have been run first) as
+                       the disk centre, so you don't have to read coordinates
+                       off the map by eye. If radius is None it defaults to a
+                       small disk matched to the grouping that produced the
+                       table (method='round': a couple of rounding steps;
+                       method='cluster': the DBSCAN eps).
+
+    The selection is non-destructive: self.NP is left untouched; the chosen
+    atoms are copied into self.NP_select (and the boolean mask into
+    self.NP_select_mask), with the _opt suffix for the optimized structure —
+    exactly as select_by_local_order() does, so both selectors are
+    interchangeable downstream.
+
+    Requires self.q4 and self.q6 (and the _opt variants for the optimized
+    structure). If absent and Xnn is given, both are computed on the fly via
+    steinhardt_q(l=4) and steinhardt_q(l=6).
+
+    Args:
+        center (tuple of float or None): the (q4, q6) coordinates of the disk
+            centre, e.g. (0.191, 0.575) for FCC, or a point picked by eye on
+            the map. Ignored when cluster_index is given.
+        radius (float or None): disk radius in (q4, q6) units. With
+            metric='euclidean' it is a plain radius in the plane; with
+            metric='normalized' it is expressed as a fraction of each reference
+            span (see `metric`). Required with an explicit center; optional
+            with cluster_index (a sensible default is used).
+        cluster_index (int or None): index of a population from
+            q4q6_populations() to use as the disk centre, instead of passing
+            `center` explicitly. Run q4q6_populations() first to build the
+            index/centre table.
+        Xnn (float): neighbour cutoff in Å, used only if q4/q6 must be computed
+            here. Ignored if both are already stored.
+        metric (str): how distance in the plane is measured. 'euclidean'
+            (default) uses the raw plane distance
+            sqrt((q4-c4)^2 + (q6-c6)^2). Because q4 (~0-0.2) and q6 (~0.45-0.66)
+            span different ranges, a raw radius is dominated by the q6 axis;
+            'normalized' rescales each axis by the FCC/BCC/HCP/ICO reference
+            spread first, so the disk is round in *descriptor-significant*
+            units and `radius` is comparable on both axes.
+        is_optimized (bool or None): target structure. None -> self.is_optimized.
+        noOutput (bool): if True, suppresses the printed summary. Default False.
+
+    Returns:
+        ase.Atoms: the selected sub-structure (also stored as self.NP_select).
+    """
+    import numpy as np
+    from ase import Atoms
+
+    # --- target structure (same convention as select_by_local_order) ------
+    if is_optimized is None:
+        is_optimized = getattr(self, 'is_optimized', False)
+    use_opt = is_optimized and getattr(self, 'NP_opt', None) is not None
+    suffix = "_opt" if use_opt else ""
+    target = self.NP_opt if use_opt else self.NP
+    status = "optimized structure" if use_opt else "initial structure"
+
+    # --- resolve the disk centre (explicit, or from a population index) ----
+    if cluster_index is not None:
+        centers = getattr(self, '_q4q6_pop_centers', None)
+        if centers is None:
+            raise ValueError(
+                "cluster_index given but q4q6_populations() has not been run "
+                "yet. Call q4q6_populations() first to build the index/centre "
+                "table, then select by index.")
+        if cluster_index < 0 or cluster_index >= len(centers):
+            raise ValueError(f"cluster_index {cluster_index} out of range "
+                             f"(0..{len(centers) - 1}).")
+        c4, c6 = (float(centers[cluster_index][0]),
+                  float(centers[cluster_index][1]))
+        if radius is None:
+            if getattr(self, '_q4q6_pop_method', 'round') == 'cluster':
+                radius = float(getattr(self, '_q4q6_pop_eps', 0.02))
+            else:
+                dec = int(getattr(self, '_q4q6_pop_decimals', 2))
+                radius = 1.5 * (10.0 ** (-dec))      # ~1.5 rounding steps
+    else:
+        if center is None or radius is None:
+            raise ValueError("give either cluster_index, or both center and "
+                             "radius.")
+        c4, c6 = float(center[0]), float(center[1])
+
+    # --- fetch or compute q4/q6 -------------------------------------------
+    q4 = getattr(self, f"q4{suffix}", None)
+    q6 = getattr(self, f"q6{suffix}", None)
+    if q4 is None or q6 is None:
+        if Xnn is None:
+            raise ValueError("q4/q6 not available. Run steinhardt_q(l=4) and "
+                             "steinhardt_q(l=6) first, or pass Xnn to compute "
+                             "them here.")
+        q4 = steinhardt_q(self, Xnn, l=4, noOutput=True, store=True,
+                          is_optimized=is_optimized)
+        q6 = steinhardt_q(self, Xnn, l=6, noOutput=True, store=True,
+                          is_optimized=is_optimized)
+    q4 = np.asarray(q4); q6 = np.asarray(q6)
+
+    # --- distance in the (q4, q6) plane -----------------------------------
+    if metric == 'euclidean':
+        d = np.sqrt((q4 - c4) ** 2 + (q6 - c6) ** 2)
+    elif metric == 'normalized':
+        # rescale each axis by the spread of the ideal references, so a unit
+        # radius means the same "descriptor significance" on q4 and q6
+        refs_q4 = np.array([0.191, 0.036, 0.097, 0.000])   # FCC BCC HCP ICO
+        refs_q6 = np.array([0.575, 0.511, 0.485, 0.663])
+        s4 = refs_q4.max() - refs_q4.min()
+        s6 = refs_q6.max() - refs_q6.min()
+        s4 = s4 if s4 > 1e-9 else 1.0
+        s6 = s6 if s6 > 1e-9 else 1.0
+        d = np.sqrt(((q4 - c4) / s4) ** 2 + ((q6 - c6) / s6) ** 2)
+    else:
+        raise ValueError(f"metric must be 'euclidean' or 'normalized', "
+                         f"got '{metric}'.")
+
+    mask = d <= radius
+
+    pos  = target.get_positions()
+    elem = target.get_chemical_symbols()
+    np_select = Atoms(
+        symbols=[elem[k] for k in np.where(mask)[0]],
+        positions=pos[mask])
+    setattr(self, f"NP_select{suffix}", np_select)
+    setattr(self, f"NP_select_mask{suffix}", mask)
+
+    if not noOutput:
+        centertxt("Selecting atoms by (q4, q6) disk", bgc='#007a7a',
+                  size='14', weight='bold')
+        n_sel = int(np.count_nonzero(mask))
+        src = (f"cluster_index {cluster_index}" if cluster_index is not None
+               else "explicit centre")
+        print(f" - Source              : {status}")
+        print(f" - Disk centre (q4, q6): ({c4:.3f}, {c6:.3f})  [{src}]")
+        print(f" - Radius / metric     : {radius:.3f} / '{metric}'")
+        print(f" - {n_sel} atoms selected out of {len(target)} "
+              f"({100 * n_sel / len(target):.1f} %). "
+              f"Stored as self.NP_select{suffix}.")
+
+    return np_select
+
 def compare_q4q6_map(objects, labels=None, Xnn=None, nrows=1, ncols=None,
                      decimals=3, same_count=False, sc_domain=False,
-                     is_optimized=None, save_path=None, noOutput=False):
+                     is_optimized=None, save_img=None, noOutput=False):
     """
     Small-multiples comparison of the Steinhardt (q4, q6) maps of several
     nanoparticles: one mini-panel per object, all sharing identical axes and
@@ -904,7 +1250,7 @@ def compare_q4q6_map(objects, labels=None, Xnn=None, nrows=1, ncols=None,
             region.
         is_optimized (bool or None): Target structure for every object.
             None -> each object's own is_optimized.
-        save_path (str): If given, saves the figure (.png or .svg).
+        save_img (str or Path): If given, saves the figure (.png or .svg).
         noOutput (bool): If True, suppresses the saved-file message.
 
     Returns:
@@ -1000,15 +1346,16 @@ def compare_q4q6_map(objects, labels=None, Xnn=None, nrows=1, ncols=None,
     for ax in axes_flat[n:]:
         ax.axis('off')
 
-    scale_note = ("common count scale" if same_count
-                  else "per-panel count scale")
-    fig.suptitle(f'Steinhardt $(q_4, q_6)$ comparison — {scale_note}',
-                 fontsize=13, fontweight='bold')
+    # scale_note = ("common count scale" if same_count
+    #               else "per-panel count scale")
+    # fig.suptitle(f'Steinhardt $(q_4, q_6)$ comparison — {scale_note}',
+    #              fontsize=13, fontweight='bold')
     plt.tight_layout()
-    if save_path:
-        if save_path.lower().endswith('.svg'):
+    if save_img:
+        save_img = str(save_img)
+        if save_img.lower().endswith('.svg'):
             matplotlib.rcParams['svg.fonttype'] = 'none'
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.savefig(save_img, dpi=300, bbox_inches='tight')
         if not noOutput:
-            print(f"✅ Plot saved to: {save_path}")
+            print(f"✅ Plot saved to: {save_img}")
     plt.show()

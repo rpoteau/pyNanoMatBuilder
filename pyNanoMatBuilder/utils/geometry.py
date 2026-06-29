@@ -2698,7 +2698,7 @@ def clip_to_cylinder(self, diameter_nm, axis=(0, 0, 1), noOutput=True,
             noOutput=noOutput,
             is_optimized=False)
     
-def plot_npr_triangle(self=None, is_optimized: bool = False, save_path: str = None, 
+def plot_npr_triangle(self=None, is_optimized: bool = False, save_img: str = None, 
                       external_data: dict = None, color_by: str = 'Rg', color: str='viridis'):
     """
     Hybrid Sauer Plot for pyNanoMatBuilder with precise colorbar scaling and bold formatting.
@@ -2771,12 +2771,12 @@ def plot_npr_triangle(self=None, is_optimized: bool = False, save_path: str = No
     ax.grid(True, linestyle=':', alpha=0.6)
 
     # 5. Save Logic
-    if save_path:
-        if save_path.lower().endswith('.svg'):
+    if save_img:
+        if save_img.lower().endswith('.svg'):
             import matplotlib
             matplotlib.rcParams['svg.fonttype'] = 'none'
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
-        print(f"✅ Plot saved to: {save_path}")
+        plt.savefig(save_img, dpi=300, bbox_inches='tight')
+        print(f"✅ Plot saved to: {save_img}")
 
     plt.show()
 
@@ -3375,6 +3375,61 @@ def apply_reflection(self, plane, plane_def='hkl', noOutput=True,
             noOutput=noOutput,
             is_optimized=False)
 
+def farthest_in_direction(self, direction, axis_def='cart'):
+    """
+    Return the outermost extent of self.NP along a direction: the largest
+    signed projection, the 1-based index of the outermost atom, and the
+    Cartesian unit direction.
+
+    Locates the atom (and the plane through it) furthest along any direction,
+    e.g. the apex of a cone or the base of a bipyramid. Handy to build a
+    reflection plane through the tip:
+        proj, _, d = NP.farthest_in_direction([0, 0, 1])
+        NP.replicate_by_reflection(plane=[*d, -proj], plane_def='cart')
+
+    Args:
+        direction (array-like): direction, as Miller indices [h,k,l]
+            (axis_def='hkl', requires a Crystal object with Gstar) or
+            Cartesian [x,y,z] (axis_def='cart').
+        axis_def (str): 'cart' (default) or 'hkl'.
+
+    Returns:
+        tuple: (proj_max, i_max, dir_cart) — the largest signed projection in
+            Å, the 1-based index of the outermost atom (Jmol convention), and
+            the Cartesian unit direction (3,).
+    """
+    import numpy as np
+    pos = self.NP.get_positions()
+
+    if axis_def == 'hkl':
+        if not hasattr(self, 'Gstar'):
+            raise AttributeError("axis_def='hkl' requires a Crystal object with Gstar.")
+        from .crystals import lattice_cart
+        dir_cart = lattice_cart(self, [direction], Bravais2cart=True, printV=False)[0]
+    else:
+        dir_cart = np.asarray(direction, dtype=float)
+    dir_cart = dir_cart / np.linalg.norm(dir_cart)
+
+    proj = pos @ dir_cart
+    i_max = int(np.argmax(proj))
+    return float(proj[i_max]), i_max + 1, dir_cart
+
+def mirror_at_tip(self, direction=[0, 0, 1], axis_def='cart', **kwargs):
+    """
+    Mirror self.NP across the plane through its outermost atom along
+    `direction`, reflecting the WHOLE body to the far side (e.g. cone ->
+    hourglass tip-to-tip). The plane normal is set so the existing body is the
+    reflected part, so it works whichever way `direction` points.
+
+    Args:
+        direction (array-like): outward direction to the tip (default [0,0,1]).
+        axis_def (str): 'cart' (default) or 'hkl'.
+        **kwargs: forwarded to replicate_by_reflection.
+    """
+    proj, _, d = self.farthest_in_direction(direction, axis_def=axis_def)
+    # normal points back toward the body, so the body is on the reflected side
+    self.replicate_by_reflection(plane=[*(-d), proj], plane_def='cart', **kwargs)
+    
 def apply_translation(self, vector, vector_def='cart', units='nm', noOutput=True,
                       postAnalyzis=None, skipChiralityCalculation=None,
                       skipSymmetryAnalyzis=None, skipFacetInfo=None,
@@ -4174,4 +4229,4 @@ def delete(self,
             noOutput                 = noOutput,
             is_optimized             = False,
         )
-
+        

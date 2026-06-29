@@ -433,6 +433,7 @@ class pentaPrism(pyNMBcore):
 
     def prop(self):
         """Display nanoparticle properties."""
+        print()
         print(self)
         print("element =", self.element)
         print(f"nearest neighbour distance = {self.Rnn:.3f} Å")
@@ -916,6 +917,7 @@ class ptnr(pyNMBcore):
     # ----- properties ------------------------------------------------------
     def prop(self):
         """Display nanoparticle properties."""
+        print()
         print(self)
         pyNMBu.plotImageInPropFunction(self.imageFile)
         print("element =", self.element)
@@ -932,3 +934,514 @@ class ptnr(pyNMBcore):
             print(f"bevel = {self._get('bevel')}, round_tips = {self._get('round_tips')}")
         if self.shape in ('double_cone',) and self._get('tip_sphere_radius_nm'):
             print(f"tip sphere radius = {self._get('tip_sphere_radius_nm'):.3f} nm")
+
+###########################################################################################################
+class hbpy(pyNMBcore):
+    """
+    hbpy — hexagonal bipyramid / cone (single crystal).
+
+    A single-crystal hexagonal bipyramid (or single cone) bounded by six
+    {10-1l} pyramidal facets, built from a parallelepiped Crystal block faceted
+    via applySlicing. Composition, not inheritance: an internal Crystal block is
+    built in 'pppd' shape, sculpted by the six tilted facets (plus optional base
+    truncation), and its atoms are adopted as self.NP, following the usual
+    pyNMBcore contract (same scheme as ptnr with pentaPrism).
+
+    Unlike fcc penta-twinned objects, a hexagonal pyramid is monocrystalline:
+    the hcp lattice already carries the six-fold symmetry around [0001], so the
+    six {10-1l} facets close without any twin plane.
+
+    The base-to-apex height is DERIVED from the facet indices and the section
+    diameter: the six facets are anchored on the equatorial atom row of the
+    block (so the {10-1l} steps stay regular), and the apex follows from the
+    facet/base dihedral angle, computed from the reciprocal metric tensor. The
+    user may additionally specify cut_nm, the apex-to-truncation distance, to
+    turn the pyramid into a frustum (truncated pyramid).
+
+    For double=True the full bipyramid is built in place by two facet groups
+    (apex up and apex down) in a single applySlicing call: the atoms are never
+    reflected or translated, so the lattice stays registered with the source
+    block and the waist is a single clean shared layer (no stacking fault).
+
+    Args:
+        crystal (str): compound name resolved by crystalNPs.Crystal
+            (e.g. 'Co hcp'). Any non-cubic lattice is supported.
+        facet (list of int): pyramidal facet indices (3-index [h, k, l],
+            e.g. [1, 0, 1] for {10-11}, [1, 0, 3] for {10-13}).
+            Default [1, 0, 1].
+        diameter (float): circumscribed (vertex-to-vertex) diameter of the
+            hexagonal section, in nm. Default 8.0.
+        double (bool): True builds the full bipyramid (apex up and down),
+            False a single cone (apex up, flat base). Default True.
+        cut_nm (float): apex-to-truncation distance in nm; 0 keeps a sharp
+            tip, > 0 truncates each apex into a flat {0001} facet (frustum).
+            Default 0.0.
+        normal_def (str): coordinate system for the facet indices, 'hkl' or
+            'cart'. When None (default), 'hkl' is used for non-cubic lattices
+            and 'cart' for cubic ones.
+        axis_on_atom (bool): placement of the six-fold rotation axis relative
+            to the hcp lattice. hcp has no atomic site on its own 6-fold axis:
+            the axis passes through the centre of an atom hexagon, a/sqrt(3)
+            from the nearest column. When False (default) the facets rotate
+            about that interstitial axis and the apex closes on a centred
+            triangle of three atoms. When True the block is shifted in-plane so
+            a real atomic column sits on the axis, and the six facets converge
+            on a single apex atom; the base is then centred on the column
+            rather than on the section centroid. Default False.
+        symmetric_facets (bool): how the six {10-1l} facets are cut. The 6_3
+            screw axis of hcp splits them into two families that, with a single
+            cut distance, terminate at different atomic levels (one looks less
+            shaved than the other). When False (default) this true-crystal
+            asymmetry is preserved. When True the two families are cut with
+            distances offset by the lattice registry shift, so all six facets
+            are shaved to the same level (visually symmetric pyramid).
+            Default False.
+        shave_family_A (bool): with symmetric_facets=True, selects which screw
+            family is shaved by one atomic row. False (default) shaves class B
+            (azimuth 90/210/330), keeping class A the larger; True shaves
+            class A (azimuth 30/150/270), keeping class B the larger. Ignored
+            when symmetric_facets=False. Default False.
+        regularize_base (bool): with symmetric_facets=True, force a regular
+            base hexagon by calibrating each screw family separately so both
+            reach the same circumscribed radius. The default one-row shave
+            (shave_family_A) only equalises the two families when their natural
+            offset is about one atomic row, which holds for shallow facets such
+            as {10-11} but not for steeper ones such as {10-13}, where the base
+            stays visibly irregular. With regularize_base=True both families are
+            bisection-calibrated to the target radius, giving six equal-length
+            base edges at any facet index l. shave_family_A is then unused.
+            Ignored when symmetric_facets=False. Default False.
+    Example:
+        from pyNanoMatBuilder import otherNPs as oNP
+        bp = oNP.hbpy(crystal='Co hcp', facet=[1, 0, 3],
+                      diameter=8.0, double=True, cut_nm=0.0,
+                      thresholdCoreSurface=0.5, skipSymmetryAnalyzis=True,
+                      noOutput=False)
+    """
+    def __init__(self,
+                 crystal: str = 'Co hcp',
+                 facet=None,
+                 diameter: float = 8.0,
+                 double: bool = True,
+                 cut_nm: float = 0.0,
+                 normal_def: str = None,
+                 axis_on_atom: bool = False,
+                 symmetric_facets: bool = False,
+                 shave_family_A: bool = False,
+                 regularize_base: bool = False,
+                 **kwargs):
+
+        super().__init__(**kwargs)
+        self.crystalName = crystal
+        self.shape = 'hbpy'
+        self.facet = list(facet) if facet is not None else [1, 0, 1]
+        self.diameter = diameter
+        self.double = double
+        self.cut_nm = cut_nm
+        self.normal_def_user = normal_def
+        self.axis_on_atom = axis_on_atom
+        self.symmetric_facets = symmetric_facets
+        self.shave_family_A = shave_family_A
+        self.regularize_base = regularize_base
+
+        self.imageFile = pyNMBu.imageNameWithPathway("underConstruction-C.png")
+        noOutput = self.noOutput
+        if not noOutput:
+            pyNMBu.centerTitle(
+                f"Hexagonal {'bipyramid' if double else 'cone'} — "
+                f"{crystal}, facet {{{self.facet[0]}{self.facet[1]}"
+                f"{-(self.facet[0]+self.facet[1])}{self.facet[2]}}}, "
+                f"Ø{diameter:.2f} nm")
+
+        if not self.calcPropOnly:
+            self.coords(noOutput)
+            if self.aseView:
+                view(self.NP)
+            if self.postAnalyzis:
+                self.propPostMake(
+                    self.skipChiralityCalculation,
+                    self.skipSymmetryAnalyzis,
+                    self.skipFacetInfo,
+                    self.thresholdCoreSurface, noOutput)
+                if self.aseView:
+                    view(self.NPcs)
+        if not noOutput:
+            self.prop()
+
+    def __str__(self):
+        kind = 'bipyramid' if self.double else 'cone'
+        return (f"Hexagonal {kind} of {self.crystalName}, "
+                f"Ø~{self.diameter:.2f} nm, facet {self.facet}")
+
+    # ----- helpers ---------------------------------------------------------
+    @staticmethod
+    def _auto_normal_def(crystal_obj, user_value):
+        """Resolve the coordinate system for the facet indices: honour the
+        user value if given, else 'hkl' for non-cubic lattices and 'cart'
+        for cubic ones (where a plane (hkl) and its normal coincide).
+        Falls back to 'hkl' (the always-correct choice) if the lattice system
+        cannot be read."""
+        if user_value is not None:
+            return user_value
+        bravais = getattr(crystal_obj, 'ucBL', None)
+        system = getattr(bravais, 'lattice_system', None)
+        return 'cart' if system == 'cubic' else 'hkl'
+
+    def _facet_dihedral_deg(self, block):
+        """Dihedral angle between the {10-1l} facet and the basal (0001)
+        plane, via crystallographic_angle (reciprocal metric tensor)."""
+        return block.crystallographic_angle(
+            [0, 0, 1], self.facet,
+            type1='plane', type2='plane', noOutput=True)
+
+    @staticmethod
+    def _rot_z(vec, deg):
+        """Rotate a 3-vector by `deg` around +z."""
+        t = np.radians(deg)
+        ct, st = np.cos(t), np.sin(t)
+        R = np.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
+        return R @ np.asarray(vec, dtype=float)
+
+    def _facet_normal_cart(self, block, facet, ndef):
+        """Reference facet normal (Cartesian) for the given facet indices,
+        built the same way applySlicing's 'normal' branch does."""
+        if ndef == 'hkl':
+            from .utils.crystals import plane_to_direction
+            n = plane_to_direction(block, facet, cartesian=True)
+        else:
+            n = np.array(facet, dtype=float)
+        return n / np.linalg.norm(n)
+
+    # ----- axis alignment --------------------------------------------------
+    def _align_axis_on_column(self, block, noOutput=True):
+        """Translate the block in-plane so a real atomic column sits on the
+        rotation axis (0, 0).
+
+        hcp has no lattice site on its own 6-fold axis: the axis passes through
+        the centre of an atom hexagon, a/sqrt(3) from the nearest column. By
+        default the facet planes rotate about that interstitial axis, so the
+        apex closes on a triangle of three atoms. Shifting the block so a column
+        lands on (0, 0) makes the six facets converge on a single apex atom.
+
+        After this shift the axis is (0, 0) for everything that follows (facet
+        distance calibration and applySlicing), so all radii are measured from
+        the axis, not from the centre of mass."""
+        pos = block.NP.get_positions()
+        com = block.NP.get_center_of_mass()
+        c_ang = block.cif.cell.lengths()[2]
+        eq = pos[np.abs(pos[:, 2] - com[2]) < c_ang / 2.0]
+        if len(eq) == 0:
+            raise ValueError("No equatorial atoms found to locate a column.")
+        # nearest column to the current axis (= COM in-plane)
+        d = np.hypot(eq[:, 0] - com[0], eq[:, 1] - com[1])
+        nearest = eq[np.argmin(d)]
+        shift_x, shift_y = nearest[0], nearest[1]
+        block.NP.positions[:, 0] -= shift_x
+        block.NP.positions[:, 1] -= shift_y
+        if not noOutput:
+            print(f"axis aligned on atomic column: block shifted by "
+                  f"({-shift_x:+.4f}, {-shift_y:+.4f}) A "
+                  f"(column was at {np.hypot(shift_x, shift_y):.4f} A from axis)")
+
+
+    # ----- facet distance calibration --------------------------------------
+    def _calibrate_distance(self, block, normals, eq, eq_r, R_target):
+        """Bisect the orthogonal facet distance so the circumscribed radius
+        realised by the given set of facet `normals` equals R_target (A).
+        Returns the distance in A. Used both for the full nRot=6 group and,
+        in symmetric mode, for each screw family (class A, class B) separately
+        so both reach the same realised radius despite the square block's
+        azimuthal anisotropy."""
+        def realised_radius(d_ang):
+            keep = np.ones(len(eq), dtype=bool)
+            for nn in normals:
+                keep &= (eq @ nn <= d_ang)
+            kept_r = eq_r[keep]
+            return kept_r.max() if len(kept_r) else 0.0
+
+        nh = np.hypot(normals[0][0], normals[0][1])
+        d_lo, d_hi = 0.1, nh * R_target * 2.0
+        for _ in range(40):
+            d_mid = 0.5 * (d_lo + d_hi)
+            if realised_radius(d_mid) < R_target:
+                d_lo = d_mid
+            else:
+                d_hi = d_mid
+        return 0.5 * (d_lo + d_hi)
+
+    def _equatorial_slab(self, block):
+        """Return (eq, eq_r): equatorial-slab atom positions and their radial
+        distance from the rotation axis (0, 0)."""
+        pos = block.NP.get_positions()
+        z0 = 0.0 if self.axis_on_atom else block.NP.get_center_of_mass()[2]
+        c_ang = block.cif.cell.lengths()[2]
+        eq = pos[np.abs(pos[:, 2] - z0) < c_ang / 2.0]
+        if len(eq) == 0:
+            raise ValueError("No equatorial atoms found to calibrate the facet "
+                             "distance; check the block height.")
+        eq_r = np.hypot(eq[:, 0], eq[:, 1])
+        return eq, eq_r
+
+    def _facet_distance_nm(self, block, dihedral_deg, ndef, noOutput=True):
+        """Orthogonal distance (nm) for the six {10-1l} facets (nRot=6 group),
+        calibrated by bisection so the realised circumscribed diameter matches
+        self.diameter. Geometry-agnostic analogue of
+        ptnr.waist_distance_for_tilted_facet. See _calibrate_distance."""
+        n0 = self._facet_normal_cart(block, self.facet, ndef)
+        normals = [self._rot_z(n0, k * 60.0) for k in range(6)]
+        eq, eq_r = self._equatorial_slab(block)
+        R_target = self.diameter / 2.0 * 10.0
+        d_ang = self._calibrate_distance(block, normals, eq, eq_r, R_target)
+        if not noOutput:
+            print(f"facet distance calibrated: d = {d_ang/10:.3f} nm")
+        return d_ang / 10.0
+
+    def _facet_row_spacing_nm(self, block, ndef, facet):
+        """Inter-row spacing (nm) along the facet normal: the distance between
+        consecutive {10-1l} atomic planes. Used to shave one screw family by
+        exactly one atomic row relative to the other."""
+        n = self._facet_normal_cart(block, facet, ndef)
+        pos = block.NP.get_positions()
+        pos = pos - pos.mean(axis=0)
+        proj = np.unique(np.round(pos @ n, 3))
+        return float(np.median(np.diff(proj))) / 10.0
+
+    def _facet_groups(self, block, ndef, d_facet, sign=+1, noOutput=True):
+        """Build the facet plane group(s) for one apex direction.
+
+        sign = +1 builds the upward facets, sign = -1 the downward facets
+        (l index negated).
+
+        symmetric_facets=False (default): a single nRot=6 group at d_facet,
+        preserving the true hcp asymmetry (the two screw families terminate at
+        different atomic levels).
+
+        symmetric_facets=True: the six facets are split into the two screw
+        families (class A at the reference azimuths, class B pre-rotated by 60
+        deg and passed as Cartesian, since applySlicing's 'normal' branch
+        ignores startAngle). One family keeps the calibrated distance d_facet;
+        the OTHER is pulled inward by one inter-row spacing so it is shaved by
+        a single atomic row, giving the regular alternation. shave_family_A
+        selects which family is the shaved one:
+          - False (default): class B is shaved (class A stays the larger one),
+          - True: class A is shaved (class B stays the larger one).
+        """
+        facet = [self.facet[0], self.facet[1], sign * self.facet[2]]
+
+        if not self.symmetric_facets:
+            return [
+                {'normal': facet, 'normal_def': ndef, 'distance': d_facet,
+                 'nRot': 6, 'rotAxis': [0, 0, 1],
+                 'delete': 'above', 'modeP': 'OR'},
+            ]
+
+        nA = self._facet_normal_cart(block, facet, ndef)
+        nB = self._rot_z(nA, 60.0)
+
+        if getattr(self, 'regularize_base', False):
+            # Per-family calibration: bring BOTH screw families to the same
+            # realised radius, for a regular base hexagon at any facet index l.
+            # Use this for steep facets (e.g. {10-13}) where a one-row shave
+            # cannot equalise the two families. shave_family_A is not used here.
+            eq, eq_r = self._equatorial_slab(block)
+            R_target = self.diameter / 2.0 * 10.0
+            normals_A = [self._rot_z(nA, k * 120.0) for k in range(3)]
+            normals_B = [self._rot_z(nB, k * 120.0) for k in range(3)]
+            dA = self._calibrate_distance(block, normals_A, eq, eq_r, R_target) / 10.0
+            dB = self._calibrate_distance(block, normals_B, eq, eq_r, R_target) / 10.0
+            if not noOutput:
+                print(f"symmetric facets (per-family calibration): "
+                      f"dA = {dA:.4f} nm, dB = {dB:.4f} nm "
+                      f"(both reaching R = {R_target/10:.3f} nm)")
+        else:
+            # Original behaviour: shave one family by exactly one atomic row.
+            # Correct and important for {10-11}; shave_family_A selects which.
+            row = self._facet_row_spacing_nm(block, ndef, facet)
+            if self.shave_family_A:
+                dA, dB = d_facet - row, d_facet
+            else:
+                dA, dB = d_facet, d_facet - row
+            if not noOutput:
+                shaved = 'A' if self.shave_family_A else 'B'
+                print(f"symmetric facets: dA = {dA:.4f} nm, dB = {dB:.4f} nm "
+                      f"(class {shaved} shaved by one row = {row:.4f} nm)")
+
+        if not noOutput:
+            shaved = 'A' if self.shave_family_A else 'B'
+            print(f"symmetric facets: dA = {dA:.4f} nm, dB = {dB:.4f} nm "
+                  f"(class {shaved} shaved by one row = {row:.4f} nm)")
+
+        return [
+            {'normal': nA.tolist(), 'normal_def': 'cart', 'distance': dA,
+             'nRot': 3, 'rotAxis': [0, 0, 1],
+             'delete': 'above', 'modeP': 'OR'},
+            {'normal': nB.tolist(), 'normal_def': 'cart', 'distance': dB,
+             'nRot': 3, 'rotAxis': [0, 0, 1],
+             'delete': 'above', 'modeP': 'OR'},
+        ]
+        
+    # ----- coordinate generation -------------------------------------------
+    def coords(self, noOutput):
+        """Build the parallelepiped block, facet it into the hexagonal
+        (bi)pyramid, and store the result as self.NP.
+
+        The block is sized exactly from the derived apex height: it is centred
+        on z = 0 and the apex sits at +Hhalf (and -Hhalf for the bipyramid),
+        so the block half-height must reach Hhalf in both cases. A small fixed
+        safety of one lattice spacing (c in z, a in section), read from the
+        unit cell, keeps the apex atom row off the block boundary.
+
+        When axis_on_atom is True, the block is shifted in-plane so a real
+        atomic column lands on the rotation axis (0, 0) before faceting, so the
+        six facets converge on a single apex atom instead of the interstitial
+        triangle. The facet distance is then calibrated against that same axis,
+        keeping axis alignment and diameter calibration consistent."""
+        if not noOutput:
+            pyNMBu.centertxt("Generation of coordinates",
+                             bgc='#007a7a', size='14', weight='bold')
+        chrono = pyNMBu.timer()
+        chrono.chrono_start()
+
+        from . import crystalNPs as cyNP
+
+        Rcs = self.diameter / 2.0
+
+        # 1) Tiny probe block: read the lattice and the facet/base dihedral.
+        probe = cyNP.Crystal(
+            self.crystalName, shape='pppd', size=[1.0, 1.0, 1.0],
+            skipSymmetryAnalyzis=True, postAnalyzis=False,
+            jmolCrystalShape=False, aseView=False, noOutput=True)
+        ndef = self._auto_normal_def(probe, self.normal_def_user)
+        dihedral = self._facet_dihedral_deg(probe)
+
+        # lattice spacings (nm) for the auto safety margin
+        a_nm = probe.cif.cell.lengths()[0] / 10.0
+        c_nm = probe.cif.cell.lengths()[2] / 10.0
+
+        # 2) Derived apex height and EXACT block sizing.
+        Hhalf = Rcs * np.tan(np.radians(dihedral))
+        block_h = 2.0 * Hhalf + 2.0 * c_nm
+        side = self.diameter + 2.0 * a_nm
+
+        if not noOutput:
+            pyNMBu.centertxt("Building the parallelepiped block",
+                             bgc='#cbcbcb', size='12', fgc='b', weight='bold')
+            print(f"facet/base dihedral angle = {dihedral:.2f} deg")
+            print(f"derived apex height Hhalf = {Hhalf:.2f} nm")
+            print(f"block size = {side:.2f} x {side:.2f} x {block_h:.2f} nm "
+                  f"(auto, safety = 1 c-spacing = {c_nm:.3f} nm)")
+            print(f"normal_def resolved to '{ndef}' "
+                  f"(lattice system: {probe.ucBL.lattice_system})")
+
+        block = cyNP.Crystal(
+            self.crystalName, shape='pppd', size=[side, side, block_h],
+            skipSymmetryAnalyzis=True, postAnalyzis=False,
+            jmolCrystalShape=False, aseView=False, noOutput=noOutput)
+
+        # 3) Optionally align the rotation axis on a real atomic column FIRST.
+        if self.axis_on_atom:
+            self._align_axis_on_column(block, noOutput=noOutput)
+
+        # 4) Calibrate the facet distance against the rotation axis (0, 0).
+        d_facet = self._facet_distance_nm(block, dihedral, ndef,
+                                          noOutput=noOutput)
+
+        # 5) Facet plane groups (symmetric or true-crystal, cone or bipyramid)
+        planes = self._facet_groups(block, ndef, d_facet, sign=+1, noOutput=noOutput)
+        if self.double:
+            planes += self._facet_groups(block, ndef, d_facet, sign=-1, noOutput=noOutput)
+        else:
+            planes.append(
+                {'normal': [0, 0, -1], 'normal_def': 'cart',
+                 'distance': 0.0, 'nRot': 1, 'rotAxis': [0, 0, 1],
+                 'delete': 'above', 'modeP': 'OR'})
+
+        # 6) Apply the facet groups (and base) first, WITHOUT truncation, so the
+        #    realised apex height can be measured. cut_nm must be referenced on
+        #    the REAL apex, not the theoretical Hhalf: the discrete lattice has
+        #    no atom exactly at the ideal tip, so the realised apex sits a
+        #    fraction of c below Hhalf, and cutting from Hhalf would remove too
+        #    little.
+        block.applySlicing(planes=planes, mode='OR', distance_unit='nm',
+                           recenter=False, noOutput=noOutput,
+                           postAnalyzis=False)
+
+        # 7) Optional apex truncation (frustum), referenced on the realised apex.
+        if self.cut_nm and self.cut_nm > 0:
+            z = block.NP.get_positions()[:, 2]
+            cut_planes = []
+            # top apex: realised top is z.max(); cut cut_nm below it
+            z_apex_top = z.max()
+            z_cut_top = (z_apex_top - self.cut_nm * 10.0) / 10.0   # nm
+            if z_cut_top * 10.0 <= z.min() + 1e-6:
+                raise ValueError(
+                    f"cut_nm ({self.cut_nm} nm) exceeds the realised apex "
+                    f"height; nothing would remain.")
+            cut_planes.append(
+                {'normal': [0, 0, 1], 'normal_def': 'cart',
+                 'distance': z_cut_top, 'nRot': 1, 'rotAxis': [0, 0, 1],
+                 'delete': 'above', 'modeP': 'OR'})
+            if self.double:
+                # bottom apex: realised bottom is z.min(); cut cut_nm above it
+                z_apex_bot = z.min()
+                z_cut_bot = (z_apex_bot + self.cut_nm * 10.0) / 10.0  # nm
+                cut_planes.append(
+                    {'normal': [0, 0, -1], 'normal_def': 'cart',
+                     'distance': -z_cut_bot, 'nRot': 1, 'rotAxis': [0, 0, 1],
+                     'delete': 'above', 'modeP': 'OR'})
+            block.applySlicing(planes=cut_planes, mode='OR', distance_unit='nm',
+                               recenter=False, noOutput=noOutput,
+                               postAnalyzis=False)
+
+        # 8) Adopt the shaped block and expose its slicing artefacts.
+        self.NP = block.NP
+        self.NP.positions -= self.NP.get_center_of_mass()
+        self.nAtoms = len(self.NP)
+        self.cog = self.NP.get_center_of_mass()
+        self.facet_dihedral_deg = dihedral
+        self.jMolSlices = getattr(block, 'jMolSlices', None)
+        self.trPlanes_Slices = getattr(block, 'trPlanes_Slices', None)
+        self._block = block
+
+        if not noOutput:
+            print(f"Total number of atoms = {self.nAtoms}")
+            chrono.chrono_stop(hdelay=False)
+            chrono.chrono_show()
+
+    # ----- properties ------------------------------------------------------
+    def prop(self):
+        """Display nanoparticle properties."""
+        print()
+        print(self)
+        print("element / compound =", self.crystalName)
+        print(f"shape = hexagonal {'bipyramid' if self.double else 'cone'}")
+        h, k, l = self.facet[0], self.facet[1], self.facet[2]
+        print(f"pyramidal facet = {{{h} {k} {-(h+k)} {l}}}")
+        print(f"target circumscribed section diameter = {self.diameter:.3f} nm")
+        if self.NP is not None and len(self.NP):
+            pos = self.NP.get_positions()
+            pos = pos - pos.mean(axis=0)
+            # realised height along z
+            height_nm = (pos[:, 2].max() - pos[:, 2].min()) / 10.0
+            # realised circumscribed diameter: twice the largest radial distance
+            # from the axis, wherever it occurs (the base for a cone, the waist
+            # for a bipyramid). Taking the global max avoids picking a slab at
+            # the wrong height (the vertical midpoint of a cone is already
+            # narrow and would halve the value).
+            r = np.hypot(pos[:, 0], pos[:, 1])
+            diam_real_nm = 2.0 * r.max() / 10.0
+            print(f"realised circumscribed section diameter = {diam_real_nm:.3f} nm")
+            print(f"realised height (z) = {height_nm:.3f} nm")
+            # truncation facet diameter, if the apex was cut into a {0001} flat
+            if self.cut_nm and self.cut_nm > 0:
+                z = pos[:, 2]
+                c_ang = (self._block.cif.cell.lengths()[2]
+                         if hasattr(self, '_block') else 4.0)
+                top = pos[np.abs(z - z.max()) < c_ang]
+                r_top = np.hypot(top[:, 0], top[:, 1])
+                diam_top_nm = 2.0 * r_top.max() / 10.0
+                print(f"realised top truncation diameter = {diam_top_nm:.3f} nm")
+        if hasattr(self, 'facet_dihedral_deg'):
+            print(f"facet/base dihedral angle = {self.facet_dihedral_deg:.2f}°")
+        if self.cut_nm and self.cut_nm > 0:
+            print(f"apex truncation (height) = {self.cut_nm:.3f} nm")

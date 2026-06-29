@@ -851,6 +851,31 @@ def kDTreeCN(crystal: Atoms,
 
 #--------------------------------------------------------------------------------------------
 
+def _resolve_value_range(values, value_range, label="value"):
+    """
+    Resolve colour-scale (vmin, vmax) from value_range.
+
+    value_range: [lo, hi] or None. None -> use the data min/max. An explicit
+    range is used as given, even if it extends beyond the data: this is the
+    intended way to colour several structures on a common scale (reserve the
+    top/bottom of the scale for values found in the other structures). The only
+    guard is against a degenerate or inverted range (hi <= lo), which is nudged
+    to a tiny positive span.
+
+    Returns:
+        tuple: (vmin, vmax).
+    """
+    import numpy as np
+    if value_range is None:
+        vmin, vmax = float(values.min()), float(values.max())
+    else:
+        vmin, vmax = float(value_range[0]), float(value_range[1])
+    if vmax - vmin < 1e-9:
+        vmax = vmin + 1e-9
+    return vmin, vmax
+    
+#--------------------------------------------------------------------------------------------
+
 def _flush_stale_data(self, shape_update=None):
     """
     Internal method to synchronize the NP state and reset analysis data
@@ -906,8 +931,10 @@ def _flush_stale_data(self, shape_update=None):
         'jMol_q6', 'jMol_q6_opt',
         'NP_select', 'NP_select_opt',
         'NP_select_mask', 'NP_select_mask_opt',
-        '_local_order_decimals'
-    ]
+        '_local_order_decimals',
+        'CN', 'GCN', 'CN_opt', 'GCN_opt',
+        'strain_vol', 'strain_vm', 'strain_d2min', 'strain_detF', 'strain_cutoff',
+]
     
     for attr in attrs_to_clean:
         if hasattr(self, attr):
@@ -971,3 +998,85 @@ def listOf_Attributes_Methods(obj, maxlen=70, show_methods=False):
         pyNMBu.centerTitle("Methods")
         for k in sorted(methods):
             print(f"  {k}")
+
+###############################################
+
+def set_symbols(self, to_symbol, from_symbol=None, indices=None,
+                is_optimized=None, noOutput=False):
+    """
+    Change chemical symbols of an already-built nanoparticle in place, to
+    relabel species after construction (e.g. turn a scaffold built as Au into
+    Co, or mark one piece of an assembly for a bimetallic analysis).
+
+    Exactly one targeting mode is used, chosen by which optional argument is
+    given:
+      - neither from_symbol nor indices : ALL atoms become to_symbol;
+      - from_symbol only                : every atom of species from_symbol
+                                          becomes to_symbol;
+      - indices only                    : the atoms at those indices become
+                                          to_symbol (1-based, Jmol convention).
+    Passing both from_symbol and indices is rejected (ambiguous).
+
+    Args:
+        to_symbol (str): the new chemical symbol to assign (e.g. 'Co').
+        from_symbol (str or None): if given, only atoms currently of this
+            species are changed. Default None.
+        indices (sequence of int or None): if given, only the atoms at these
+            1-based indices are changed (Jmol convention, matching the rest of
+            pyNMB). Default None.
+        is_optimized (bool or None): operate on the optimized structure
+            (self.NP_opt) when True, else self.NP. None -> self.is_optimized.
+        noOutput (bool): if True, suppress the printed summary. Default False.
+
+    Returns:
+        int: the number of atoms whose symbol was changed.
+    """
+    import numpy as np
+
+    if is_optimized is None:
+        is_optimized = getattr(self, 'is_optimized', False)
+    use_opt = is_optimized and getattr(self, 'NP_opt', None) is not None
+    atoms = self.NP_opt if use_opt else self.NP
+    status = "optimized structure" if use_opt else "initial structure"
+
+    symbols = np.array(atoms.get_chemical_symbols())
+    n_before = len(symbols)
+
+    if from_symbol is not None and indices is not None:
+        raise ValueError("give either from_symbol or indices, not both "
+                         "(the target would be ambiguous).")
+
+    if from_symbol is None and indices is None:
+        # change everything
+        mask = np.ones(n_before, dtype=bool)
+        what = f"all {n_before} atoms"
+    elif from_symbol is not None:
+        # change one species into another
+        mask = symbols == from_symbol
+        what = f"{int(mask.sum())} {from_symbol} atoms"
+    elif indices is not None:
+        # change a set of 1-based (Jmol) indices
+        idx0 = np.asarray(indices, dtype=int) - 1   # Jmol 1-based -> Python
+        if idx0.min() < 0 or idx0.max() >= n_before:
+            raise IndexError(f"indices must be in 1..{n_before} "
+                             f"(Jmol 1-based).")
+        mask = np.zeros(n_before, dtype=bool)
+        mask[idx0] = True
+        what = f"{int(mask.sum())} atoms at the given indices"
+    else:
+        raise NotImplementedError("unhandled targeting combination.")
+
+    n_changed = int(mask.sum())
+    symbols[mask] = to_symbol
+    atoms.set_chemical_symbols(symbols.tolist())
+
+    if not noOutput:
+        centertxt(f"Set symbols ({status})",
+                  bgc='#007a7a', size='14', weight='bold')
+        print(f" - Changed {what} to {to_symbol}.")
+        uniq, counts = np.unique(atoms.get_chemical_symbols(),
+                                 return_counts=True)
+        comp = ", ".join(f"{u}: {c}" for u, c in zip(uniq, counts))
+        print(f" - New composition: {comp}")
+
+    return n_changed

@@ -32,40 +32,168 @@ from .symmetry import MolSym
 from .external_pgm import defCrystalShapeForJMol
 
 ######################################## coordination numbers
-def calculateCN(coords,Rmax):
-    '''
-    Calculate the coordination number (CN) for each atom.
+def calculate_CN(self, Rmax=2.9, is_optimized=None, noOutput=False):
+    """
+    Compute the coordination number (CN) of every atom and store it.
 
-    The coordination number is determined by counting neighbors within 
-    a spherical cutoff distance defined by Rmax.
+    The CN of an atom is the number of neighbours within the spherical cutoff
+    Rmax, counted with a KD-tree (O(N log N), linear memory), so the analysis
+    remains tractable for particles with up to ~10^6 atoms.
 
     Args:
-        coords (numpy.ndarray): An (N, 3) array containing the Cartesian 
-            coordinates for each of the N points.
-        r_max (float): The threshold distance (cutoff) used to define 
-            a coordination bond.
+        Rmax (float): cutoff distance (Å) defining a coordination bond.
+            Default 2.9.
+        is_optimized (bool or None): target structure. None -> self.is_optimized.
+        noOutput (bool): if True, suppresses the printed summary. Default False.
 
     Returns:
-        numpy.ndarray: An array of length N containing the calculated 
-            coordination number for each atom.
-    '''
-    # CN = np.zeros(len(coords))
-    # for i,ci in enumerate(coords):
-    #     for j in range(0,i):
-    #         Rij = Rbetween2Points(ci,coords[j])
-    #         if Rij <= Rmax:
-    #             CN[i]+=1
-    #             CN[j]+=1
-    
-    # NEW
-    from scipy.spatial.distance import squareform, pdist
-    coords = np.asarray(coords)
-    # Compute all pairwise distances at once
-    dist_matrix = squareform(pdist(coords))
-    # Count neighbors within Rmax (excluding self with > 0)
-    CN = np.sum((dist_matrix > 0) & (dist_matrix <= Rmax), axis=1)
+        numpy.ndarray: CN value for every atom of the target structure, in atom
+        order. Also stored as self.CN (or self.CN_opt for the optimized
+        structure).
+    """
+    import numpy as np
+    from scipy.spatial import cKDTree
+
+    if is_optimized is None:
+        is_optimized = getattr(self, 'is_optimized', False)
+    use_opt = is_optimized and getattr(self, 'NP_opt', None) is not None
+    target_atoms = self.NP_opt if use_opt else self.NP
+    status = "optimized structure" if use_opt else "initial structure"
+
+    if not noOutput:
+        centertxt("Coordination number (all atoms)",
+                  bgc='#007a7a', size='14', weight='bold')
+
+    coords = np.asarray(target_atoms.get_positions())
+    tree = cKDTree(coords)
+    # number of points within Rmax for each atom (includes itself) minus 1
+    CN = tree.query_ball_point(coords, r=Rmax, return_length=True) - 1
+
+    if use_opt:
+        self.CN_opt = CN
+    else:
+        self.CN = CN
+
+    if not noOutput:
+        print(f"  - Source    : {status}")
+        print(f"  - Atoms     : {len(CN)}")
+        print(f"  - CN range  : {CN.min()} to {CN.max()}")
+        print(f"  - CN mean   : {CN.mean():.2f}")
+        print(f"  Stored as self.{'CN_opt' if use_opt else 'CN'}.")
 
     return CN
+
+def calculate_GCN(self, Rmax=2.9, cn_max=None,
+                                    is_optimized=None, noOutput=False):
+    """
+    Compute the generalized coordination number (GCN) of every atom.
+
+    The GCN of a site i is the coordination-weighted count of its first
+    neighbours, normalized by the bulk coordination cn_max:
+
+        GCN(i) = sum_j cn(j) / cn_max
+
+    where the sum runs over the first neighbours j of atom i, cn(j) is the
+    ordinary coordination number of neighbour j, and cn_max is the maximum
+    coordination of an atom in the corresponding bulk lattice (12 for FCC and
+    HCP, 8 for BCC). A bulk atom whose neighbours are all fully coordinated has
+    GCN = cn_max (e.g. 12 for FCC); under-coordinated sites such as edges,
+    vertices, and atoms lining internal cavities have a lower GCN. Introduced by
+    Calle-Vallejo, Sautet and co-workers as a simple geometric descriptor that
+    linearly tracks adsorption energies on metal nanoparticles.
+
+    The GCN is computed for ALL atoms, not only the outer surface: this also
+    flags the under-coordinated atoms that line internal cavities (e.g. after
+    cut_by or systematic_carve_by, or in hollow structures), which a purely
+    convex-hull surface test would miss.
+
+    Args:
+        Rmax (float): cutoff distance (Å) defining first neighbours, passed to
+            kDTreeCN. Should bracket the first coordination shell. Default 2.9.
+        cn_max (int or None): bulk reference coordination. If None (default),
+            taken from the crystal structure when available (FCC/HCP -> 12,
+            BCC -> 8); falls back to 12 with a note otherwise. Pass an explicit
+            value to override.
+        is_optimized (bool or None): target structure. None -> self.is_optimized.
+        noOutput (bool): if True, suppresses the printed summary. Default False.
+
+    Returns:
+        np.ndarray: GCN value for every atom of the target structure, in atom
+        order. Also stored as self.GCN (or self.GCN_opt for the optimized
+        structure).
+    """
+    import numpy as np
+    from .core import kDTreeCN
+
+    if is_optimized is None:
+        is_optimized = getattr(self, 'is_optimized', False)
+    use_opt = is_optimized and getattr(self, 'NP_opt', None) is not None
+    target_atoms = self.NP_opt if use_opt else self.NP
+    status = "optimized structure" if use_opt else "initial structure"
+
+    if not noOutput:
+        centertxt("Generalized coordination number (all atoms)",
+                  bgc='#007a7a', size='14', weight='bold')
+
+    # --- Resolve cn_max -----------------------------------------------------
+    if cn_max is None:
+        cs = getattr(self, 'crystalStructure', None)
+        if cs is None:
+            cs = getattr(self, 'crystal_structure', None)
+        cs_str = str(cs).lower() if cs is not None else ''
+        cn_max_table = {'fcc': 12, 'hcp': 12, 'bcc': 8}
+        cn_max = None
+        for key, val in cn_max_table.items():
+            if key in cs_str:
+                cn_max = val
+                break
+        if cn_max is None:
+            cn_max = 12
+            if not noOutput:
+                print(f"{bg.LIGHTYELLOWB}Note: bulk coordination could not be "
+                      f"resolved from the crystal structure; defaulting to "
+                      f"cn_max = 12 (FCC/HCP). Pass cn_max explicitly to "
+                      f"override.{bg.OFF}")
+        elif not noOutput:
+            print(f"  Bulk reference coordination cn_max = {cn_max} "
+                  f"(from crystal structure '{cs}').")
+    else:
+        if not noOutput:
+            print(f"  Bulk reference coordination cn_max = {cn_max} "
+                  f"(user-specified).")
+
+    # --- Ordinary coordination numbers of all atoms -------------------------
+    _, CN = kDTreeCN(target_atoms, Rmax=Rmax, returnD=False, noOutput=True)
+    CN = np.asarray(CN, dtype=float)
+
+    # --- Neighbour lists (same cutoff) --------------------------------------
+    from scipy.spatial import cKDTree
+    pos = target_atoms.get_positions()
+    tree = cKDTree(pos)
+    neighbours = tree.query_ball_point(pos, r=Rmax)
+
+    # --- GCN of every atom --------------------------------------------------
+    GCN = np.zeros(len(pos), dtype=float)
+    for i in range(len(pos)):
+        nbrs = [j for j in neighbours[i] if j != i]   # exclude self
+        if nbrs:
+            GCN[i] = CN[nbrs].sum() / cn_max
+        # isolated atom keeps GCN = 0
+
+    # --- Store --------------------------------------------------------------
+    if use_opt:
+        self.GCN_opt = GCN
+    else:
+        self.GCN = GCN
+
+    if not noOutput:
+        print(f"  - Source        : {status}")
+        print(f"  - Atoms         : {len(pos)}")
+        print(f"  - GCN range     : {GCN.min():.2f} to {GCN.max():.2f}")
+        print(f"  - GCN mean      : {GCN.mean():.2f}")
+        print(f"  Stored as self.{'GCN_opt' if use_opt else 'GCN'}.")
+
+    return GCN
 
 def delAtomsWithCN(coords: np.ndarray,
                    Rmax: np.float64,
@@ -90,7 +218,7 @@ def delAtomsWithCN(coords: np.ndarray,
         - targetCN (default=12)
     returns an array that contains the indexes of atoms with CN == targetCN
     '''
-    CN = calculateCN(coords,Rmax)
+    CN = calculate_CN(coords,Rmax)
     # tabDelAtoms = []
     # for i,cn in enumerate(CN):
     #     if cn == targetCN: tabDelAtoms.append(i)
@@ -1712,8 +1840,18 @@ def external_facets_info(self, mode='auto', noOutput=False):
                   f"Run the NP construction first.{bg.OFF}")
         return None
 
-    planes    = np.array(target_planes)
-    distances = np.abs(planes[:, 3])   # |d|, since ||n||=1
+    # planes    = np.array(target_planes)
+    # distances = np.abs(planes[:, 3])   # |d|, since ||n||=1
+    planes = np.array(target_planes)
+    # The plane offsets in planes[:, 3] are relative to the frame origin, which
+    # is not necessarily the particle center (some NPs are built off-origin and
+    # deliberately not recentered). Re-reference each offset to the center of
+    # mass so the reported distance is the true facet-to-center distance:
+    # a facet passing through the frame origin must not register as d = 0.
+    cog = (self.NP_opt if getattr(self, 'is_optimized', False)
+           and getattr(self, 'NP_opt', None) is not None
+           else self.NP).get_center_of_mass()
+    distances = np.abs(planes[:, :3] @ cog + planes[:, 3])
 
     # --- Relative energies (always computed from distances) ---
     d_min = distances.min()
@@ -1994,6 +2132,8 @@ def propPostMake(self, skipChiralityCalculation, skipSymmetryAnalyzis, skipFacet
         # This will stop the entire execution and show a red error block in Jupyter
         raise AttributeError(f"Structure Error: '{label}' is None. "
                              f"Cannot perform propPostMake() on an empty structure.")
+
+    if not noOutput: print("Total number of atoms = ", len(target_np))
 
     moiNP = compute_moi(target_np, noOutput)
     setattr(self, f"moi{suffix}", moiNP)
@@ -2528,3 +2668,287 @@ def compare_effective_diameters(nmb_object, n_feret=2000):
     display(pivot)
     return pivot
 
+#############################################################################################
+
+def apparent_apex_angle(self, apex_direction, view_axis=None,
+                        axis_def='cart', n_azimuth=180,
+                        flank_lo=0.2, flank_hi=0.85, n_slab=14,
+                        is_optimized=None, save_img=None, show_panels=True,
+                        save_panels=None, noOutput=False):
+    """
+    Mean and standard deviation of the APPARENT (projected) apex angle of a tip,
+    as it would be measured on an HRTEM micrograph, swept over the azimuthal
+    orientation of the particle.
+
+    On a micrograph the angle read at a faceted apex is the angle between the
+    two silhouette flanks in PROJECTION, extended to their virtual intersection.
+    This routine therefore fits a straight line to each side of the projected
+    silhouette over an axial band [flank_lo, flank_hi] of the height (excluding
+    the top, which may be a truncated plateau with no terminal atom, and the
+    base, which may flare out), then measures the angle between the two fitted
+    flank lines. Because the flanks are extended to their virtual apex, the
+    result is INSENSITIVE to a truncated tip: it reports the angle the
+    un-truncated pyramid would have, which is what one reads by extending the
+    facet edges by hand. For a pointed tip the two flanks meet at the real apex
+    and the same value is obtained.
+
+    The projected angle of a polygonal-based pyramid depends on the azimuth of
+    the particle about its long axis (looking into an edge vs onto a facet), so
+    the azimuth is swept over a full turn and the mean +/- std (and min/max
+    range) are reported. A measured micrograph angle within ~1-2 std of this
+    mean is consistent with the assumed facet family.
+
+    The long axis is `apex_direction`; the view is swept in the plane
+    perpendicular to it (beam perpendicular to the long axis).
+
+    Performance: the sweep runs on the surface atoms (self.NPcs / self.NPcs_opt)
+    that determine the silhouette, scaling to multi-million-atom structures; it
+    falls back to the convex-hull boundary, then to all atoms.
+
+    Args:
+        apex_direction (array-like): direction to the apex / the long axis, as
+            Miller indices [h,k,l] (axis_def='hkl', needs Gstar) or Cartesian
+            [x,y,z] (axis_def='cart').
+        view_axis (array-like or None): a fixed Cartesian viewing direction for a
+            single measurement (no sweep). None (default) sweeps the view around
+            apex_direction over a full turn.
+        axis_def (str): 'cart' (default) or 'hkl' for apex_direction.
+        n_azimuth (int): number of azimuthal samples over 360 deg. Default 180.
+        flank_lo (float): lower bound of the axial band used to fit each flank,
+            as a fraction of the silhouette height measured from the base.
+            Excludes the flaring base. Default 0.2.
+        flank_hi (float): upper bound of that band. Keep below 1 to exclude a
+            truncated top plateau. Default 0.85.
+        n_slab (int): number of horizontal slabs over the band, each
+            contributing one left-edge and one right-edge point to the flank
+            fit. Default 14.
+        is_optimized (bool or None): target structure. None -> self.is_optimized.
+        save_img (str): if given, save the angle-vs-azimuth plot (.png/.svg).
+        show_panels (bool): if True (default), display five panels showing the
+            projected silhouette, the fitted flank lines extended to the virtual
+            apex, and the measured angle, at the azimuths producing the five key
+            statistics: min, mean-sigma, mean, mean+sigma, max.
+        save_panels (str): if given, also save that five-panel figure
+            (.png/.svg). Saving is independent of show_panels.
+        noOutput (bool): if True, suppress the printed summary. Default False.
+
+    Returns:
+        dict: {'mean', 'std', 'min', 'max' (deg),
+               'azimuth' (array, deg), 'angle' (array, deg)}.
+    """
+    import numpy as np
+    from scipy.spatial import ConvexHull
+
+    if is_optimized is None:
+        is_optimized = getattr(self, 'is_optimized', False)
+    use_opt = is_optimized and getattr(self, 'NP_opt', None) is not None
+    status = "optimized structure" if use_opt else "initial structure"
+
+    # --- surface atoms determine the silhouette -------------------------------
+    npcs = getattr(self, 'NPcs_opt' if use_opt else 'NPcs', None)
+    src = "surface atoms (NPcs)"
+    if npcs is not None and len(npcs) > 0:
+        shell = npcs.get_positions()
+    else:
+        atoms = self.NP_opt if use_opt else self.NP
+        allpos = atoms.get_positions()
+        if len(allpos) > 4:
+            try:
+                shell = allpos[np.unique(ConvexHull(allpos).vertices)]
+                src = "convex-hull boundary atoms"
+            except Exception:
+                shell = allpos
+                src = "all atoms"
+        else:
+            shell = allpos
+            src = "all atoms"
+    n_total = (len(self.NP_opt) if use_opt and getattr(self, 'NP_opt', None)
+               is not None else len(self.NP))
+
+    # apex direction -> Cartesian unit (the long axis)
+    if axis_def == 'hkl':
+        if not hasattr(self, 'Gstar'):
+            raise AttributeError("axis_def='hkl' requires a Crystal object "
+                                 "with Gstar.")
+        from .crystals import lattice_cart
+        axis = lattice_cart(self, [apex_direction], Bravais2cart=True,
+                            printV=False)[0]
+    else:
+        axis = np.asarray(apex_direction, dtype=float)
+    axis = axis / np.linalg.norm(axis)
+
+    def _project(view):
+        """Return the 2D projection (x across, y along axis) for a view, or None."""
+        u = view / np.linalg.norm(view)
+        e2 = axis - (axis @ u) * u
+        if np.linalg.norm(e2) < 1e-9:
+            return None
+        e2 /= np.linalg.norm(e2)
+        e1 = np.cross(u, e2)
+        return np.column_stack([shell @ e1, shell @ e2])
+
+    def _fit_flanks(P):
+        """Fit a line x = m*y + b to the left and right silhouette edges over
+        the band [flank_lo, flank_hi]. Returns (mL,bL,mR,bR) or None."""
+        ymin, ymax = P[:, 1].min(), P[:, 1].max()
+        H = ymax - ymin
+        if H < 1e-9:
+            return None
+        ylo = ymin + flank_lo * H
+        yhi = ymin + flank_hi * H
+        ys = np.linspace(ylo, yhi, n_slab)
+        dy = (yhi - ylo) / n_slab
+        eL, eR = [], []
+        for yc in ys:
+            m = (P[:, 1] >= yc - dy / 2) & (P[:, 1] < yc + dy / 2)
+            if m.sum() < 2:
+                continue
+            row = P[m]
+            eL.append([row[:, 0].min(), yc])
+            eR.append([row[:, 0].max(), yc])
+        if len(eL) < 3 or len(eR) < 3:
+            return None
+        eL = np.array(eL)
+        eR = np.array(eR)
+        mL, bL = np.polyfit(eL[:, 1], eL[:, 0], 1)
+        mR, bR = np.polyfit(eR[:, 1], eR[:, 0], 1)
+        return mL, bL, mR, bR
+
+    def _apex_angle(view):
+        """Angle (deg) between the two extended flanks for one view."""
+        P = _project(view)
+        if P is None:
+            return np.nan
+        fit = _fit_flanks(P)
+        if fit is None:
+            return np.nan
+        mL, _, mR, _ = fit
+        dL = np.array([mL, 1.0]); dL /= np.linalg.norm(dL)
+        dR = np.array([mR, 1.0]); dR /= np.linalg.norm(dR)
+        return float(np.degrees(np.arccos(np.clip(np.dot(dL, dR), -1.0, 1.0))))
+
+    # azimuth reference frame (perpendicular to the axis)
+    arb = np.array([1.0, 0, 0]) if abs(axis[0]) < 0.9 else np.array([0, 1.0, 0])
+    e_ref = arb - (arb @ axis) * axis
+    e_ref /= np.linalg.norm(e_ref)
+    e_perp = np.cross(axis, e_ref)
+
+    if view_axis is not None:
+        ang = _apex_angle(np.asarray(view_axis, dtype=float))
+        if not noOutput:
+            centertxt(f"Apparent apex angle ({status})",
+                      bgc='#007a7a', size='14', weight='bold')
+            print(f" - Source       : {src} ({len(shell)} atoms)")
+            print(f" - Single view  : apparent apex angle = {ang:.2f} deg")
+        return {'mean': ang, 'std': 0.0, 'min': ang, 'max': ang,
+                'azimuth': np.array([0.0]), 'angle': np.array([ang])}
+
+    az = np.linspace(0, 360, n_azimuth, endpoint=False)
+    vals = []
+    for a_deg in az:
+        t = np.radians(a_deg)
+        view = np.cos(t) * e_ref + np.sin(t) * e_perp
+        vals.append(_apex_angle(view))
+    vals = np.array(vals)
+    good = np.isfinite(vals)
+    v = vals[good]
+    if len(v) == 0:
+        raise ValueError("could not measure the apex angle at any azimuth; "
+                         "check apex_direction, flank_lo/flank_hi.")
+
+    out = {'mean': float(v.mean()), 'std': float(v.std()),
+           'min': float(v.min()), 'max': float(v.max()),
+           'azimuth': az[good], 'angle': v}
+
+    if not noOutput:
+        centertxt(f"Apparent apex angle ({status})",
+                  bgc='#007a7a', size='14', weight='bold')
+        print(f" - Apex direction        : {apex_direction} ({axis_def})")
+        print(f" - Source                : {src} ({len(shell)} of {n_total})")
+        print(f" - Flank band            : {flank_lo:.2f} - {flank_hi:.2f} of height")
+        print(f" - Azimuth samples       : {int(good.sum())} over 360 deg")
+        print(f" - Mean apparent angle   : {out['mean']:.2f} deg")
+        print(f" - Std (over azimuth)    : {out['std']:.2f} deg")
+        print(f" - Range (min - max)     : {out['min']:.2f} - {out['max']:.2f} deg")
+        print(f" - Report as             : {out['mean']:.1f} +/- {out['std']:.1f} deg "
+              f"(range {out['min']:.1f} - {out['max']:.1f} deg)")
+
+    if save_img:
+        import matplotlib
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots(figsize=(9, 5.0))
+        ax.plot(az[good], v, color='#4a90d9', lw=2)
+        ax.axhline(out['mean'], color='green', ls='--', lw=2,
+                   label=f"mean {out['mean']:.1f} deg")
+        ax.axhspan(out['mean'] - out['std'], out['mean'] + out['std'],
+                   color='green', alpha=0.12, label=f"+/- {out['std']:.1f} deg")
+        ax.set_xlabel('azimuth of the particle about its axis (deg)',
+                      fontsize=13, fontweight='bold')
+        ax.set_ylabel('apparent apex angle (deg)', fontsize=13, fontweight='bold')
+        ax.set_title(f'apparent apex angle vs azimuth ({status})',
+                     fontsize=13, fontweight='bold')
+        ax.legend(prop={'weight': 'bold'})
+        ax.grid(True, linestyle=':', alpha=0.5)
+        for tk in ax.get_xticklabels() + ax.get_yticklabels():
+            tk.set_fontweight('bold')
+        plt.tight_layout()
+        if save_img.lower().endswith('.svg'):
+            matplotlib.rcParams['svg.fonttype'] = 'none'
+        plt.savefig(save_img, dpi=300, bbox_inches='tight')
+        if not noOutput:
+            print(f" - Plot saved to: {save_img}")
+        plt.show()
+
+    if show_panels or save_panels:
+        import matplotlib
+        import matplotlib.pyplot as plt
+        stats = [('min', out['min']),
+                 ('mean-sigma', out['mean'] - out['std']),
+                 ('mean', out['mean']),
+                 ('mean+sigma', out['mean'] + out['std']),
+                 ('max', out['max'])]
+        fig, axes = plt.subplots(1, 5, figsize=(22, 5))
+        for idx, (name, target) in enumerate(stats):
+            ax = axes[idx]
+            j = int(np.argmin(np.abs(v - target)))
+            a_deg = out['azimuth'][j]
+            t = np.radians(a_deg)
+            view = np.cos(t) * e_ref + np.sin(t) * e_perp
+            P = _project(view)
+            if P is None:
+                ax.axis('off')
+                continue
+            fit = _fit_flanks(P)
+            ax.scatter(P[:, 0], P[:, 1], s=2, c='#cccccc', zorder=1)
+            ang_p = out['angle'][j]
+            if fit is not None:
+                mL, bL, mR, bR = fit
+                ymin, ymax = P[:, 1].min(), P[:, 1].max()
+                # virtual apex = intersection of the two flank lines
+                if abs(mL - mR) > 1e-9:
+                    yi = (bR - bL) / (mL - mR)
+                    xi = mL * yi + bL
+                else:
+                    yi, xi = ymax, 0.0
+                yspanL = np.array([ymin, yi])
+                ax.plot(mL * yspanL + bL, yspanL, '-', c='#d62728', lw=2,
+                        zorder=3)
+                ax.plot(mR * yspanL + bR, yspanL, '-', c='#2ca02c', lw=2,
+                        zorder=3)
+                ax.plot(xi, yi, 'k*', ms=14, zorder=4)
+            ax.set_title(f'{name}\nangle = {ang_p:.1f}°  (az {a_deg:.0f}°)',
+                         fontweight='bold')
+            ax.set_aspect('equal')
+            ax.axis('off')
+        fig.suptitle(f'Apparent apex angle at key statistics ({status})',
+                     fontweight='bold', fontsize=15)
+        plt.tight_layout()
+        if save_panels:
+            if save_panels.lower().endswith('.svg'):
+                matplotlib.rcParams['svg.fonttype'] = 'none'
+            plt.savefig(save_panels, dpi=150, bbox_inches='tight')
+            if not noOutput:
+                print(f" - Panels saved to: {save_panels}")
+        plt.show()
+
+    return out

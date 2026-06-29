@@ -5,6 +5,330 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
+## [0.18.0] "local descriptors II, bug fixes, ovito, hexagonal bipyramids"
+
+### Added
+
+- **`q4q6_populations(...)` + `select_by_q4q6_disk(...)` in
+    utils.local_descriptors.py + pyNMBcore wrappers**: the 2D counterparts of
+    `local_order_populations` / `select_by_local_order` for the Steinhardt
+    (q4, q6) map. `q4q6_populations` lists the main (q4, q6) clusters as an
+    indexed table (centre, atom count, fraction, colour swatch), so the
+    coordinates of a population no longer have to be read off `plot_q4q6_map`
+    by eye. It offers two grouping methods: `method='round'` groups atoms on
+    identical rounded (q4, q6) values (exact, for clean crystalline NPs), and
+    `method='cluster'` spatially clusters a continuous cloud with DBSCAN (for
+    relaxed/disordered structures), reporting unclustered atoms separately;
+    `min_fraction` keeps only the dominant populations (e.g. >10%).
+    `select_by_q4q6_disk` extracts the atoms inside a disk of the (q4, q6)
+    plane into `self.NP_select` (mask in `self.NP_select_mask`, `_opt` suffix
+    for the optimized structure), the disk given either explicitly
+    (`center` + `radius`) or by a population index from `q4q6_populations`
+    (`cluster_index`). A `metric` option ('euclidean' / 'normalized') accounts
+    for the different q4 and q6 axis ranges. Non-destructive; q4/q6 computed on
+    the fly via `steinhardt_q` when absent and `Xnn` is given.
+
+- **`calculate_CN(...)` and `calculate_GCN(...)` in utils.prop.py + pyNMBcore
+    wrappers**: per-atom coordination descriptors stored as object attributes,
+    in the same spirit as the local-order descriptors.
+    `calculate_CN` computes the ordinary coordination number (number of
+    neighbours within `Rmax`) of every atom with a KD-tree (O(N log N), linear
+    memory, tractable up to ~10^6 atoms) and stores it in `self.CN`
+    (`self.CN_opt` for the optimized structure). `calculate_GCN` computes the
+    generalized coordination number (GCN) of every atom after Calle-Vallejo,
+    Sautet and co-workers, defined as the coordination-weighted count of an
+    atom's first neighbours normalized by the bulk coordination `cn_max`
+    (resolved automatically from the crystal structure: 12 for FCC/HCP, 8 for
+    BCC, or set explicitly), and stores it in `self.GCN` (`self.GCN_opt`). A
+    single KD-tree is shared, so `calculate_GCN` also stores `self.CN` as a
+    by-product. The GCN is a simple geometric descriptor that linearly tracks
+    adsorption energies on metal nanoparticles, complementing the CNP and
+    Steinhardt `(q4, q6)` order parameters for structure-property database
+    construction. Both are computed for ALL atoms, not only the outer convex
+    surface, so that under-coordinated atoms lining internal cavities (e.g.
+    after `cut_by` or `systematic_carve_by`, or in hollow structures) are
+    flagged as well.
+
+- **`saveGCN4JMol(...)` in utils.external_pgm.py + pyNMBcore wrapper**: writes a
+    per-atom descriptor file and generates a Jmol command to colour atoms by
+    GCN. Since the GCN is continuous, it is binned into `nClasses` colour
+    classes, and a class boundary is forced at the bulk value `cn_max` by
+    default (`split_at_bulk=True`) so that bulk-perfect sites (GCN = cn_max) and
+    over-coordinated dense sites (GCN > cn_max, e.g. from CN = 16) always fall
+    in distinct classes and are never confused. A shared `gcn_range` can be
+    passed to make colours comparable across several particles.
+
+- **calculation of atomic strain**
+    - **`calculate_atomic_strain` (utils/strain.py)**: per-atom affine strain descriptor
+        (Falk-Langer method). Compares `self.NP_opt` against `self.NP` and computes,
+        per atom, the volumetric strain trace(eta), the von Mises (deviatoric) strain,
+        and the non-affine residual D2min. Numba-accelerated core, cKDTree neighbor
+        search built on the reference configuration. Results stored in `self.strain_vol`,
+        `self.strain_vm`, `self.strain_d2min`, `self.strain_detF`.
+    - **`saveStrain4JMol` (utils/external_pgm.py)**: writes the strain fields as real-value
+        `.dat` files for Jmol (volumetric, von Mises, D2min).
+    - **`pyNMBcore` wrapper for `calculate_atomic_strain`**
+
+    **Under development and testing. Validated analytically on isotropic expansion,
+    pure shear, and non-affine cases. Physical validation on relaxed nanoparticles
+    (icosahedron first) is ongoing.**
+
+
+- **`epbpyM.size_from_nm(...)` classmethod in geometry.py**: converts target
+    physical dimensions (in nm) into the integer `(sizeP, sizeE)` layer counts
+    expected by the constructor, inverting the class geometric relations
+    (`pentagon edge = Rnn * sizeP`, `body length = Rnn * magicFactorF * sizeE`).
+    As a classmethod it is called directly on the class, with no instance
+    (`jNP.epbpyM.size_from_nm(Rnn=2.884, diameter_nm=6.0, length_nm=3.0)`), since
+    its purpose is to compute the sizes one then passes to the constructor.
+    `diameter_def` selects how the requested diameter is interpreted
+    ('circumscribed' default, 'edge', or 'inscribed'), `round_mode` controls the
+    integer rounding ('nearest' default, 'floor', 'ceil'). Returns a dict with
+    `sizeP`, `sizeE`, and the realised dimensions (`realised_diameter_nm`,
+    `realised_length_nm`) so the integer-quantisation mismatch is visible. A
+    `noOutput=False` parameter prints a titled report of the request and the
+    resolved parameters; set `noOutput=True` to stay silent and only return the
+    dict. Also computes, prints, and
+    returns the total tip-to-tip height of the decahedron along the 5-fold axis
+    (`total_height_nm` key in the returned dict, and a "total height" line in
+    the report). It is measured atom-to-atom (two pyramidal caps plus the
+    elongated body, minus one vertical interplane spacing `Rnn * magicFactorF`),
+    consistent with the corrected `heightOfPyramid()`.
+
+- **`export_png_with_ovito(...)` in utils/external_pgm.py** (with a thin
+    `self`-method wrapper in pyNMBcore): renders `self.NP` (or `self.NP_opt`
+    via `use_opt`) to a PNG with OVITO Basic, the free edition, using its
+    OpenGL renderer — the only non-watermarked backend (Tachyon, OSPRay, and
+    VisRTX are OVITO Pro and stamp a demo watermark). The free Ambient
+    Occlusion modifier is added to the pipeline for facet-revealing per-atom
+    shading, which OpenGL can display. The structure is passed to OVITO
+    directly from the ASE `Atoms` object via `ase_to_ovito` (no temporary file
+    on disk), and the scene is cleared after rendering so repeated calls do not
+    stack pipelines. Output is written to `<user_output_dir>/<prefix>.png`
+    (pathlib, `outdir` created if missing). Viewpoint is set either by
+    `azimuth_deg`/`elevation_deg` (camera on a sphere looking at the origin;
+    ~60-70 deg elevation keeps top facets visible with depth, 90 deg flattens
+    them) or by explicit `camera_pos`/`camera_dir` read from the OVITO GUI,
+    which take priority and reproduce a GUI framing exactly. Supports a
+    transparent background (`transparent=True`, via `render_image(alpha=...)`,
+    preserved by the PNG format), a configurable sphere `radius` (defaults to
+    `Rnn/2`), image `size`, and `background` color. Atom colors are overridable
+    through `colors`: either a single color applied to every element or a
+    `{symbol: color}` mapping for multi-element particles; each color accepts a
+    hex string ('#RRGGBB'), an int RGB triple in [0, 255], or a float RGB
+    triple in [0, 1]. Raises a clear `ImportError` (with conda/pip install
+    hints) when the ovito module is missing.
+
+- **`hbpy` class in otherNPs.py**: single-crystal hexagonal bipyramid / cone
+    bounded by six {10-1l} pyramidal facets, for hcp (and any non-cubic) lattices.
+    Built by composition: an internal 'pppd' Crystal block is faceted via
+    applySlicing and adopted as self.NP. The base-to-apex height is derived from
+    the facet indices and the section diameter through the facet/base dihedral
+    angle (reciprocal metric tensor); the facet distance is calibrated by
+    bisection so the realised circumscribed diameter matches the target.
+    Parameters:
+    - `crystal`, `facet`, `diameter`: compound, {10-1l} indices, and
+    circumscribed (vertex-to-vertex) section diameter in nm.
+    - `double`: full bipyramid (apex up and down, built in one applySlicing call
+    so the waist is a single clean shared layer) or single cone with a flat base.
+    - `cut_nm`: apex-to-truncation distance, turning the tip into a flat {0001}
+    facet (frustum).
+    - `normal_def`: facet-index coordinate system, auto-resolved to 'hkl' for
+    non-cubic lattices and 'cart' for cubic ones.
+    - `axis_on_atom`: place the six-fold axis on a real atomic column (single
+    apex atom) instead of the interstitial axis (centred apex triangle), since
+    hcp has no lattice site on its own six-fold axis.
+    - `symmetric_facets` and `shave_family_A`: the 6_3 screw axis splits the six
+    facets into two families that terminate at different atomic levels; when
+    enabled, the two families are calibrated so all six shave to the same
+    level, with shave_family_A selecting which family is pulled in by one row.
+    prop() reports the realised diameter, height, dihedral, and (when truncated)
+    the top {0001} facet diameter.
+
+- **`regularize_base` parameter for `hbpy` (otherNPs.py)**: with
+    symmetric_facets=True, calibrates each of the two hcp screw families
+    separately so both reach the same circumscribed radius, producing a regular
+    base hexagon with six equal-length edges at any facet index l. The default
+    one-row shave (shave_family_A) only equalises the families for shallow facets
+    such as {10-11}; for steeper facets such as {10-13} the natural offset exceeds
+    one atomic row and the base stays irregular, which per-family calibration
+    fixes. Default False preserves the existing one-row-shave behaviour, including
+    shave_family_A, which remains the correct choice for {10-11}. Ignored when
+    symmetric_facets=False.
+
+- **`union_with` (utils/csg.py)**: new `attach_direction` parameter for end-to-end
+    assembly. When given a Cartesian direction, B is attached onto the TIP of A
+    along that direction instead of having its centre of mass placed at cogB:
+    A's outermost atom along the direction is the anchor, and B's trailing end is
+    brought onto it so B grows outward from A's tip. The anchor point is found
+    internally, so attaching a rod onto a cone apex is a single call:
+    `cone.union_with(rod, attach_direction=[0, 0, 1], mode='atoms')`. A companion
+    `seat_axis` parameter (default: same as attach_direction) identifies B's
+    trailing end when B's long axis differs from the attach direction.
+    attach_direction overrides cogB; default None preserves the original
+    cogB-based behaviour.
+
+- **`axis_on_atom` parameter for wires (crystalNPs.py, Crystal class)**: controls
+    the placement of the wire axis relative to the hcp lattice. hcp has no atomic
+    site on its 6-fold / 3-fold axis (the axis runs a/sqrt(3) from the nearest
+    column, through the centre of an atom hexagon). When False (default) the
+    rotated truncation planes are centred on the supercell COM, giving an
+    interstitial axis. When True the supercell is shifted in the plane
+    perpendicular to directionWire so a real atomic column lands on the axis,
+    turning the 3-fold axis from interstitial to on-atom. The wire analogue of
+    hbpy's axis_on_atom. Default False preserves the previous behaviour.
+
+- **`apparent_apex_angle` (utils/prop.py)**: the apex angle is now measured between
+    the two silhouette flanks extended to their virtual intersection, by fitting a
+    line to each side of the projection over an axial band [flank_lo, flank_hi] of
+    the height. This makes the measurement insensitive to a truncated tip (a
+    pyramid with a top plateau and no terminal atom): it reports the angle the
+    un-truncated pyramid would have, as read by extending the facet edges by hand.
+    A pointed tip gives the same value as before. The single flank_frac parameter
+    is replaced by flank_lo (default 0.2), flank_hi (default 0.85) and n_slab
+    (default 14); the band excludes the truncated top plateau and the flaring
+    base. The statistical panels now draw the fitted flank lines and the
+    reconstructed virtual apex.
+
+- **`set_symbols` (utils/prop.py)**: relabel the chemical symbols of an already
+    built nanoparticle in place, with three targeting modes selected by argument:
+    no target changes all atoms, from_symbol changes one species into another, and
+    indices changes a given set of atoms (1-based, Jmol convention). Passing both
+    from_symbol and indices is rejected as ambiguous, and out-of-range indices
+    raise an error. Returns the number of atoms changed and prints the new
+    composition. Operates on self.NP, or self.NP_opt when is_optimized. Simplifies
+    post-construction relabelling such as turning an Au-built scaffold into Co or
+    marking one piece of an assembly for a bimetallic interface analysis.
+
+### Changed
+
+- **`defCrystalShapeForJMol` in utils.external_pgm.py**: two new parameters.
+    `colorFacets` overrides the default gray facet colour (`[x828282]`): it
+    accepts a Jmol colour name ('red', 'gold', …), a hex code prefixed by
+    'x'/'0x'/'#' (normalised to `[xRRGGBB]`), or a pre-bracketed value, passed
+    as-is. `useWulff` overrides the facet source: when None (default) the source
+    is auto-detected (Wulff planes if `trPlanes_Wulff` exists, else the convex
+    hull), while `useWulff=False` forces the real convex hull of the current
+    atoms even when `trPlanes_Wulff` exists (useful after the shape has been
+    modified by CSG, peeling or slicing) and `useWulff=True` forces the Wulff
+    planes. The facet-colour command now also ends with '; ' (previously
+    missing), fixing a concatenation failure when the crystal-shape script was
+    followed by another Jmol command (e.g. a carve/stellate preview).
+
+- **`reset_facets(colorFacets=None, useWulff=None, ...)` in pyNMBcore** —
+    regenerates the crystal-shape Jmol script (`self.jMolCS` /
+    `self.jMolCS_opt`) without re-running `propPostMake`, optionally forcing the
+    facet source (Wulff planes vs real convex hull via `useWulff`) and/or a
+    custom facet colour (`colorFacets`). The script is rebuilt via
+    `defCrystalShapeForJMol` and re-stored (with the `_opt` suffix for the
+    optimized structure).
+
+- **`saveCN4JMol(...)` in utils.prop.py**: turned into a `self` method
+    (previously a free function taking an ASE `Atoms`), symmetric with the new
+    `saveGCN4JMol`. It now reuses `self.CN` (or `self.CN_opt`) when it has
+    already been computed by `calculate_CN`, and only recomputes it on the fly
+    otherwise, instead of always recalculating the coordination number
+    internally. The discrete per-CN palette and the Jmol labelling are
+    unchanged.
+
+- **`epbpyM.coords()` core construction in johnsonNPs.py**: the core-filling
+    loop placed interior atoms by linear interpolation along the chord between
+    each surface atom and its mirror image, with the per-column atom count
+    `int(Rvv/Rnn·magicFactorF) - 1` rounded independently. Neighbouring columns
+    therefore desynchronised vertically, producing first-neighbour distances as
+    short as ~2.36 Å (≈0.85·Rnn) on ~14 % of atoms, concentrated in the core
+    away from the twin planes — corrupting any structure-sensitive calculation
+    (SAXS pair distances, EAM/DFT energies). Core atoms are now stacked directly
+    on the lattice z-planes: for each strictly vertical column, atoms are dropped
+    at the exact spacing `dz = Rnn·magicFactorF` from the top with (x, y) held
+    fixed, so every core atom lands on a real {111}-stacking plane of the grain.
+    First-neighbour minimum is restored to Rnn (2.769 Å) throughout and the
+    number of distinct z-planes collapses from 87 to the expected few. The total
+    atom count may shift by a few atoms versus previous versions (different,
+    now-correct per-column rounding). Surface, caps, Marks truncation, mirror
+    reflection, and the `sizeE` / `Hollow` / `Multiples_index_plan` options are
+    unaffected — the change is confined to the core block.
+
+- **`pyNMB-Article.ipynb`**: new "Five-fold nanostars" subsection, with model
+    pentagonal bipyramid, Ino decahedron, Marks decahedron, and fivefold-star
+    structures (the latter carved from an Ino by five-fold `applySlicing`).
+
+- **`make_packed_supercell` (utils/crystals.py)**: vectorized the implementation.
+    The previous version looped over atoms in Python, which scaled poorly on
+    large supercells (about 90 s for ~44M atoms). The new version loops over the
+    26 neighbour shifts and processes all eligible atoms at once with numpy,
+    cutting that to a few seconds. The set of added atoms is identical (same
+    face/edge/corner completion, same tolerance), so PACKED-mode output is
+    unchanged.
+
+- **`Crystal.prop` (crystalNPs.py)**: added a "Shape parameters" block that reports
+    the construction parameters actually in effect for the requested shape
+    (target dimensions, growth direction, cross-section, Wulff facets, and for
+    wires the on-atom *vs* interstitial axis placement). The unit-cell and image
+    output is unchanged.
+
+### Fixed
+
+- **`makeSuperCell` in `crystalNPs.py`: fix undersized supercell for Wulff shapes with high-index planes**
+  For planes such as {211} where one or more normal components are small, the previous
+  per-axis projection logic (`abs(n_i) * d * 2`) underestimated the required supercell
+  extent along axes where the normal component is weak, leaving holes in the nanoparticle
+  below the Wulff truncation planes. The fix computes the circumscribed sphere radius as
+  `max(d_i / |n_i|)` over all planes and axes, then uses this as a uniform extent for
+  all three directions.
+
+- **`epbpyM.heightOfPyramid()` in geometry.py**: replaced the hard-coded
+    `-2.84 Å` offset (an Au-only approximation, wrong for every other element)
+    with the generic, element-aware vertical interplane spacing
+    `Rnn * magicFactorF`. The subtraction accounts for the ideal geometric apex
+    lying half a spacing beyond the outermost atom at each end, so the returned
+    tip-to-tip cap height now matches the atom-to-atom value (as measured in
+    Jmol) for any element. Two stray debug `print` statements were also removed.
+    This propagates to `prop()`, whose pbpy/Marks height and total Ino height
+    (`heightOfPyramid() + edgeLength('EP')`) are now correct for all elements.
+
+- **`external_facets_info()` in utils/geometry.py**: facet distances were read
+    directly from the raw hull plane offsets (`planes[:, 3]`), which scipy
+    expresses relative to the frame origin, not the particle center. For an NP
+    deliberately built off-origin (e.g. an arm whose tip sits at the origin),
+    any facet passing through the origin registered as `d = 0`, which then made
+    the Wulff-style relative energies (`e_rel`, normalized by the smallest
+    distance) blow up to absurd values (10^5–10^6). Distances are now
+    re-referenced to the center of mass (`|planes[:, :3] @ cog + planes[:, 3]|`),
+    giving the true facet-to-center distance. The frame origin is left
+    untouched (`self.trPlanes` keeps origin-relative offsets), so NPs can still
+    be built without recentering, and `defCrystalShapeForJMol` — which works
+    from facet vertices, not offsets — is unaffected.
+
+- **`applySlicing()` in `utils/csg.py`**: with `normal_def='hkl'`, the plane
+    normal was built by projecting the (h k l) indices through the DIRECT
+    lattice via `lattice_cart`, which yields the direction [h k l], not the
+    plane normal. The two coincide only in cubic systems; in hcp (and any
+    non-orthonormal basis) they differ (e.g. {10-11} normal sits at 61.9 deg
+    from c, while the [101] direction sits at 31.6 deg). The normal is now
+    computed via `plane_to_direction(..., cartesian=True)`, which uses the
+    reciprocal metric tensor G*. Faceting of non-cubic crystals (hcp cones,
+    pyramids) now produces the intended crystallographic facets.
+
+- **`applySlicing()` in `utils/csg.py`**: `self.jMolSlices` (the Jmol script
+    visualizing the cut planes) was only generated through
+    `defCrystalShapeForJMol`, which is skipped when the object is built with
+    `jmolCrystalShape=False`. As a result, slicing an object created with
+    `jmolCrystalShape=False` left `jMolSlices` undefined, raising an
+    AttributeError on access. The script is now generated directly at the end
+    of `applySlicing`, after `trPlanes_Slices` is set, independently of
+    `jmolCrystalShape`: visualizing the cut planes is a consequence of the
+    slicing operation, not of the crystal-shape (Wulff/hull) rendering.
+
+### Documentation
+
+- **`pyNMB-examples.ipynb`: new "Exporting PNG renderings of very large
+    compounds with OVITO" subsection**, introducing `export_png_with_ovito` and
+    the OVITO Python library it relies on, with examples rendering a five-fold
+    nanostar from several viewpoints (varying elevation and azimuth) to show
+    how the camera angle controls facet readability, plus transparent-background
+    and per-element colouring options.
+
 ## [0.17.0] - "debug ptnr (core/shell mismatch) & carving/stellating"
 
 ### Added
@@ -21,7 +345,7 @@
     atoms (within `contact_frac`·Rnn, default 1.2) and the number of overlapping
     atoms (within `overlap_frac`·Rnn, default 0.85, highlighted as a red zone on
     the plot), and returns the per-atom distance arrays for further processing. The
-    figure can be saved via `save_path` (.png or .svg). Useful to verify the
+    figure can be saved via `save_img` (.png or .svg). Useful to verify the
     quality of a bimetallic junction and to flag overlaps that the merge may
     have introduced.
     Useful to verify the quality of a bimetallic junction and to flag overlaps

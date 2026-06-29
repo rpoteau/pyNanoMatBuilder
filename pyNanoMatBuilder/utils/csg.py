@@ -165,7 +165,16 @@ def applySlicing(self,
         mode = 'OR'
 
     # --- Unit conversion ---
-    scale = 10.0 if distance_unit == 'nm' else 1.0  # nm → Å
+    _UNIT_SCALES = {
+        'nm': 10.0,
+        'angstrom': 1.0, 'Angstrom': 1.0, 'A': 1.0, 'Å': 1.0,
+    }
+    if distance_unit not in _UNIT_SCALES:
+        raise ValueError(
+            f"Unknown distance_unit '{distance_unit}'. "
+            f"Expected one of {sorted(_UNIT_SCALES)} "
+            f"(nm → Å conversion uses factor 10; Å is identity).")
+    scale = _UNIT_SCALES[distance_unit]
 
     all_tr_planes = []
     group_masks   = []
@@ -203,14 +212,27 @@ def applySlicing(self,
         if 'normal' in plane_def:
             normal_def = plane_def.get('normal_def', 'cart')
             n = np.array(plane_def['normal'], dtype=float)
+            # if normal_def == 'hkl':
+            #     if not hasattr(self, 'Gstar'):
+            #         raise AttributeError(
+            #             "normal_def='hkl' requires a Crystal object with "
+            #             "self.Gstar. Use normal_def='cart' instead.")
+            #     from .crystals import lattice_cart
+            #     n = lattice_cart(self, [n], Bravais2cart=True)[0]
+            # n = n / np.linalg.norm(n)
             if normal_def == 'hkl':
-                if not hasattr(self, 'Gstar'):
+                if not hasattr(self, 'Gstar') or self.Gstar is None:
                     raise AttributeError(
                         "normal_def='hkl' requires a Crystal object with "
                         "self.Gstar. Use normal_def='cart' instead.")
-                from .crystals import lattice_cart
-                n = lattice_cart(self, [n], Bravais2cart=True)[0]
-            n = n / np.linalg.norm(n)
+                # In a non-orthonormal basis (e.g. hcp), the normal to a plane (h k l)
+                # is NOT parallel to the direction [h k l]. lattice_cart projects a
+                # DIRECTION through the direct lattice, which is wrong for a plane normal.
+                # plane_to_direction converts (h k l) to its normal via the reciprocal
+                # metric tensor G*, then returns it in Cartesian coordinates.
+                from .crystals import plane_to_direction
+                n = plane_to_direction(self, plane_def['normal'], cartesian=True)
+            n = n / np.linalg.norm(n)            
 
         elif 'angle' in plane_def:
             rot_axis = np.array(plane_def['rotAxis'], dtype=float)
@@ -404,6 +426,14 @@ def applySlicing(self,
     self.cog              = self.NP.get_center_of_mass()
     self._flush_stale_data(shape_update="_Slices")
     self.is_optimized     = False
+
+    # --- Jmol visualization of the slicing planes ---
+    # Generated here, independently of jmolCrystalShape: visualizing the cut
+    # planes is a consequence of the slicing operation, not of the crystal-shape
+    # (Wulff/hull) rendering. Keeps jMolSlices available even when the object was
+    # built with jmolCrystalShape=False.
+    from .external_pgm import defSlicingPlanesForJMol
+    self.jMolSlices = defSlicingPlanesForJMol(self, noOutput=True)
     
     if not noOutput:
         print(f"  {n_to_del} atoms removed, {self.nAtoms} remaining.")
@@ -676,6 +706,8 @@ def union_with(self,
                 NP_B,
                 cogB: list = None,
                 rotB=None,
+                attach_direction=None,
+                seat_axis=None,
                 mode: str = 'hull',
                 threshold: float = 0.8,
                 recenter: bool=True,
@@ -707,6 +739,18 @@ def union_with(self,
             - {'axis': [ux, uy, uz], 'angle': angle}: same as above.
             - [{'axis': [...], 'angle': ...}, ...]: list of rotations
               applied sequentially in the given order.
+        attach_direction (array-like or None): if given, attach B end-to-end
+            onto the TIP of A along this Cartesian direction, instead of
+            placing B's centre of mass at cogB. A's outermost atom along this
+            direction is the anchor; B's trailing end (smallest projection on
+            seat_axis) is brought onto it, so B grows outward from A's tip.
+            Overrides cogB. Default None (use cogB, original behaviour).
+            Example: attach_direction=[0,0,1] grows B off the +z apex of A.
+        seat_axis (array-like or None): Cartesian direction along which B's
+            trailing end is identified when attach_direction is used. Default
+            None means "same as attach_direction" (B is built along the attach
+            direction). Pass a different axis only if B's long axis differs
+            from the attach direction.
         mode (str): 'hull' (default) or 'atoms'.
         threshold (float): Atoms of A closer than threshold * Rnn_A to any
             atom of B are removed before merging. Default is 0.8.
@@ -739,17 +783,36 @@ def union_with(self,
         centertxt("CSG plus", bgc="#cbcbcb", size="12",
                   fgc="b", weight="bold")
 
+    pos_A = self.NP.get_positions()
+
     # --- Position and rotate B ---
     pos_B = NP_B.NP.get_positions().copy()
     cog_B = NP_B.NP.get_center_of_mass()
     pos_B = pos_B - cog_B              # center B at origin
     pos_B = _apply_rotB(pos_B, rotB)   # rotate around its own center
-    if cogB is not None:
+
+    if attach_direction is not None:
+        # Attach B onto the tip of A along a direction, end-to-end. A's
+        # outermost atom along attach_direction is the anchor; B's trailing end
+        # along the same direction is brought onto it, so B extends outward from
+        # A's tip. The user supplies only the direction (e.g. [0,0,1] for the
+        # apex of a cone); the anchor point is found here. Used to grow a rod
+        # off a cone apex, a bipyramid vertex, etc.
+        if cogB is not None and not noOutput:
+            print(f"{bg.LIGHTYELLOWB}Note: attach_direction given; cogB is "
+                  f"ignored.{bg.OFF}")
+        u = np.asarray(attach_direction, dtype=float)
+        u = u / np.linalg.norm(u)
+        ax = u if seat_axis is None else (np.asarray(seat_axis, float)
+                                          / np.linalg.norm(seat_axis))
+        anchor = pos_A[np.argmax(pos_A @ u)]   # A's outermost atom along u
+        trailing = pos_B[np.argmin(pos_B @ ax)]  # B's back end along seat axis
+        pos_B = pos_B + (anchor - trailing)    # glue B's end onto A's tip
+    elif cogB is not None:
         cogB_ang = np.array(cogB) * 10.0  # nm → Å
         pos_B = pos_B + cogB_ang
 
     # --- Estimate Rnn_A ---
-    pos_A = self.NP.get_positions()
     Rnn_A = getattr(self, 'Rnn', None)
     if Rnn_A is None:
         from scipy.spatial import KDTree
@@ -1239,7 +1302,7 @@ def flush_inlay_with(self,
 def interface_distance_histogram(self, elemA, elemB, Rnn,
                                  overlap_frac=0.85, contact_frac=1.2,
                                  bins=60, is_optimized=None,
-                                 save_path=None, noOutput=False):
+                                 save_img=None, noOutput=False):
     """
     Histogram of cross-species nearest-neighbour distances at the interface
     between two chemical species, to assess how cleanly two pieces were joined
@@ -1263,7 +1326,7 @@ def interface_distance_histogram(self, elemA, elemB, Rnn,
             species are counted as interface atoms. Default 1.2.
         bins (int): histogram bins. Default 60.
         is_optimized (bool or None): target structure. None -> self.is_optimized.
-        save_path (str): if given, saves the figure (.png or .svg).
+        save_img (str): if given, saves the figure (.png or .svg).
         noOutput (bool): if True, suppresses the printed summary. Default False.
 
     Returns:
@@ -1337,12 +1400,12 @@ def interface_distance_histogram(self, elemA, elemB, Rnn,
         tk.set_fontweight('bold')
 
     plt.tight_layout()
-    if save_path:
-        if save_path.lower().endswith('.svg'):
+    if save_img:
+        if save_img.lower().endswith('.svg'):
             matplotlib.rcParams['svg.fonttype'] = 'none'
-        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.savefig(save_img, dpi=300, bbox_inches='tight')
         if not noOutput:
-            print(f" - Plot saved to: {save_path}")
+            print(f" - Plot saved to: {save_img}")
     plt.show()
 
     return {'d_A_to_B': d_A_to_B, 'd_B_to_A': d_B_to_A,

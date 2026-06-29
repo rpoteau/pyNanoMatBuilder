@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.17.0 documentation</title>
+  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.18.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="canonical" href="https://pynanomatbuilder.readthedocs.io/modules.html" />
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=0c3dd48d"></script>
+      <script src="_static/documentation_options.js?v=ba2e7b09"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -489,6 +489,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.johnsonNPs.epbpyM.heightOfPyramidF"><code class="docutils literal notranslate"><span class="pre">epbpyM.heightOfPyramidF</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.johnsonNPs.epbpyM.interCompactPlanesF"><code class="docutils literal notranslate"><span class="pre">epbpyM.interCompactPlanesF</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.johnsonNPs.epbpyM.magicFactorF"><code class="docutils literal notranslate"><span class="pre">epbpyM.magicFactorF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.johnsonNPs.epbpyM.size_from_nm"><code class="docutils literal notranslate"><span class="pre">epbpyM.size_from_nm()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.johnsonNPs.epbpyM.edgeLength"><code class="docutils literal notranslate"><span class="pre">epbpyM.edgeLength()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.johnsonNPs.epbpyM.nAtomsPerEdgeOfPC_after_truncation"><code class="docutils literal notranslate"><span class="pre">epbpyM.nAtomsPerEdgeOfPC_after_truncation()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.johnsonNPs.epbpyM.edgeLength_after_truncation"><code class="docutils literal notranslate"><span class="pre">epbpyM.edgeLength_after_truncation()</span></code></a></li>
@@ -589,6 +590,11 @@
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.otherNPs.ptnr.waist_distance_for_tilted_facet"><code class="docutils literal notranslate"><span class="pre">ptnr.waist_distance_for_tilted_facet()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.otherNPs.ptnr.coords"><code class="docutils literal notranslate"><span class="pre">ptnr.coords()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.otherNPs.ptnr.prop"><code class="docutils literal notranslate"><span class="pre">ptnr.prop()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.otherNPs.hbpy"><code class="docutils literal notranslate"><span class="pre">hbpy</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.otherNPs.hbpy.coords"><code class="docutils literal notranslate"><span class="pre">hbpy.coords()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pyNanoMatBuilder.otherNPs.hbpy.prop"><code class="docutils literal notranslate"><span class="pre">hbpy.prop()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -693,6 +699,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.core.round_to_Miller"><code class="docutils literal notranslate"><span class="pre">round_to_Miller()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.core.kDTreeCN"><code class="docutils literal notranslate"><span class="pre">kDTreeCN()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.core.listOf_Attributes_Methods"><code class="docutils literal notranslate"><span class="pre">listOf_Attributes_Methods()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.core.set_symbols"><code class="docutils literal notranslate"><span class="pre">set_symbols()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyNanoMatBuilder.utils.geometry">Geometry Tools (geometry.py)</a><ul>
@@ -743,6 +750,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.applyTwist"><code class="docutils literal notranslate"><span class="pre">applyTwist()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.apply_rotation"><code class="docutils literal notranslate"><span class="pre">apply_rotation()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.apply_reflection"><code class="docutils literal notranslate"><span class="pre">apply_reflection()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.farthest_in_direction"><code class="docutils literal notranslate"><span class="pre">farthest_in_direction()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.mirror_at_tip"><code class="docutils literal notranslate"><span class="pre">mirror_at_tip()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.apply_translation"><code class="docutils literal notranslate"><span class="pre">apply_translation()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.center"><code class="docutils literal notranslate"><span class="pre">center()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.rotate_to_align"><code class="docutils literal notranslate"><span class="pre">rotate_to_align()</span></code></a></li>
@@ -796,7 +805,8 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyNanoMatBuilder.utils.prop">Properties (prop.py)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.calculateCN"><code class="docutils literal notranslate"><span class="pre">calculateCN()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.calculate_CN"><code class="docutils literal notranslate"><span class="pre">calculate_CN()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.calculate_GCN"><code class="docutils literal notranslate"><span class="pre">calculate_GCN()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.delAtomsWithCN"><code class="docutils literal notranslate"><span class="pre">delAtomsWithCN()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.findNeighbours"><code class="docutils literal notranslate"><span class="pre">findNeighbours()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.printNeighbours"><code class="docutils literal notranslate"><span class="pre">printNeighbours()</span></code></a></li>
@@ -832,6 +842,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.print_atomic_radii"><code class="docutils literal notranslate"><span class="pre">print_atomic_radii()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.effective_diameter"><code class="docutils literal notranslate"><span class="pre">effective_diameter()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.compare_effective_diameters"><code class="docutils literal notranslate"><span class="pre">compare_effective_diameters()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.apparent_apex_angle"><code class="docutils literal notranslate"><span class="pre">apparent_apex_angle()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyNanoMatBuilder.utils.external_pgm">External programs (external_pgm.py)</a><ul>
@@ -839,12 +850,16 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.saveCoords_DrawJmol"><code class="docutils literal notranslate"><span class="pre">saveCoords_DrawJmol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defCrystalShapeForJMol"><code class="docutils literal notranslate"><span class="pre">defCrystalShapeForJMol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.saveCN4JMol"><code class="docutils literal notranslate"><span class="pre">saveCN4JMol()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.saveGCN4JMol"><code class="docutils literal notranslate"><span class="pre">saveGCN4JMol()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.plotPaletteBubbles"><code class="docutils literal notranslate"><span class="pre">plotPaletteBubbles()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.saveStrain4JMol"><code class="docutils literal notranslate"><span class="pre">saveStrain4JMol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.DrawJmol"><code class="docutils literal notranslate"><span class="pre">DrawJmol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defHelixShapeForJMol"><code class="docutils literal notranslate"><span class="pre">defHelixShapeForJMol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defSlabShapeForJMol"><code class="docutils literal notranslate"><span class="pre">defSlabShapeForJMol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defSlicingPlanesForJMol"><code class="docutils literal notranslate"><span class="pre">defSlicingPlanesForJMol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defLocalOrderColorForJMol"><code class="docutils literal notranslate"><span class="pre">defLocalOrderColorForJMol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.defCarvePreviewForJMol"><code class="docutils literal notranslate"><span class="pre">defCarvePreviewForJMol()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.external_pgm.export_png_with_ovito"><code class="docutils literal notranslate"><span class="pre">export_png_with_ovito()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -890,7 +905,7 @@
 <span id="crystalnps-py"></span><h2>CrystalNPs.py<a class="headerlink" href="#module-pyNanoMatBuilder.crystalNPs" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.crystalNPs.Crystal">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.crystalNPs.</span></span><span class="sig-name descname"><span class="pre">Crystal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crystal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Au'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaleDmin2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setSymbols2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">userDefCif</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'sphere'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directionsPPD</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buildPPD</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'xyz'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directionWire</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directionCylinder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refPlaneWire</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nRotWire</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surfacesWulff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eSurfacesWulff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sizesWulff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symWulff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aseSymPrec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pbc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dbFolder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.crystalNPs.Crystal" title="Link to this definition"></a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.crystalNPs.</span></span><span class="sig-name descname"><span class="pre">Crystal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crystal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Au</span> <span class="pre">fcc'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scaleDmin2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">setSymbols2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">userDefCif</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'sphere'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directionsPPD</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buildPPD</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'xyz'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directionWire</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directionCylinder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refPlaneWire</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nRotWire</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_on_atom</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surfacesWulff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eSurfacesWulff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sizesWulff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symWulff</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aseSymPrec</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pbc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dbFolder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.crystalNPs.Crystal" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pyNMBcore</span></code></p>
 <p>A class for generating XYZ and CIF files of crystalline nanoparticles (NPs)
 of various shapes and sizes, based on user-defined compounds (either by
@@ -920,39 +935,107 @@ spheroids, and their truncated versions</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>crystal</strong> (<em>str</em>) – Chemical element or compound name (default: “Au”).
-See pyNMBu.ciflist() for available options.</p></li>
-<li><p><strong>scaleDmin2</strong> (<em>float</em><em>, </em><em>optional</em>) – Scale factor for unit cell minimum dimension.</p></li>
-<li><p><strong>setSymbols2</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Array of chemical symbols to replace default.</p></li>
-<li><p><strong>userDefCif</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to user-defined CIF file.</p></li>
-<li><p><strong>shape</strong> (<em>str</em>) – Nanoparticle shape. Options: ‘sphere’, ‘ellipsoid’, ‘pppd’ (parallelepiped),
-‘wire’, ‘cylinder’, or ‘Wulff: &lt;shape&gt;’ (default: “sphere”).</p></li>
-<li><p><strong>size</strong> (<em>list</em><em>, </em><em>optional</em>) – Size specification (format depends on shape):
+<li><p><strong>crystal</strong> (<em>str</em>) – Chemical element or compound name (default: “Au fcc”).
+Resolved against the internal CIF database (case-insensitive),
+e.g. “Au”, “Fe bcc”, “Co hcp”. See pyNMBu.ciflist() for the full
+list of available compounds. Ignored when userDefCif is given.</p></li>
+<li><p><strong>scaleDmin2</strong> (<em>float</em><em>, </em><em>optional</em>) – Isotropic scale factor applied to the
+unit cell so that its smallest interatomic distance matches a
+target. Use to model alloys or strained lattices. None (default)
+keeps the database lattice parameters unchanged.</p></li>
+<li><p><strong>setSymbols2</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Array of chemical symbols used to
+replace the default species of the unit cell, atom by atom (same
+length and order as the basis). Use for substitutional alloys or
+isotopic labelling. None (default) keeps the database species.</p></li>
+<li><p><strong>userDefCif</strong> (<em>str</em><em>, </em><em>optional</em>) – Path to a user-supplied CIF file used
+instead of the internal database. The crystal name is read from
+the CIF’s chemical-name tags when present. None (default) uses
+the database entry named by <cite>crystal</cite>.</p></li>
+<li><p><strong>shape</strong> (<em>str</em>) – Nanoparticle shape. One of ‘sphere’, ‘ellipsoid’,
+‘pppd’ (parallelepiped), ‘supercell’ (untruncated block),
+‘wire’, ‘cylinder’, or ‘Wulff: &lt;shape&gt;’ (e.g. ‘Wulff: cube’).
+Default “sphere”.</p></li>
+<li><p><strong>size</strong> (<em>list</em><em>, </em><em>optional</em>) – <p>Size specification in nm; its meaning depends
+on <cite>shape</cite>:
 - Sphere: [diameter]
-- Ellipsoid/Parallelepiped: [size_x, size_y, size_z]
-- Wire/Cylinder: [cross-section diameter, length]</p></li>
-<li><p><strong>directionsPPD</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Three direction vectors for parallelepiped.</p></li>
-<li><p><strong>buildPPD</strong> (<em>str</em>) – Parallelepiped coordinate system: ‘xyz’ or ‘abc’ (default: “xyz”).</p></li>
-<li><p><strong>directionWire</strong> (<em>list</em><em>, </em><em>optional</em>) – Wire growth direction (default: [0, 0, 1]).</p></li>
-<li><p><strong>directionCylinder</strong> (<em>list</em><em>, </em><em>optional</em>) – Cylinder growth direction (default: [0, 0, 1]).</p></li>
-<li><p><strong>refPlaneWire</strong> (<em>list</em><em>, </em><em>optional</em>) – Miller indices of wire reference plane.</p></li>
-<li><p><strong>nRotWire</strong> (<em>int</em>) – Number of rotations for wire cross-section (default: 6).</p></li>
+- Ellipsoid / Parallelepiped / supercell: [size_x, size_y, size_z]</p>
+<blockquote>
+<div><p>(full extents along each axis)</p>
+</div></blockquote>
+<ul>
+<li><p>Wire / Cylinder: [cross-section diameter, length]</p></li>
+</ul>
+<p>Default [2, 2, 2].</p>
+</p></li>
+<li><p><strong>directionsPPD</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Three direction vectors
+defining the parallelepiped edges. Interpreted as Cartesian
+[x,y,z] axes when buildPPD=’xyz’, or as crystallographic [u,v,w]
+directions when buildPPD=’abc’. Default [[1,0,0],[0,1,0],[0,0,1]].</p></li>
+<li><p><strong>buildPPD</strong> (<em>str</em>) – Coordinate system for directionsPPD: ‘xyz’ (Cartesian,
+default) or ‘abc’ (crystallographic). Note: ‘abc’ is not reliable
+for non-orthogonal lattices.</p></li>
+<li><p><strong>directionWire</strong> (<em>list</em><em>, </em><em>optional</em>) – Wire growth direction as Miller
+indices [h,k,l]; the wire axis and the rotation axis of the
+cross-section planes. Default [0, 0, 1].</p></li>
+<li><p><strong>directionCylinder</strong> (<em>list</em><em>, </em><em>optional</em>) – Cylinder growth direction as
+Miller indices [h,k,l]. Default [0, 0, 1].</p></li>
+<li><p><strong>refPlaneWire</strong> (<em>list</em><em>, </em><em>optional</em>) – Miller indices [h,k,l] of the wire’s
+reference lateral face, rotated nRotWire times around
+directionWire to build the cross-section. Should be parallel to
+directionWire (a warning is issued otherwise). Default [1, 0, 0].</p></li>
+<li><p><strong>nRotWire</strong> (<em>int</em>) – Number of lateral faces of the wire cross-section,
+i.e. the rotation order around directionWire. 6 gives a hexagonal
+section, 4 a square one, etc. Default 6.</p></li>
+<li><p><strong>axis_on_atom</strong> (<em>bool</em>) – placement of the wire axis relative to the hcp
+lattice. hcp has no atomic site on its 6-fold / 3-fold axis: the
+axis passes through the centre of an atom hexagon, a/sqrt(3) from
+the nearest column. When False (default) the rotated truncation
+planes are centred on the supercell COM, so the wire axis is
+interstitial. When True the supercell is shifted in the plane
+perpendicular to directionWire so a real atomic column lands on
+the axis, turning the 3-fold axis from interstitial to on-atom.
+Only meaningful for wires along a hcp symmetry axis (default: False).</p></li>
 <li><p><strong>hollow_sphere_diameter</strong> (<em>#</em>) – Hollow sphere diameter (Kirkendall effect).</p></li>
-<li><p><strong>surfacesWulff</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Miller indices for Wulff surfaces.</p></li>
-<li><p><strong>eSurfacesWulff</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Surface energies for Wulff construction.</p></li>
-<li><p><strong>sizesWulff</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Size parameters for Wulff construction.</p></li>
-<li><p><strong>symWulff</strong> (<em>bool</em>) – Apply symmetry to Wulff construction (default: True).</p></li>
-<li><p><strong>jmolCrystalShape</strong> (<em>bool</em>) – Generate JMol visualization script (default: True).</p></li>
-<li><p><strong>aseSymPrec</strong> (<em>float</em>) – Symmetry precision threshold (default: 1e-4).</p></li>
-<li><p><strong>pbc</strong> (<em>bool</em>) – Enable periodic boundary conditions (default: False).</p></li>
-<li><p><strong>threshold</strong> (<em>float</em>) – Plane truncation distance threshold (default: 1e-3).</p></li>
-<li><p><strong>dbFolder</strong> (<em>str</em><em>, </em><em>optional</em>) – Database folder path for CIF files.</p></li>
-<li><p><strong>postAnalyzis</strong> (<em>bool</em>) – Perform post-construction analysis (default: True).</p></li>
-<li><p><strong>aseView</strong> (<em>bool</em>) – Enable ASE visualization (default: False).</p></li>
-<li><p><strong>thresholdCoreSurface</strong> (<em>float</em>) – Core/surface differentiation threshold (default: 1.0).</p></li>
-<li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – Skip symmetry analysis (default: False).</p></li>
-<li><p><strong>noOutput</strong> (<em>bool</em>) – Suppress printed output (default: False).</p></li>
-<li><p><strong>calcPropOnly</strong> (<em>bool</em>) – Calculate properties only without structure generation (default: False).</p></li>
+<li><p><strong>surfacesWulff</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – List of Miller indices [h,k,l]
+of the crystallographic surfaces bounding a Wulff construction.
+Required for shape=’Wulff: …’ unless a predefined Wulff shape
+supplies them. Default None.</p></li>
+<li><p><strong>eSurfacesWulff</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Relative surface energies, one
+per entry in surfacesWulff. When given, truncation distances are
+energy-weighted (Wulff theorem) and sizesWulff[0] sets the size
+of the most stable facet. Mutually informative with sizesWulff;
+if None, distances come directly from sizesWulff. Default None.</p></li>
+<li><p><strong>sizesWulff</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Wulff truncation sizes in nm. In
+distance mode (eSurfacesWulff is None) one value per surface; in
+energy mode a single value, the target size along the most stable
+direction. Default None.</p></li>
+<li><p><strong>symWulff</strong> (<em>bool</em>) – If True (default), expand each Wulff surface into its
+full set of symmetry-equivalent planes before truncation; if
+False, use only the planes as given.</p></li>
+<li><p><strong>jmolCrystalShape</strong> (<em>bool</em>) – If True (default), generate the JMol script
+rendering the crystal shape (Wulff/hull facets).</p></li>
+<li><p><strong>aseSymPrec</strong> (<em>float</em>) – Symmetry-detection precision (Å) passed to ASE’s
+spacegroup analysis. Default 1e-4.</p></li>
+<li><p><strong>pbc</strong> (<em>bool</em>) – Enable periodic boundary conditions. For wires, True
+makes the wire axially periodic (no end caps). Default False.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – Atom-to-plane signed-distance tolerance (Å) for
+truncation: atoms within this band of a cutting plane are kept.
+Default 1e-3.</p></li>
+<li><p><strong>dbFolder</strong> (<em>str</em><em>, </em><em>optional</em>) – Folder holding the CIF database. None
+(default) uses the package’s bundled database.</p></li>
+<li><p><strong>postAnalyzis</strong> (<em>bool</em>) – If True (default), run the post-construction
+property analysis (symmetry, facets, core/surface) after the NP
+is built.</p></li>
+<li><p><strong>aseView</strong> (<em>bool</em>) – If True, open ASE’s viewer on the unit cell, the
+supercell and the final NP. Default False.</p></li>
+<li><p><strong>thresholdCoreSurface</strong> (<em>float</em>) – Distance tolerance (Å) used to classify
+an atom as surface vs core in the convex-hull analysis.
+Default 1.0.</p></li>
+<li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – If True, skip the (potentially slow)
+symmetry analysis. Default False.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppress all printed output. Default False.</p></li>
+<li><p><strong>calcPropOnly</strong> (<em>bool</em>) – If True, compute and print properties only,
+without generating the atomic structure. Default False.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1135,10 +1218,31 @@ with crystal lattice.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.crystalNPs.Crystal.prop">
 <span class="sig-name descname"><span class="pre">prop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.crystalNPs.Crystal.prop" title="Link to this definition"></a></dt>
-<dd><p>Display unit cell and nanoparticle properties.</p>
+<dd><p>Display the crystal’s unit-cell, shape and image properties.</p>
+<dl class="simple">
+<dt>Prints, in order:</dt><dd><ul class="simple">
+<li><p>a header and the string representation of the Crystal instance
+(compound and shape);</p></li>
+<li><p>a thumbnail image of the requested shape;</p></li>
+<li><p>the full unit-cell description (lattice system, space group,
+lattice parameters, basis) via print_ase_unitcell;</p></li>
+<li><p>a shape-specific block summarising the construction parameters
+actually in effect (target size, growth direction, cross-section,
+Wulff facets, and — for wires/cylinders along a hcp symmetry axis —
+whether the rotation axis is on-atom or interstitial).</p></li>
+</ul>
+</dd>
+</dl>
+<p>This reports the BULK / unit-cell level and the requested SHAPE
+parameters, available as soon as the unit cell is loaded and the
+arguments are parsed, independently of the built nanoparticle. It is
+called automatically at the end of __init__ unless noOutput is set.
+Per-nanoparticle properties measured on the final structure (atom count,
+realised dimensions, core/surface, symmetry, facets) are produced
+separately by propPostMake after the structure is built.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>noOutput</strong> (<em>bool</em>) – If False, details are printed.</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None. Output is printed to the console.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -5347,6 +5451,105 @@ between compact planes.</p>
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.johnsonNPs.epbpyM.size_from_nm">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">size_from_nm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Rnn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diameter_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height_nm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diameter_def</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'circumscribed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">round_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nearest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.johnsonNPs.epbpyM.size_from_nm" title="Link to this definition"></a></dt>
+<dd><p>Convert target physical dimensions (in nm) into the integer
+(sizeP, sizeE) layer counts expected by the epbpyM constructor.</p>
+<p>This is the inverse of the geometric relations used by the class:</p>
+<blockquote>
+<div><p>pentagon edge length = Rnn * sizeP
+elongated body length (height_nm) = Rnn * magicFactorF * sizeE</p>
+</div></blockquote>
+<p>where magicFactorF = 2 * sqrt((5 - sqrt5) / 10) ~ 1.0515 is the ratio
+between the vertical interplane spacing and Rnn for this intrinsically
+strained 5-fold geometry (it is a class attribute, reused here via cls).</p>
+<p>The pentagon edge is converted to/from the requested diameter according
+to diameter_def (circumscribed, edge, or inscribed circle). Because
+sizeP and sizeE are integers, the realised dimensions generally differ
+slightly from the request; the realised values are returned alongside
+the counts so the caller can check the match.</p>
+<p>This is a classmethod: call it on the class itself, with no instance,
+since its whole purpose is to compute the sizes you then pass to the
+constructor. Example:</p>
+<blockquote>
+<div><p>s = jNP.epbpyM.size_from_nm(Rnn=2.884, diameter_nm=6.0, height_nm=3.0)
+ino = jNP.epbpyM(‘Au’, 2.884, sizeP=s[‘sizeP’], sizeE=s[‘sizeE’],</p>
+<blockquote>
+<div><p>Marks=0, noOutput=True)</p>
+</div></blockquote>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Rnn</strong> (<em>float</em>) – nearest-neighbour distance, in Angstrom (same unit and
+meaning as the Rnn passed to the constructor).</p></li>
+<li><p><strong>diameter_nm</strong> (<em>float</em><em>, </em><em>optional</em>) – target pentagon diameter, in nm. Its
+exact meaning is set by diameter_def. If None, sizeP is set to
+its minimum (1) and only the elongation is solved.</p></li>
+<li><p><strong>height_nm</strong> (<em>float</em><em>, </em><em>optional</em>) – target length of the elongated {100}
+body along the 5-fold axis, in nm. This is the Ino body length,
+NOT the full tip-to-tip height of the bipyramid. If None,
+sizeE = 0 (a regular pentagonal bipyramid / Marks decahedron
+base, with no elongation).</p></li>
+<li><p><strong>diameter_def</strong> (<em>str</em>) – <p>how diameter_nm is interpreted.
+‘circumscribed’ (default): vertex-to-opposite-vertex distance of</p>
+<blockquote>
+<div><p>the pentagon (diameter of the circumscribed circle).</p>
+</div></blockquote>
+<p>’edge’: length of a single pentagon edge.
+‘inscribed’: flat-to-flat distance (diameter of the inscribed</p>
+<blockquote>
+<div><p>circle, i.e. twice the apothem).</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>round_mode</strong> (<em>str</em>) – <p>rounding applied when inverting to integers.
+‘nearest’ (default): closest integer to the exact solution.
+‘floor’: largest integer not exceeding the target (never larger</p>
+<blockquote>
+<div><p>than requested).</p>
+</div></blockquote>
+<dl class="simple">
+<dt>’ceil’: smallest integer not below the target (never smaller</dt><dd><p>than requested).</p>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – if False (default), print the request and the
+resolved parameters (sizeP, sizeE, and the realised dimensions).
+If True, stay silent and only return the result dict.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl>
+<dt>with keys</dt><dd><p>’sizeP’ (int): pentagon size to pass to epbpyM.
+‘sizeE’ (int): elongation to pass to epbpyM.
+‘realised_diameter_nm’ (float): pentagon diameter actually</p>
+<blockquote>
+<div><p>obtained with the returned sizeP, in the same diameter_def
+convention, in nm.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>’realised_height_nm’ (float): elongated body length actually</dt><dd><p>obtained with the returned sizeE, in nm.</p>
+</dd>
+<dt>’total_height_nm’ (float): full tip-to-tip height of the</dt><dd><p>decahedron along the 5-fold axis, measured atom-to-atom
+(two pyramidal caps plus the elongated body, minus one
+vertical interplane spacing), in nm.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – if diameter_def or round_mode is unknown, or if a
+    requested dimension is negative.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.johnsonNPs.epbpyM.edgeLength">
 <span class="sig-name descname"><span class="pre">edgeLength</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">whichEdge</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.johnsonNPs.epbpyM.edgeLength" title="Link to this definition"></a></dt>
 <dd><p>Compute the edge length of pentagon and the
@@ -5385,7 +5588,11 @@ nAtomsPerEdgeOfPC / nAtomsPerEdgeOfEP and Marks.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.johnsonNPs.epbpyM.heightOfPyramid">
 <span class="sig-name descname"><span class="pre">heightOfPyramid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.johnsonNPs.epbpyM.heightOfPyramid" title="Link to this definition"></a></dt>
-<dd><p>Compute the height of the pyramid in Å.</p>
+<dd><p>Compute the tip-to-tip height of the two pyramidal caps in Å,
+measured atom-to-atom.</p>
+<p>The ideal geometric apex lies half a vertical interplane spacing
+beyond the outermost atom at each end, so one full spacing
+dz = Rnn * magicFactorF is subtracted.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -6442,6 +6649,144 @@ the result as self.NP.</p>
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.otherNPs.hbpy">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.otherNPs.</span></span><span class="sig-name descname"><span class="pre">hbpy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">crystal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Co</span> <span class="pre">hcp'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">facet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diameter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">8.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cut_nm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normal_def</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_on_atom</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symmetric_facets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shave_family_A</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regularize_base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.otherNPs.hbpy" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pyNMBcore</span></code></p>
+<p>hbpy — hexagonal bipyramid / cone (single crystal).</p>
+<p>A single-crystal hexagonal bipyramid (or single cone) bounded by six
+{10-1l} pyramidal facets, built from a parallelepiped Crystal block faceted
+via applySlicing. Composition, not inheritance: an internal Crystal block is
+built in ‘pppd’ shape, sculpted by the six tilted facets (plus optional base
+truncation), and its atoms are adopted as self.NP, following the usual
+pyNMBcore contract (same scheme as ptnr with pentaPrism).</p>
+<p>Unlike fcc penta-twinned objects, a hexagonal pyramid is monocrystalline:
+the hcp lattice already carries the six-fold symmetry around [0001], so the
+six {10-1l} facets close without any twin plane.</p>
+<p>The base-to-apex height is DERIVED from the facet indices and the section
+diameter: the six facets are anchored on the equatorial atom row of the
+block (so the {10-1l} steps stay regular), and the apex follows from the
+facet/base dihedral angle, computed from the reciprocal metric tensor. The
+user may additionally specify cut_nm, the apex-to-truncation distance, to
+turn the pyramid into a frustum (truncated pyramid).</p>
+<p>For double=True the full bipyramid is built in place by two facet groups
+(apex up and apex down) in a single applySlicing call: the atoms are never
+reflected or translated, so the lattice stays registered with the source
+block and the waist is a single clean shared layer (no stacking fault).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>crystal</strong> (<em>str</em>) – compound name resolved by crystalNPs.Crystal
+(e.g. ‘Co hcp’). Any non-cubic lattice is supported.</p></li>
+<li><p><strong>facet</strong> (<em>list</em><em> of </em><em>int</em>) – pyramidal facet indices (3-index [h, k, l],
+e.g. [1, 0, 1] for {10-11}, [1, 0, 3] for {10-13}).
+Default [1, 0, 1].</p></li>
+<li><p><strong>diameter</strong> (<em>float</em>) – circumscribed (vertex-to-vertex) diameter of the
+hexagonal section, in nm. Default 8.0.</p></li>
+<li><p><strong>double</strong> (<em>bool</em>) – True builds the full bipyramid (apex up and down),
+False a single cone (apex up, flat base). Default True.</p></li>
+<li><p><strong>cut_nm</strong> (<em>float</em>) – apex-to-truncation distance in nm; 0 keeps a sharp
+tip, &gt; 0 truncates each apex into a flat {0001} facet (frustum).
+Default 0.0.</p></li>
+<li><p><strong>normal_def</strong> (<em>str</em>) – coordinate system for the facet indices, ‘hkl’ or
+‘cart’. When None (default), ‘hkl’ is used for non-cubic lattices
+and ‘cart’ for cubic ones.</p></li>
+<li><p><strong>axis_on_atom</strong> (<em>bool</em>) – placement of the six-fold rotation axis relative
+to the hcp lattice. hcp has no atomic site on its own 6-fold axis:
+the axis passes through the centre of an atom hexagon, a/sqrt(3)
+from the nearest column. When False (default) the facets rotate
+about that interstitial axis and the apex closes on a centred
+triangle of three atoms. When True the block is shifted in-plane so
+a real atomic column sits on the axis, and the six facets converge
+on a single apex atom; the base is then centred on the column
+rather than on the section centroid. Default False.</p></li>
+<li><p><strong>symmetric_facets</strong> (<em>bool</em>) – how the six {10-1l} facets are cut. The 6_3
+screw axis of hcp splits them into two families that, with a single
+cut distance, terminate at different atomic levels (one looks less
+shaved than the other). When False (default) this true-crystal
+asymmetry is preserved. When True the two families are cut with
+distances offset by the lattice registry shift, so all six facets
+are shaved to the same level (visually symmetric pyramid).
+Default False.</p></li>
+<li><p><strong>shave_family_A</strong> (<em>bool</em>) – with symmetric_facets=True, selects which screw
+family is shaved by one atomic row. False (default) shaves class B
+(azimuth 90/210/330), keeping class A the larger; True shaves
+class A (azimuth 30/150/270), keeping class B the larger. Ignored
+when symmetric_facets=False. Default False.</p></li>
+<li><p><strong>regularize_base</strong> (<em>bool</em>) – with symmetric_facets=True, force a regular
+base hexagon by calibrating each screw family separately so both
+reach the same circumscribed radius. The default one-row shave
+(shave_family_A) only equalises the two families when their natural
+offset is about one atomic row, which holds for shallow facets such
+as {10-11} but not for steeper ones such as {10-13}, where the base
+stays visibly irregular. With regularize_base=True both families are
+bisection-calibrated to the target radius, giving six equal-length
+base edges at any facet index l. shave_family_A is then unused.
+Ignored when symmetric_facets=False. Default False.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>from pyNanoMatBuilder import otherNPs as oNP
+bp = oNP.hbpy(crystal=’Co hcp’, facet=[1, 0, 3],</p>
+<blockquote>
+<div><p>diameter=8.0, double=True, cut_nm=0.0,
+thresholdCoreSurface=0.5, skipSymmetryAnalyzis=True,
+noOutput=False)</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>postAnalyzis</strong> (<em>bool</em>) – If True, prints additional NP information
+(e.g., cell parameters, moments of inertia,
+inscribed/circumscribed sphere diameters, etc.).</p></li>
+<li><p><strong>aseView</strong> (<em>bool</em>) – If True, enables visualization of the NP using ASE.</p></li>
+<li><p><strong>thresholdCoreSurface</strong> (<em>float</em>) – Precision threshold for core/surface
+differentiation (distance threshold for retaining atoms).</p></li>
+<li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – If False, performs an atomic
+structure analysis using pymatgen.</p></li>
+<li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – <p>If True, skips the automatic computation of
+external facet areas and relative energies in propPostMake.
+Useful for shapes without flat facets (spheres, ellipsoids) or
+for large NPs where the computation is slow. Default is False.
+The analysis can always be run manually afterwards:</p>
+<blockquote>
+<div><p>NP.external_facets_info(mode=’auto’, noOutput=False)</p>
+</div></blockquote>
+</p></li>
+<li><p><strong>jmolCrystalShape</strong> (<em>bool</em>) – If True, generates a JMOL script
+for visualization.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If False, prints details about the NP structure.</p></li>
+<li><p><strong>calcPropOnly</strong> (<em>bool</em>) – If False, generates the atomic structure
+of the NP.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.otherNPs.hbpy.coords">
+<span class="sig-name descname"><span class="pre">coords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">noOutput</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.otherNPs.hbpy.coords" title="Link to this definition"></a></dt>
+<dd><p>Build the parallelepiped block, facet it into the hexagonal
+(bi)pyramid, and store the result as self.NP.</p>
+<p>The block is sized exactly from the derived apex height: it is centred
+on z = 0 and the apex sits at +Hhalf (and -Hhalf for the bipyramid),
+so the block half-height must reach Hhalf in both cases. A small fixed
+safety of one lattice spacing (c in z, a in section), read from the
+unit cell, keeps the apex atom row off the block boundary.</p>
+<p>When axis_on_atom is True, the block is shifted in-plane so a real
+atomic column lands on the rotation axis (0, 0) before faceting, so the
+six facets converge on a single apex atom instead of the interstitial
+triangle. The facet distance is then calibrated against that same axis,
+keeping axis alignment and diameter calibration consistent.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.otherNPs.hbpy.prop">
+<span class="sig-name descname"><span class="pre">prop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.otherNPs.hbpy.prop" title="Link to this definition"></a></dt>
+<dd><p>Display nanoparticle properties.</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 </section>
 <section id="utilities-utils">
@@ -7238,6 +7583,53 @@ bool: True if all indices are within tolerance for all planes.</p>
 <dd><p>List attributes of a pyNanoMatBuilder object using dir(), split into
 data attributes that are set, those that are None/empty, and (optionally)
 methods. Large objects are summarized.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.core.set_symbols">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.core.</span></span><span class="sig-name descname"><span class="pre">set_symbols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_symbol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_symbol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_optimized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.core.set_symbols" title="Link to this definition"></a></dt>
+<dd><p>Change chemical symbols of an already-built nanoparticle in place, to
+relabel species after construction (e.g. turn a scaffold built as Au into
+Co, or mark one piece of an assembly for a bimetallic analysis).</p>
+<p>Exactly one targeting mode is used, chosen by which optional argument is
+given:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>neither from_symbol nor indices : ALL atoms become to_symbol;</p></li>
+<li><dl class="simple">
+<dt>from_symbol only<span class="classifier">every atom of species from_symbol</span></dt><dd><p>becomes to_symbol;</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>indices only<span class="classifier">the atoms at those indices become</span></dt><dd><p>to_symbol (1-based, Jmol convention).</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>Passing both from_symbol and indices is rejected (ambiguous).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>to_symbol</strong> (<em>str</em>) – the new chemical symbol to assign (e.g. ‘Co’).</p></li>
+<li><p><strong>from_symbol</strong> (<em>str</em><em> or </em><em>None</em>) – if given, only atoms currently of this
+species are changed. Default None.</p></li>
+<li><p><strong>indices</strong> (<em>sequence</em><em> of </em><em>int</em><em> or </em><em>None</em>) – if given, only the atoms at these
+1-based indices are changed (Jmol convention, matching the rest of
+pyNMB). Default None.</p></li>
+<li><p><strong>is_optimized</strong> (<em>bool</em><em> or </em><em>None</em>) – operate on the optimized structure
+(self.NP_opt) when True, else self.NP. None -&gt; self.is_optimized.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – if True, suppress the printed summary. Default False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the number of atoms whose symbol was changed.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -8440,7 +8832,7 @@ rod.clip_to_cylinder(diameter_nm=4.0, axis=[0, 0, 1])</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.plot_npr_triangle">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">plot_npr_triangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_optimized</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">external_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Rg'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'viridis'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.plot_npr_triangle" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">plot_npr_triangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_optimized</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_img</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">external_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Rg'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'viridis'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.plot_npr_triangle" title="Link to this definition"></a></dt>
 <dd><p>Hybrid Sauer Plot for pyNanoMatBuilder with precise colorbar scaling and bold formatting.</p>
 </dd></dl>
 
@@ -8609,6 +9001,60 @@ d is the signed distance from the origin. Default is 0.</p></li>
 <li><p><strong>skipSymmetryAnalyzis</strong> (<em>bool</em>) – Default None → self.skipSymmetryAnalyzis.</p></li>
 <li><p><strong>skipFacetInfo</strong> (<em>bool</em>) – Default None → self.skipFacetInfo.</p></li>
 <li><p><strong>thresholdCoreSurface</strong> (<em>float</em>) – Default None → self.thresholdCoreSurface.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.farthest_in_direction">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">farthest_in_direction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_def</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cart'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.farthest_in_direction" title="Link to this definition"></a></dt>
+<dd><p>Return the outermost extent of self.NP along a direction: the largest
+signed projection, the 1-based index of the outermost atom, and the
+Cartesian unit direction.</p>
+<p>Locates the atom (and the plane through it) furthest along any direction,
+e.g. the apex of a cone or the base of a bipyramid. Handy to build a
+reflection plane through the tip:</p>
+<blockquote>
+<div><p>proj, _, d = NP.farthest_in_direction([0, 0, 1])
+NP.replicate_by_reflection(plane=[<a href="#id4"><span class="problematic" id="id5">*</span></a>d, -proj], plane_def=’cart’)</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>direction</strong> (<em>array-like</em>) – direction, as Miller indices [h,k,l]
+(axis_def=’hkl’, requires a Crystal object with Gstar) or
+Cartesian [x,y,z] (axis_def=’cart’).</p></li>
+<li><p><strong>axis_def</strong> (<em>str</em>) – ‘cart’ (default) or ‘hkl’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>(proj_max, i_max, dir_cart) — the largest signed projection in</dt><dd><p>Å, the 1-based index of the outermost atom (Jmol convention), and
+the Cartesian unit direction (3,).</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.mirror_at_tip">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">mirror_at_tip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_def</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cart'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.mirror_at_tip" title="Link to this definition"></a></dt>
+<dd><p>Mirror self.NP across the plane through its outermost atom along
+<cite>direction</cite>, reflecting the WHOLE body to the far side (e.g. cone -&gt;
+hourglass tip-to-tip). The plane normal is set so the existing body is the
+reflected part, so it works whichever way <cite>direction</cite> points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>direction</strong> (<em>array-like</em>) – outward direction to the tip (default [0,0,1]).</p></li>
+<li><p><strong>axis_def</strong> (<em>str</em>) – ‘cart’ (default) or ‘hkl’.</p></li>
+<li><p><strong>**kwargs</strong> – forwarded to replicate_by_reflection.</p></li>
 </ul>
 </dd>
 </dl>
@@ -9331,6 +9777,11 @@ if cartesian=True.</p>
 <span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.crystals.</span></span><span class="sig-name descname"><span class="pre">make_packed_supercell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.02</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.crystals.make_packed_supercell" title="Link to this definition"></a></dt>
 <dd><p>Add missing atoms on faces/edges/corners of an already-built supercell,
 equivalent to JMol’s PACKED mode.</p>
+<p>Vectorized implementation: instead of looping over atoms in Python (which
+is prohibitively slow for large supercells, tens of seconds for tens of
+millions of atoms), it loops over the 26 neighbour shifts and processes all
+eligible atoms at once with numpy. The set of added atoms is identical to
+the original per-atom version.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -9695,29 +10146,73 @@ self.jMolCS_opt</p>
 <section id="module-pyNanoMatBuilder.utils.prop">
 <span id="properties-prop-py"></span><h2>Properties (prop.py)<a class="headerlink" href="#module-pyNanoMatBuilder.utils.prop" title="Link to this heading"></a></h2>
 <dl class="py function">
-<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.calculateCN">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">calculateCN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rmax</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.calculateCN" title="Link to this definition"></a></dt>
-<dd><p>Calculate the coordination number (CN) for each atom.</p>
-<p>The coordination number is determined by counting neighbors within
-a spherical cutoff distance defined by Rmax.</p>
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.calculate_CN">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">calculate_CN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_optimized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.calculate_CN" title="Link to this definition"></a></dt>
+<dd><p>Compute the coordination number (CN) of every atom and store it.</p>
+<p>The CN of an atom is the number of neighbours within the spherical cutoff
+Rmax, counted with a KD-tree (O(N log N), linear memory), so the analysis
+remains tractable for particles with up to ~10^6 atoms.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coords</strong> (<em>numpy.ndarray</em>) – An (N, 3) array containing the Cartesian
-coordinates for each of the N points.</p></li>
-<li><p><strong>r_max</strong> (<em>float</em>) – The threshold distance (cutoff) used to define
-a coordination bond.</p></li>
+<li><p><strong>Rmax</strong> (<em>float</em>) – cutoff distance (Å) defining a coordination bond.
+Default 2.9.</p></li>
+<li><p><strong>is_optimized</strong> (<em>bool</em><em> or </em><em>None</em>) – target structure. None -&gt; self.is_optimized.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – if True, suppresses the printed summary. Default False.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><dl class="simple">
-<dt>An array of length N containing the calculated</dt><dd><p>coordination number for each atom.</p>
-</dd>
-</dl>
-</p>
+<dd class="field-even"><p>CN value for every atom of the target structure, in atom
+order. Also stored as self.CN (or self.CN_opt for the optimized
+structure).</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.calculate_GCN">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">calculate_GCN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cn_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_optimized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.calculate_GCN" title="Link to this definition"></a></dt>
+<dd><p>Compute the generalized coordination number (GCN) of every atom.</p>
+<p>The GCN of a site i is the coordination-weighted count of its first
+neighbours, normalized by the bulk coordination cn_max:</p>
+<blockquote>
+<div><p>GCN(i) = sum_j cn(j) / cn_max</p>
+</div></blockquote>
+<p>where the sum runs over the first neighbours j of atom i, cn(j) is the
+ordinary coordination number of neighbour j, and cn_max is the maximum
+coordination of an atom in the corresponding bulk lattice (12 for FCC and
+HCP, 8 for BCC). A bulk atom whose neighbours are all fully coordinated has
+GCN = cn_max (e.g. 12 for FCC); under-coordinated sites such as edges,
+vertices, and atoms lining internal cavities have a lower GCN. Introduced by
+Calle-Vallejo, Sautet and co-workers as a simple geometric descriptor that
+linearly tracks adsorption energies on metal nanoparticles.</p>
+<p>The GCN is computed for ALL atoms, not only the outer surface: this also
+flags the under-coordinated atoms that line internal cavities (e.g. after
+cut_by or systematic_carve_by, or in hollow structures), which a purely
+convex-hull surface test would miss.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Rmax</strong> (<em>float</em>) – cutoff distance (Å) defining first neighbours, passed to
+kDTreeCN. Should bracket the first coordination shell. Default 2.9.</p></li>
+<li><p><strong>cn_max</strong> (<em>int</em><em> or </em><em>None</em>) – bulk reference coordination. If None (default),
+taken from the crystal structure when available (FCC/HCP -&gt; 12,
+BCC -&gt; 8); falls back to 12 with a note otherwise. Pass an explicit
+value to override.</p></li>
+<li><p><strong>is_optimized</strong> (<em>bool</em><em> or </em><em>None</em>) – target structure. None -&gt; self.is_optimized.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – if True, suppresses the printed summary. Default False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>GCN value for every atom of the target structure, in atom
+order. Also stored as self.GCN (or self.GCN_opt for the optimized
+structure).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
 </dd></dl>
@@ -10384,6 +10879,76 @@ Default is 1000.</p></li>
 compare_effective_diameters(ico, n_feret=5000)</p>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.apparent_apex_angle">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">apparent_apex_angle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apex_direction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">view_axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_def</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cart'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_azimuth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">180</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flank_lo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flank_hi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.85</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_slab</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">14</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_optimized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_img</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_panels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_panels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.apparent_apex_angle" title="Link to this definition"></a></dt>
+<dd><p>Mean and standard deviation of the APPARENT (projected) apex angle of a tip,
+as it would be measured on an HRTEM micrograph, swept over the azimuthal
+orientation of the particle.</p>
+<p>On a micrograph the angle read at a faceted apex is the angle between the
+two silhouette flanks in PROJECTION, extended to their virtual intersection.
+This routine therefore fits a straight line to each side of the projected
+silhouette over an axial band [flank_lo, flank_hi] of the height (excluding
+the top, which may be a truncated plateau with no terminal atom, and the
+base, which may flare out), then measures the angle between the two fitted
+flank lines. Because the flanks are extended to their virtual apex, the
+result is INSENSITIVE to a truncated tip: it reports the angle the
+un-truncated pyramid would have, which is what one reads by extending the
+facet edges by hand. For a pointed tip the two flanks meet at the real apex
+and the same value is obtained.</p>
+<p>The projected angle of a polygonal-based pyramid depends on the azimuth of
+the particle about its long axis (looking into an edge vs onto a facet), so
+the azimuth is swept over a full turn and the mean +/- std (and min/max
+range) are reported. A measured micrograph angle within ~1-2 std of this
+mean is consistent with the assumed facet family.</p>
+<p>The long axis is <cite>apex_direction</cite>; the view is swept in the plane
+perpendicular to it (beam perpendicular to the long axis).</p>
+<p>Performance: the sweep runs on the surface atoms (self.NPcs / self.NPcs_opt)
+that determine the silhouette, scaling to multi-million-atom structures; it
+falls back to the convex-hull boundary, then to all atoms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>apex_direction</strong> (<em>array-like</em>) – direction to the apex / the long axis, as
+Miller indices [h,k,l] (axis_def=’hkl’, needs Gstar) or Cartesian
+[x,y,z] (axis_def=’cart’).</p></li>
+<li><p><strong>view_axis</strong> (<em>array-like</em><em> or </em><em>None</em>) – a fixed Cartesian viewing direction for a
+single measurement (no sweep). None (default) sweeps the view around
+apex_direction over a full turn.</p></li>
+<li><p><strong>axis_def</strong> (<em>str</em>) – ‘cart’ (default) or ‘hkl’ for apex_direction.</p></li>
+<li><p><strong>n_azimuth</strong> (<em>int</em>) – number of azimuthal samples over 360 deg. Default 180.</p></li>
+<li><p><strong>flank_lo</strong> (<em>float</em>) – lower bound of the axial band used to fit each flank,
+as a fraction of the silhouette height measured from the base.
+Excludes the flaring base. Default 0.2.</p></li>
+<li><p><strong>flank_hi</strong> (<em>float</em>) – upper bound of that band. Keep below 1 to exclude a
+truncated top plateau. Default 0.85.</p></li>
+<li><p><strong>n_slab</strong> (<em>int</em>) – number of horizontal slabs over the band, each
+contributing one left-edge and one right-edge point to the flank
+fit. Default 14.</p></li>
+<li><p><strong>is_optimized</strong> (<em>bool</em><em> or </em><em>None</em>) – target structure. None -&gt; self.is_optimized.</p></li>
+<li><p><strong>save_img</strong> (<em>str</em>) – if given, save the angle-vs-azimuth plot (.png/.svg).</p></li>
+<li><p><strong>show_panels</strong> (<em>bool</em>) – if True (default), display five panels showing the
+projected silhouette, the fitted flank lines extended to the virtual
+apex, and the measured angle, at the azimuths producing the five key
+statistics: min, mean-sigma, mean, mean+sigma, max.</p></li>
+<li><p><strong>save_panels</strong> (<em>str</em>) – if given, also save that five-panel figure
+(.png/.svg). Saving is independent of show_panels.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – if True, suppress the printed summary. Default False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>{‘mean’, ‘std’, ‘min’, ‘max’ (deg),</dt><dd><p>’azimuth’ (array, deg), ‘angle’ (array, deg)}.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="module-pyNanoMatBuilder.utils.external_pgm">
 <span id="external-programs-external-pgm-py"></span><h2>External programs (external_pgm.py)<a class="headerlink" href="#module-pyNanoMatBuilder.utils.external_pgm" title="Link to this heading"></a></h2>
@@ -10417,7 +10982,7 @@ compare_effective_diameters(ico, n_feret=5000)</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.external_pgm.defCrystalShapeForJMol">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">defCrystalShapeForJMol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.defCrystalShapeForJMol" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">defCrystalShapeForJMol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colorFacets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useWulff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.defCrystalShapeForJMol" title="Link to this definition"></a></dt>
 <dd><p>Generate a Jmol command to visualize the crystal shape based on the facets of the NP.</p>
 <p>For Wulff constructions and crystal shapes, uses HalfspaceIntersection to
 compute the reduced convex hull facets. For slicing planes (applySlicing),
@@ -10425,7 +10990,14 @@ redirects to defSlicingPlanesForJMol since the resulting shape may be
 non-convex and cannot be represented by HalfspaceIntersection.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses the output of the command.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses the output of the command.</p></li>
+<li><p><strong>colorFacets</strong> (<em>str</em>) – If not None, overrides the default facet colour
+(gray [x828282]). Accepts a Jmol colour name (‘red’, ‘gold’, …),
+a hex code prefixed by ‘x’, ‘0x’ or ‘#’ (‘xff3030’), normalised to
+Jmol’s bracketed form, or a value already in brackets, passed
+through as-is.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The Jmol command string for visualizing the crystal shape.</p>
@@ -10438,19 +11010,164 @@ non-convex and cannot be represented by HalfspaceIntersection.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.external_pgm.saveCN4JMol">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">saveCN4JMol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Crystal</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'CN.dat'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rmax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.saveCN4JMol" title="Link to this definition"></a></dt>
-<dd><p>Calculates the coordination number (CN) for a given crystal and generates a Jmol command for visualization.</p>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">saveCN4JMol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'CN.dat'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rmax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_optimized</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.saveCN4JMol" title="Link to this definition"></a></dt>
+<dd><p>Colour atoms by their coordination number (CN) in Jmol.</p>
+<p>Writes one CN class index per atom to a .dat file (loaded into Jmol via the
+‘valence’ channel) and prints the Jmol command to colour atoms by CN with a
+discrete palette (one colour per CN value). Reuses self.CN if it has already
+been computed by calculate_CN; otherwise computes it on the fly. The legend
+is a vertical set of circles, one per CN value present, each circle’s area
+proportional to the number of atoms with that CN, annotated with
+‘index | CN | atom count’.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The .dat file written for Jmol contains the per-atom CLASS INDEX (a
+contiguous 0-based index over the CN values present), not necessarily
+the raw CN, so that the colour palette is indexed contiguously. The raw
+CN is available in self.CN; the CN of each class is reported in the
+legend.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>Crystal</strong> (<em>Atoms</em>) – The crystal structure object.</p></li>
-<li><p><strong>save2</strong> (<em>str</em><em>, </em><em>optional</em>) – The filename to save the coordination numbers. Defaults to ‘CN.dat’.</p></li>
-<li><p><strong>Rmax</strong> (<em>float</em><em>, </em><em>optional</em>) – The maximum distance for neighbors when calculating CN. Defaults to 3.0.</p></li>
-<li><p><strong>noOutput</strong> (<em>bool</em><em>, </em><em>optional</em>) – If set to True, suppresses the output. Defaults to False.</p></li>
+<li><p><strong>self</strong> – pyNMBcore instance (uses self.NP or self.NP_opt).</p></li>
+<li><p><strong>save2</strong> (<em>str</em>) – file where the per-atom CN class index is written.</p></li>
+<li><p><strong>Rmax</strong> (<em>float</em>) – cutoff distance (Å), used only if the CN must be computed.
+Default 3.0.</p></li>
+<li><p><strong>is_optimized</strong> (<em>bool</em><em> or </em><em>None</em>) – target structure. None -&gt; self.is_optimized.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – if True, suppresses output. Default False.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.external_pgm.saveGCN4JMol">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">saveGCN4JMol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'GCN.dat'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Rmax</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cn_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nClasses</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gcn_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_at_bulk</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_optimized</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.saveGCN4JMol" title="Link to this definition"></a></dt>
+<dd><p>Compute the generalized coordination number (GCN) of every atom, bin it
+into discrete classes, and generate a Jmol command that colours each atom
+by its GCN class.</p>
+<p>The GCN is continuous, so it is discretized into nClasses bins. A class
+boundary is forced at the bulk value cn_max by default (split_at_bulk=True)
+so that bulk-perfect sites (GCN = cn_max, e.g. 12 for FCC) and
+over-coordinated dense sites (GCN &gt; cn_max, e.g. from CN = 16) always fall
+in different colour classes. The legend is a vertical set of circles, one
+per class, each circle’s area proportional to the number of atoms in the
+class, annotated with ‘index | segment mid-GCN | atom count’.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The .dat file written for Jmol contains the per-atom CLASS INDEX (an
+integer), not the real GCN value, because Jmol colours by an indexed
+palette. The real GCN is available in self.GCN; the segment value of
+each class is reported in the legend.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> – pyNMBcore instance (uses self.NP or self.NP_opt).</p></li>
+<li><p><strong>save2</strong> (<em>str</em>) – file where the per-atom GCN class index is written.</p></li>
+<li><p><strong>Rmax</strong> (<em>float</em>) – cutoff distance (Å) for first neighbours. Default 2.9.</p></li>
+<li><p><strong>cn_max</strong> (<em>int</em><em> or </em><em>None</em>) – bulk reference coordination. None -&gt; resolved
+from the crystal structure (FCC/HCP=12, BCC=8), else 12.</p></li>
+<li><p><strong>nClasses</strong> (<em>int</em>) – number of GCN colour classes. Default 12.</p></li>
+<li><p><strong>gcn_range</strong> (<em>tuple</em><em> or </em><em>None</em>) – (gcn_min, gcn_max) spanned by the classes.
+None uses the min and max GCN over all atoms.</p></li>
+<li><p><strong>split_at_bulk</strong> (<em>bool</em>) – force a class boundary at cn_max. Default True.</p></li>
+<li><p><strong>is_optimized</strong> (<em>bool</em><em> or </em><em>None</em>) – target structure. None -&gt; self.is_optimized.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – if True, suppresses output. Default False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.external_pgm.plotPaletteBubbles">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">plotPaletteBubbles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">colors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">counts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">savePngAs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'GCN'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.plotPaletteBubbles" title="Link to this definition"></a></dt>
+<dd><p>Vertical colour legend: one circle per class, its area proportional to the
+number of atoms in the class, with ‘index  value(2 dec)  N atoms’ written
+to its right. Used by saveCN4JMol and saveGCN4JMol.</p>
+<p>The circle radius grows with the LOG of the atom count (with a floor radius)
+so that classes spanning several orders of magnitude all stay visible, a
+one-atom class included.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>colors</strong> (<em>list</em>) – (r, g, b) floats in [0, 1], one per class.</p></li>
+<li><p><strong>labels_idx</strong> (<em>list</em>) – class index (int) for each class.</p></li>
+<li><p><strong>labels_val</strong> (<em>list</em>) – representative value per class (float). For GCN this
+is the segment mid-value; for CN it is the integer CN.</p></li>
+<li><p><strong>counts</strong> (<em>list</em>) – number of atoms in each class.</p></li>
+<li><p><strong>savePngAs</strong> (<em>str</em>) – path to save the PNG (or None to skip saving).</p></li>
+<li><p><strong>title</strong> (<em>str</em>) – optional title above the legend.</p></li>
+<li><p><strong>val_header</strong> (<em>str</em>) – header of the value column (‘GCN’ or ‘CN’).</p></li>
+<li><p><strong>show</strong> (<em>bool</em>) – if True, also display the figure inline (e.g. in a
+notebook). Default False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>savePngAs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.external_pgm.saveStrain4JMol">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">saveStrain4JMol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'strain'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">which</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'all'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symmetric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.saveStrain4JMol" title="Link to this definition"></a></dt>
+<dd><p>Write per-atom strain descriptors to real-value .dat files for Jmol and
+print the Jmol command that colours atoms by each field.</p>
+<p>One .dat file is written per requested quantity, each holding one real value
+per atom in atom-index order. Strain fields are continuous (and the volumetric
+strain is signed, negative under compression), so atoms are coloured by a
+continuous colourmap with an explicit range, in the same style as
+defLocalOrderColorForJMol, rather than by the discrete class palette used for
+CN and GCN.</p>
+<p>The Jmol command loads each .dat into the ‘partialcharge’ channel and colours
+by it. The real value is also shown as an atom label.</p>
+<dl class="simple">
+<dt>Output files (written in user_output_dir):</dt><dd><p>{prefix}_strainVol_values.dat    volumetric strain trace(eta)
+{prefix}_strainVM_values.dat      von Mises (deviatoric) strain
+{prefix}_strainD2min_values.dat   non-affine residual D2min</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prefix</strong> (<em>str</em><em>, </em><em>optional</em>) – Filename prefix for the output .dat files.
+Default is “strain”.</p></li>
+<li><p><strong>user_output_dir</strong> (<em>str</em><em> or </em><em>pathlib.Path</em><em>, </em><em>optional</em>) – Output directory for the
+.dat files, created if absent. Default is “./”.</p></li>
+<li><p><strong>which</strong> (<em>str</em><em>, </em><em>optional</em>) – Which quantities to write, one of ‘all’, ‘vol’,
+‘vm’, or ‘d2min’. Default is ‘all’.</p></li>
+<li><p><strong>color</strong> (<em>str</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Jmol colour scheme name. If None (default),
+a per-field default is used: a divergent ‘rwb’ (red = compression,
+white = zero, blue = dilation) for the signed volumetric strain, and a
+sequential ‘turbo’ for the non-negative von Mises and D2min fields.
+Pass an explicit name to force the same colour scheme on every field.</p></li>
+<li><p><strong>value_range</strong> (<em>list</em><em> of </em><em>float</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – [vmin, vmax] colour-scale
+limits in the field’s units. None uses each field’s own min/max.
+Pass the same value_range to several structures to colour them on a
+common scale. Default is None.</p></li>
+<li><p><strong>symmetric</strong> (<em>bool</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – If True, centre the colour range on
+zero (vmax = -vmin = max(<a href="#id6"><span class="problematic" id="id7">|values|</span></a>)), appropriate for the signed
+volumetric strain so that zero strain maps to the colourmap centre.
+If None, defaults to True for the volumetric field and False for the
+(non-negative) von Mises and D2min fields. Ignored when value_range
+is given. Default is None.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, suppress the printed Jmol command.
+Default is False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>AttributeError</strong> – If calculate_atomic_strain() has not been run yet.</p></li>
+<li><p><strong>ValueError</strong> – If which is not one of ‘all’, ‘vol’, ‘vm’, ‘d2min’.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -10567,7 +11284,7 @@ one per plane. If None, a default palette is used.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.external_pgm.defLocalOrderColorForJMol">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">defLocalOrderColorForJMol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descriptor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cnp'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'turbo'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_optimized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.defLocalOrderColorForJMol" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">defLocalOrderColorForJMol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">descriptor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cnp'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'turbo'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_optimized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.defLocalOrderColorForJMol" title="Link to this definition"></a></dt>
 <dd><p>Generate a Jmol command that writes a per-atom local-order descriptor
 (CNP or Steinhardt q_l) into an atom property and colours the atoms by it.</p>
 <p>The descriptor must already be stored on the object (self.cnp / self.q{l},
@@ -10580,6 +11297,12 @@ common_neighbour_parameter() or steinhardt_q() first.</p>
 <li><p><strong>l</strong> (<em>int</em>) – Harmonic degree for descriptor=’q’. Default 6.</p></li>
 <li><p><strong>color</strong> (<em>str</em>) – Jmol colour scheme name. Default ‘turbo’.
 (color schemes known by Jmol: batlow,cividis,kry,thermal,viridis,inferno,magma,plasma,turbo)</p></li>
+<li><p><strong>value_range</strong> (<em>list</em><em> of </em><em>float</em><em> or </em><em>None</em>) – [vmin, vmax] colour-scale limits
+in the descriptor’s units (Å² for CNP). None (default) uses this
+structure’s own min/max. Pass the SAME value_range to several
+structures to colour them on a common scale; a bound outside the
+data is clamped to the data with a warning. Applies to both the
+matplotlib figure and the generated Jmol colouring command.</p></li>
 <li><p><strong>is_optimized</strong> (<em>bool</em><em> or </em><em>None</em>) – Target structure. None -&gt; self.is_optimized.</p></li>
 <li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is True.</p></li>
 </ul>
@@ -10631,6 +11354,102 @@ positions of each pattern copy (one per carved face).</p></li>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.external_pgm.export_png_with_ovito">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.external_pgm.</span></span><span class="sig-name descname"><span class="pre">export_png_with_ovito</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ovito'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">colors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">azimuth_deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elevation_deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">65.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">camera_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">camera_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(2400,</span> <span class="pre">2400)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">background</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1,</span> <span class="pre">1,</span> <span class="pre">1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transparent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ambient_occlusion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_opt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.external_pgm.export_png_with_ovito" title="Link to this definition"></a></dt>
+<dd><p>Render self.NP to a PNG image with OVITO Basic (free, no watermark).</p>
+<p>Uses OVITO’s OpenGL renderer, the only non-watermarked backend in the free
+OVITO Basic edition. The free Ambient Occlusion modifier is added to the
+pipeline to give per-atom occlusion shading, which OpenGL can display and
+which makes facets readable. Facets look flat when a particle is viewed
+straight down, so the camera is placed off-axis.</p>
+<p>The output file is written to ‘&lt;user_output_dir&gt;/&lt;prefix&gt;.png’.</p>
+<dl class="simple">
+<dt>Two ways to set the viewpoint:</dt><dd><ul class="simple">
+<li><p>azimuth_deg / elevation_deg: the camera looks at the origin from a
+point on a sphere (convenient for quick framing).</p></li>
+<li><p>camera_pos / camera_dir: explicit camera placement, e.g. the values
+read from the interactive OVITO GUI. If camera_dir is given it takes
+priority over the azimuth/elevation direction; if camera_pos is also
+given, zoom_all() is skipped so the GUI framing is reproduced exactly.</p></li>
+</ul>
+</dd>
+</dl>
+<p>The OVITO Python module renders headlessly when imported from an external
+interpreter, so no window is opened; the image is written straight to disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prefix</strong> (<em>str</em>) – base name of the output file (without extension); the
+image is saved as ‘&lt;prefix&gt;.png’.</p></li>
+<li><p><strong>user_output_dir</strong> (<em>str</em>) – directory where the image is written. Created
+if it does not exist.</p></li>
+<li><p><strong>radius</strong> (<em>float</em><em>, </em><em>optional</em>) – sphere radius in Angstrom. If None, uses
+half of self.Rnn (jointed spheres look).</p></li>
+<li><p><strong>colors</strong> (<em>dict</em><em>, </em><em>str</em><em>, or </em><em>sequence</em><em>, </em><em>optional</em>) – <p>atom colors overriding
+OVITO’s default CPK per-element colors. Each color may be given as:</p>
+<blockquote>
+<div><ul>
+<li><p>a hex string ‘#RRGGBB’ (also accepts ‘0xRRGGBB’, ‘xRRGGBB’,
+or bare ‘RRGGBB’),</p></li>
+<li><p>a triple of ints in [0, 255], e.g. (255, 165, 0),</p></li>
+<li><p>a triple of floats in [0, 1], e.g. (1.0, 0.65, 0.0).</p></li>
+</ul>
+</div></blockquote>
+<dl class="simple">
+<dt>Two forms are accepted:</dt><dd><ul>
+<li><p>a dict mapping chemical symbol to a color, e.g.
+{‘Au’: ‘#D9A521’, ‘Co’: (51, 102, 230)}; only the listed
+elements are recoloured, others keep their default,</p></li>
+<li><p>a single color (hex string or RGB triple) applied uniformly
+to every element.</p></li>
+</ul>
+</dd>
+</dl>
+<p>A triple whose values are all &lt;= 1 is read as floats in [0, 1];
+if any value exceeds 1, the triple is read as ints in [0, 255].
+If None, the default element colors are kept.</p>
+</p></li>
+<li><p><strong>azimuth_deg</strong> (<em>float</em>) – camera azimuth around the vertical z axis, in
+degrees (0 = +x). Ignored if camera_dir is provided.</p></li>
+<li><p><strong>elevation_deg</strong> (<em>float</em>) – camera elevation above the xy plane, in degrees.
+90 looks straight down (facets flatten); ~60-70 keeps the top
+facets visible while giving them depth. Ignored if camera_dir is
+provided.</p></li>
+<li><p><strong>camera_pos</strong> (<em>array-like</em><em>, </em><em>optional</em>) – explicit camera position (x, y, z).
+When given together with camera_dir, the automatic zoom_all()
+framing is skipped to reproduce a GUI viewpoint exactly.</p></li>
+<li><p><strong>camera_dir</strong> (<em>array-like</em><em>, </em><em>optional</em>) – explicit camera viewing direction
+(look vector). Takes priority over azimuth/elevation.</p></li>
+<li><p><strong>size</strong> (<em>tuple</em><em> of </em><em>int</em>) – output image size in pixels (width, height).</p></li>
+<li><p><strong>background</strong> (<em>tuple</em><em> of </em><em>float</em>) – RGB background color, each in [0, 1].
+Ignored where the image is transparent if transparent=True.</p></li>
+<li><p><strong>transparent</strong> (<em>bool</em>) – if True, render with a transparent background
+(alpha channel): areas not covered by atoms become transparent so
+the image can be overlaid on another backdrop. PNG output (used
+here) preserves the alpha channel.</p></li>
+<li><p><strong>ambient_occlusion</strong> (<em>bool</em>) – if True, append the Ambient Occlusion
+modifier for facet-revealing per-atom shading.</p></li>
+<li><p><strong>use_opt</strong> (<em>bool</em>) – if True, render the optimized structure (self.NP_opt)
+instead of self.NP.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – if True, suppress printed messages.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the full path of the PNG file that was written.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ImportError</strong> – if the ovito Python module is not installed.</p></li>
+<li><p><strong>AttributeError</strong> – if use_opt is True but self.NP_opt is not available.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

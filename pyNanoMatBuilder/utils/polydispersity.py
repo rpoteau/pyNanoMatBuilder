@@ -1198,24 +1198,24 @@ class NanoparticleDistribution:
                         
         # --- 8. Enhanced Save Logic ---
         if save_img:
-            save_path = Path(save_img)
+            save_img = Path(save_img)
             
             # Ensure the directory exists
-            if save_path.parent:
-                save_path.parent.mkdir(parents=True, exist_ok=True)
+            if save_img.parent:
+                save_img.parent.mkdir(parents=True, exist_ok=True)
             
-            ext = save_path.suffix.lower()
+            ext = save_img.suffix.lower()
             
             if ext == '.svg':
-                plt.savefig(save_path, format='svg')
-                print(f"Plot saved as vector graphics: {save_path}")
+                plt.savefig(save_img, format='svg')
+                print(f"Plot saved as vector graphics: {save_img}")
             elif ext == '.png':
-                plt.savefig(save_path, format='png', dpi=dpi)
-                print(f"Plot saved as PNG: {save_path}")
+                plt.savefig(save_img, format='png', dpi=dpi)
+                print(f"Plot saved as PNG: {save_img}")
             else:
                 # Default fallback for other formats supported by matplotlib (pdf, jpg, etc.)
-                plt.savefig(save_path)
-                print(f"Plot saved with {ext} format: {save_path}")
+                plt.savefig(save_img)
+                print(f"Plot saved with {ext} format: {save_img}")
 
         plt.show()
 

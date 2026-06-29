@@ -76,6 +76,8 @@ class pyNMBcore:
         self.jMol_q6 = None
         self.NP_select = None
         self.NP_select_mask = None
+        self.CN = None
+        self.GCN = None
 
         self.NP_opt = None
         self.NPcs_opt = None
@@ -107,10 +109,18 @@ class pyNMBcore:
         self.jMol_q6_opt = None
         self.NP_select_opt = None
         self.NP_select_mask_opt = None
+        self.CN_opt = None
+        self.GCN_opt = None
         
         self.ellipsoid = {} #two keys: "initial structure" or "optimized structure"
 
         self.chirality = "achiral"
+
+        self.strain_vol = None
+        self.strain_vm = None
+        self.strain_d2min = None
+        self.strain_detF = None
+        self.strain_cutoff = None
 
         self._local_order_decimals = None
 
@@ -426,7 +436,7 @@ class pyNMBcore:
                             skipFacetInfo,
                             thresholdCoreSurface, noOutput, is_optimized, coreSurfaceMethod)
 
-    def plot_npr_triangle(self=None, is_optimized: bool = None, save_path: str = None, 
+    def plot_npr_triangle(self=None, is_optimized: bool = None, save_img: str = None, 
                       external_data: dict = None, color_by: str = 'Rg', color: str = 'viridis'):
         """
         Plot the NPR triangle (Rod/Sphere/Disk) for shape classification.
@@ -435,7 +445,7 @@ class pyNMBcore:
         Args:
             is_optimized (bool): If True, uses optimized structure data
                                   (default: self.is_optimized).
-            save_path (str, optional): Path to save the figure (SVG or PNG).
+            save_img (str, optional): Path to save the figure (SVG or PNG).
             external_data (dict, optional): Population data for multi-NP plots,
                                             with keys 'NPR', 'Rg', and 'shapes'.
             color_by (str): Coloring scheme: 'Rg' or 'shapes' (default: 'Rg').
@@ -449,7 +459,7 @@ class pyNMBcore:
         plot_npr_triangle(
             self, 
             is_optimized=is_optimized, 
-            save_path=save_path, 
+            save_img=save_img, 
             external_data=external_data, 
             color_by=color_by, 
             color=color
@@ -509,6 +519,49 @@ class pyNMBcore:
         from .utils.external_pgm import defHelixShapeForJMol
         return defHelixShapeForJMol(self, n_rings, n_sides, noOutput)
 
+    def reset_facets(self, colorFacets=None, useWulff=None,
+                     is_optimized=None, noOutput=True):
+        """
+        Regenerate the crystal-shape Jmol script (self.jMolCS / self.jMolCS_opt)
+        without re-running propPostMake, optionally forcing the facet source
+        (Wulff planes vs real convex hull) and/or a custom facet colour.
+
+        By default defCrystalShapeForJMol draws the Wulff planes whenever
+        trPlanes_Wulff exists; pass useWulff=False to draw the real convex hull
+        of the current atoms instead (useful after the shape has been modified
+        by CSG, peeling or slicing, when the theoretical Wulff planes no longer
+        describe it). Facet colour is purely cosmetic and does not touch the
+        geometry. The script produced at construction is overwritten.
+
+        Args:
+            colorFacets (str or None): the facet colour. None keeps the default
+                gray ([x828282]). Otherwise accepts a Jmol colour name ('red',
+                'gold', …), a hex code prefixed by 'x', '0x' or '#' ('xff3030'),
+                or a value already in brackets ('[xff3030]', '[255 0 0]'),
+                passed through as-is.
+            useWulff (bool or None): facet source. None (default) auto-detects
+                (Wulff planes if trPlanes_Wulff exists, else the hull). True
+                forces the Wulff planes; False forces the real convex hull of
+                the current atoms even when trPlanes_Wulff exists.
+            is_optimized (bool or None): which script to regenerate. None ->
+                self.is_optimized (so jMolCS_opt is rebuilt for an optimized
+                structure, jMolCS otherwise).
+            noOutput (bool): if True, suppresses output. Default True.
+
+        Returns:
+            str: the regenerated Jmol command string (also stored as
+                self.jMolCS or self.jMolCS_opt).
+        """
+        from .utils.external_pgm import defCrystalShapeForJMol
+        if is_optimized is None:
+            is_optimized = getattr(self, 'is_optimized', False)
+        use_opt = is_optimized and getattr(self, 'NP_opt', None) is not None
+        suffix = "_opt" if use_opt else ""
+        cs = defCrystalShapeForJMol(self, noOutput=noOutput,
+                                    colorFacets=colorFacets, useWulff=useWulff)
+        setattr(self, f"jMolCS{suffix}", cs)
+        return cs
+    
     def crystallographic_angle(self, v1, v2,
                             type1: str = 'direction',
                             type2: str = 'direction',
@@ -690,15 +743,17 @@ class pyNMBcore:
                       thresholdCoreSurface=thresholdCoreSurface)
 
 
-    def union_with(self, NP_B, cogB=None, rotB=None, mode='hull', threshold=0.8, recenter=True,
+    def union_with(self, NP_B, cogB=None, rotB=None, attach_direction=None,
+                   seat_axis=None, mode='hull', threshold=0.8, recenter=True,
                    noOutput=None, postAnalyzis=None, skipChiralityCalculation=None,
                    skipSymmetryAnalyzis=None, skipFacetInfo=None, thresholdCoreSurface=None):
         """Union of self.NP and NP_B — keeps all atoms of A and B. See utils.csg.union_with for full documentation."""
         from .utils.csg import union_with
         if noOutput is None: noOutput = self.noOutput
-        return union_with(self, NP_B, cogB=cogB, rotB=rotB, mode=mode,
-                          threshold=threshold, recenter=recenter, noOutput=noOutput,
-                          postAnalyzis=postAnalyzis,
+        return union_with(self, NP_B, cogB=cogB, rotB=rotB,
+                          attach_direction=attach_direction, seat_axis=seat_axis,
+                          mode=mode, threshold=threshold, recenter=recenter,
+                          noOutput=noOutput, postAnalyzis=postAnalyzis,
                           skipChiralityCalculation=skipChiralityCalculation,
                           skipSymmetryAnalyzis=skipSymmetryAnalyzis,
                           skipFacetInfo=skipFacetInfo,
@@ -1072,15 +1127,14 @@ class pyNMBcore:
                             store=store, is_optimized=is_optimized)
 
     def plot_local_order(self, descriptor='cnp', Xnn=None, l=6,
-                         is_optimized=None, save_path=None, color='turbo',
-                         bins=50, noOutput=None):
-        """Histogram + per-atom colour map of a local-order descriptor. See utils.prop.plot_local_order."""
+                         is_optimized=None, save_img=None, color='turbo',
+                         bins=50, value_range=None, save_colorbar=None,
+                         noOutput=False):
         from .utils.local_descriptors import plot_local_order
-        if noOutput is None:
-            noOutput = self.noOutput
         return plot_local_order(self, descriptor=descriptor, Xnn=Xnn, l=l,
-                               is_optimized=is_optimized, save_path=save_path,
-                               color=color, bins=bins, noOutput=noOutput)
+                                is_optimized=is_optimized, save_img=save_img,
+                                color=color, bins=bins, value_range=value_range,
+                                save_colorbar=save_colorbar, noOutput=noOutput)
 
     def defLocalOrderColorForJMol(self, descriptor='cnp', l=6, color='turbo',
                                   is_optimized=None, noOutput=None):
@@ -1111,20 +1165,40 @@ class pyNMBcore:
         return select_by_local_order(self, indices, descriptor=descriptor, l=l,
                                      is_optimized=is_optimized, noOutput=noOutput)
 
-    def plot_q4q6_map(self, Xnn=None, is_optimized=None, save_path=None,
+    def plot_q4q6_map(self, Xnn=None, is_optimized=None, save_img=None,
                       aggregate=True, decimals=3, sc_domain=False, noOutput=None):
         """Plot the Steinhardt (q4,q6) map: ideal references + per-atom data. See utils.prop.plot_q4q6_map."""
         from .utils.local_descriptors import plot_q4q6_map
         if noOutput is None:
             noOutput = self.noOutput
         return plot_q4q6_map(self, Xnn=Xnn, is_optimized=is_optimized,
-                             save_path=save_path, aggregate=aggregate,
+                             save_img=save_img, aggregate=aggregate,
                              decimals=decimals, sc_domain=sc_domain, noOutput=noOutput)
+        
+    def q4q6_populations(self, Xnn=None, method='round', decimals=2,
+                         min_fraction=0.0, eps=None, min_samples=5,
+                         color='Blues', is_optimized=None, noOutput=False):
+        """List the main (q4, q6) populations as an indexed table (centre, count, fraction). See utils.local_descriptors.q4q6_populations."""
+        from .utils.local_descriptors import q4q6_populations
+        return q4q6_populations(self, Xnn=Xnn, method=method,
+                                decimals=decimals, min_fraction=min_fraction,
+                                eps=eps, min_samples=min_samples, color=color,
+                                is_optimized=is_optimized, noOutput=noOutput)
 
+    def select_by_q4q6_disk(self, center=None, radius=None, cluster_index=None,
+                            Xnn=None, metric='euclidean',
+                            is_optimized=None, noOutput=False):
+        """Select atoms within a (q4, q6) disk into self.NP_select. See utils.local_descriptors.select_by_q4q6_disk."""
+        from .utils.local_descriptors import select_by_q4q6_disk
+        return select_by_q4q6_disk(self, center=center, radius=radius,
+                                   cluster_index=cluster_index, Xnn=Xnn,
+                                   metric=metric, is_optimized=is_optimized,
+                                   noOutput=noOutput)
+    
     def interface_distance_histogram(self, elemA, elemB, Rnn,
                                      overlap_frac=0.85, contact_frac=1.2,
                                      bins=60, is_optimized=None,
-                                     save_path=None, noOutput=None):
+                                     save_img=None, noOutput=None):
         """Histogram of cross-species nearest-neighbour distances at a bimetallic interface. See utils.local_descriptors.interface_distance_histogram."""
         from .utils.csg import interface_distance_histogram
         if noOutput is None:
@@ -1133,4 +1207,141 @@ class pyNMBcore:
                                             overlap_frac=overlap_frac,
                                             contact_frac=contact_frac,
                                             bins=bins, is_optimized=is_optimized,
-                                            save_path=save_path, noOutput=noOutput)
+                                            save_img=save_img, noOutput=noOutput)
+
+    def calculate_GCN(self, Rmax=2.9, cn_max=None,
+                      is_optimized=None, noOutput=None):
+        """
+        Compute the generalized coordination number (GCN) of every atom.
+        See utils.prop.calculate_GCN for full documentation.
+        """
+        from .utils.prop import calculate_GCN
+        if noOutput is None:
+            noOutput = self.noOutput
+        return calculate_GCN(self, Rmax=Rmax, cn_max=cn_max,
+                             is_optimized=is_optimized, noOutput=noOutput)
+
+    def calculate_CN(self, Rmax=2.9, is_optimized=None, noOutput=None):
+        """Compute and store the coordination number of every atom.
+        See utils.prop.calculate_CN for full documentation."""
+        from .utils.prop import calculate_CN
+        if noOutput is None:
+            noOutput = self.noOutput
+        return calculate_CN(self, Rmax=Rmax, is_optimized=is_optimized,
+                            noOutput=noOutput)
+
+    def saveCN4JMol(self, save2='CN.dat', Rmax=3.0,
+                    is_optimized=None, noOutput=None):
+        """
+        Colour atoms by coordination number (CN) in Jmol.
+        See utils.external_pgm.saveCN4JMol for full documentation.
+        """
+        from .utils.external_pgm import saveCN4JMol
+        if noOutput is None:
+            noOutput = self.noOutput
+        return saveCN4JMol(self, save2=save2, Rmax=Rmax,
+                           is_optimized=is_optimized, noOutput=noOutput)
+
+    def saveGCN4JMol(self, save2='GCN.dat', Rmax=2.9, cn_max=None,
+                     nClasses=12, gcn_range=None, split_at_bulk=True,
+                     is_optimized=None, noOutput=None):
+        """
+        Colour atoms by generalized coordination number (GCN) in Jmol.
+        See utils.external_pgm.saveGCN4JMol for full documentation.
+        """
+        from .utils.external_pgm import saveGCN4JMol
+        if noOutput is None:
+            noOutput = self.noOutput
+        return saveGCN4JMol(self, save2=save2, Rmax=Rmax, cn_max=cn_max,
+                            nClasses=nClasses, gcn_range=gcn_range,
+                            split_at_bulk=split_at_bulk,
+                            is_optimized=is_optimized)
+
+    def calculate_atomic_strain(self, cutoff=None, neighbor_source='reference', noOutput=None):
+        """
+        Compute per-atom affine strain descriptors (Falk-Langer method) by comparing
+        the optimized configuration self.NP_opt against the undeformed reference
+        self.NP. See utils.strain.calculate_atomic_strain for the full description.
+        """
+        from .utils.strain import calculate_atomic_strain
+        if noOutput is None:
+            noOutput = self.noOutput
+        calculate_atomic_strain(
+            self, cutoff=cutoff, neighbor_source=neighbor_source,
+            noOutput=noOutput
+        )
+
+    def saveStrain4JMol(self, prefix="strain", user_output_dir="coords",
+                    which='all', color=None, value_range=None,
+                    symmetric=None, noOutput=False):
+        """
+        Write per-atom strain descriptors to .dat files for Jmol and print the
+        Jmol command that colours atoms by each field. See
+        utils.external_pgm.saveStrain4JMol for the full description.
+        """
+        from .utils.external_pgm import saveStrain4JMol
+        if noOutput is None:
+            noOutput = self.noOutput
+        return saveStrain4JMol(
+            self, prefix=prefix, user_output_dir=user_output_dir,
+            which=which, color=color, value_range=value_range,
+            symmetric=symmetric, noOutput=noOutput,
+        )
+
+    def export_png_with_ovito(self, prefix="ovito", user_output_dir="./",
+                              radius=None, colors=None,
+                              azimuth_deg=30.0, elevation_deg=65.0,
+                              camera_pos=None, camera_dir=None,
+                              size=(2400, 2400), background=(1, 1, 1),
+                              transparent=False, ambient_occlusion=True,
+                              use_opt=False, noOutput=None):
+        """Render self.NP to a PNG image with OVITO Basic (free renderer).
+        See utils.external_pgm.export_png_with_ovito for full documentation.
+        """
+        from .utils.external_pgm import export_png_with_ovito
+        if noOutput is None:
+            noOutput = self.noOutput
+        return export_png_with_ovito(
+            self, prefix=prefix, user_output_dir=user_output_dir,
+            radius=radius, colors=colors,
+            azimuth_deg=azimuth_deg, elevation_deg=elevation_deg,
+            camera_pos=camera_pos, camera_dir=camera_dir,
+            size=size, background=background, transparent=transparent,
+            ambient_occlusion=ambient_occlusion, use_opt=use_opt,
+            noOutput=noOutput)
+
+    def farthest_in_direction(self, direction, axis_def='cart'):
+        """Wrapper for utils.geometry.farthest_in_direction."""
+        from .utils.geometry import farthest_in_direction
+        return farthest_in_direction(self, direction, axis_def=axis_def)
+
+    def mirror_at_tip(self, direction, axis_def, **kwargs):
+        """Wrapper for utils.geometry.mirror_at_tip."""
+        from .utils.geometry import mirror_at_tip
+        return mirror_at_tip(self, direction=direction, axis_def=axis_def, **kwargs)
+
+    def apparent_apex_angle(self, apex_direction, view_axis=None,
+                            axis_def='cart', n_azimuth=180,
+                            flank_lo=0.2, flank_hi=0.85, n_slab=14,
+                            is_optimized=None, save_img=None, show_panels=True,
+                            save_panels=None, noOutput=None):
+        """Mean/std of the projected (HRTEM-apparent) apex angle, measured between the extended silhouette flanks
+        (truncation-insensitive), swept over azimuth, with statistical panels. See utils.prop.apparent_apex_angle for full documentation."""
+        from .utils.prop import apparent_apex_angle
+        if noOutput is None: noOutput = self.noOutput
+        return apparent_apex_angle(self, apex_direction, view_axis=view_axis,
+                                   axis_def=axis_def, n_azimuth=n_azimuth,
+                                   flank_lo=flank_lo, flank_hi=flank_hi,
+                                   n_slab=n_slab, is_optimized=is_optimized,
+                                   save_img=save_img, show_panels=show_panels,
+                                   save_panels=save_panels, noOutput=noOutput)
+
+    def set_symbols(self, to_symbol, from_symbol=None, indices=None,
+                    is_optimized=None, noOutput=None):
+        """Relabel chemical symbols of the built NP: all atoms, one species, or given 1-based indices.
+        See utils.core.set_symbols for full documentation."""
+        from .utils.core import set_symbols
+        if noOutput is None: noOutput = self.noOutput
+        return set_symbols(self, to_symbol, from_symbol=from_symbol,
+                           indices=indices, is_optimized=is_optimized,
+                           noOutput=noOutput)

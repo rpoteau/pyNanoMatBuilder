@@ -905,50 +905,114 @@ def plane_to_direction(self, hkl, cartesian=False):
     uvw = np.round(uvw).astype(int)
     return uvw
 
+# def make_packed_supercell(sc, tol=0.02):
+#     """
+#     Add missing atoms on faces/edges/corners of an already-built supercell,
+#     equivalent to JMol's PACKED mode.
+    
+#     Args:
+#         sc (ase.Atoms): Already-built supercell.
+#         tol (float): Fractional coordinate tolerance. Default is 0.02.
+    
+#     Returns:
+#         ase.Atoms: Packed supercell with complete outer shells.
+#     """
+#     from itertools import product as iproduct
+#     from ase import Atoms
+#     from ase.build import make_supercell
+
+#     print("old packed")
+
+#     cell = sc.get_cell()
+#     frac = sc.get_scaled_positions()
+#     symbols = sc.get_chemical_symbols()
+
+#     extra_pos = []
+#     extra_sym = []
+
+#     for f, sym in zip(frac, symbols):
+#         shifts = []
+#         for fi in f:
+#             dim_shifts = [0]
+#             if fi < tol:
+#                 dim_shifts.append(1)
+#             elif fi > 1 - tol:
+#                 dim_shifts.append(-1)
+#             shifts.append(dim_shifts)
+
+#         for shift in iproduct(*shifts):
+#             if shift == (0, 0, 0):
+#                 continue
+#             new_frac = f + np.array(shift)
+#             if all(0 <= new_frac[d] <= 1 + 1e-6 for d in range(3)):
+#                 extra_pos.append(new_frac @ cell)
+#                 extra_sym.append(sym)
+
+#     if extra_pos:
+#         extra = Atoms(symbols=extra_sym, positions=extra_pos,
+#                       cell=cell, pbc=sc.pbc)
+#         sc = sc + extra
+
+#     return sc
+    
 def make_packed_supercell(sc, tol=0.02):
     """
     Add missing atoms on faces/edges/corners of an already-built supercell,
     equivalent to JMol's PACKED mode.
-    
+
+    Vectorized implementation: instead of looping over atoms in Python (which
+    is prohibitively slow for large supercells, tens of seconds for tens of
+    millions of atoms), it loops over the 26 neighbour shifts and processes all
+    eligible atoms at once with numpy. The set of added atoms is identical to
+    the original per-atom version.
+
     Args:
         sc (ase.Atoms): Already-built supercell.
         tol (float): Fractional coordinate tolerance. Default is 0.02.
-    
+
     Returns:
         ase.Atoms: Packed supercell with complete outer shells.
     """
     from itertools import product as iproduct
     from ase import Atoms
-    from ase.build import make_supercell
 
+    # print("new vectorized pack")
     cell = sc.get_cell()
     frac = sc.get_scaled_positions()
-    symbols = sc.get_chemical_symbols()
+    symbols = np.asarray(sc.get_chemical_symbols())
 
-    extra_pos = []
-    extra_sym = []
+    # per-dimension eligibility: an atom near 0 can be copied at +1, an atom
+    # near 1 can be copied at -1 (same rule as the original code).
+    lo = frac < tol               # (N, 3) -> shift +1 allowed on that axis
+    hi = frac > 1.0 - tol         # (N, 3) -> shift -1 allowed on that axis
 
-    for f, sym in zip(frac, symbols):
-        shifts = []
-        for fi in f:
-            dim_shifts = [0]
-            if fi < tol:
-                dim_shifts.append(1)
-            elif fi > 1 - tol:
-                dim_shifts.append(-1)
-            shifts.append(dim_shifts)
+    pos_list = []
+    sym_list = []
+    # the 26 corner/edge/face neighbour shifts (exclude the no-shift case)
+    for shift in iproduct((0, 1, -1), repeat=3):
+        if shift == (0, 0, 0):
+            continue
+        # an atom may take this shift only if each nonzero component is allowed
+        ok = np.ones(len(frac), dtype=bool)
+        for d, s in enumerate(shift):
+            if s == 1:
+                ok &= lo[:, d]
+            elif s == -1:
+                ok &= hi[:, d]
+        if not ok.any():
+            continue
+        new_frac = frac[ok] + np.array(shift)
+        # keep only those that land inside the cell (with the original 1e-6 slack)
+        inb = np.all((new_frac >= 0) & (new_frac <= 1.0 + 1e-6), axis=1)
+        new_frac = new_frac[inb]
+        if len(new_frac):
+            pos_list.append(new_frac @ cell)
+            sym_list.append(symbols[ok][inb])
 
-        for shift in iproduct(*shifts):
-            if shift == (0, 0, 0):
-                continue
-            new_frac = f + np.array(shift)
-            if all(0 <= new_frac[d] <= 1 + 1e-6 for d in range(3)):
-                extra_pos.append(new_frac @ cell)
-                extra_sym.append(sym)
-
-    if extra_pos:
+    if pos_list:
+        extra_pos = np.vstack(pos_list)
+        extra_sym = np.concatenate(sym_list).tolist()
         extra = Atoms(symbols=extra_sym, positions=extra_pos,
                       cell=cell, pbc=sc.pbc)
         sc = sc + extra
-
     return sc

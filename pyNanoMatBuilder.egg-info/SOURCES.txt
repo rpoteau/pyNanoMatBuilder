@@ -3,6 +3,7 @@ ChangeLog.md
 LICENSE
 MANIFEST.in
 README.md
+pyNMB-Article.ipynb
 pyNMB-GraphAbs.ipynb
 pyNMB-examples.ipynb
 pyNMB-tutorials.ipynb
@@ -277,7 +278,6 @@ pyNanoMatBuilder/resources/figs/pbpy-C.png
 pyNanoMatBuilder/resources/figs/pbpy.base64
 pyNanoMatBuilder/resources/figs/pbpy.png
 pyNanoMatBuilder/resources/figs/pbpy.xyz
-pyNanoMatBuilder/resources/figs/pnmbAvailableStructures.pdf
 pyNanoMatBuilder/resources/figs/pnmbAvailableStructures.png
 pyNanoMatBuilder/resources/figs/pnmbAvailableStructures.svg
 pyNanoMatBuilder/resources/figs/pppd-C.png
@@ -345,6 +345,8 @@ pyNanoMatBuilder/resources/figs/uptnr-C.png
 pyNanoMatBuilder/resources/figs/wire-C.png
 pyNanoMatBuilder/resources/figs/wire.xyz
 pyNanoMatBuilder/resources/figs/.ipynb_checkpoints/bccrdd-C-checkpoint.png
+pyNanoMatBuilder/resources/figs/CSG/SCB_oh_td-C.png
+pyNanoMatBuilder/resources/figs/CSG/SSB_oh_td-C.png
 pyNanoMatBuilder/resources/figs/CSG/c_inlay_s_diag-C.png
 pyNanoMatBuilder/resources/figs/CSG/c_inlay_s_diag.png
 pyNanoMatBuilder/resources/figs/CSG/c_inlay_s_diag.xyz
@@ -361,6 +363,8 @@ pyNanoMatBuilder/resources/figs/CSG/cube-C.png
 pyNanoMatBuilder/resources/figs/CSG/cube.png
 pyNanoMatBuilder/resources/figs/CSG/cube.xyz
 pyNanoMatBuilder/resources/figs/CSG/moveto.dat
+pyNanoMatBuilder/resources/figs/CSG/previewSCB_oh_td-C.png
+pyNanoMatBuilder/resources/figs/CSG/previewSSB_oh_td-C.png
 pyNanoMatBuilder/resources/figs/CSG/sphere-C.png
 pyNanoMatBuilder/resources/figs/CSG/sphere.png
 pyNanoMatBuilder/resources/figs/CSG/sphere.xyz

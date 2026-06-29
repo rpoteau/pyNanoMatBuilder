@@ -13,6 +13,7 @@ from . import data
 from . import utils as pyNMBu
 from . import platonicNPs as pNP
 from .utils import hl, fg, bg
+from .utils.core import centertxt, centerTitle
 from .pyNMBcore import pyNMBcore
 from .platonicNPs import regfccOh
 
@@ -228,7 +229,7 @@ class fcctbp(JohnsonNP):
         nAtoms = aseObject.get_global_number_of_atoms()
 
         aseObject = ase.Atoms(
-            self.element * nAtoms, positions=c)
+            [self.element] * nAtoms, positions=c)
         if not noOutput:
             print(f"Total number of atoms = {nAtoms}")
         if not noOutput:
@@ -331,6 +332,209 @@ class epbpyM(JohnsonNP):
         2 * heightOfPyramidF / edgeLengthF
     )
 
+    @classmethod
+    def size_from_nm(cls, Rnn, diameter_nm=None, height_nm=None,
+                     diameter_def='circumscribed', round_mode='nearest',
+                     noOutput=False):
+        """Convert target physical dimensions (in nm) into the integer
+        (sizeP, sizeE) layer counts expected by the epbpyM constructor.
+
+        This is the inverse of the geometric relations used by the class:
+
+            pentagon edge length = Rnn * sizeP
+            elongated body length (height_nm) = Rnn * magicFactorF * sizeE
+
+        where magicFactorF = 2 * sqrt((5 - sqrt5) / 10) ~ 1.0515 is the ratio
+        between the vertical interplane spacing and Rnn for this intrinsically
+        strained 5-fold geometry (it is a class attribute, reused here via cls).
+
+        The pentagon edge is converted to/from the requested diameter according
+        to diameter_def (circumscribed, edge, or inscribed circle). Because
+        sizeP and sizeE are integers, the realised dimensions generally differ
+        slightly from the request; the realised values are returned alongside
+        the counts so the caller can check the match.
+
+        This is a classmethod: call it on the class itself, with no instance,
+        since its whole purpose is to compute the sizes you then pass to the
+        constructor. Example:
+
+            s = jNP.epbpyM.size_from_nm(Rnn=2.884, diameter_nm=6.0, height_nm=3.0)
+            ino = jNP.epbpyM('Au', 2.884, sizeP=s['sizeP'], sizeE=s['sizeE'],
+                             Marks=0, noOutput=True)
+
+        Args:
+            Rnn (float): nearest-neighbour distance, in Angstrom (same unit and
+                meaning as the Rnn passed to the constructor).
+            diameter_nm (float, optional): target pentagon diameter, in nm. Its
+                exact meaning is set by diameter_def. If None, sizeP is set to
+                its minimum (1) and only the elongation is solved.
+            height_nm (float, optional): target length of the elongated {100}
+                body along the 5-fold axis, in nm. This is the Ino body length,
+                NOT the full tip-to-tip height of the bipyramid. If None,
+                sizeE = 0 (a regular pentagonal bipyramid / Marks decahedron
+                base, with no elongation).
+            diameter_def (str): how diameter_nm is interpreted.
+                'circumscribed' (default): vertex-to-opposite-vertex distance of
+                    the pentagon (diameter of the circumscribed circle).
+                'edge': length of a single pentagon edge.
+                'inscribed': flat-to-flat distance (diameter of the inscribed
+                    circle, i.e. twice the apothem).
+            round_mode (str): rounding applied when inverting to integers.
+                'nearest' (default): closest integer to the exact solution.
+                'floor': largest integer not exceeding the target (never larger
+                    than requested).
+                'ceil': smallest integer not below the target (never smaller
+                    than requested).
+            noOutput (bool): if False (default), print the request and the
+                resolved parameters (sizeP, sizeE, and the realised dimensions).
+                If True, stay silent and only return the result dict.
+
+        Returns:
+            dict: with keys
+                'sizeP' (int): pentagon size to pass to epbpyM.
+                'sizeE' (int): elongation to pass to epbpyM.
+                'realised_diameter_nm' (float): pentagon diameter actually
+                    obtained with the returned sizeP, in the same diameter_def
+                    convention, in nm.
+                'realised_height_nm' (float): elongated body length actually
+                    obtained with the returned sizeE, in nm.
+                'total_height_nm' (float): full tip-to-tip height of the
+                    decahedron along the 5-fold axis, measured atom-to-atom
+                    (two pyramidal caps plus the elongated body, minus one
+                    vertical interplane spacing), in nm.
+
+        Raises:
+            ValueError: if diameter_def or round_mode is unknown, or if a
+                requested dimension is negative.
+        """
+        if diameter_def not in ('circumscribed', 'edge', 'inscribed'):
+            raise ValueError(
+                f"Unknown diameter_def '{diameter_def}'. Expected "
+                f"'circumscribed', 'edge', or 'inscribed'.")
+        if round_mode not in ('nearest', 'floor', 'ceil'):
+            raise ValueError(
+                f"Unknown round_mode '{round_mode}'. Expected "
+                f"'nearest', 'floor', or 'ceil'.")
+
+        sin36 = np.sin(np.radians(36.0))
+        tan36 = np.tan(np.radians(36.0))
+
+        def _round(x):
+            if round_mode == 'floor':
+                return int(np.floor(x))
+            if round_mode == 'ceil':
+                return int(np.ceil(x))
+            return int(np.rint(x))
+
+        Rnn_nm = Rnn / 10.0   # Angstrom -> nm
+
+        # --- Pentagon size (sizeP) ---
+        if diameter_nm is None:
+            sizeP = 1
+        else:
+            if diameter_nm < 0:
+                raise ValueError("diameter_nm must be non-negative.")
+            # Convert the requested diameter to a target EDGE length (nm),
+            # then invert  edge = Rnn * sizeP  ->  sizeP = edge / Rnn.
+            if diameter_def == 'circumscribed':
+                # circumradius R = edge / (2 sin36); diameter = 2R = edge / sin36
+                target_edge_nm = diameter_nm * sin36
+            elif diameter_def == 'inscribed':
+                # apothem a = edge / (2 tan36); diameter = 2a = edge / tan36
+                target_edge_nm = diameter_nm * tan36
+            else:  # 'edge'
+                target_edge_nm = diameter_nm
+            sizeP = max(1, _round(target_edge_nm / Rnn_nm))
+
+        # --- Elongation (sizeE) ---
+        if height_nm is None:
+            sizeE = 0
+        else:
+            if height_nm < 0:
+                raise ValueError("height_nm must be non-negative.")
+            # body length = Rnn * magicFactorF * sizeE  ->  invert for sizeE
+            sizeE = max(0, _round(height_nm / (Rnn_nm * cls.magicFactorF)))
+
+        # --- Realised dimensions with the integer counts ---
+        realised_edge_nm = Rnn_nm * sizeP
+        if diameter_def == 'circumscribed':
+            realised_diameter_nm = realised_edge_nm / sin36
+        elif diameter_def == 'inscribed':
+            realised_diameter_nm = realised_edge_nm / tan36
+        else:  # 'edge'
+            realised_diameter_nm = realised_edge_nm
+        realised_height_nm = Rnn_nm * cls.magicFactorF * sizeE
+
+        # Total tip-to-tip height of the decahedron along the 5-fold axis,
+        # measured atom-to-atom (the value one reads in Jmol between the two
+        # apex atoms). It is the sum of the two pyramidal caps and the elongated
+        # body, minus one vertical interplane spacing dz = Rnn * magicFactorF:
+        # the ideal geometric apex lies half a spacing beyond the outermost atom
+        # at each end. This is the generic, element-aware replacement for the
+        # former hard-coded 2.84 A offset (which was an Au-only approximation).
+        n_edge_pc = sizeP + 1
+        dz_nm = Rnn_nm * cls.magicFactorF
+        caps_height_nm = 2.0 * cls.heightOfPyramidF * Rnn_nm * n_edge_pc
+        total_height_nm = caps_height_nm + realised_height_nm - dz_nm
+
+        result = {
+            'sizeP': sizeP,
+            'sizeE': sizeE,
+            'realised_diameter_nm': realised_diameter_nm,
+            'realised_height_nm': realised_height_nm,
+            'total_height_nm': total_height_nm,
+        }
+
+        # --- Optional report ---
+        if not noOutput:
+            centertxt(
+                "Size from target dimensions", bgc='#007a7a', size='14',
+                weight='bold'
+            )
+            print(f"  Rnn          = {Rnn:.4f} Å")
+            print(f"  diameter_def = '{diameter_def}'")
+            print(f"  round_mode   = '{round_mode}'")
+            if diameter_nm is None:
+                print(f"  diameter     = (not requested) -> sizeP set to minimum")
+            else:
+                print(f"  diameter     : requested {diameter_nm:.3f} nm"
+                      f"  ->  realised {realised_diameter_nm:.3f} nm"
+                      f"  (sizeP = {sizeP})")
+            if height_nm is None:
+                print(f"  body height  = (not requested) -> sizeE = 0")
+            else:
+                print(f"  body height  : requested {height_nm:.3f} nm"
+                      f"  ->  realised {realised_height_nm:.3f} nm"
+                      f"  (sizeE = {sizeE})")
+            print(f"  total height : {total_height_nm:.3f} nm"
+                  f"  (tip-to-tip, atom-to-atom along the 5-fold axis)")
+
+        return result
+
+        # --- Optional report ---
+        if not noOutput:
+            centertxt(
+                "Size from target dimensions", bgc='#007a7a', size='14',
+                weight='bold'
+            )
+            print(f"  Rnn          = {Rnn:.4f} Å")
+            print(f"  diameter_def = '{diameter_def}'")
+            print(f"  round_mode   = '{round_mode}'")
+            if diameter_nm is None:
+                print(f"  diameter     = (not requested) -> sizeP set to minimum")
+            else:
+                print(f"  diameter     : requested {diameter_nm:.3f} nm"
+                      f"  ->  realised {realised_diameter_nm:.3f} nm"
+                      f"  (sizeP = {sizeP})")
+            if height_nm is None:
+                print(f"  height       = (not requested) -> sizeE = 0")
+            else:
+                print(f"  height       : requested {height_nm:.3f} nm"
+                      f"  ->  realised {realised_height_nm:.3f} nm"
+                      f"  (sizeE = {sizeE})")
+
+        return result
+    
     def __init__(self,
                  element: str = 'Au',
                 Rnn: float = 2.7,
@@ -515,13 +719,17 @@ class epbpyM(JohnsonNP):
         return el**3 * (5 + np.sqrt(5)) / 12
 
     def heightOfPyramid(self):
-        """Compute the height of the pyramid in Å."""
-        print("heightOfPyramidF = ", self.heightOfPyramidF)
-        print("natomsPerEdgeOfPC = ", self.nAtomsPerEdgeOfPC)
-        return (self.heightOfPyramidF * self.Rnn
-                * (self.nAtomsPerEdgeOfPC)) * 2 - 2.84 #
-                # 2.84 Angs is the dAu-Au along the height
+        """Compute the tip-to-tip height of the two pyramidal caps in Å,
+        measured atom-to-atom.
 
+        The ideal geometric apex lies half a vertical interplane spacing
+        beyond the outermost atom at each end, so one full spacing
+        dz = Rnn * magicFactorF is subtracted.
+        """
+        dz = self.Rnn * self.magicFactorF   # vertical interplane spacing
+        return (self.heightOfPyramidF * self.Rnn
+                * self.nAtomsPerEdgeOfPC) * 2 - dz
+        
     def MakeVertices(self):
         """Generate the coordinates of the vertices,
         edges, and faces of a pentagonal bipyramid.
@@ -766,18 +974,41 @@ class epbpyM(JohnsonNP):
         # the mirror distance divided by Rnn, corrected by magicFactorF
         # (the ratio between the inter-plane spacing and Rnn for this
         # crystal geometry).
+        # nAtomsHalfPy = int(self.nAtoms / 2)
+        # coordCoreAt = []
+        # for i in range(nAtomsHalfPy):
+        #     Rvv = pyNMBu.RAB(c, i, i + nAtomsHalfPy)  # dist mirror atoms
+        #     nAtomsInCore = (
+        #         int((Rvv + 1e-6) / self.Rnn * self.magicFactorF) - 1)
+        #     nIntervals = nAtomsInCore + 1
+        #     for n in range(nAtomsInCore):
+        #         tmp = (c[i]
+        #                + pyNMBu.vector(c, i, i + nAtomsHalfPy)
+        #                * (n + 1) / nIntervals)
+        #         coordCoreAt.append(tmp)
+        # self.nAtoms += len(coordCoreAt)
+        # c.extend(coordCoreAt)
+
+        # --- Core atoms (atom-precise: stack on lattice z-planes) ---
+        # Each surface atom i and its mirror image (i + nAtomsHalfPy) define a
+        # strictly VERTICAL column (same x, y top and bottom). Instead of
+        # distributing atoms uniformly along the chord — which rounds the count
+        # independently per column and desynchronises neighbouring columns,
+        # creating the short (~2.36 Å) bonds — we drop atoms straight down at the
+        # exact lattice spacing dz = Rnn * magicFactorF. Every core atom then
+        # lands on a real {111}-stacking plane of the grain, so all first-neighbour
+        # distances stay at Rnn.
         nAtomsHalfPy = int(self.nAtoms / 2)
+        dz = self.Rnn * self.magicFactorF
         coordCoreAt = []
         for i in range(nAtomsHalfPy):
-            Rvv = pyNMBu.RAB(c, i, i + nAtomsHalfPy)  # dist mirror atoms
-            nAtomsInCore = (
-                int((Rvv + 1e-6) / self.Rnn * self.magicFactorF) - 1)
-            nIntervals = nAtomsInCore + 1
+            top = c[i]
+            bot = c[i + nAtomsHalfPy]
+            height = top[2] - bot[2]                      # vertical extent (axis = z)
+            nAtomsInCore = int((height + 1e-6) / dz) - 1
             for n in range(nAtomsInCore):
-                tmp = (c[i]
-                       + pyNMBu.vector(c, i, i + nAtomsHalfPy)
-                       * (n + 1) / nIntervals)
-                coordCoreAt.append(tmp)
+                z = top[2] - (n + 1) * dz
+                coordCoreAt.append(np.array([top[0], top[1], z]))
         self.nAtoms += len(coordCoreAt)
         c.extend(coordCoreAt)
 
@@ -790,7 +1021,7 @@ class epbpyM(JohnsonNP):
             self.nAtoms = len(c)
 
         # --- Store results ---
-        aseObject = ase.Atoms(self.element * self.nAtoms, positions=c)
+        aseObject = ase.Atoms([self.element] * self.nAtoms, positions=c)
 
         if not noOutput:
             print(f"Total number of atoms = {self.nAtoms}")

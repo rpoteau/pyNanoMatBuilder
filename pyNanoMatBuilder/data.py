@@ -165,23 +165,24 @@ class WulffShapes:
 class pyNMBcif:
     data = ({
         'cif file': {
-            'NaCl': 'cod1000041-NaCl.cif',
-            'TiO2 rutile': 'cod9015662-TiO2-rutile.cif',
-            'TiO2 anatase': 'cod9015929-TiO2-anatase.cif',
-            'Fe bcc': 'cod5000217-Fe_bcc.cif',
-            'Mn alpha': 'cod9011068-Mn_alpha.cif',
-            'Mn beta': 'cod1539039-Mn_beta.cif',
+            'Ag fcc': 'cod9008459-Ag_fcc.cif',
+            'Au fcc': 'cod9008463-Au_fcc.cif',
             'Co hcp': 'cod9008492-Co_hcp.cif',
             'Co fcc': 'cod9008466-Co_fcc.cif',
             'Co epsilon': 'cod9012884-Co_epsilon.cif',
-            'Ru hcp': 'cod9008513-Ru_hcp.cif',
-            'Pt fcc': 'cod9012957-Pt_fcc.cif',
-            'Au fcc': 'cod9008463-Au_fcc.cif',
-            'Fe beta': 'cod1539039-Fe_beta.cif',
-            'Ag fcc': 'cod9008459-Ag_fcc.cif',
             'CsPbBr3 ortho': 'CsPbBr3_ortho_14608.cif',
             'CsPbBr3 cubic': 'CsPbBr3_cubic_231023.cif',
+            'Fe bcc': 'cod5000217-Fe_bcc.cif',
+            'Fe beta': 'cod1539039-Fe_beta.cif',
             'FeCo bcc': 'cod9004229-FeCo_bcc.cif',
+            'Mn alpha': 'cod9011068-Mn_alpha.cif',
+            'Mn beta': 'cod1539039-Mn_beta.cif',
+            'Ni fcc': 'cod9013024_Ni_fcc.cif',
+            'Ru hcp': 'cod9008513-Ru_hcp.cif',
+            'NaCl': 'cod1000041-NaCl.cif',
+            'Pt fcc': 'cod9012957-Pt_fcc.cif',
+            'TiO2 rutile': 'cod9015662-TiO2-rutile.cif',
+            'TiO2 anatase': 'cod9015929-TiO2-anatase.cif',
             }
             })
     CIFdf = pd.DataFrame(data)

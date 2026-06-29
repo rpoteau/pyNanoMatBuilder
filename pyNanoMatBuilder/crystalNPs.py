@@ -52,7 +52,7 @@ class Crystal(pyNMBcore):
 
     def __init__(
         self,
-        crystal: str = "Au",
+        crystal: str = "Au fcc",
         scaleDmin2: float = None,
         setSymbols2: np.ndarray = None,
         userDefCif: str = None,
@@ -64,6 +64,7 @@ class Crystal(pyNMBcore):
         directionCylinder: float = None,
         refPlaneWire: float = None,
         nRotWire: int = 6,
+        axis_on_atom: bool = False,
         # hollow_sphere_diameter: float = None,
         surfacesWulff: np.ndarray = None,
         eSurfacesWulff: np.ndarray = None,
@@ -79,39 +80,102 @@ class Crystal(pyNMBcore):
         Initialize a Crystal nanoparticle generator with specified parameters.
 
         Args:
-            crystal (str): Chemical element or compound name (default: "Au").
-                See pyNMBu.ciflist() for available options.
-            scaleDmin2 (float, optional): Scale factor for unit cell minimum dimension.
-            setSymbols2 (np.ndarray, optional): Array of chemical symbols to replace default.
-            userDefCif (str, optional): Path to user-defined CIF file.
-            shape (str): Nanoparticle shape. Options: 'sphere', 'ellipsoid', 'pppd' (parallelepiped),
-                'wire', 'cylinder', or 'Wulff: <shape>' (default: "sphere").
-            size (list, optional): Size specification (format depends on shape):
+            crystal (str): Chemical element or compound name (default: "Au fcc").
+                Resolved against the internal CIF database (case-insensitive),
+                e.g. "Au", "Fe bcc", "Co hcp". See pyNMBu.ciflist() for the full
+                list of available compounds. Ignored when userDefCif is given.
+            scaleDmin2 (float, optional): Isotropic scale factor applied to the
+                unit cell so that its smallest interatomic distance matches a
+                target. Use to model alloys or strained lattices. None (default)
+                keeps the database lattice parameters unchanged.
+            setSymbols2 (np.ndarray, optional): Array of chemical symbols used to
+                replace the default species of the unit cell, atom by atom (same
+                length and order as the basis). Use for substitutional alloys or
+                isotopic labelling. None (default) keeps the database species.
+            userDefCif (str, optional): Path to a user-supplied CIF file used
+                instead of the internal database. The crystal name is read from
+                the CIF's chemical-name tags when present. None (default) uses
+                the database entry named by `crystal`.
+            shape (str): Nanoparticle shape. One of 'sphere', 'ellipsoid',
+                'pppd' (parallelepiped), 'supercell' (untruncated block),
+                'wire', 'cylinder', or 'Wulff: <shape>' (e.g. 'Wulff: cube').
+                Default "sphere".
+            size (list, optional): Size specification in nm; its meaning depends
+                on `shape`:
                 - Sphere: [diameter]
-                - Ellipsoid/Parallelepiped: [size_x, size_y, size_z]
-                - Wire/Cylinder: [cross-section diameter, length]
-            directionsPPD (np.ndarray, optional): Three direction vectors for parallelepiped.
-            buildPPD (str): Parallelepiped coordinate system: 'xyz' or 'abc' (default: "xyz").
-            directionWire (list, optional): Wire growth direction (default: [0, 0, 1]).
-            directionCylinder (list, optional): Cylinder growth direction (default: [0, 0, 1]).
-            refPlaneWire (list, optional): Miller indices of wire reference plane.
-            nRotWire (int): Number of rotations for wire cross-section (default: 6).
+                - Ellipsoid / Parallelepiped / supercell: [size_x, size_y, size_z]
+                  (full extents along each axis)
+                - Wire / Cylinder: [cross-section diameter, length]
+                Default [2, 2, 2].
+            directionsPPD (np.ndarray, optional): Three direction vectors
+                defining the parallelepiped edges. Interpreted as Cartesian
+                [x,y,z] axes when buildPPD='xyz', or as crystallographic [u,v,w]
+                directions when buildPPD='abc'. Default [[1,0,0],[0,1,0],[0,0,1]].
+            buildPPD (str): Coordinate system for directionsPPD: 'xyz' (Cartesian,
+                default) or 'abc' (crystallographic). Note: 'abc' is not reliable
+                for non-orthogonal lattices.
+            directionWire (list, optional): Wire growth direction as Miller
+                indices [h,k,l]; the wire axis and the rotation axis of the
+                cross-section planes. Default [0, 0, 1].
+            directionCylinder (list, optional): Cylinder growth direction as
+                Miller indices [h,k,l]. Default [0, 0, 1].
+            refPlaneWire (list, optional): Miller indices [h,k,l] of the wire's
+                reference lateral face, rotated nRotWire times around
+                directionWire to build the cross-section. Should be parallel to
+                directionWire (a warning is issued otherwise). Default [1, 0, 0].
+            nRotWire (int): Number of lateral faces of the wire cross-section,
+                i.e. the rotation order around directionWire. 6 gives a hexagonal
+                section, 4 a square one, etc. Default 6.
+            axis_on_atom (bool): placement of the wire axis relative to the hcp
+                lattice. hcp has no atomic site on its 6-fold / 3-fold axis: the
+                axis passes through the centre of an atom hexagon, a/sqrt(3) from
+                the nearest column. When False (default) the rotated truncation
+                planes are centred on the supercell COM, so the wire axis is
+                interstitial. When True the supercell is shifted in the plane
+                perpendicular to directionWire so a real atomic column lands on
+                the axis, turning the 3-fold axis from interstitial to on-atom.
+                Only meaningful for wires along a hcp symmetry axis (default: False).
             # hollow_sphere_diameter (list, optional): Hollow sphere diameter (Kirkendall effect).
-            surfacesWulff (np.ndarray, optional): Miller indices for Wulff surfaces.
-            eSurfacesWulff (np.ndarray, optional): Surface energies for Wulff construction.
-            sizesWulff (np.ndarray, optional): Size parameters for Wulff construction.
-            symWulff (bool): Apply symmetry to Wulff construction (default: True).
-            jmolCrystalShape (bool): Generate JMol visualization script (default: True).
-            aseSymPrec (float): Symmetry precision threshold (default: 1e-4).
-            pbc (bool): Enable periodic boundary conditions (default: False).
-            threshold (float): Plane truncation distance threshold (default: 1e-3).
-            dbFolder (str, optional): Database folder path for CIF files.
-            postAnalyzis (bool): Perform post-construction analysis (default: True).
-            aseView (bool): Enable ASE visualization (default: False).
-            thresholdCoreSurface (float): Core/surface differentiation threshold (default: 1.0).
-            skipSymmetryAnalyzis (bool): Skip symmetry analysis (default: False).
-            noOutput (bool): Suppress printed output (default: False).
-            calcPropOnly (bool): Calculate properties only without structure generation (default: False).
+            surfacesWulff (np.ndarray, optional): List of Miller indices [h,k,l]
+                of the crystallographic surfaces bounding a Wulff construction.
+                Required for shape='Wulff: ...' unless a predefined Wulff shape
+                supplies them. Default None.
+            eSurfacesWulff (np.ndarray, optional): Relative surface energies, one
+                per entry in surfacesWulff. When given, truncation distances are
+                energy-weighted (Wulff theorem) and sizesWulff[0] sets the size
+                of the most stable facet. Mutually informative with sizesWulff;
+                if None, distances come directly from sizesWulff. Default None.
+            sizesWulff (np.ndarray, optional): Wulff truncation sizes in nm. In
+                distance mode (eSurfacesWulff is None) one value per surface; in
+                energy mode a single value, the target size along the most stable
+                direction. Default None.
+            symWulff (bool): If True (default), expand each Wulff surface into its
+                full set of symmetry-equivalent planes before truncation; if
+                False, use only the planes as given.
+            jmolCrystalShape (bool): If True (default), generate the JMol script
+                rendering the crystal shape (Wulff/hull facets).
+            aseSymPrec (float): Symmetry-detection precision (Å) passed to ASE's
+                spacegroup analysis. Default 1e-4.
+            pbc (bool): Enable periodic boundary conditions. For wires, True
+                makes the wire axially periodic (no end caps). Default False.
+            threshold (float): Atom-to-plane signed-distance tolerance (Å) for
+                truncation: atoms within this band of a cutting plane are kept.
+                Default 1e-3.
+            dbFolder (str, optional): Folder holding the CIF database. None
+                (default) uses the package's bundled database.
+            postAnalyzis (bool): If True (default), run the post-construction
+                property analysis (symmetry, facets, core/surface) after the NP
+                is built.
+            aseView (bool): If True, open ASE's viewer on the unit cell, the
+                supercell and the final NP. Default False.
+            thresholdCoreSurface (float): Distance tolerance (Å) used to classify
+                an atom as surface vs core in the convex-hull analysis.
+                Default 1.0.
+            skipSymmetryAnalyzis (bool): If True, skip the (potentially slow)
+                symmetry analysis. Default False.
+            noOutput (bool): If True, suppress all printed output. Default False.
+            calcPropOnly (bool): If True, compute and print properties only,
+                without generating the atomic structure. Default False.
         """
         super().__init__(**kwargs)
         # Initialize default values to avoid mutable default arguments
@@ -140,6 +204,7 @@ class Crystal(pyNMBcore):
         self.directionCylinder = directionCylinder
         self.refPlaneWire = refPlaneWire
         self.nRotWire = nRotWire
+        self.axis_on_atom = axis_on_atom
         # self.hollow_sphere_diameter = hollow_sphere_diameter
         self.surfacesWulff = surfacesWulff
         self.eSurfacesWulff = eSurfacesWulff
@@ -456,24 +521,18 @@ class Crystal(pyNMBcore):
                 ])
             else:
                 max_distances = np.array(self.sizesWulff, dtype=float) * 10
-        
-            # For each cartesian axis, find the maximum extent
-            # by projecting each plane normal onto that axis
-            max_dim_a = 0.0
-            max_dim_b = 0.0
-            max_dim_c = 0.0
+
+            # The supercell must contain the circumscribed sphere of the Wulff shape.
+            # For a plane at distance d with normal n, the furthest extent along any
+            # Cartesian axis is d / |n_i|. Take the maximum over all planes and axes.
+            max_extent = 0.0
             for i, p in enumerate(self.surfacesWulff):
                 n = pyNMBu.normV(np.array(p, dtype=float))
-                # Projection of plane normal onto each cartesian axis
-                max_dim_a = max(max_dim_a, abs(n[0]) * max_distances[i] * 2)
-                max_dim_b = max(max_dim_b, abs(n[1]) * max_distances[i] * 2)
-                max_dim_c = max(max_dim_c, abs(n[2]) * max_distances[i] * 2)
-        
-            # Ensure minimum size
-            max_dim_a = max(max_dim_a, np.max(max_distances) * 1.5)
-            max_dim_b = max(max_dim_b, np.max(max_distances) * 1.5)
-            max_dim_c = max(max_dim_c, np.max(max_distances) * 1.5)
-        
+                for ni in n:
+                    if abs(ni) > 1e-6:  # Avoid division by zero for zero components
+                        max_extent = max(max_extent, max_distances[i] / abs(ni))
+            max_dim_a = max_dim_b = max_dim_c = max_extent * 2
+
             Ma = int(np.round(extend_size_by_factor * max_dim_a / self.cif.cell.lengths()[0]))
             Mb = int(np.round(extend_size_by_factor * max_dim_b / self.cif.cell.lengths()[1]))
             Mc = int(np.round(extend_size_by_factor * max_dim_c / self.cif.cell.lengths()[2]))
@@ -509,8 +568,15 @@ class Crystal(pyNMBcore):
             print(f"       = {Ma * ma1nm}x{Mb * mb1nm}x{Mc * mc1nm} supercell")
 
         M = [[Ma, 0, 0], [0, Mb, 0], [0, 0, Mc]]
+        import time
+        t0 = time.time()
         sc = make_supercell(sc1nm, M)          # standard supercell
+        t1 = time.time()
         sc = make_packed_supercell(sc, tol=0.02)  # apply packed on final sc
+        t2 = time.time()
+        if not noOutput: 
+            print(f"  [timing] make_supercell: {t1-t0:.1f}s, "
+                  f"make_packed_supercell: {t2-t1:.1f}s")
         if not noOutput: print(f"sc final cell: {sc.get_cell().lengths()}")
         V = cellpar_to_cell(sc.cell.cellpar())
 
@@ -701,7 +767,36 @@ class Crystal(pyNMBcore):
             )
             chrono = pyNMBu.timer()
             chrono.chrono_start()
-
+        # Optionally shift the supercell so a real atomic column sits on the
+        # wire axis (directionWire). hcp has no lattice site on its 6-fold /
+        # 3-fold axis: the axis passes through the centre of an atom hexagon,
+        # a/sqrt(3) from the nearest column. By default the rotated truncation
+        # planes are centred on the supercell COM (interstitial axis). Shifting
+        # a column onto the axis turns the 3-fold axis from interstitial to
+        # on-atom, the wire analogue of hbpy's axis_on_atom.
+        if getattr(self, 'axis_on_atom', False):
+            axis_w = pyNMBu.normV(np.array(self.directionWire, dtype=float))
+            pos = self.sc.get_positions()
+            com = self.sc.get_center_of_mass()
+            # equatorial slab (one c-spacing thick) around the COM, projected
+            # along the wire axis, to find the nearest column to the axis
+            proj = (pos - com) @ axis_w
+            c_len = self.cif.cell.lengths()[2]
+            slab = pos[np.abs(proj) < c_len / 2.0]
+            if len(slab) == 0:
+                slab = pos
+            # transverse offset of each slab atom from the axis
+            rel = slab - com
+            trans = rel - np.outer(rel @ axis_w, axis_w)
+            r_trans = np.linalg.norm(trans, axis=1)
+            shift_vec = trans[np.argmin(r_trans)]   # vector COM -> nearest column
+            self.sc.positions -= shift_vec
+            if not noOutput:
+                print(f"axis_on_atom: supercell shifted by "
+                      f"[{-shift_vec[0]:+.4f} {-shift_vec[1]:+.4f} "
+                      f"{-shift_vec[2]:+.4f}] Å so a column sits on the wire "
+                      f"axis (was {np.linalg.norm(shift_vec):.4f} Å away).")
+                
         # Construct reference plane if not provided
         if self.refPlaneWire is None:
             self.refPlaneWire = pyNMBu.returnPlaneParallel2Line(
@@ -1270,17 +1365,88 @@ class Crystal(pyNMBcore):
 
     def prop(self):
         """
-        Display unit cell and nanoparticle properties.
+        Display the crystal's unit-cell, shape and image properties.
 
-        Args:
-            noOutput (bool): If False, details are printed.
+        Prints, in order:
+          - a header and the string representation of the Crystal instance
+            (compound and shape);
+          - a thumbnail image of the requested shape;
+          - the full unit-cell description (lattice system, space group,
+            lattice parameters, basis) via print_ase_unitcell;
+          - a shape-specific block summarising the construction parameters
+            actually in effect (target size, growth direction, cross-section,
+            Wulff facets, and — for wires/cylinders along a hcp symmetry axis —
+            whether the rotation axis is on-atom or interstitial).
+
+        This reports the BULK / unit-cell level and the requested SHAPE
+        parameters, available as soon as the unit cell is loaded and the
+        arguments are parsed, independently of the built nanoparticle. It is
+        called automatically at the end of __init__ unless noOutput is set.
+        Per-nanoparticle properties measured on the final structure (atom count,
+        realised dimensions, core/surface, symmetry, facets) are produced
+        separately by propPostMake after the structure is built.
+
+        Returns:
+            None. Output is printed to the console.
         """
         pyNMBu.centertxt("Properties", bgc='#007a7a', size='14', weight='bold')
         print(self)
-        pyNMBu.plotImageInPropFunction(self.imageFile, figsize=self.imageFigsize, rot=self.imageRot)
+        pyNMBu.plotImageInPropFunction(self.imageFile, figsize=self.imageFigsize,
+                                       rot=self.imageRot)
         pyNMBu.centertxt(
             "Unit cell properties", bgc="#007a7a", size="14", weight="bold"
         )
         pyNMBu.print_ase_unitcell(self)
+
+        # --- Shape parameters actually in effect -----------------------------
+        pyNMBu.centertxt("Shape parameters", bgc="#007a7a", size="14",
+                         weight="bold")
+        print(f"shape = {self.shape}")
+
+        if self.shape == "sphere":
+            print(f"target diameter = {self.size[0]:.3f} nm")
+
+        elif self.shape == "ellipsoid":
+            print(f"target diameters (x, y, z) = "
+                  f"{self.size[0]:.3f} x {self.size[1]:.3f} x "
+                  f"{self.size[2]:.3f} nm")
+
+        elif self.shape in ("pppd", "supercell"):
+            print(f"target side lengths (x, y, z) = "
+                  f"{self.size[0]:.3f} x {self.size[1]:.3f} x "
+                  f"{self.size[2]:.3f} nm")
+            if self.shape == "pppd":
+                print(f"edge directions ({self.buildPPD}) = "
+                      f"{list(self.directionsPPD)}")
+
+        elif self.shape == "wire":
+            print(f"growth direction = {self.directionWire}")
+            print(f"target cross-section diameter = {self.size[0]:.3f} nm")
+            print(f"target length = {self.size[1]:.3f} nm")
+            print(f"cross-section = {self.nRotWire}-fold "
+                  f"(reference face {self.refPlaneWire})")
+            print(f"periodic along axis (pbc) = {self.pbc}")
+            axis_kind = ("on-atom (a real atomic column on the axis)"
+                         if getattr(self, 'axis_on_atom', False)
+                         else "interstitial (axis through an atom hexagon)")
+            print(f"axis_on_atom = {getattr(self, 'axis_on_atom', False)} "
+                  f"-> {axis_kind}")
+
+        elif self.shape == "cylinder":
+            print(f"growth direction = {self.directionCylinder}")
+            print(f"target diameter = {self.size[0]:.3f} nm")
+            print(f"target length = {self.size[1]:.3f} nm")
+
+        elif "Wulff" in self.shape:
+            if getattr(self, 'WulffShape', None) is not None:
+                print(f"predefined Wulff shape = {self.WulffShape}")
+            if self.surfacesWulff is not None:
+                print(f"bounding surfaces = {list(self.surfacesWulff)}")
+            if self.eSurfacesWulff is not None:
+                print(f"relative surface energies = {list(self.eSurfacesWulff)} "
+                      f"(energy-weighted truncation)")
+            if self.sizesWulff is not None:
+                print(f"sizes = {list(self.sizesWulff)} nm")
+            print(f"symmetry expansion of facets = {self.symWulff}")
 
   

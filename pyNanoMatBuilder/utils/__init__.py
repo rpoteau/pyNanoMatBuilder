@@ -12,5 +12,6 @@ from .io import *
 from .local_descriptors import *
 from .parallel import *
 from .polydispersity import *
+from .strain import *
 
 __all__ = ['fg', 'bg', 'hl', 'color']
