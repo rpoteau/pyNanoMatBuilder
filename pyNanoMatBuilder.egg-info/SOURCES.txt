@@ -413,6 +413,8 @@ pyNanoMatBuilder/resources/svg/pynanomatbuilder_pypi_ready_badge.svg
 pyNanoMatBuilder/resources/svg/pynmb_logo.svg
 pyNanoMatBuilder/resources/svg/pynmb_logo_dark.png
 pyNanoMatBuilder/resources/svg/pynmb_logo_light.png
+pyNanoMatBuilder/resources/svg/workflow_figure.png
+pyNanoMatBuilder/resources/svg/workflow_figure.svg
 pyNanoMatBuilder/utils/__init__.py
 pyNanoMatBuilder/utils/animations.py
 pyNanoMatBuilder/utils/core.py

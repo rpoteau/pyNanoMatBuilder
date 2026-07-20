@@ -25,6 +25,24 @@ DIST_DIR="dist"
 
 project_name="pyNanoMatBuilder"
 
+TARGET_INDEX="testpypi"   # "testpypi" or "pypi"
+
+if [ "$TARGET_INDEX" = "testpypi" ]; then
+    JSON_URL="https://test.pypi.org/pypi/$PACKAGE_NAME/json"
+    INDEX_LABEL="TestPyPI (test.pypi.org)"
+    INDEX_COLOR="$YELLOW"
+else
+    JSON_URL="https://pypi.org/pypi/$PACKAGE_NAME/json"
+    INDEX_LABEL="PyPI (pypi.org) -- PRODUCTION"
+    INDEX_COLOR="$RED"
+fi
+
+echo -e "$SEPARATOR"
+print_padded_line_wbg "Target repository: $INDEX_LABEL" "$SEPARATOR_WIDTH"
+echo -e "$SEPARATOR"
+echo -e "${INDEX_COLOR}Package will be uploaded to $INDEX_LABEL${RESET}"
+echo
+
 USER_COMMENT="$1"
 
 # nice utility
@@ -82,7 +100,7 @@ PACKAGE_NAME=$(grep "^name" $PYPROJECT | head -n1 | cut -d '"' -f2)
 echo -e "$SEPARATOR"
 print_padded_line_wbg "Querying PyPI for $PACKAGE_NAME..." "$SEPARATOR_WIDTH"
 echo -e "$SEPARATOR"
-LATEST_PYPI=$(curl -s https://pypi.org/pypi/$PACKAGE_NAME/json | jq -r '.info.version')
+LATEST_PYPI=$(curl -s "$JSON_URL" | jq -r '.info.version')
 
 if [ "$LATEST_PYPI" != "null" ]; then
     echo -e "${CYAN}Latest published version on PyPI:${RESET} ${YELLOW}$LATEST_PYPI${RESET}"
@@ -273,9 +291,9 @@ if [[ "$REPLY" =~ ^[Yy]$ ]]; then
 
     # Upload to PyPI
     echo -e "$SEPARATOR"
-    print_padded_line_wbg "Uploading to PyPI: twine upload dist/*" "$SEPARATOR_WIDTH"
+    print_padded_line_wbg "Uploading to $INDEX_LABEL: twine upload --repository $TARGET_INDEX dist/*" "$SEPARATOR_WIDTH"
     echo -e "$SEPARATOR"
-    twine upload dist/*
+    twine upload --repository "$TARGET_INDEX" dist/*
     echo
 
     # Reinstall in editable mode

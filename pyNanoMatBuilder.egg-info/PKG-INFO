@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: pyNanoMatBuilder
-Version: 0.19.0
+Version: 0.19.1
 Summary: Build and visualize complex crystalline nanoparticle architectures, including models on substrates, for materials science, X-ray data analysis, and electron microscopy research
 Author-email: "Sara Mokhtari, LPCNO" <smokhtari@insa-toulouse.fr>, "Romuald Poteau, LPCNO" <romuald.poteau@utoulouse.fr>
 License: GPL-3.0-or-later
@@ -45,7 +45,7 @@ Requires-Dist: tools4pyphyschem; extra == "visu"
 Dynamic: license-file
 
 <div style="text-align:center">
-<img src="https://raw.githubusercontent.com/rpoteau/pynanomatbuilder/main/pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_banner.png" alt="pyNMB_banner" width="800" />
+<img src="https://raw.githubusercontent.com/rpoteau/pynanomatbuilder/main/pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_banner.png" alt="pyNMB_banner" width="800" /> 
 </div>
 <br>
 
@@ -152,6 +152,14 @@ pyNMBu.write("coords/SphericalAuNP_sc.cif", AuNP.sc)             # The supercell
 ```
 
 ---
+
+**Typical workflow**
+
+<div style="text-align:center">
+<img src="https://raw.githubusercontent.com/rpoteau/pynanomatbuilder/main/pyNanoMatBuilder/resources/svg/workflow_figure.png" alt="workflow" width="1200" />
+</div>
+
+---
 See more explanations in the **How to? Workflow Guides** section of the Main Tutorial notebook 
 
 **Main Tutorial**: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/rpoteau/pynanomatbuilder/blob/main/pyNMB-examples.ipynb)
@@ -159,6 +167,11 @@ See more explanations in the **How to? Workflow Guides** section of the Main Tut
 ---
 
 **Funding**
+
+<div style="text-align:center">
+<img src="https://raw.githubusercontent.com/rpoteau/pynanomatbuilder/main/pyNanoMatBuilder/resources/svg/Materiaux-emergents.png" alt="France2030" width="250" />
+</div>
+<br>
 
 `pyNanoMatBuilder` is developed within the **BiMAn** project of **PEPR DIADEM** and is supported by the French National Research Agency, as a part of the **France 2030** program, under **grant 23-PEXD-0005**.
 
@@ -168,11 +181,6 @@ to the fabrication of optimized materials*
 - **DIADEM** = *Dispositifs Intégrés pour l'Accélération du DEploiement de Matériaux
 Emergents / Integrated Devices for Accelerating the Deployment of Emerging
 Materials*
-
-<br>
-<div style="text-align:center">
-<img src="https://raw.githubusercontent.com/rpoteau/pynanomatbuilder/main/pyNanoMatBuilder/resources/svg/Materiaux-emergents.png" alt="France2030" width="250" />
-</div>
 
 ---
 

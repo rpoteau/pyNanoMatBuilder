@@ -5,6 +5,25 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
+## [0.19.2] "push_pyPi"
+
+### Changed
+- The PyPI version query now uses `$JSON_URL` instead of the hard-coded `https://pypi.org/pypi/.../json`.
+- `twine upload dist/*` replaced by `twine upload --repository "$TARGET_INDEX" dist/*`.
+- Upload section header now includes the target repository label.
+
+### Added
+- `TARGET_INDEX` variable at the top of the script, controlling whether the package is published to `testpypi` or `pypi`. Defaults to `testpypi`.
+- Optional command-line override as the second argument: `./push_pyPi.sh "my comment" pypi`.
+- Derived variables `JSON_URL`, `INDEX_LABEL` and `INDEX_COLOR`, so that the API endpoint, the displayed name and the warning color all follow from a single switch.
+- Banner printed before the version query, stating explicitly which repository is targeted (TestPyPI in yellow, PyPI in red and flagged as PRODUCTION).
+- Interactive confirmation prompt before `twine upload` when the target is the production index, preventing accidental releases.
+
+### Notes
+- Both `[pypi]` and `[testpypi]` sections must be present in `~/.pypirc`; the tokens are distinct for the two indexes.
+- TestPyPI does not mirror external dependencies. Testing an installation from there requires:
+  `pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ pyNanoMatBuilder`
+
 ## [0.19.1] "workflow"
 
 ### Fixed

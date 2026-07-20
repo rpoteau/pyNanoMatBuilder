@@ -5,5 +5,5 @@ article_pyNMB/fivefold_nanostars/star_Pt2nm_arm.xyz
 article_pyNMB/fivefold_nanostars/star_Pt2nm_armZZ.xyz
 article_pyNMB/fivefold_nanostars/star_48h.xyz
 .git/objects/pack/pack-4b30fe7d7b0a16206ad334608b721fe402f16ac5.pack
-dist/pynanomatbuilder-0.19.0.tar.gz
-dist/pynanomatbuilder-0.19.0-py3-none-any.whl
+dist/pynanomatbuilder-0.19.1.tar.gz
+dist/pynanomatbuilder-0.19.1-py3-none-any.whl
