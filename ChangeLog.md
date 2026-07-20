@@ -5,6 +5,12 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
+## [0.19.1] "workflow"
+
+### Fixed
+
+forgot to put the worflow graph in `pyNanoMatBuilder/resources/svg/`
+
 ## [0.19.0] "zigzags, twists, and meshes"
 
 ### Added

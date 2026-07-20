@@ -297,6 +297,9 @@ pyNanoMatBuilder/resources/figs/script-facettes-345PtLight.spt
 pyNanoMatBuilder/resources/figs/sphere-C.png
 pyNanoMatBuilder/resources/figs/sphere.base64
 pyNanoMatBuilder/resources/figs/sphere.png
+pyNanoMatBuilder/resources/figs/star-C.png
+pyNanoMatBuilder/resources/figs/star_shaped-C.png
+pyNanoMatBuilder/resources/figs/star_shaped_b-C.png
 pyNanoMatBuilder/resources/figs/tbp-C.png
 pyNanoMatBuilder/resources/figs/tbp.base64
 pyNanoMatBuilder/resources/figs/tbp.png
@@ -384,6 +387,7 @@ pyNanoMatBuilder/resources/figs/slices/cube_X-C.png
 pyNanoMatBuilder/resources/figs/slices/cube_X.xyz
 pyNanoMatBuilder/resources/svg/Logo-Universite-Toulouse-n-2023.png
 pyNanoMatBuilder/resources/svg/Logo-institutionnel-couleur-Uonly.svg
+pyNanoMatBuilder/resources/svg/Materiaux-emergents.png
 pyNanoMatBuilder/resources/svg/Python_logo_and_wordmark.svg.png
 pyNanoMatBuilder/resources/svg/__init__.py
 pyNanoMatBuilder/resources/svg/bccrdd.spt
@@ -400,8 +404,15 @@ pyNanoMatBuilder/resources/svg/logoEnd.svg
 pyNanoMatBuilder/resources/svg/logo_lpcno_300_dpi_notexttransparent.png
 pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_banner.png
 pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_banner.svg
+pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_banner_draft.svg
+pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_banner_old.png
 pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_logo.png
 pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_logo.svg
+pyNanoMatBuilder/resources/svg/pynanomatbuilder_pypi_ready_badge.png
+pyNanoMatBuilder/resources/svg/pynanomatbuilder_pypi_ready_badge.svg
+pyNanoMatBuilder/resources/svg/pynmb_logo.svg
+pyNanoMatBuilder/resources/svg/pynmb_logo_dark.png
+pyNanoMatBuilder/resources/svg/pynmb_logo_light.png
 pyNanoMatBuilder/utils/__init__.py
 pyNanoMatBuilder/utils/animations.py
 pyNanoMatBuilder/utils/core.py
