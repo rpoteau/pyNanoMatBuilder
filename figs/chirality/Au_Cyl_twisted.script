@@ -1,0 +1,1 @@
+pmesh npmesh "Au_Cyl_twisted.pmesh"; color $npmesh [x7d7d7d] translucent 0;

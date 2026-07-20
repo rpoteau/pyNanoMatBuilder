@@ -1,0 +1,1 @@
+; rotate x 60; frank off; cpk 0; wireframe 0.05; script '/home/romuald/PGM/pyNanoMatBuilder/pyNanoMatBuilder/resources/figs/script-facettes-345PtLight.spt'; facettes345ptlight; draw * opaque;set specularPower 80; set antialiasdisplay; set background [xf1f2f3]; set zShade ON; set zShadePower 1; write image pngt 1024 1024 'figs/chirality/bch.png';

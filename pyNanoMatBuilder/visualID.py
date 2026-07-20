@@ -90,15 +90,28 @@ def init():
     # 1. Call the explicit CSS function
     apply_css_style()
     
-    # 2. Display the banner
-    path2banner = DEFAULT_RES_PATH / 'svg' / 'pyNanoMatBuilder_banner.svg'
+    # 2. Display the SVG banner
+    # path2banner = DEFAULT_RES_PATH / 'svg' / 'pyNanoMatBuilder_banner.svg'
     
+    # if path2banner.exists():
+    #     with open(path2banner, "r") as f: svg_data = f.read()
+    #     display(HTML(f'<div style="text-align: center; max-width: 1200px; margin: 0 auto; height: auto;">{svg_data}</div>'))
+    # else:
+    #     print(f"[Warning] banner file not found at {path2banner}")
+    # 2. Display the PNG banner
+    path2banner = DEFAULT_RES_PATH / 'svg' / 'pyNanoMatBuilder_banner.png'
+
     if path2banner.exists():
-        with open(path2banner, "r") as f: svg_data = f.read()
-        display(HTML(f'<div style="text-align: center; max-width: 1200px; margin: 0 auto; height: auto;">{svg_data}</div>'))
+        import base64
+        with open(path2banner, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode()
+        display(HTML(
+            f'<div style="text-align: center;">'
+            f'<img src="data:image/png;base64,{b64}" '
+            f'style="max-width: 800px; width: 100%; height: auto;"></div>'))
     else:
         print(f"[Warning] banner file not found at {path2banner}")
-    
+        
     # 4. Final Environment metadata display (time, host, and Numba info)
     now = datetime.datetime.now().strftime("%A %d %B %Y, %H:%M:%S")
     env_info = f"**Environment initialized:** {now} on {platform.node()}  \n"

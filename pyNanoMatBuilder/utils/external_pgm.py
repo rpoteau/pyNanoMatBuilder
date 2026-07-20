@@ -765,47 +765,136 @@ def saveStrain4JMol(self, prefix="strain", user_output_dir="./",
         print(command)
         print()
         
-def DrawJmol(mol, prefix, scriptJ="", noOutput=True):
+# def DrawJmol(mol, prefix, scriptJ="", noOutput=True):
+#     """
+#     Generate a Jmol visualization from an existing XYZ file.
+#     """
+#     from pyNanoMatBuilder import data
+#     path2Jmol = data.pyNMBvar.path2Jmol  # Use the user-configurable path
+    
+#     # 1. Define the local working directory for the user's files
+#     user_figs_dir = Path("figs")
+#     user_figs_dir.mkdir(exist_ok=True)
+    
+#     # 2. Locate the input XYZ (assumed to be in the local figs folder)
+#     fxyz = user_figs_dir / f"{mol}.xyz"
+#     if not fxyz.exists():
+#         if not noOutput:
+#             print(f"Error: {fxyz} not found. Cannot generate image.")
+#         return
+
+#     # 3. Build the Jmol script
+#     # We save the .png to the local working directory 'figs/'
+#     output_png = user_figs_dir / f"{prefix}.png"
+    
+#     jmolscript = (
+#         f"{scriptJ}; frank off; set specularPower 80; set antialiasdisplay; "
+#         "set background [xf1f2f3]; set zShade ON; set zShadePower 1; "
+#         f"write image pngt 1024 1024 '{output_png}';"
+#     )
+
+#     # 4. Assemble the command
+#     jmolcmd = (
+#         f"java -Xmx512m -jar {path2Jmol}/JmolData.jar {fxyz} "
+#         f"-ij \"{jmolscript}\" >/dev/null "
+#     )
+
+#     if not noOutput:
+#         print(f"Generating Jmol image: {output_png}")
+#         print(jmolcmd)
+    
+#     os.system(jmolcmd)
+
+def DrawJmol(mol, prefix, scriptJ="", noOutput=True,
+             user_output_dir="figs", fmt=None):
     """
-    Generate a Jmol visualization from an existing XYZ file.
+    Generate a Jmol visualization from an existing XYZ or CIF file.
+
+    Backward compatible: DrawJmol(mol, prefix) still reads 'figs/{mol}.xyz'
+    and writes 'figs/{prefix}.png'. The input directory and the file format
+    can now be set explicitly.
+
+    Args:
+        mol (str): base name of the input file (without extension), OR a full
+            path to the input file. If a path with a .xyz/.cif extension is
+            given, it is used directly and fmt/user_output_dir are ignored for
+            locating the input.
+        prefix (str): base name of the output PNG (written as '{prefix}.png').
+        scriptJ (str): Jmol script commands applied before writing the image.
+        noOutput (bool): if True, suppresses printed messages. Default True.
+        user_output_dir (str or Path): directory holding the input file and
+            receiving the output PNG. Default "figs" (legacy behaviour).
+        fmt (str or None): input format, 'xyz' or 'cif'. If None, inferred from
+            the file extension when 'mol' is a path, otherwise defaults to
+            'xyz'. CIF files are loaded natively by Jmol so the unit cell is
+            preserved (use 'unitcell on' in scriptJ to draw it).
+
+    Returns:
+        str: full path of the PNG written, or None if the input was not found
+            or Jmol is unavailable.
     """
     from pyNanoMatBuilder import data
-    path2Jmol = data.pyNMBvar.path2Jmol  # Use the user-configurable path
-    
-    # 1. Define the local working directory for the user's files
-    user_figs_dir = Path("figs")
-    user_figs_dir.mkdir(exist_ok=True)
-    
-    # 2. Locate the input XYZ (assumed to be in the local figs folder)
-    fxyz = user_figs_dir / f"{mol}.xyz"
-    if not fxyz.exists():
-        if not noOutput:
-            print(f"Error: {fxyz} not found. Cannot generate image.")
-        return
+    path2Jmol = Path(data.pyNMBvar.path2Jmol)
 
-    # 3. Build the Jmol script
-    # We save the .png to the local working directory 'figs/'
-    output_png = user_figs_dir / f"{prefix}.png"
-    
+    # --- Resolve the input file: explicit path, or '{user_output_dir}/{mol}.{fmt}' ---
+    mol_path = Path(mol)
+    if mol_path.suffix.lower() in (".xyz", ".cif"):
+        # 'mol' is already a path to the structure file
+        finput = mol_path
+        if fmt is None:
+            fmt = mol_path.suffix.lower().lstrip(".")
+        out_dir = Path(user_output_dir)
+    else:
+        # legacy form: base name inside user_output_dir
+        if fmt is None:
+            fmt = "xyz"
+        out_dir = Path(user_output_dir)
+        finput = out_dir / f"{mol}.{fmt}"
+
+    if fmt not in ("xyz", "cif"):
+        raise ValueError(f"fmt must be 'xyz' or 'cif', got '{fmt}'.")
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    if not finput.exists():
+        if not noOutput:
+            print(f"Error: {finput} not found. Cannot generate image.")
+        return None
+
+    jar_file = path2Jmol / "JmolData.jar"
+    if not jar_file.exists():
+        if not noOutput:
+            print(f"Jmol not found at {jar_file}; PNG skipped.")
+        return None
+
+    # --- Build the Jmol script ---
+    # For CIF, load explicitly so cell parameters are read; for XYZ, the file
+    # passed on the command line is loaded automatically (legacy behaviour).
+    output_png = out_dir / f"{prefix}.png"
+    load_cmd = f"load '{finput}'; " if fmt == "cif" else ""
     jmolscript = (
-        f"{scriptJ}; frank off; set specularPower 80; set antialiasdisplay; "
-        "set background [xf1f2f3]; set zShade ON; set zShadePower 1; "
+        f"{load_cmd}{scriptJ}; frank off; set specularPower 80; "
+        "set antialiasdisplay; set background [xf1f2f3]; "
+        f"set zShade ON; set zShadePower 1; "
         f"write image pngt 1024 1024 '{output_png}';"
     )
 
-    # 4. Assemble the command
+    # --- Assemble the command ---
+    # XYZ: pass the file as an argument (kept for backward compatibility).
+    # CIF: the load is inside the script, so no file argument is passed.
+    file_arg = "" if fmt == "cif" else f"{finput} "
     jmolcmd = (
-        f"java -Xmx512m -jar {path2Jmol}/JmolData.jar {fxyz} "
+        f"java -Xmx512m -jar {jar_file} {file_arg}"
         f"-ij \"{jmolscript}\" >/dev/null "
     )
 
     if not noOutput:
         print(f"Generating Jmol image: {output_png}")
         print(jmolcmd)
-    
+
     os.system(jmolcmd)
-
-
+    return str(output_png)
+    
 def defHelixShapeForJMol(self, n_rings=50, n_sides=12, noOutput=True):
     """
     Generate a Jmol command to visualize the helical envelope as a triangulated tube.
@@ -1327,22 +1416,41 @@ def export_png_with_ovito(self,
                           elevation_deg=65.0,
                           camera_pos=None,
                           camera_dir=None,
+                          camera_up=None,
+                          fov=None,
+                          zoom_factor=None,
+                          projection="perspective",
                           size=(2400, 2400),
                           background=(1, 1, 1),
                           transparent=False,
                           ambient_occlusion=True,
                           use_opt=False,
+                          render_mode="atoms",
+                          surface_radius=4.0,
+                          surface_smoothing=12,
+                          highlight_mesh_edges=False,
                           noOutput=False):
     """Render self.NP to a PNG image with OVITO Basic (free, no watermark).
-
+    The function can render either the atoms as spheres (the default) or a
+    solid enclosing surface, selected with the render_mode argument. In surface
+    mode an alpha-shape surface is built around the atoms, the atoms are hidden,
+    and the mesh is drawn as a uniform-colored solid, giving a faceted
+    polyhedron-like view of the particle shape; a non-periodic bounding-box
+    cell is assigned to the data first, as the surface construction requires a
+    non-degenerate simulation cell.
+    
     Uses OVITO's OpenGL renderer, the only non-watermarked backend in the free
     OVITO Basic edition. The free Ambient Occlusion modifier is added to the
     pipeline to give per-atom occlusion shading, which OpenGL can display and
     which makes facets readable. Facets look flat when a particle is viewed
     straight down, so the camera is placed off-axis.
-
     The output file is written to '<user_output_dir>/<prefix>.png'.
-
+    The camera can use either a perspective or a parallel (orthographic)
+    projection, selected with the projection argument. To reproduce a view set
+    up interactively in the OVITO GUI, match the GUI projection here: read the
+    projection type, the camera position, the camera direction and the field of
+    view from the 'Adjust view...' dialog and pass them through projection,
+    camera_pos, camera_dir and fov.
     Two ways to set the viewpoint:
       - azimuth_deg / elevation_deg: the camera looks at the origin from a
         point on a sphere (convenient for quick framing).
@@ -1350,10 +1458,8 @@ def export_png_with_ovito(self,
         read from the interactive OVITO GUI. If camera_dir is given it takes
         priority over the azimuth/elevation direction; if camera_pos is also
         given, zoom_all() is skipped so the GUI framing is reproduced exactly.
-
     The OVITO Python module renders headlessly when imported from an external
     interpreter, so no window is opened; the image is written straight to disk.
-
     Args:
         prefix (str): base name of the output file (without extension); the
             image is saved as '<prefix>.png'.
@@ -1387,6 +1493,24 @@ def export_png_with_ovito(self,
             framing is skipped to reproduce a GUI viewpoint exactly.
         camera_dir (array-like, optional): explicit camera viewing direction
             (look vector). Takes priority over azimuth/elevation.
+        fov (float, optional): camera field of view, only used when camera_pos
+            and camera_dir are both given (explicit GUI framing). Its meaning
+            depends on projection: for 'perspective' it is the vertical opening
+            angle in radians; for 'ortho' it is the vertical size of the
+            visible region in Angstrom. Copy the value shown in the OVITO
+            'Adjust view...' dialog. If None, OVITO's default field of view for
+            the chosen projection is used, so the apparent zoom may not match
+            the GUI.
+        zoom_factor (float, optional): multiplies the field of view after
+            framing, in either viewpoint mode. Values > 1 zoom out (add margin
+            around the particle), values < 1 zoom in. Useful when the automatic
+            zoom_all() framing is too tight and the particle spills over the
+            image edges. If None, the framing is left unchanged.
+        projection (str): camera projection type. 'perspective' (default) for a
+            perspective projection, or 'ortho' for a parallel/orthographic
+            projection (also accepts 'orthographic', 'orthogonal', 'parallel').
+            To reproduce a GUI view, set this to the same projection as the
+            viewport used in the GUI.
         size (tuple of int): output image size in pixels (width, height).
         background (tuple of float): RGB background color, each in [0, 1].
             Ignored where the image is transparent if transparent=True.
@@ -1398,20 +1522,38 @@ def export_png_with_ovito(self,
             modifier for facet-revealing per-atom shading.
         use_opt (bool): if True, render the optimized structure (self.NP_opt)
             instead of self.NP.
+        render_mode (str): what to draw. 'atoms' (default) renders the atoms as
+            spheres. 'surface' builds a solid alpha-shape surface enclosing the
+            atoms, hides the atoms, and renders that mesh instead, giving a
+            faceted polyhedron-like view of the particle shape. In surface mode
+            the per-sphere radius is ignored and colors sets the single surface
+            color.
+        surface_radius (float): in surface render mode, the alpha-shape probe
+            sphere radius in Angstrom. Smaller values hug the atoms and may
+            open holes in low-density regions; larger values smooth the surface
+            and, in the limit, reproduce the convex hull. Ignored in atoms
+            render mode.
+        surface_smoothing (int): in surface render mode, the number of
+            smoothing iterations applied to the surface mesh. Higher values
+            round off the mesh. Ignored in atoms render mode.
+        highlight_mesh_edges (bool): in surface render mode, if True draw the edges
+            of the surface mesh triangles (the OVITO 'Highlight mesh edges'
+            option), which exposes the triangulation. Default False gives
+            smooth faces where only the facet edges show up through ambient
+            occlusion shading. Ignored in atoms render mode.
         noOutput (bool): if True, suppress printed messages.
-
     Returns:
         str: the full path of the PNG file that was written.
-
     Raises:
         ImportError: if the ovito Python module is not installed.
         AttributeError: if use_opt is True but self.NP_opt is not available.
+        ValueError: if projection is not a recognized projection name.
     """
     try:
         from ovito.io.ase import ase_to_ovito
         from ovito.pipeline import Pipeline, StaticSource
         from ovito.vis import Viewport, OpenGLRenderer, ParticlesVis
-        from ovito.modifiers import AmbientOcclusionModifier
+        from ovito.modifiers import AmbientOcclusionModifier, ConstructSurfaceModifier
     except ImportError as exc:
         raise ImportError(
             "OVITO is required for export_png_with_ovito. Install it with "
@@ -1447,32 +1589,83 @@ def export_png_with_ovito(self,
     data = ase_to_ovito(atoms)
     pipeline = Pipeline(source=StaticSource(data=data))
 
-    vis = pipeline.source.data.particles.vis
-    vis.shape = ParticlesVis.Shape.Sphere
-    vis.radius = radius
+    mode = str(render_mode).lower()
+    if mode not in ("atoms", "surface"):
+        raise ValueError(
+            f"render_mode must be 'atoms' or 'surface', got {render_mode!r}")
 
-    # --- Optional atom recolouring (overrides default CPK colors) ---
-    # Accept either one color (applied to all elements) or a {symbol: color}
-    # mapping. Each color may be a hex string, an int RGB triple in [0, 255],
-    # or a float RGB triple in [0, 1].
-    if colors is not None:
-        if isinstance(colors, dict):
-            color_map = {sym: _normalize_rgb(c) for sym, c in colors.items()}
-        else:
-            rgb = _normalize_rgb(colors)
-            color_map = {ptype.name: rgb
-                         for ptype in data.particles.particle_types.types}
-        for ptype in data.particles.particle_types.types:
-            if ptype.name in color_map:
-                ptype.color = color_map[ptype.name]
-                
-    if ambient_occlusion:
-        pipeline.modifiers.append(AmbientOcclusionModifier())
+    if mode == "atoms":
+        vis = pipeline.source.data.particles.vis
+        vis.shape = ParticlesVis.Shape.Sphere
+        vis.radius = radius
+
+        # --- Optional atom recolouring (overrides default CPK colors) ---
+        if colors is not None:
+            if isinstance(colors, dict):
+                color_map = {sym: _normalize_rgb(c)
+                             for sym, c in colors.items()}
+            else:
+                rgb = _normalize_rgb(colors)
+                color_map = {ptype.name: rgb
+                             for ptype in data.particles.particle_types.types}
+            for ptype in data.particles.particle_types.types:
+                if ptype.name in color_map:
+                    ptype.color = color_map[ptype.name]
+
+        if ambient_occlusion:
+            pipeline.modifiers.append(AmbientOcclusionModifier())
+
+    else:  # mode == "surface"
+                # ConstructSurfaceModifier requires a non-degenerate simulation cell.
+        # pyNMB particles are isolated clusters with no periodic box, so give
+        # the data a non-periodic bounding-box cell sized to the atoms (plus a
+        # margin) to avoid a zero-volume cell error.
+        pos = data.particles.positions
+        pmin = np.min(pos, axis=0)
+        pmax = np.max(pos, axis=0)
+        margin = 2.0 * surface_radius
+        cell_origin = pmin - margin
+        cell_span = (pmax - pmin) + 2.0 * margin
+        cell_matrix = np.zeros((3, 4))
+        cell_matrix[0, 0] = cell_span[0]
+        cell_matrix[1, 1] = cell_span[1]
+        cell_matrix[2, 2] = cell_span[2]
+        cell_matrix[:, 3] = cell_origin  # cell origin in the 4th column
+        data.create_cell(cell_matrix, (False, False, False))
+
+        # Build a solid alpha-shape surface enclosing the atoms and render that
+        # instead of the individual spheres, giving a faceted polyhedron look.
+        surf_mod = ConstructSurfaceModifier(
+            method=ConstructSurfaceModifier.Method.AlphaShape,
+            radius=surface_radius,
+            smoothing_level=surface_smoothing,
+            identify_regions=False)
+        # Configure the surface appearance on the modifier's own vis element so
+        # the settings persist through to rendering (a throwaway compute() does
+        # not).
+        surf_mod.vis.show_cap = False
+        surf_mod.vis.highlight_edges = highlight_mesh_edges
+        if colors is not None:
+            surf_mod.vis.surface_color = _normalize_rgb(colors)
+        pipeline.modifiers.append(surf_mod)
+
+        # Hide the atoms so only the surface mesh is visible.
+        pipeline.source.data.particles.vis.enabled = False
+
+        if ambient_occlusion:
+            pipeline.modifiers.append(AmbientOcclusionModifier())
 
     pipeline.add_to_scene()
 
     # --- Camera placement ---
-    vp = Viewport(type=Viewport.Type.Perspective)
+    proj = str(projection).lower()
+    if proj in ("ortho", "orthographic", "orthogonal", "parallel"):
+        vp = Viewport(type=Viewport.Type.Ortho)
+    elif proj in ("perspective", "persp"):
+        vp = Viewport(type=Viewport.Type.Perspective)
+    else:
+        raise ValueError(
+            f"projection must be 'ortho' or 'perspective', got {projection!r}")
 
     if camera_dir is not None:
         # Explicit direction from the GUI takes priority.
@@ -1487,12 +1680,25 @@ def export_png_with_ovito(self,
                         np.sin(el)])
         vp.camera_dir = tuple(-cam)
 
+    if camera_up is not None:
+        # Explicit up vector fixes the roll (rotation about the viewing axis).
+        # When None, OVITO keeps its default constraint (z stays vertical).
+        vp.camera_up = tuple(camera_up)
+
     if camera_pos is not None and camera_dir is not None:
         # Full explicit framing: reproduce the GUI viewpoint, no auto-zoom.
         vp.camera_pos = tuple(camera_pos)
+        if fov is not None:
+            vp.fov = float(fov)
     else:
         # Auto-position the camera along camera_dir to fit all atoms.
         vp.zoom_all()
+
+    if zoom_factor is not None:
+        # Widen (>1) or tighten (<1) the framing relative to the current fov.
+        # Useful when zoom_all() frames too tightly and the particle spills
+        # over the image edges: zoom_factor=1.1 adds ~10% margin.
+        vp.fov = vp.fov * float(zoom_factor)
 
     vp.render_image(filename=str(out_path), size=tuple(size),
                     renderer=OpenGLRenderer(),
@@ -1508,3 +1714,163 @@ def export_png_with_ovito(self,
         chrono.chrono_stop(hdelay=False)
         chrono.chrono_show()
     return str(out_path)
+
+def export_surface_mesh(self, prefix, user_output_dir="mesh",
+                        method='alpha', probe_radius=None, surface_smoothing=8,
+                        cn_threshold=12, Rmax=None, surface_only=None,
+                        atomic_radius=None,
+                        color='x999999', translucency=0.15,
+                        noOutput=False):
+    """
+    Build a surface mesh of the NP and export it as a Jmol pmesh file.
+
+    For very large NPs, the mesh is built only from under-coordinated atoms
+    (CN < cn_threshold), i.e. the surface shell — light on memory and, for
+    method='alpha', faithful to concave features (nanostars, octopods).
+
+    Args:
+        prefix (str): basename of the output files; '{prefix}.pmesh' and
+            '{prefix}.script' are written in user_output_dir.
+        user_output_dir (str or Path): output directory, created if needed.
+            Default 'mesh'.
+        method (str): 'alpha' (default, follows concavities) or 'hull'
+            (convex only).
+        probe_radius (float): alpha-shape probe radius in Å. If None,
+            defaults to 1.6 * Rnn. Ignored when method='hull'.
+        surface_smoothing (int): number of Taubin smoothing iterations
+            applied to the mesh, analogous to OVITO's smoothing_level.
+            0 disables smoothing. Default 8.
+        cn_threshold (int): keep only atoms with coordination number below
+            this (default 12 = fcc/hcp bulk; use 8 for bcc).
+        Rmax (float): neighbour cutoff in Å for the CN calculation. If None,
+            defaults to 1.2 * Rnn.
+        surface_only (bool): if True, use self.surfaceAtoms instead of the CN
+            filter. Default None (use CN filter).
+        atomic_radius (float): if given (Å), also compute the area and
+            volume of the surface offset outwards by this radius (outer
+            atomic envelope estimate, Steiner parallel-body formulas).
+            Stored as meshArea_radius_nm2 / meshVolume_radius_nm3.
+        color (str): Jmol colour. Default 'x999999'.
+        translucency (float): 0 = opaque, 1 = invisible. Default 0.15.
+        noOutput (bool): suppress messages. Default False.
+
+    """
+    import numpy as np
+    from pathlib import Path
+    from .geometry import build_surface_mesh
+    from .core import kDTreeCN, centertxt, timer
+
+    Rnn = getattr(self, 'Rnn', 2.9)
+    if Rmax is None:
+        Rmax = 1.2 * Rnn
+    if probe_radius is None:
+        probe_radius = 1.6 * Rnn
+
+    if not noOutput:
+        centertxt("Exporting surface mesh (pmesh for Jmol)",
+                  bgc='#007a7a', size='14', weight='bold')
+        chrono = timer(); chrono.chrono_start()
+
+    # Select the shell
+    if surface_only:
+        if not hasattr(self, 'surfaceAtoms') or self.surfaceAtoms is None:
+            raise AttributeError("surface_only=True requires self.surfaceAtoms "
+                                 "(run coreSurface / propPostMake first).")
+        shell = self.NP[self.surfaceAtoms]
+        n_source = "surface atoms (surfaceAtoms)"
+    else:
+        from scipy.spatial import cKDTree
+        _, CN = kDTreeCN(self.NP, Rmax=Rmax, returnD=False, noOutput=True)
+        CN = np.asarray(CN)
+        mask = CN < cn_threshold
+        # Dilate the surface selection by one neighbour layer: a strictly
+        # single-layer shell is locally coplanar on flat facets, which makes
+        # every local tetrahedron degenerate (zero determinant) and opens
+        # holes in the alpha-shape. Adding the first sub-surface layer gives
+        # the tessellation the thickness it needs.
+        pos = self.NP.get_positions()
+        tree = cKDTree(pos)
+        neigh = tree.query_ball_point(pos[mask], r=Rmax)
+        extra = np.unique(np.concatenate([np.asarray(n, dtype=int) for n in neigh]))
+        mask = mask.copy()
+        mask[extra] = True
+        shell = self.NP[mask]
+        n_source = (f"under-coordinated atoms (CN < {cn_threshold}) "
+                    f"+ one neighbour layer")
+
+    if len(shell) < 4:
+        raise ValueError(f"Only {len(shell)} atoms in the shell — not enough "
+                         f"to build a 3D mesh. Lower cn_threshold or check Rmax.")
+
+    # Build the mesh (pure geometry)
+    vertices, faces, comp_labels = build_surface_mesh(
+        shell, method=method, probe_radius=probe_radius,
+        return_components=True)
+
+    # Area and volume of the outer skin, on the raw (unsmoothed) mesh
+    from .prop import mesh_area_volume
+    result = mesh_area_volume(vertices, faces, labels=comp_labels,
+                              atomic_radius=atomic_radius)
+    area, volume = result[0], result[1]
+    self.meshArea_nm2 = area * 1e-2
+    self.meshVolume_nm3 = volume * 1e-3
+    if atomic_radius is not None:
+        area_corr, volume_corr = result[2], result[3]
+        self.meshArea_radius_nm2 = area_corr * 1e-2
+        self.meshVolume_radius_nm3 = volume_corr * 1e-3
+    
+    if surface_smoothing and surface_smoothing > 0:
+        from .geometry import smooth_mesh_taubin
+        vertices = smooth_mesh_taubin(vertices, faces,
+                                      iterations=surface_smoothing)
+
+    # Optional Taubin smoothing, equivalent to OVITO's smoothing_level
+    if surface_smoothing and surface_smoothing > 0:
+        from .geometry import smooth_mesh_taubin
+        vertices = smooth_mesh_taubin(vertices, faces,
+                                      iterations=surface_smoothing)
+
+    # Normalize colour to Jmol's [xRRGGBB] form (accept '#RRGGBB' or 'xRRGGBB')
+    c = color.strip()
+    if c.startswith('#'):
+        c = c[1:]
+    elif c.startswith('x'):
+        c = c[1:]
+    color_jmol = f"x{c}"
+
+    # Write the Jmol-native pmesh file
+    output_dir = Path(user_output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_pmesh = output_dir / f"{prefix}.pmesh"
+    with open(output_pmesh, 'w') as f:
+        f.write(f"{len(vertices)}\n")
+        for v in vertices:
+            f.write(f"{v[0]:.5f} {v[1]:.5f} {v[2]:.5f}\n")
+        f.write(f"{len(faces)}\n")
+        for t in faces:
+            f.write(f"4 {t[0]} {t[1]} {t[2]} {t[0]}\n")
+
+    jmol_cmd = f'pmesh npmesh "{output_pmesh.name}"; color $npmesh [{color_jmol}] translucent {translucency};'
+
+    # Write a ready-to-run Jmol script next to the pmesh
+    script_path = output_pmesh.with_suffix('.script')
+    with open(script_path, 'w') as f:
+        f.write(jmol_cmd + "\n")
+        
+    if not noOutput:
+        print(f"  - Source: {n_source} ({len(shell)} atoms)")
+        print(f"  - Method: {method}"
+              + (f", probe_radius = {probe_radius:.2f} Å" if method == 'alpha' else ""))
+        print(f"  - Mesh: {len(vertices)} vertices, {len(faces)} triangles")
+        print(f"  - Outer surface (through atomic centres): "
+              f"area = {self.meshArea_nm2:.2f} nm², volume = {self.meshVolume_nm3:.2f} nm³")
+        if atomic_radius is not None:
+            print(f"  - Corrected for atomic radius R = {atomic_radius:.3f} Å: "
+                  f"area = {self.meshArea_radius_nm2:.2f} nm², "
+                  f"volume = {self.meshVolume_radius_nm3:.2f} nm³")
+        print(f"  - Mesh and Script written to  {output_pmesh}")
+        print(f"\n  To visualize in Jmol:")
+        print(f"    - optionally load the atoms first: load \"{output_pmesh.stem}.xyz\"")
+        print(f"    - then run in the Jmol console: script \"{output_pmesh.stem}.script\"")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+

@@ -14,7 +14,7 @@ from . import platonicNPs as pNP
 from . import johnsonNPs as jNP
 from .utils import hl, fg, bg
 from .pyNMBcore import pyNMBcore
-from .utils.geometry import z_height_nm
+from .utils.geometry import z_height_nm, inner_end_z_height_nm
 
 ###########################################################################################################
 class fcctpt(pyNMBcore):
@@ -1445,3 +1445,462 @@ class hbpy(pyNMBcore):
             print(f"facet/base dihedral angle = {self.facet_dihedral_deg:.2f}°")
         if self.cut_nm and self.cut_nm > 0:
             print(f"apex truncation (height) = {self.cut_nm:.3f} nm")
+
+###########################################################################################################
+class star(pyNMBcore):
+    """
+    Five-fold star nanoparticle: a penta-twinned Ino decahedron carved into
+    five branches by hull-plane slicing, replicated by 72 deg rotations about
+    the five-fold axis.
+
+    Composition, not inheritance: an Ino decahedron (johnsonNPs.epbpyM) is built
+    internally, oriented so one branch points along +x, then a per-branch wedge
+    (two flanks parallel to consecutive twin planes plus one end plane, combined
+    with AND) is applied five times, rotating the object by 72 deg between cuts.
+    The rotation is taken about the fixed origin [0, 0, 0] (not the drifting
+    center of mass), so the five branches stay exactly C5-symmetric. The shaped
+    decahedron's atoms are adopted as self.NP, following the usual pyNMBcore
+    contract (same scheme as ptnr with pentaPrism).
+
+    The size of the underlying Ino decahedron is DERIVED from the target
+    dimensions (diameter_nm, height_nm) via epbpyM.size_from_nm, which returns
+    the integer sizeP / sizeE counts. The branch geometry (arm_width_nm, diameterC_nm)
+    is then applied as the CSG wedge that carves each branch.
+
+    Args:
+        element (str): chemical element (e.g. 'Pt').
+        Rnn (float): nearest-neighbour distance in A.
+        diameter_nm (float): target circumscribed diameter of the underlying
+            Ino decahedron, in nm (mapped to sizeP). Default 20.0.
+        height_nm (float): target elongated-body height of the decahedron, in
+            nm (mapped to sizeE). Default 6.0.
+        Marks (int): Marks re-entrant truncation order; 0 = plain Ino
+            decahedron. Default 0.
+        arm_width_nm (float): width of the groove removed between two branches, in
+            nm. Default 2.0.
+        diameterC_nm (float): diameter of the core. Default 6.0.
+        clip_diameter_nm (float or None): if set, clip the finished star to a
+            cylinder of this diameter (nm) about the five-fold axis, trimming
+            branch tips that extend beyond it. None (default) leaves the star
+            unclipped.
+    """
+    nBranches = 5
+    # Predefined facet-pair presets for the zigzag (zigP, zagP), as
+    # [u, v, w, h] normals with h=0 (the offset is set later at the reference
+    # atom via planeAtPoint). Users may also pass their own (zigP, zagP).
+    _FACET_PAIRS = {
+        # zigP = {111}, zagP = {100}
+        '111-100': (
+            [0.491124202567378,  0.356820695917090,  0.794654647389544, 0.0],
+            [0.425919441189337, -0.586227916007409, -0.689151260689969, 0.0],
+        ),
+        # zigP = {111}, zagP = the z-mirrored {111}
+        '111-111': (
+            [0.491124202567378,  0.356820695917090,  0.794654647389544, 0.0],
+            [0.491123352139124,  0.356821174222847, -0.794654958211335, 0.0],
+        ),
+    }
+
+    def __init__(self,
+                 element: str = 'Pt',
+                 Rnn: float = 2.769,
+                 diameter_nm: float = 20.0,
+                 height_nm: float = 6.0,
+                 Marks: int = 0,
+                 arm_width_nm: float = 2.0,
+                 diameterC_nm: float = 6.0,
+                 clip_diameter_nm: float = None,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.element = element
+        self.shape = 'star'
+        self.Rnn = Rnn
+        self.diameter_nm = diameter_nm
+        self.height_nm = height_nm
+        self.Marks = int(Marks)
+        self.arm_width_nm = arm_width_nm
+        self.diameterC_nm = diameterC_nm
+        self.clip_diameter_nm = clip_diameter_nm
+
+        # Derive the integer decahedron counts from the target dimensions.
+        noOutput = self.noOutput
+        s = jNP.epbpyM.size_from_nm(
+            Rnn=self.Rnn, diameter_nm=self.diameter_nm,
+            height_nm=self.height_nm, noOutput=noOutput)
+        self.sizeP = s['sizeP']
+        self.sizeE = s['sizeE']
+
+        self.imageFile = pyNMBu.imageNameWithPathway("star-C.png")
+        if not noOutput:
+            pyNMBu.centerTitle(
+                f"Five-fold star — {element}, Ø{diameter_nm:.1f} nm decahedron "
+                f"(sizeP={self.sizeP}, sizeE={self.sizeE}), "
+                f"arm_width_nm={arm_width_nm:.2f} nm, branch Ø{diameterC_nm:.2f} nm")
+            self.prop()
+        if not self.calcPropOnly:
+            self.coords(noOutput)
+            if self.aseView:
+                view(self.NP)
+            if self.postAnalyzis:
+                self.propPostMake(
+                    self.skipChiralityCalculation,
+                    self.skipSymmetryAnalyzis,
+                    self.skipFacetInfo,
+                    self.thresholdCoreSurface, noOutput)
+                if self.aseView:
+                    view(self.NPcs)
+
+    def __str__(self):
+        return (f"Five-fold star of {self.element}, decahedron Ø~"
+                f"{self.diameter_nm:.1f} nm (sizeP={self.sizeP}, "
+                f"sizeE={self.sizeE}), Rnn = {self.Rnn} A")
+
+    # ----- geometry helper -------------------------------------------------
+    @staticmethod
+    def _n_xy(theta_deg):
+        """Unit vector in the xy-plane at angle theta (deg) from +x."""
+        t = np.radians(theta_deg)
+        return np.array([np.cos(t), np.sin(t), 0.0])
+
+    # ----- coordinate generation -------------------------------------------
+    def coords(self, noOutput):
+        """Build the Ino decahedron, carve the five branches, store as self.NP.
+
+        A per-branch wedge of three planes (two flanks at theta +/- 36 deg of
+        the branch axis, one {001} end plane at diameter/2) is applied in
+        mode='AND', then the object is rotated by 72 deg about the fixed origin.
+        Repeating this five times carves all branches while preserving exact C5
+        symmetry (the rotation center is [0, 0, 0], not the center of mass,
+        which drifts after each asymmetric cut)."""
+        if not noOutput:
+            pyNMBu.centertxt("Generation of coordinates",
+                             bgc='#007a7a', size='14', weight='bold')
+        chrono = pyNMBu.timer()
+        chrono.chrono_start()
+
+        # 1) Build the Ino decahedron internally (no post-analysis: we analyse
+        #    the final star, not the intermediate decahedron).
+        if not noOutput:
+            pyNMBu.centertxt(
+                "Building the Ino decahedron",
+                bgc='#cbcbcb', size='12', fgc='b', weight='bold')
+        ino = jNP.epbpyM(
+            self.element, self.Rnn,
+            sizeP=self.sizeP, sizeE=self.sizeE, Marks=self.Marks,
+            skipSymmetryAnalyzis=True, postAnalyzis=False, noOutput=noOutput)
+
+        # 2) Orient one branch along +x.
+        ino.apply_rotation(angle_deg=36, axis=[0, 0, 1], axis_def='cart',
+                           postAnalyzis=False, noOutput=True)
+        self.NP0 = ino.NP.copy()
+
+        # 3) Per-branch wedge, replicated by 72 deg about the FIXED origin.
+        planes = [
+            {'normal': self._n_xy(36 + 90), 'distance': -self.arm_width_nm / 2,
+             'nRot': 1, 'rotAxis': [0, 0, 1], 'delete': 'below',
+             'modeP': 'AND'},
+            {'normal': self._n_xy(-36 + 90), 'distance': self.arm_width_nm / 2,
+             'nRot': 1, 'rotAxis': [0, 0, 1], 'delete': 'above',
+             'modeP': 'AND'},
+            {'normal': self._n_xy(0), 'distance': self.diameterC_nm / 2,
+             'nRot': 1, 'rotAxis': [0, 0, 1], 'delete': 'above',
+             'modeP': 'AND'},
+        ]
+        for k in range(self.nBranches):
+            ino.applySlicing(
+                planes=planes, distance_unit='nm', mode='AND',
+                recenter=False, noOutput=noOutput)
+            # center=[0, 0, 0] is critical: rotating about the drifting COM
+            # would break C5 symmetry after the first asymmetric cut.
+            ino.apply_rotation(angle_deg=72, axis=[0, 0, 1], center=[0, 0, 0],
+                               axis_def='cart', postAnalyzis=False,
+                               noOutput=True)
+
+        # Optional final clip: trim branch tips to a cylinder about the axis.
+        if self.clip_diameter_nm is not None:
+            ino.clip_to_cylinder(diameter_nm=self.clip_diameter_nm,
+                                 axis=(0, 0, 1), noOutput=noOutput,
+                                 postAnalyzis=False)
+
+        # 4) Adopt the shaped decahedron's atoms as our own.
+        self.NP = ino.NP
+        self.NP.positions -= self.NP.get_center_of_mass()
+        self.nAtoms = len(self.NP)
+        self.cog = self.NP.get_center_of_mass()
+
+        if not noOutput:
+            print(f"Total number of atoms = {self.nAtoms}")
+            chrono.chrono_stop(hdelay=False)
+            chrono.chrono_show()
+            
+
+    def make_zigzag_arm(self, pattern, facet_pair='111-100', L_nm=2.0,
+                        skin=2, core_sizeE_offset=0, core_element=None,
+                        threshold=0.8, analyze_interface=False, noOutput=None,
+                        postAnalyzis=None, skipChiralityCalculation=None,
+                        skipSymmetryAnalyzis=None, skipFacetInfo=None,
+                        thresholdCoreSurface=None):
+        """Build the full zigzag star: five carved branches fused onto a core.
+
+        Pipeline (reproducing the notebook workflow):
+          1. extract a half-arm from this star (rotate 36 deg, slice to a single
+             half-branch along +x),
+          2. carve the zigzag on both flanks with carve_zigzag_pattern, using
+             the (zigP, zagP) reference planes anchored on the branch tip atom.
+             The anchor is the atom maximising x + z (farthest_atom with
+             weights=[1, 0, 1]): y is the thin dimension of the arm, so giving it
+             any weight would pick an atom on the lateral edge, set back from the
+             true tip, and leave the outermost part of the branch outside the
+             pattern,
+          3. mirror the half-arm across y=0 to complete one branch,
+          4. replicate the branch five times by 72 deg rotation,
+          5. build a decahedral core (epbpyM) sized from the inner-end height,
+          6. fuse core + branches with union_with.
+
+        The single carved branch is stored as self.arm, the core as self.core,
+        and the fused star replaces self.NP.
+
+        Args:
+            pattern (sequence of (float, float)): zigzag pattern passed to
+                carve_zigzag_pattern, in units of L (each entry is (a, b) giving
+                deltas (a, b) -- see carve_zigzag_pattern for the crossing
+                convention). Multiplied by L internally.
+            facet_pair (str or tuple): either a preset name ('111-100',
+                '111-111') or an explicit (zigP, zagP) pair of [u, v, w, h]
+                planes. Default '111-100'.
+            L_nm (float): base length scale for the pattern, in nanometer.
+                Default 2.0.
+            skin (int): extra shells added to the core pentagon so it slightly
+                overfills the branch roots before fusion. Default 2.
+            core_sizeE_offset (int): shifts the core's vertical layer count
+                (sizeE) relative to the value derived from the branch inner-end
+                height. Negative values shorten the core, reducing how far it
+                bulges out of the star's plane; positive values lengthen it.
+                The parity correction below is applied AFTER this offset, so the
+                core still seats correctly in the branch hollows whatever the
+                offset. Default 0.
+            core_element (str or None): element of the core; defaults to this
+                star's element.
+            threshold (float): passed to union_with (atoms within threshold*Rnn
+                of the core are removed before merging). Default 0.8.
+            analyze_interface (bool): if True and the core element differs from
+                the branch element, run interface_distance_histogram on the
+                fused star to assess how cleanly the core and branches joined
+                (overlap or gap at the bimetallic interface). Default False.
+            noOutput (bool or None): suppress output; None -> self.noOutput.
+            postAnalyzis, skip*, thresholdCoreSurface: standard post-analysis
+                controls (None -> self.*). Because make_zigzag_arm REPLACES
+                self.NP with the fused zigzag star, the properties computed in
+                __init__ (on the smooth star) become stale; they are recomputed
+                here on the new structure unless postAnalyzis is False.
+
+        Returns:
+            None. Sets self.arm, self.armZZ, self.core, and replaces self.NP with the star.
+        """
+        import numpy as np
+        from . import johnsonNPs as jNP
+        if noOutput is None:
+            noOutput = self.noOutput
+
+        # --- resolve the (zigP, zagP) reference planes -----------------------
+        if isinstance(facet_pair, str):
+            try:
+                zigP0, zagP0 = self._FACET_PAIRS[facet_pair]
+            except KeyError:
+                raise ValueError(
+                    f"Unknown facet_pair '{facet_pair}'; use one of "
+                    f"{list(self._FACET_PAIRS)} or pass an explicit "
+                    f"(zigP, zagP) pair.")
+        else:
+            zigP0, zagP0 = facet_pair
+        zigP0 = list(zigP0)
+        zagP0 = list(zagP0)
+
+        # --- 1) extract a half-arm ------------------------------------------
+        arm = self.copy()
+        arm.apply_rotation(angle_deg=36, axis=[0, 0, 1], axis_def='cart',
+                           postAnalyzis=False, noOutput=True)
+        aw = self.arm_width_nm
+        arm.applySlicing(
+            planes=[
+                {'normal': [0, 1, 0], 'distance': aw / 2 + 1e-3, 'nRot': 1,
+                 'rotAxis': [0, 0, 1], 'delete': 'above', 'modeP': 'AND'},
+                {'normal': [0, 1, 0], 'distance': -(aw / 2 + 1e-3), 'nRot': 1,
+                 'rotAxis': [0, 0, 1], 'delete': 'below', 'modeP': 'AND'},
+                {'normal': [1, 0, 0], 'distance': self.diameterC_nm / 2, 'nRot': 1,
+                 'rotAxis': [0, 0, 1], 'delete': 'below', 'modeP': 'AND'},
+            ],
+            distance_unit='nm', mode='OR', recenter=False, noOutput=True)
+        # keep only the y >= 0 half
+        arm.applySlicing(
+            planes=[{'normal': [0, 1, 0], 'distance': 0, 'nRot': 1,
+                     'rotAxis': [0, 0, 1], 'delete': 'below', 'modeP': 'AND'}],
+            distance_unit='nm', mode='OR', recenter=False, noOutput=noOutput)
+
+        self.arm = arm.copy()
+
+        # --- 2) carve the zigzag on the half-arm ----------------------------
+        n_max, coord_max = arm.farthest_atom(weights=[1, 0, 1])
+        if not noOutput:
+            print(f"Index of the reference atom for the zig-zag pattern applied to the half-arm = {n_max}")
+            print("Coordinates = ", coord_max)
+        zigP = pyNMBu.planeAtPoint(zigP0, coord_max)
+        zagP = pyNMBu.planeAtPoint(zagP0, coord_max)
+        zigP_opp = pyNMBu.reflect_plane(zigP, mirror='xOy')
+        zagP_opp = pyNMBu.reflect_plane(zagP, mirror='xOy')
+
+        # pattern entries are facet lengths in units of L_nm (nm);
+        # carve_zigzag_pattern works in Angstrom and converts facet lengths into
+        # plane displacements itself (pattern_unit='facet', its default).
+        scaled = [(10.0 * L_nm * a, 10.0 * L_nm * b) for (a, b) in pattern]
+        arm.carve_zigzag_pattern(zigP, zagP, pattern=scaled,
+                                 recenter=False, noOutput=noOutput)
+        arm.carve_zigzag_pattern(zigP_opp, zagP_opp, pattern=scaled,
+                                 recenter=False, noOutput=noOutput)
+
+        # --- 3) mirror across y=0 to complete one branch --------------------
+        arm.replicate_by_reflection(plane=[0, 1, 0, 0], plane_def="cart")
+        self.armZZ = arm.copy()
+
+        # --- 5) build the decahedral core -----------------------------------
+        # Core and branches must have OPPOSITE z-parity so the core's layers
+        # seat in the hollows between branch layers (compact stacking) rather
+        # than facing them (a same-parity match gives a short contact). After
+        # carving, the branch parity is read from its measured z-height in units
+        # of the exact vertical period Rnn*magic; the core height is estimated
+        # analytically as Rnn*magic*sizeE, so no trial build is needed.
+        magic = jNP.epbpyM.magicFactorF if hasattr(jNP.epbpyM, 'magicFactorF') \
+            else 2.0 * np.sqrt((5.0 - np.sqrt(5.0)) / 10.0)
+        period_z = self.Rnn * magic          # z-height added per unit of sizeE
+
+        height_core = inner_end_z_height_nm(arm)
+        s = jNP.epbpyM.size_from_nm(
+            Rnn=self.Rnn, diameter_nm=self.diameterC_nm,
+            height_nm=height_core, noOutput=noOutput)
+        core_sizeP = s['sizeP'] + int(skin)
+        # Apply the user's vertical offset BEFORE the parity correction, so the
+        # parity rule still has the last word and the core keeps seating in the
+        # branch hollows. A negative offset shortens the core, reducing how far
+        # it bulges out of the star's plane.
+        core_sizeE = max(1, s['sizeE'] + int(core_sizeE_offset))
+
+        arm_h = float(np.ptp(arm.NP.get_positions()[:, 2]))
+        n_arm = int(round(arm_h / period_z))
+
+        # flip core sizeE parity if it matches the branch parity, choosing -1
+        # when +1 would push the core height too far above the arms.
+        if (core_sizeE % 2) == (n_arm % 2):
+            core_h_plus = period_z * (core_sizeE + 1)
+            if core_sizeE > 1 and core_h_plus > arm_h:
+                core_sizeE -= 1              # +1 overshoots the arms -> shorten
+            else:
+                core_sizeE += 1
+
+        core = jNP.epbpyM(
+            core_element or self.element, self.Rnn,
+            sizeP=core_sizeP, sizeE=core_sizeE, Marks=0,
+            skipSymmetryAnalyzis=True, postAnalyzis=False, noOutput=noOutput)
+        self.core = core
+
+        if not noOutput:
+            core_h_est = period_z * core_sizeE
+            print(f"  [z-parity] period_z={period_z:.4f} A  "
+                  f"arm h={arm_h:.2f} A (parity {n_arm%2})  "
+                  f"core sizeE={core_sizeE} -> est. h={core_h_est:.2f} A "
+                  f"(parity {core_sizeE%2})")
+
+        # --- 4) replicate the branch to five, then 6) fuse the core ---------
+        def _assemble(core_obj):
+            st = arm.copy()
+            st.replicate_by_rotation(axis=[0, 0, 1], axis_def="cart",
+                                     n_copies=5, postAnalyzis=False)
+            st.remove_duplicates(noOutput=True)
+            st.union_with(core_obj, cogB=[0, 0, 0], mode="hull",
+                          threshold=threshold, noOutput=True)
+            return st
+
+        star = _assemble(core)
+        self.NP = star.NP
+
+        # --- radial parity guard, via the interface histogram ---------------
+        # Besides the z-parity (sizeE), the core has a radial (xy-column) parity
+        # that must interleave with the branch columns. skin can flip it,
+        # producing half-period (~Rnn/2) overlaps the merge cannot clean. Reuse
+        # interface_distance_histogram to detect them (n_overlap > 0): if found,
+        # bump core sizeP by 1 to restore the radial parity and re-fuse.
+        core_elem = core_element or self.element
+        if core_elem != self.element:
+            # Retry up to 2 sizeP bumps until the interface reaches ~Rnn.
+            for attempt in range(3):
+                res = self.interface_distance_histogram(
+                    elemA=self.element, elemB=core_elem, Rnn=self.Rnn,
+                    noOutput=True)
+                if res['d_min'] >= 0.95 * self.Rnn:
+                    break                       # clean interface, done
+                core_sizeP += 1
+                core = jNP.epbpyM(
+                    core_element or self.element, self.Rnn,
+                    sizeP=core_sizeP, sizeE=core_sizeE, Marks=0,
+                    skipSymmetryAnalyzis=True, postAnalyzis=False,
+                    noOutput=True)
+                star = _assemble(core)
+                self.NP = star.NP
+                if not noOutput:
+                    print(f"  [radial-parity] short contact d_min="
+                          f"{res['d_min']:.2f} A; core sizeP -> {core_sizeP}, "
+                          f"re-fused (attempt {attempt+1}).")
+        self.core = core
+
+        # --- adopt the fused star as our own structure ----------------------
+        self.nAtoms = len(self.NP)
+        self.cog = self.NP.get_center_of_mass()
+        self._flush_stale_data(shape_update="_zigzag_star")
+        self.is_optimized = False
+
+        # --- optional bimetallic interface analysis -------------------------
+        if analyze_interface and core_elem != self.element:
+            self.interface_distance_histogram(
+                elemA=self.element, elemB=core_elem, Rnn=self.Rnn,
+                noOutput=noOutput)
+        elif analyze_interface and core_elem == self.element:
+            if not noOutput:
+                print(f"  - interface analysis skipped: core and branches are "
+                      f"both {self.element} (monometallic).")
+
+        # --- post-analysis on the NEW structure -----------------------------
+        # self.NP now holds the fused zigzag star, so any properties computed in
+        # __init__ (on the smooth star) are stale. Recompute them here.
+        if postAnalyzis is None:
+            postAnalyzis = getattr(self, 'postAnalyzis', True)
+        if skipChiralityCalculation is None:
+            skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+        if skipSymmetryAnalyzis is None:
+            skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+        if skipFacetInfo is None:
+            skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+        if thresholdCoreSurface is None:
+            thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+        if postAnalyzis and self.nAtoms > 0:
+            self.propPostMake(
+                skipChiralityCalculation=skipChiralityCalculation,
+                skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                skipFacetInfo=skipFacetInfo,
+                thresholdCoreSurface=thresholdCoreSurface,
+                noOutput=noOutput, is_optimized=False)
+            if self.aseView:
+                view(self.NPcs)
+            
+    # ----- properties ------------------------------------------------------
+    def prop(self):
+        """Display nanoparticle properties."""
+        print()
+        print(self)
+        pyNMBu.plotImageInPropFunction(self.imageFile)
+        print("element =", self.element)
+        print(f"number of branches = {self.nBranches}")
+        print(f"nearest neighbour distance = {self.Rnn:.3f} A")
+        print(f"Ino decahedron target: Ø{self.diameter_nm:.1f} nm, "
+              f"height {self.height_nm:.1f} nm "
+              f"-> sizeP={self.sizeP}, sizeE={self.sizeE}, Marks={self.Marks}")
+        print(f"arm width (groove) = {self.arm_width_nm:.3f} nm")
+        print(f"branch tip-to-tip diameterC_nm = {self.diameterC_nm:.3f} nm")

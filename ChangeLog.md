@@ -5,6 +5,251 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
+## [0.19.0] "zigzags, twists, and meshes"
+
+### Added
+- **`reflect_plane()` in utils/geometry.py**: generalized to
+    reflect a plane across an ARBITRARY mirror plane, not only the coordinate
+    planes. The `mirror` argument now accepts either a full `[a, b, c, d]`
+    equation (any orientation and position, e.g. a fitted twin plane) or one of
+    the preset keywords 'yOz', 'xOz', 'xOy' for the coordinate planes through
+    the origin. The reflection uses the full geometric formula
+    `n' = n - 2 (n·m) m`, `d' = d - 2 (n·m) md` for a unit mirror normal m, so
+    it handles oblique and off-origin mirrors correctly. The previous
+    `mirror_pos` scalar is removed: an off-origin mirror is now expressed
+    directly through the mirror equation's offset. Verified numerically against
+    explicit point mirroring for coordinate and oblique mirrors.
+
+- **`carve_zigzag_pattern(ref1, ref2, pattern, pattern_unit='facet', ...)` in
+    utils/csg.py** (with a thin `self`-method wrapper in pyNMBcore): carves a
+    repeated zigzag (staircase) along an arm from two reference planes. Each
+    notch is the wedge-shaped corner removed by combining the two planes with
+    AND (one delete='above', one delete='below'); the first notch cuts at the
+    reference planes and each subsequent notch is sunk inward by per-notch
+    increments, so the wedge marches along the arm, building terraces parallel
+    to ref1 separated by steps parallel to ref2. The exposed facets and their
+    mutual angle follow entirely from the supplied reference normals; no
+    crystallographic family is assumed. Reference planes use the [u, v, w, -d]
+    convention (n.x = d), matching applySlicing's distance argument.
+
+    Two conventions make the pattern say what the user means. (i) The increments
+    are CROSSED internally: because the two planes share the wedge edge, moving
+    one plane sets the length of the OTHER exposed facet, so delta1 sinks the
+    ref2 plane and thereby sets the ref1 facet, and vice versa; a pattern of
+    (20, 10) therefore gives a ref1 facet about twice as long as the ref2 step.
+    (ii) By default (`pattern_unit='facet'`) the pattern values are read as
+    FACET LENGTHS, not as plane displacements: displacing a plane by d exposes a
+    facet of length d / sin(theta) on the neighbouring plane (theta being the
+    angle between ref1 and ref2), so the values are multiplied by sin(theta)
+    internally to produce the requested lengths. Without this conversion a
+    requested 3 nm edge came out at about 3.9 nm, a distortion that grew
+    conspicuous on long arms. `pattern_unit='plane'` keeps the raw low-level
+    behaviour (orthogonal plane displacements). Atomic discretisation still
+    scatters realised lengths by about one atomic row around the request.
+
+    Developed to reproduce the branched (star-shaped) nanoparticles of Lacroix
+    et al. (Angew. Chem. Int. Ed. Engl. 2012, [10.1002/anie.201107425](https://doi.org/10.1002/anie.201107425))
+    , whose arm
+    edges show the alternating faceting this routine can build with the
+    appropriate keywords. Typically paired with reflect_plane to carve the
+    symmetric opposite flank of each arm.
+
+- **`star` class in otherNPs.py**: five-fold star nanoparticle built by
+    composition. An Ino decahedron (`epbpyM`) is generated internally, oriented
+    so one branch points along +x, then a per-branch three-plane wedge (two
+    flanks at +/-36 deg of the branch axis plus one end plane at
+    `diameterC_nm/2`) is applied five times in `mode='AND'`, with a 72 deg
+    rotation about the FIXED origin `[0, 0, 0]` between cuts (rotating about the
+    drifting center of mass would break C5 symmetry). Size is derived from
+    target dimensions via `epbpyM.size_from_nm` (diameter_nm, height_nm ->
+    sizeP, sizeE). Optional `clip_diameter_nm` trims branch tips to a cylinder
+    about the five-fold axis. Follows the usual pyNMBcore contract (prop,
+    coords, propPostMake), on the `ptnr`/`pentaPrism` model.
+
+    - **`star.make_zigzag_arm(pattern, facet_pair=..., ...)`**: full zigzag-star
+        pipeline. Extracts a half-arm (rotate 36 deg, slice to a single half-branch
+        along +x), carves a zigzag on both flanks with `carve_zigzag_pattern` using
+        reference planes anchored on the branch-tip atom (`farthest_atom` +
+        `planeAtPoint`), mirrors across y=0 to complete one branch, replicates it
+        five times by 72 deg rotation, builds a decahedral core, and fuses core and
+        branches with `union_with`. The single carved branch is exposed as
+        `self.arm`, the core as `self.core`, and the fused star replaces `self.NP`.
+    
+    - **Facet-pair presets for the zigzag** (`star._FACET_PAIRS`): named presets
+        selecting the two reference planes (zigP, zagP) of the zigzag. `'111-100'`
+        pairs a {111} flank with a {100} step; `'111-111'` pairs a {111} flank with
+        its z-mirrored {111} (equivalent to `reflect_plane(zigP, 'xOy')`). Users may
+        also pass an explicit `(zigP, zagP)` pair as `[u, v, w, h]` planes.
+    
+    - **Core/branch lattice-registry correction (two parities)**: because the
+        core is rebuilt independently of the branches, it can be out of registry
+        with them at the interface, giving a short contact (~2.35 A) instead of a
+        clean Rnn contact. Two independent parities are enforced. (a) Vertical
+        (z) parity: the core's z-height, estimated analytically as
+        `Rnn * magicFactorF * sizeE`, must have opposite parity to the branch's
+        measured z-height in the same units; `sizeE` is nudged by +/-1 (choosing
+        -1 when +1 would overshoot the arms) to flip it. (b) Radial (xy-column)
+        parity: after fusion, the interface is probed with
+        `interface_distance_histogram`; if `d_min < 0.95*Rnn` (a short contact
+        the merge cannot clean, e.g. the 2.35 A quarter-layer that falls just
+        above overlap_frac*Rnn), the core `sizeP` is bumped by 1 and the star is
+        re-fused, iterating until the interface reaches ~Rnn. This makes the
+        result robust to any `skin` value (which shifts `sizeP` and would
+        otherwise flip the radial parity).
+    
+    - **Optional bimetallic interface analysis**: `make_zigzag_arm` accepts
+        `analyze_interface=True`, which runs `interface_distance_histogram` on the
+        fused star when the core element differs from the branch element, reporting
+        overlap or gap at the core/branch interface. The core element is set with
+        `core_element`.
+        (`interface_distance_histogram` is also used internally by the radial
+        parity guard above to detect short contacts.)
+    
+    - **`inner_end_z_height_nm(NP, slab_thickness=3.0)` in otherNPs.py**: returns
+        the transverse z-height (in nm) of an arm's innermost end (the slab of atoms
+        at the smallest x, toward the star center), used to size the core height
+        from the carved branch.
+
+- **Funding** and **From atomistic models to experiment** sections introduced in **README.md**
+
+- **triangulated surface mesh enclosing a set of atoms now available in pyNMB**:
+    - **`build_surface_mesh()` in `utils/geometry.py`**: builds a triangulated
+        surface mesh enclosing a set of atoms, either as the convex hull
+        (`method='hull'`, convex shapes only) or as an alpha-shape
+        (`method='alpha'`, follows concave features such as nanostar arms).
+        Faces are oriented coherently by topological propagation across shared
+        edges, followed by a global signed-volume flip; a centroid-based test
+        would flip normals in concave regions. Returns compacted
+        (vertices, faces), with per-face outward normals available via
+        `return_normals=True`.
+        
+    - **`smooth_mesh_taubin()` in `utils/geometry.py`**: shrink-free Taubin
+        lambda/mu mesh smoothing, analogous to OVITO's smoothing_level.
+    
+    - **`export_surface_mesh()` in `utils/external_pgm.py`, with a
+        `pyNMBcore` wrapper**: high-level method that extracts the surface shell
+        (atoms with CN below a user-defined threshold, default 12, to stay light
+        on multi-million-atom NPs), dilates it by one neighbour layer (a strictly
+        single-layer shell is locally coplanar on flat facets and would open
+        holes in the alpha-shape), builds the mesh via `build_surface_mesh`,
+        optionally smooths it (`surface_smoothing`, default 8 Taubin iterations),
+        writes it via `write_pmesh` together with a ready-to-run Jmol script, and
+        returns the Jmol command to display it. The alpha-shape probe radius,
+        mesh colour and translucency are configurable.
+        ```python
+        cmd = NP.export_surface_mesh("mesh/star.pmesh", method='alpha',
+                                   cn_threshold=12, probe_radius=5,
+                                   surface_smoothing=8)
+        ```
+    - **`mesh_area_volume()` in `utils/prop.py`**: area and enclosed volume of
+      a triangulated mesh via the divergence theorem, computed per connected
+      component; the outer skin (largest |volume|) is reported, so the inner
+      skin of the hollow two-layer shell does not contaminate the result.
+      Per-face component labels can be supplied (`labels=`, e.g. from
+      `build_surface_mesh` with `return_components=True`) to avoid a second
+      connectivity traversal; optional per-component breakdown with
+      `per_component=True`. With `atomic_radius=`, the area and volume of the
+      surface offset outwards by this radius (outer atomic envelope estimate)
+      are also returned, using the exact Steiner parallel-body formulas with
+      the integral mean curvature of the outer skin; valid for concave shapes
+      as well, as long as the offset stays below the smallest concave radius
+      of curvature.
+
+    - **`mesh_integral_mean_curvature()` in `utils/prop.py`**: integral of the
+      mean curvature of a closed, coherently oriented mesh, from the discrete
+      Steiner sum over signed dihedral angles; validated against the
+      closed-form icosahedron value M = 15 a arccos(√5/3).
+
+    - **`export_surface_mesh`** systematically computes area and volume of the
+      outer skin on the raw mesh (before smoothing), stored as
+      `meshArea` / `meshVolume` (Å) and `meshArea_nm2` / `meshVolume_nm3`;
+      with `atomic_radius=`, the Steiner-corrected values are stored as
+      `meshArea_radius` / `meshVolume_radius` and their `_nm2` / `_nm3`
+      counterparts. Validated against the closed-form area and volume of a
+      Mackay icosahedron (edge a = n·Rnn): analytical, convex-hull and
+      alpha-shape values agree to four significant digits (104.9 nm²,
+      91.9 nm³ for the 12-shell test case).
+
+### Changed
+
+- **`DrawJmol()` in utils.external_pgm.py** now supports CIF input in addition to XYZ and accepts a configurable `user_output_dir`.
+    CIF files are loaded natively by Jmol so the unit cell is preserved (use `unitcell on` in the script to draw it).
+    The format is inferred from the file extension when a path is passed, or set via the new `fmt` parameter.
+    The function now returns the output PNG path (or `None` on failure).
+    Fully backward compatible: `DrawJmol(mol, prefix)` still reads `figs/{mol}.xyz` and writes `figs/{prefix}.png`.
+
+- **`frames_to_movie()` in utils/animations.py**: the MP4 output is now encoded
+    for reliable playback in browser-based viewers such as PowerPoint for the web,
+    which previously dropped frames in slideshow mode. The stream is now written
+    at a standard frame rate (default `fps=25`) with each source image repeated to
+    stay on screen for a chosen duration, set by the new `seconds_per_frame`
+    argument (default 1.0), instead of relying on a very low frame rate. The H.264
+    encoding is forced to a widely compatible baseline: `yuv420p` pixel format,
+    even dimensions (via a scale filter), every frame as a keyframe (`-g 1`), and
+    `+faststart`. The perceived pace is now controlled by `seconds_per_frame`
+    rather than by `fps`; existing calls that passed a low `fps` for pacing should
+    switch to `seconds_per_frame` (e.g. `fps=1` becomes `fps=25,
+    seconds_per_frame=1.0`).
+
+- **`interface_distance_histogram()` in utils/csg.py**: the figure is no longer
+    shown unconditionally. `plt.show()` now runs only when `noOutput` is False,
+    and the figure is skipped entirely when it is neither displayed nor saved
+    (when `noOutput=True` and no `save_img`), so the function can be used as a
+    lightweight probe returning only `d_min`/`n_overlap`/`n_interface` without
+    creating or leaking matplotlib figures. Saving without displaying is
+    supported via `save_img` together with `noOutput=True`; when `noOutput` is
+    True the figure is closed (`plt.close`) instead of shown.
+
+- **`get_ellipsoid_analysis()` in utils/prop.py**: added a reliability check.
+    The fit is unchanged, but the object's extent along the ellipsoid's own
+    principal axes (orientation-invariant) is now compared with the fitted
+    dimensions. An axis exceeding that extent by more than 5% is geometrically
+    impossible for an enclosing ellipsoid and triggers a warning; this happens
+    on strongly oblate or branched shapes, where the major-axis-calibrated
+    scaling inflates the minor axis (a 10.2 nm thick nanostar was reported as
+    16.9 nm). The result dictionary gains `reliable` (bool) and `extent_pca`
+    (Å), so an unreliable fit can be detected even with `noOutput=True`.
+
+- **`export_png_with_ovito()` in utils/external_pgm.py** now supports a parallel
+    (orthographic) projection in addition to the default perspective one, via the
+    new `projection` argument (`"perspective"` or `"ortho"`, the latter also
+    accepting `"orthographic"`, `"orthogonal"`, `"parallel"`). A new `fov`
+    argument sets the camera field of view for explicit GUI framing: it is a
+    vertical opening angle in radians for perspective projection, or the vertical
+    size of the visible region in Angstrom for orthographic projection. A new
+    `camera_up` argument sets the camera up vector, which fixes the roll (the
+    rotation about the viewing axis); when left as None, OVITO keeps its default
+    constraint that the z axis stays vertical, so a rolled GUI view would
+    otherwise be straightened to the horizontal. Together these let a viewpoint
+    set up interactively in the OVITO GUI be reproduced exactly: read the
+    projection type, camera position, camera direction, camera up vector and
+    field of view from the 'Adjust view...' dialog and pass them through
+    `projection`, `camera_pos`, `camera_dir`, `camera_up` and `fov`. An
+    unrecognized `projection` value now raises `ValueError`. The function can
+    also render a solid faceted surface instead of individual atoms, via the new
+    `render_mode` argument (`"atoms"`, the default, or `"surface"`). In surface
+    mode an alpha-shape surface is built around the atoms with the
+    `ConstructSurfaceModifier`, the atoms are hidden, and the mesh is drawn as a
+    uniform-colored solid with highlighted edges, giving a polyhedron-like
+    representation of the particle shape. Two arguments control the surface: the
+    probe sphere radius `surface_radius` (in Angstrom, larger values smooth over
+    surface dips) and the mesh `surface_smoothing` level. In surface mode
+    `colors` sets the single surface color and the per-sphere `radius` is
+    ignored. An unrecognized `render_mode` value raises `ValueError`. Fully
+    backward compatible: existing calls keep the previous perspective projection,
+    default field of view, default up vector and atom rendering. The
+    `pyNMBcore.py` wrapper was updated accordingly.
+
+### Documentation
+
+- **`pyNMB-examples.ipynb`:**.
+    -  new nanostar subsection under the other NPs section
+    -  new Meshes, surfaces and volumes subsection under the Miscellaneous section
+- **`pyNMB-Article.ipynb`**: new example of the `systematic_carve_by` CSG
+    operation, carving a pyramidal pit into every face of an fcc cube with a
+    regular octahedron as the cutting pattern, including the `preview=True`
+    inspection step.
+
 ## [0.18.0] "local descriptors II, bug fixes, ovito, hexagonal bipyramids"
 
 ### Added
@@ -266,6 +511,16 @@
     (target dimensions, growth direction, cross-section, Wulff facets, and for
     wires the on-atom *vs* interstitial axis placement). The unit-cell and image
     output is unchanged.
+
+- **Package banner (`resources/svg/pyNanoMatBuilder_banner.svg`)** redesigned for
+    a cleaner, more legible look. The wordmark now uses a single font family with
+    a system fallback stack instead of a Calibri/Cantarell mix, which also fixes a
+    font rendering issue in some environments, and adds visual hierarchy by
+    setting "NanoMat" in a bolder, darker teal while "py" and "Builder" stay
+    lighter. The flat separator line was replaced by a teal rule that fades out,
+    the octahedron motif is now declined at three decreasing sizes and opacities
+    to evoke a nanoparticle size distribution, and a subtle drop shadow was added
+    to the wordmark. 
 
 ### Fixed
 

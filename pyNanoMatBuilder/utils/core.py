@@ -387,7 +387,32 @@ def signedAngleBetweenVV(v1, v2, n):
     if angle >= 0:
         return angle
     return 360 + angle
+    
+def angle_between_planes_byAtom(NP, nums1, nums2, acute=True):
+    """Angle between two planes, each fitted through a set of atoms.
 
+    Fits a plane through each atom selection (1-based numbers) and returns the
+    angle between them, reusing AngleBetweenVV on the plane normals. Because the
+    sign of a least-squares normal is arbitrary, `acute=True` folds the result
+    into [0, 90] deg (returning the acute angle); set acute=False to keep the
+    raw AngleBetweenVV value, which may be the supplement.
+
+    Args:
+        NP (pyNMB object): structure holding the positions.
+        nums1, nums2 (sequence of int): 1-based atom numbers defining each plane.
+        acute (bool): if True, return the acute angle in [0, 90] deg.
+
+    Returns:
+        float: the angle between the two planes, in degrees.
+    """
+    atoms = NP.NP
+    p1 = planeFittingLSF_byAtom(atoms, nums1, printEq=False)
+    p2 = planeFittingLSF_byAtom(atoms, nums2, printEq=False)
+    ang = AngleBetweenVV(p1[:3], p2[:3])
+    if acute and ang > 90.0:
+        ang = 180.0 - ang
+    return ang
+    
 #########################################################################################
 def centerToVertices(coordVertices: np.ndarray,
                      cog: np.ndarray):
@@ -727,7 +752,54 @@ def planeFittingLSF(coords: np.float64,
         print(errors)
         print(f"residual: {residual}")
     return np.array([u,v,w,h]).real
-    
+
+def planeFittingLSF_byAtom(atoms, atom_numbers, printErrors=False,
+                           printEq=True):
+    """Fit the plane equation through a set of atoms given by their numbers.
+
+    Convenience wrapper around planeFittingLSF that takes 1-based atom numbers
+    (as displayed in Jmol) instead of a raw coordinate array, so a selection
+    can be passed directly by atom number.
+
+    Args:
+        atoms (ase.Atoms): structure holding the atomic positions.
+        atom_numbers (sequence of int): 1-based atom numbers of the atoms
+            lying in the plane (e.g. [1, 5, 12]). At least 3 are required to
+            define a plane.
+        printErrors (bool): forwarded to planeFittingLSF; if True, prints the
+            per-point residuals.
+        printEq (bool): forwarded to planeFittingLSF; if True, prints the
+            fitted equation.
+
+    Returns:
+        numpy.ndarray: the plane equation [u, v, w, h] of ux + vy + wz + h = 0.
+
+    Raises:
+        ValueError: if fewer than 3 atom numbers are given, if any number is
+            out of the valid range [1, n_atoms], or if duplicates are present.
+    """
+    n_atoms = len(atoms)
+    nums = np.asarray(atom_numbers, dtype=int)
+
+    if nums.size < 3:
+        raise ValueError(
+            f"At least 3 atoms are required to define a plane, "
+            f"got {nums.size}.")
+
+    out_of_range = nums[(nums < 1) | (nums > n_atoms)]
+    if out_of_range.size > 0:
+        raise ValueError(
+            f"Atom number(s) {sorted(set(out_of_range.tolist()))} out of range; "
+            f"valid range is 1..{n_atoms}.")
+
+    if np.unique(nums).size != nums.size:
+        raise ValueError("Duplicate atom numbers are not allowed.")
+
+    # Jmol-style 1-based numbers -> 0-based positional indices.
+    coords = atoms.get_positions()[nums - 1]
+
+    return planeFittingLSF(coords, printErrors=printErrors, printEq=printEq)
+
 def faces_to_planes(faces, coords):
     """Converts a list of faces in planes equations [u, v, w, d].
 
@@ -810,7 +882,7 @@ def kDTreeCN(crystal: Atoms,
         tuple: (nn, CN) or (nn, CN, dNN) if returnD is True.
     """
     from sklearn.neighbors import KDTree
-    if noOutput:
+    if not noOutput:
         centertxt(
             "Building a table of nearest neighbours",
             bgc='#cbcbcb',
@@ -818,7 +890,7 @@ def kDTreeCN(crystal: Atoms,
             fgc='b',
             weight='bold',
         )
-    if noOutput:
+    if not noOutput:
         chrono = timer()
         chrono.chrono_start()
     coords = crystal.get_positions()
@@ -841,7 +913,7 @@ def kDTreeCN(crystal: Atoms,
             del(d[ipos])
         nn.append(l)
         CN.append(len(l))
-    if noOutput:
+    if not noOutput:
         chrono.chrono_stop(hdelay=False)
         chrono.chrono_show()
     if returnD:
@@ -934,6 +1006,7 @@ def _flush_stale_data(self, shape_update=None):
         '_local_order_decimals',
         'CN', 'GCN', 'CN_opt', 'GCN_opt',
         'strain_vol', 'strain_vm', 'strain_d2min', 'strain_detF', 'strain_cutoff',
+        'meshArea_nm2', 'meshVolume_nm3', 'meshArea_corr_nm2', 'meshVolume_corr_nm3'
 ]
     
     for attr in attrs_to_clean:

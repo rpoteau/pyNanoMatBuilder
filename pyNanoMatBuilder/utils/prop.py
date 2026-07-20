@@ -1725,6 +1725,31 @@ def get_ellipsoid_analysis(self, noOutput=False, mode='vertices'):
 
     # 7. Results Dictionary
     D1, D2, D3 = 2*a, 2*b, 2*c
+
+    # Sanity check: an enclosing ellipsoid cannot be larger than the object it
+    # encloses. The comparison must be made in the ellipsoid's OWN frame (the
+    # PCA axes), not in the cartesian frame: a tilted particle has a cartesian
+    # bounding box far larger than its true extent, which would silently defeat
+    # a cartesian check. On strongly oblate, branched shapes (e.g. flat
+    # five-fold stars) the 'vertices'/'all' scaling calibrates its factor on the
+    # MAJOR axis and can inflate the minor one beyond the particle's own extent.
+    all_pos = target_atoms.get_positions() - center
+    extent_pca = 2.0 * np.array([
+        np.max(np.abs(all_pos @ evecs[:, 0])),
+        np.max(np.abs(all_pos @ evecs[:, 1])),
+        np.max(np.abs(all_pos @ evecs[:, 2])),
+    ])
+    dims = np.array([D1, D2, D3])
+    ellipsoid_is_reliable = not np.any(dims > 1.05 * extent_pca)
+    if not ellipsoid_is_reliable and not noOutput:
+        print(f"{bg.LIGHTYELLOWB}Warning: the fitted ellipsoid "
+              f"({D1:.1f} x {D2:.1f} x {D3:.1f} Å) exceeds the object's own "
+              f"extent along the same axes ({extent_pca[0]:.1f} x "
+              f"{extent_pca[1]:.1f} x {extent_pca[2]:.1f} Å). The '{mode}' fit "
+              f"is not reliable for this morphology (strongly non-convex or "
+              f"oblate). Consider mode='planes', or report the extent measured "
+              f"along the principal axes.{bg.OFF}")
+
     self.ellipsoid[key] = {
         "status":      status,
         "mode":        mode,
@@ -1733,7 +1758,8 @@ def get_ellipsoid_analysis(self, noOutput=False, mode='vertices'):
         "D3":          D3,
         "volume":      volume,
         "surface":     surface_area,
-        "asphericity": D1 / D3 if c > 0 else 1.0
+        "asphericity": D1 / D3 if c > 0 else 1.0,
+        "reliable":    bool(ellipsoid_is_reliable),
     }
 
     if not noOutput:
@@ -1741,6 +1767,9 @@ def get_ellipsoid_analysis(self, noOutput=False, mode='vertices'):
         centertxt(f"Ellipsoid Analysis — {mode} ({status})",
                   bgc='#007a7a', size='14', weight='bold')
         print(f"  - Dimensions (Å): {results['D1']:.2f} x {results['D2']:.2f} x {results['D3']:.2f}")
+        print(f"  - Extent along the same axes (Å): "
+              f"{extent_pca[0]:.2f} x {extent_pca[1]:.2f} x {extent_pca[2]:.2f}"
+              f"  [the object's own size, for comparison]")
         print(f"  - Volume: {results['volume']/1000:.2f} nm³")
         print(f"  - Surface: {results['surface']/100:.2f} nm²")
         print(f"  - Asphericity: {results['asphericity']:.2f}")
@@ -2744,24 +2773,22 @@ def apparent_apex_angle(self, apex_direction, view_axis=None,
     use_opt = is_optimized and getattr(self, 'NP_opt', None) is not None
     status = "optimized structure" if use_opt else "initial structure"
 
-    # --- surface atoms determine the silhouette -------------------------------
+    # --- atoms that determine the silhouette ---------------------------------
+    # The flank fit samples the left/right silhouette edge in each horizontal
+    # slab, so it needs many atoms spread over the whole height. NPcs (surface
+    # atoms) is ideal. The former fallback to the 3D convex-hull VERTICES kept
+    # only a handful of extreme points (e.g. 19), leaving most slabs empty and
+    # making every flank fit fail — so when NPcs is missing we fall back to ALL
+    # atoms instead (a bit slower, but always measurable).
     npcs = getattr(self, 'NPcs_opt' if use_opt else 'NPcs', None)
-    src = "surface atoms (NPcs)"
     if npcs is not None and len(npcs) > 0:
         shell = npcs.get_positions()
+        src = "surface atoms (NPcs)"
     else:
         atoms = self.NP_opt if use_opt else self.NP
-        allpos = atoms.get_positions()
-        if len(allpos) > 4:
-            try:
-                shell = allpos[np.unique(ConvexHull(allpos).vertices)]
-                src = "convex-hull boundary atoms"
-            except Exception:
-                shell = allpos
-                src = "all atoms"
-        else:
-            shell = allpos
-            src = "all atoms"
+        shell = atoms.get_positions()
+        src = "all atoms (no NPcs classification)"
+            
     n_total = (len(self.NP_opt) if use_opt and getattr(self, 'NP_opt', None)
                is not None else len(self.NP))
 
@@ -2952,3 +2979,160 @@ def apparent_apex_angle(self, apex_direction, view_axis=None,
         plt.show()
 
     return out
+
+def mesh_integral_mean_curvature(vertices, faces):
+    """Integral of the mean curvature M of a closed triangulated mesh.
+
+    Computed as the discrete Steiner sum M = 1/2 * sum_e L_e * theta_e over
+    all edges, where L_e is the edge length and theta_e the signed dihedral
+    angle between the two adjacent faces (positive at convex edges, negative
+    at concave ones). Requires a coherently oriented mesh, as produced by
+    build_surface_mesh. Together with the area A and volume V, M gives the
+    exact parallel-body (Steiner) expansions
+        A(R) = A + 2 M R + 4 pi R^2
+        V(R) = V + A R + M R^2 + (4 pi / 3) R^3
+    valid as long as the outward offset R does not self-intersect (R smaller
+    than the smallest concave radius of curvature).
+
+    Args:
+        vertices ((N, 3) ndarray): mesh vertex coordinates.
+        faces ((M, 3) ndarray of int): coherently oriented triangles.
+
+    Returns:
+        float: M, in the unit of the vertices (Angstrom for pyNMB meshes).
+    """
+    import numpy as np
+    from collections import defaultdict
+
+    v0 = vertices[faces[:, 0]]
+    v1 = vertices[faces[:, 1]]
+    v2 = vertices[faces[:, 2]]
+    normals = np.cross(v1 - v0, v2 - v0)
+    normals /= np.linalg.norm(normals, axis=1, keepdims=True)
+
+    edge_to_faces = defaultdict(list)
+    for fi, (a, b, c) in enumerate(faces):
+        for e in ((a, b), (b, c), (c, a)):
+            edge_to_faces[frozenset(e)].append(fi)
+
+    M = 0.0
+    for edge, fpair in edge_to_faces.items():
+        if len(fpair) != 2:
+            continue  # non-manifold or boundary edge: skip
+        i, j = tuple(edge)
+        f1, f2 = fpair
+        n1, n2 = normals[f1], normals[f2]
+        cosang = np.clip(np.dot(n1, n2), -1.0, 1.0)
+        theta = np.arccos(cosang)
+        # Sign: convex if the fold bends outwards. Take the edge vector as
+        # directed in face f1; the sign of det(e, n1, n2) gives the fold side.
+        tri = faces[f1]
+        # directed edge (i -> j) as it appears in f1
+        order = [(tri[0], tri[1]), (tri[1], tri[2]), (tri[2], tri[0])]
+        evec = (vertices[j] - vertices[i]) if (i, j) in order \
+               else (vertices[i] - vertices[j])
+        sign = np.sign(np.dot(np.cross(n1, n2), evec))
+        M += np.linalg.norm(vertices[j] - vertices[i]) * sign * theta
+    return 0.5 * M
+
+def mesh_area_volume(vertices, faces, per_component=False, labels=None,
+                     atomic_radius=None):
+    """Compute the area and enclosed volume of a triangulated mesh.
+
+    The mesh may contain several closed connected components (e.g. the outer
+    skin and the inner skin produced by the alpha-shape of a hollow two-layer
+    surface shell). Components are identified by edge connectivity; area and
+    signed volume (divergence theorem) are computed per component. The
+    reported area and volume are those of the component with the largest
+    absolute volume, i.e. the outer skin.
+
+    Args:
+        vertices ((N, 3) ndarray): mesh vertex coordinates in Angstrom.
+        faces ((M, 3) ndarray of int): coherently oriented triangles
+            indexing into vertices.
+        per_component (bool): if True, also return the per-component
+            breakdown as a list of (area, volume, n_faces) tuples sorted by
+            decreasing |volume|.
+        labels ((M,) ndarray of int, optional): precomputed per-face
+            connected-component labels (e.g. from build_surface_mesh with
+            return_components=True). If None, components are recomputed
+            here by edge-connectivity BFS.
+        atomic_radius (float, optional): if given (in the same unit as the
+            vertices, i.e. Angstrom for pyNMB meshes), also return the area
+            and volume of the surface offset outwards by atomic_radius,
+            i.e. an estimate of the outer atomic envelope rather than the
+            surface through the atomic centres. Uses the Steiner
+            parallel-body formulas
+                A(R) = A + 2 M R + 4 pi R^2
+                V(R) = V + A R + M R^2 + (4 pi / 3) R^3
+            where M is the integral of the mean curvature, computed from
+            the signed dihedral angles of the outer-skin faces. Exact for
+            convex bodies; for concave shapes, valid as long as R stays
+            below the smallest concave radius of curvature (always the case
+            for atomic radii on atomistic surfaces).
+
+    Returns:
+        tuple: (area, volume) in Angstrom^2 and Angstrom^3, extended with
+            (area_corr, volume_corr) if atomic_radius is given, and with the
+            per-component list if per_component is True (always last).
+    """
+    import numpy as np
+    from collections import defaultdict, deque
+
+    # Connected components via shared edges (skipped when labels are given)
+    if labels is None:
+        edge_to_faces = defaultdict(list)
+        for fi, (a, b, c) in enumerate(faces):
+            for e in ((a, b), (b, c), (c, a)):
+                edge_to_faces[frozenset(e)].append(fi)
+        labels = np.full(len(faces), -1, dtype=int)
+        n_comp = 0
+        for seed in range(len(faces)):
+            if labels[seed] >= 0:
+                continue
+            labels[seed] = n_comp
+            queue = deque([seed])
+            while queue:
+                fi = queue.popleft()
+                a, b, c = faces[fi]
+                for e in ((a, b), (b, c), (c, a)):
+                    for fj in edge_to_faces[frozenset(e)]:
+                        if labels[fj] < 0:
+                            labels[fj] = n_comp
+                            queue.append(fj)
+            n_comp += 1
+    else:
+        labels = np.asarray(labels, dtype=int)
+        n_comp = int(labels.max()) + 1
+
+    # Per-triangle area and signed volume contribution
+    v0 = vertices[faces[:, 0]]
+    v1 = vertices[faces[:, 1]]
+    v2 = vertices[faces[:, 2]]
+    cross = np.cross(v1 - v0, v2 - v0)
+    tri_area = 0.5 * np.linalg.norm(cross, axis=1)
+    tri_vol = np.einsum('ij,ij->i', v0, np.cross(v1, v2)) / 6.0
+
+    components = []       # (area, signed volume, n_faces, component label)
+    for k in range(n_comp):
+        m = labels == k
+        components.append((tri_area[m].sum(), tri_vol[m].sum(),
+                           int(m.sum()), k))
+    components.sort(key=lambda t: abs(t[1]), reverse=True)
+
+    area = components[0][0]
+    volume = abs(components[0][1])
+    outer_label = components[0][3]
+
+    out = [area, volume]
+    if atomic_radius is not None:
+        R = float(atomic_radius)
+        M = mesh_integral_mean_curvature(vertices,
+                                         faces[labels == outer_label])
+        area_corr = area + 2.0 * M * R + 4.0 * np.pi * R**2
+        volume_corr = volume + area * R + M * R**2 + (4.0 * np.pi / 3.0) * R**3
+        out += [area_corr, volume_corr]
+    if per_component:
+        out.append([c[:3] for c in components])   # keep the public 3-tuples
+
+    return tuple(out)

@@ -168,6 +168,7 @@ pyNanoMatBuilder/resources/cif_database/cod9008513-Ru_hcp.cif
 pyNanoMatBuilder/resources/cif_database/cod9011068-Mn_alpha.cif
 pyNanoMatBuilder/resources/cif_database/cod9012884-Co_epsilon.cif
 pyNanoMatBuilder/resources/cif_database/cod9012957-Pt_fcc.cif
+pyNanoMatBuilder/resources/cif_database/cod9013024_Ni_fcc.cif
 pyNanoMatBuilder/resources/cif_database/cod9015662-TiO2-rutile.cif
 pyNanoMatBuilder/resources/cif_database/cod9015929-TiO2-anatase.cif
 pyNanoMatBuilder/resources/cif_database/.ipynb_checkpoints/cod1000041-NaCl-checkpoint.cif
@@ -257,6 +258,7 @@ pyNanoMatBuilder/resources/figs/fccrdd-C.png
 pyNanoMatBuilder/resources/figs/fccrdd.base64
 pyNanoMatBuilder/resources/figs/fccrdd.png
 pyNanoMatBuilder/resources/figs/fccrdd.xyz
+pyNanoMatBuilder/resources/figs/hbpy-C.png
 pyNanoMatBuilder/resources/figs/hcpsph1WS-C.png
 pyNanoMatBuilder/resources/figs/hcpsph1WS.png
 pyNanoMatBuilder/resources/figs/hcpsph1WS.script
@@ -413,6 +415,7 @@ pyNanoMatBuilder/utils/local_descriptors.py
 pyNanoMatBuilder/utils/parallel.py
 pyNanoMatBuilder/utils/polydispersity.py
 pyNanoMatBuilder/utils/prop.py
+pyNanoMatBuilder/utils/strain.py
 pyNanoMatBuilder/utils/symmetry.py
 pyNanoMatBuilder/utils/utils.py.org
 pyNanoMatBuilder/utils/utils.py.tmp
@@ -429,4 +432,5 @@ pyNanoMatBuilder/utils/.ipynb_checkpoints/local_descriptors-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/parallel-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/polydispersity-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/prop-checkpoint.py
+pyNanoMatBuilder/utils/.ipynb_checkpoints/strain-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/symmetry-checkpoint.py

@@ -136,6 +136,11 @@ class pyNMBcore:
         self.G = None
         self.Gstar = None
         self.ucMatrix = None
+
+        self.meshArea_nm2 = None
+        self.meshVolume_nm3 = None
+        self.meshArea_corr_nm2 = None
+        self.meshVolume_corr_nm3 = None
         
     def optimize(self, calculator='EMT', optimizer='QN', fthreshold=0.1,
                  traj_file=None, xyz_file=None,
@@ -469,42 +474,17 @@ class pyNMBcore:
                  depth_nm: float = 0.0,
                  profile: str = 'linear', custom_profile=None,
                  pitch: float = None, helix_radius: float = None,
+                 Burger: float=None,
                  chirality: str = 'RH',
                  noOutput: bool = None):
         """
         Apply a Twist to the NP along a given axis.
         See utils/geometry.applyTwist for full documentation.
-    
-        Args:
-            axis (array-like): Twist axis in crystallographic [h, k, l] or
-                Cartesian [x, y, z] coordinates depending on axis_def.
-            axis_def (str): Coordinate system of axis: 'hkl' (default) or 'cart'.
-            rate (float): Twist rate in degrees per Å (linear, helical), peak
-                amplitude in degrees (sinusoidal, gaussian), or scaling
-                factor (custom). Not used for 'helix'. Default is 1.0.
-            depth_nm (float): Thickness (nm) of the twisted surface cap,
-                measured inward from the outermost plane along the
-                axis. Only the cap is twisted; the core stays fixed,
-                with the angle growing from 0 at the cap boundary to
-                full value at the surface. depth_nm = 0.0 (default)
-                = no limit (whole object twisted). Small positive
-                values give a per-facet surface twist.
-            profile (str): Twist profile: 'linear', 'sinusoidal', 'gaussian',
-                'helical', 'helix', or 'custom'. Default is 'linear'.
-            custom_profile (callable, optional): User-defined function f(z, L) -> float,
-                required when profile='custom'.
-            pitch (float, optional): Helix pitch in Å/turn, required when
-                profile='helical' or 'helix'.
-            helix_radius (float, optional): Radius of the helical path in Å,
-                required when profile='helix'.
-            chirality (str): Handedness of the Twist or helix: 'RH' (Right-Handed,
-                default) or 'LH' (Left-Handed, mirror image).
-            noOutput (bool): If True, suppresses output. Default is self.noOutput.
         """
         from .utils.geometry import applyTwist
         if noOutput is None:
             noOutput = self.noOutput
-        applyTwist(self, axis, axis_def, rate, depth_nm, profile, custom_profile, pitch, helix_radius, chirality, noOutput)
+        applyTwist(self, axis, axis_def, rate, depth_nm, profile, custom_profile, pitch, helix_radius, Burger, chirality, noOutput)
 
     def defHelixShapeForJMol(self, n_rings=50, n_sides=12, noOutput=True):
         """
@@ -831,6 +811,26 @@ class pyNMBcore:
                                       skipSymmetryAnalyzis=skipSymmetryAnalyzis,
                                       skipFacetInfo=skipFacetInfo,
                                       thresholdCoreSurface=thresholdCoreSurface)
+        
+    def carve_zigzag_pattern(self, ref1, ref2, pattern, pattern_unit='facet',
+                             recenter=False, noOutput=None, postAnalyzis=None,
+                             skipChiralityCalculation=None,
+                             skipSymmetryAnalyzis=None, skipFacetInfo=None,
+                             thresholdCoreSurface=None):
+        """Carve a repeated zigzag along an arm from two reference planes.
+
+        See utils.csg.carve_zigzag_pattern for full documentation.
+        """
+        from .utils.csg import carve_zigzag_pattern
+        if noOutput is None:
+            noOutput = self.noOutput
+        return carve_zigzag_pattern(
+            self, ref1, ref2, pattern, pattern_unit=pattern_unit,
+            recenter=recenter, noOutput=noOutput, postAnalyzis=postAnalyzis,
+            skipChiralityCalculation=skipChiralityCalculation,
+            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+            skipFacetInfo=skipFacetInfo,
+            thresholdCoreSurface=thresholdCoreSurface)
     
     def copy(self):
         "Create and return a deep copy of any pyNanoMatBuilder system"
@@ -1291,10 +1291,14 @@ class pyNMBcore:
     def export_png_with_ovito(self, prefix="ovito", user_output_dir="./",
                               radius=None, colors=None,
                               azimuth_deg=30.0, elevation_deg=65.0,
-                              camera_pos=None, camera_dir=None,
+                              camera_pos=None, camera_dir=None, camera_up=None,
+                              fov=None, zoom_factor=None, projection="perspective",
                               size=(2400, 2400), background=(1, 1, 1),
                               transparent=False, ambient_occlusion=True,
-                              use_opt=False, noOutput=None):
+                              use_opt=False, render_mode="atoms",
+                              surface_radius=4.0, surface_smoothing=12,
+                              highlight_mesh_edges=False,
+                              noOutput=None):
         """Render self.NP to a PNG image with OVITO Basic (free renderer).
         See utils.external_pgm.export_png_with_ovito for full documentation.
         """
@@ -1305,15 +1309,29 @@ class pyNMBcore:
             self, prefix=prefix, user_output_dir=user_output_dir,
             radius=radius, colors=colors,
             azimuth_deg=azimuth_deg, elevation_deg=elevation_deg,
-            camera_pos=camera_pos, camera_dir=camera_dir,
+            camera_pos=camera_pos, camera_dir=camera_dir, camera_up=camera_up,
+            fov=fov, zoom_factor=zoom_factor, projection=projection,
             size=size, background=background, transparent=transparent,
             ambient_occlusion=ambient_occlusion, use_opt=use_opt,
+            render_mode=render_mode, surface_radius=surface_radius,
+            surface_smoothing=surface_smoothing,
+            highlight_mesh_edges=highlight_mesh_edges,
             noOutput=noOutput)
 
     def farthest_in_direction(self, direction, axis_def='cart'):
         """Wrapper for utils.geometry.farthest_in_direction."""
         from .utils.geometry import farthest_in_direction
         return farthest_in_direction(self, direction, axis_def=axis_def)
+
+    def farthest_atom(self, weights=(1.0, 1.0, 1.0), signs=(1, 1, 1),
+                      metric='projection', from_cog=True):
+        """Return the outermost atom along a weighted/signed combination of x, y, z.
+
+        See utils.geometry.farthest_atom for full documentation.
+        """
+        from .utils.geometry import farthest_atom
+        return farthest_atom(self, weights=weights, signs=signs,
+                             metric=metric, from_cog=from_cog)
 
     def mirror_at_tip(self, direction, axis_def, **kwargs):
         """Wrapper for utils.geometry.mirror_at_tip."""
@@ -1345,3 +1363,34 @@ class pyNMBcore:
         return set_symbols(self, to_symbol, from_symbol=from_symbol,
                            indices=indices, is_optimized=is_optimized,
                            noOutput=noOutput)
+
+    def planeFittingLSF_byAtom(self, atom_numbers, printErrors=False,
+                               printEq=True, is_optimized=None):
+        """Fit the plane equation through a set of atoms given by their numbers.
+        See utils.core.planeFittingLSF_byAtom for full documentation."""
+        from .utils.core import planeFittingLSF_byAtom
+        if is_optimized is None:
+            is_optimized = getattr(self, 'is_optimized', False)
+        use_opt = is_optimized and getattr(self, 'NP_opt', None) is not None
+        atoms = self.NP_opt if use_opt else self.NP
+
+        return planeFittingLSF_byAtom(
+            atoms, atom_numbers, printErrors=printErrors, printEq=printEq)
+
+    def export_surface_mesh(self, prefix, user_output_dir="mesh",
+                        method='alpha', probe_radius=None, surface_smoothing=8,
+                        cn_threshold=12, Rmax=None, surface_only=None,
+                        atomic_radius=None, color='x999999', translucency=0.15,
+                        noOutput=None):
+        """Build a surface mesh and export it as a Jmol pmesh file.
+        See utils.external_pgm.export_surface_mesh for full documentation."""
+        from .utils.external_pgm import export_surface_mesh
+        if noOutput is None: noOutput = self.noOutput
+        return export_surface_mesh(self, prefix=prefix,
+                                   user_output_dir=user_output_dir,
+                                   method=method, probe_radius=probe_radius,
+                                   surface_smoothing=surface_smoothing,
+                                   cn_threshold=cn_threshold, Rmax=Rmax,
+                                   surface_only=surface_only,
+                                   atomic_radius=atomic_radius, color=color,
+                                   translucency=translucency, noOutput=noOutput)
