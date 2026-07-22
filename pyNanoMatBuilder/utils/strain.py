@@ -9,7 +9,7 @@ from .core import (pyNMB_location, get_resource_path, timer, RAB, Rbetween2Point
                    )
 from .core import centertxt, centerTitle, fg, bg, hl, color
 
-from numba import njit
+from .parallel import njit
 from scipy.spatial import cKDTree
 
 
