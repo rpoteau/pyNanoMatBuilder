@@ -13,5 +13,6 @@ from .local_descriptors import *
 from .parallel import *
 from .polydispersity import *
 from .strain import *
+from .compute_f0 import *
 
 __all__ = ['fg', 'bg', 'hl', 'color']

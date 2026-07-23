@@ -96,6 +96,25 @@ See more explanations in the **How to? Workflow Guides** section of the Main Tut
 
 ---
 
+## Optional couplings (simulated data)
+
+pyNanoMatBuilder nanoparticles can be fed into external simulation packages. These couplings pull in
+extra, sometimes conflicting dependencies, so each is meant to run in its **own** environment/Jupyter kernel:
+
+| Tutorial | Package | Setup | Notes |
+|---|---|---|---|
+| [`pyNMB-abtem-coupling.ipynb`](pyNMB-abtem-coupling.ipynb) | [abTEM](https://abtem.readthedocs.io/) (HRTEM simulation) | [`requirements-abtem.txt`](requirements-abtem.txt) | numpy version depends on your abTEM version |
+| [`pyNMB-debye-coupling.ipynb`](pyNMB-debye-coupling.ipynb) | [DebyeCalculator](https://github.com/FrederikLizakJohansen/DebyeCalculator) (scattering) | [`requirements-debye.txt`](requirements-debye.txt) | Python 3.11 only, older ASE (3.22.1) |
+| [`pyNMB-pyausaxs-coupling.ipynb`](pyNMB-pyausaxs-coupling.ipynb) | [pyausaxs](https://github.com/AUSAXS/pyAUSAXS) (scattering) | [`requirements-abtem.txt`](requirements-pyausaxs.txt) |
+
+
+
+Each notebook states its required kernel in its first cell. Use a dedicated environment per
+coupling — do not reuse a general-purpose environment, and do not share one environment
+between the two tutorials.
+
+---
+
 [![PyPI version](https://img.shields.io/pypi/v/pynanomatbuilder.svg)](https://pypi.org/project/pynanomatbuilder/)
 [![Documentation Status](https://readthedocs.org/projects/pynanomatbuilder/badge/?version=latest)](https://pynanomatbuilder.readthedocs.io/en/latest/?badge=latest)
 [![License](https://img.shields.io/github/license/rpoteau/pynanomatbuilder)](https://github.com/rpoteau/pynanomatbuilder/blob/main/LICENSE)

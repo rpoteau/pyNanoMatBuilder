@@ -1,0 +1,8 @@
+ase==3.22.1
+numpy==1.26.4
+scipy==1.16.3
+pandas==2.3.3
+matplotlib==3.10.7
+pymatgen==2024.8.9
+debyecalculator==1.0.14
+torch

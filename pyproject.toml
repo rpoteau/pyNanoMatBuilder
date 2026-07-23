@@ -61,12 +61,8 @@ docs = [
   "numpydoc",
   "sphinx-copybutton"
 ]
-debye = [
-    "debyecalculator"
-]
-tem = [
-    "abtem"
-]
+
 visu = [
     "tools4pyphyschem"
 ]
+
