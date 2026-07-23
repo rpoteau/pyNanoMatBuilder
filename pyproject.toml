@@ -66,3 +66,12 @@ visu = [
     "tools4pyphyschem"
 ]
 
+debye = [
+    "debyecalculator"
+]
+tem = [
+    "abtem"
+]
+pyausaxs = [
+    "pyausaxs"
+]
