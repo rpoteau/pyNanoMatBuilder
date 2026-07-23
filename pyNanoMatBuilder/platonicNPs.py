@@ -954,7 +954,7 @@ class regfccTd(PlatonicNP):
                  Rnn: float = 2.7,
                  nLayer: int = 1,
                  shape: str = 'regfccTd',
-                 n_Td: int = 1,
+                 n_Td: int = 1, # deprecated, see chiralNPs.py
                  **kwargs
                  ):
         """Initialize the class with all necessary parameters.
@@ -967,7 +967,8 @@ class regfccTd(PlatonicNP):
                 per edge).
             shape (str): Shape 'regfccTd'.
             n_Td (int): The number of tetrahedrons in the
-                optional helix.
+                optional helix. 
+                Depracated! Has been moved to chiralNPs.py
             postAnalyzis (bool): If True, prints additional NP
                 information (e.g., cell parameters, moments of inertia,
                 inscribed/circumscribed sphere diameters, etc.).
@@ -1003,7 +1004,17 @@ class regfccTd(PlatonicNP):
         self.nAtomsPerLayer = []
         self.nAtomsPerEdge = self.nLayer
         self.cog = np.array([0., 0., 0.])
-        self.n_Td = n_Td
+        if n_Td > 1:
+            raise NotImplementedError(
+                "Generation of Boerdijk-Coxeter helices (BCH) from tetrahedral "
+                "units (n_Td > 1) has been moved out of platonicNPs.regfccTd "
+                "since pyNanoMatBuilder 0.11.0. Please use the dedicated class "
+                "instead:\n"
+                "    from pyNanoMatBuilder import chiralNPs as chNP\n"
+                "    chNP.bch(...)\n"
+                "The n_Td parameter is kept here only for the single-tetrahedron "
+                "case (n_Td = 1)."
+            )
         self.nAtoms_helix = 0  # Initialize to 0, will be computed in generate_tetrahelix()
         self.imageFile = pyNMBu.imageNameWithPathway("fccTd-C.png")
         noOutput = self.noOutput
@@ -1132,6 +1143,7 @@ class regfccTd(PlatonicNP):
             faces = np.array(faces)
         return CoordVertices, edges, faces
 
+    # MOVED TO chiralNPs.py
     # def generate_tetrahelix(self, c, n_Td, nAtoms,
     #                          debug=False):
     #     """Generates a Boerdijk-Coxeter helix made of tetrahedrons.
@@ -1275,7 +1287,7 @@ class regfccTd(PlatonicNP):
             print(self.nAtomsPerLayer)
         # aseObject = ase.Atoms(self.element*self.nAtoms, positions=c)
         
-        # ########################### helix ########################################################
+        # ########################### helix ######################################################## MOVED TO chiralNPs.py
         # if self.n_Td > 1: 
         #     # Faces of a tetrahedron, consistent with MakeVertices convention
         #     seed_faces = [(0, 2, 1), (0, 1, 3), (0, 3, 2), (1, 2, 3)]

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="760"
+   height="120"
+   viewBox="0 0 190 30"
+   version="1.1"
+   id="svg5"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"><title>pyNanoMatBuilder banner</title>
+  <defs>
+    <!-- Soft drop shadow for the wordmark -->
+    <filter id="softShadow" x="-0.1" y="-0.2" width="1.2" height="1.4">
+      <feDropShadow dx="0.25" dy="0.35" stdDeviation="0.35"
+        flood-color="#003a3a" flood-opacity="0.35" />
+    </filter>
+    <!-- Fading separator gradient (teal -> transparent) -->
+    <linearGradient id="ruleFade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0"    stop-color="#007a7a" stop-opacity="1" />
+      <stop offset="0.75" stop-color="#007a7a" stop-opacity="0.5" />
+      <stop offset="1"    stop-color="#007a7a" stop-opacity="0" />
+    </linearGradient>
+    <!-- One octahedron/graph motif, reused at several sizes -->
+    <g id="octa">
+      <path d="m -200.23175,576.42988 198.999997,-115 v 460 l -198.999997,-115 z"
+        style="fill:#007a7a;fill-opacity:1;opacity:0.3" />
+      <g style="stroke:#007a7a;stroke-width:33.1107;stroke-opacity:1">
+        <line x1="-1.2317423" y1="691.42987" x2="-1.2317423" y2="461.42987" />
+        <line x1="-1.2317423" y1="691.42987" x2="197.76826"  y2="576.42987" />
+        <line x1="-1.2317423" y1="691.42987" x2="197.76826"  y2="806.42987" />
+        <line x1="-1.2317423" y1="691.42987" x2="-1.2317423" y2="921.42987" />
+        <line x1="-1.2317423" y1="691.42987" x2="-200.23174" y2="806.42987" />
+        <line x1="-1.2317423" y1="691.42987" x2="-200.23174" y2="576.42987" />
+      </g>
+      <g style="fill:#007a7a;fill-opacity:1">
+        <circle cx="-1.2317423" cy="461.42987" r="62" />
+        <circle cx="197.76826"  cy="576.42987" r="62" />
+        <circle cx="197.76826"  cy="806.42987" r="62" />
+        <circle cx="-1.2317423" cy="921.42987" r="62" />
+        <circle cx="-200.23174" cy="806.42987" r="62" />
+        <circle cx="-200.23174" cy="576.42987" r="62" />
+      </g>
+      <circle cx="-1.2317423" cy="691.42987" r="95"
+        style="fill:#004d4d;fill-opacity:1" />
+    </g>
+  </defs>
+
+  <!-- Red Python-Chemistry logo (unchanged) -->
+  <g transform="matrix(0.03539767,0,0,0.03539767,3,6.5)">
+    <path d="M 320.32,15.5 V 0 H 209.24 v 15.5 h 33.58 V 124 c 20.67,0 43.92,-18.08 43.92,-49.08 V 15.5 Z"
+      style="fill:#611313" />
+    <path d="m 286.74,170.49 h -43.92 v 18.08 c 0,90.96 -10.49,115.36 -31,134.33 -1.87,1.73 -0.57,2.77 1.03,2.28 39.34,-12.09 73.88,-37.74 73.88,-123.69 v -31 z M 108.5,217.9 V 0 H 0 v 201.49 c 0,104.67 51.67,139.49 136.91,139.49 23.25,0 54.47,-7.34 59.41,-10.33 0.99,-0.6 1.53,-1.23 1.34,-1.79 -0.17,-0.51 -0.77,-0.8 -2.3,-0.8 -22.06,-0.05 -86.87,-13.15 -86.87,-110.16"
+      style="fill:#e93328" />
+  </g>
+
+  <!-- Wordmark with visual hierarchy: py / NanoMat / Builder -->
+  <text x="20" y="17.5"
+    style="font-family:'DejaVu Sans','Segoe UI',Calibri,sans-serif;font-size:9px;letter-spacing:0.1px;fill:#007a7a"
+    filter="url(#softShadow)">
+    <tspan style="font-weight:300">py</tspan><tspan style="font-weight:700;fill:#004d4d">NanoMat</tspan><tspan style="font-weight:300">Builder</tspan>
+  </text>
+
+  <!-- Fading separator rule under the wordmark -->
+  <rect x="20" y="20.5" width="100" height="0.7" fill="url(#ruleFade)" />
+
+  <!-- Octahedron motif declined as a size/opacity distribution -->
+  <use href="#octa" transform="matrix(0.0300,0,0,0.0300,150,4.5)" opacity="0.35" />
+  <use href="#octa" transform="matrix(0.0230,0,0,0.0230,165,7.0)" opacity="0.6" />
+  <use href="#octa" transform="matrix(0.0330,0,0,0.0330,178,4.0)" opacity="1" />
+</svg>

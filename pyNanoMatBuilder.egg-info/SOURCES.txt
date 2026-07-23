@@ -168,6 +168,7 @@ pyNanoMatBuilder/resources/cif_database/cod9008513-Ru_hcp.cif
 pyNanoMatBuilder/resources/cif_database/cod9011068-Mn_alpha.cif
 pyNanoMatBuilder/resources/cif_database/cod9012884-Co_epsilon.cif
 pyNanoMatBuilder/resources/cif_database/cod9012957-Pt_fcc.cif
+pyNanoMatBuilder/resources/cif_database/cod9013024_Ni_fcc.cif
 pyNanoMatBuilder/resources/cif_database/cod9015662-TiO2-rutile.cif
 pyNanoMatBuilder/resources/cif_database/cod9015929-TiO2-anatase.cif
 pyNanoMatBuilder/resources/cif_database/.ipynb_checkpoints/cod1000041-NaCl-checkpoint.cif
@@ -257,6 +258,7 @@ pyNanoMatBuilder/resources/figs/fccrdd-C.png
 pyNanoMatBuilder/resources/figs/fccrdd.base64
 pyNanoMatBuilder/resources/figs/fccrdd.png
 pyNanoMatBuilder/resources/figs/fccrdd.xyz
+pyNanoMatBuilder/resources/figs/hbpy-C.png
 pyNanoMatBuilder/resources/figs/hcpsph1WS-C.png
 pyNanoMatBuilder/resources/figs/hcpsph1WS.png
 pyNanoMatBuilder/resources/figs/hcpsph1WS.script
@@ -295,6 +297,9 @@ pyNanoMatBuilder/resources/figs/script-facettes-345PtLight.spt
 pyNanoMatBuilder/resources/figs/sphere-C.png
 pyNanoMatBuilder/resources/figs/sphere.base64
 pyNanoMatBuilder/resources/figs/sphere.png
+pyNanoMatBuilder/resources/figs/star-C.png
+pyNanoMatBuilder/resources/figs/star_shaped-C.png
+pyNanoMatBuilder/resources/figs/star_shaped_b-C.png
 pyNanoMatBuilder/resources/figs/tbp-C.png
 pyNanoMatBuilder/resources/figs/tbp.base64
 pyNanoMatBuilder/resources/figs/tbp.png
@@ -382,6 +387,7 @@ pyNanoMatBuilder/resources/figs/slices/cube_X-C.png
 pyNanoMatBuilder/resources/figs/slices/cube_X.xyz
 pyNanoMatBuilder/resources/svg/Logo-Universite-Toulouse-n-2023.png
 pyNanoMatBuilder/resources/svg/Logo-institutionnel-couleur-Uonly.svg
+pyNanoMatBuilder/resources/svg/Materiaux-emergents.png
 pyNanoMatBuilder/resources/svg/Python_logo_and_wordmark.svg.png
 pyNanoMatBuilder/resources/svg/__init__.py
 pyNanoMatBuilder/resources/svg/bccrdd.spt
@@ -398,8 +404,17 @@ pyNanoMatBuilder/resources/svg/logoEnd.svg
 pyNanoMatBuilder/resources/svg/logo_lpcno_300_dpi_notexttransparent.png
 pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_banner.png
 pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_banner.svg
+pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_banner_draft.svg
+pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_banner_old.png
 pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_logo.png
 pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_logo.svg
+pyNanoMatBuilder/resources/svg/pynanomatbuilder_pypi_ready_badge.png
+pyNanoMatBuilder/resources/svg/pynanomatbuilder_pypi_ready_badge.svg
+pyNanoMatBuilder/resources/svg/pynmb_logo.svg
+pyNanoMatBuilder/resources/svg/pynmb_logo_dark.png
+pyNanoMatBuilder/resources/svg/pynmb_logo_light.png
+pyNanoMatBuilder/resources/svg/workflow_figure.png
+pyNanoMatBuilder/resources/svg/workflow_figure.svg
 pyNanoMatBuilder/utils/__init__.py
 pyNanoMatBuilder/utils/animations.py
 pyNanoMatBuilder/utils/core.py
@@ -413,6 +428,7 @@ pyNanoMatBuilder/utils/local_descriptors.py
 pyNanoMatBuilder/utils/parallel.py
 pyNanoMatBuilder/utils/polydispersity.py
 pyNanoMatBuilder/utils/prop.py
+pyNanoMatBuilder/utils/strain.py
 pyNanoMatBuilder/utils/symmetry.py
 pyNanoMatBuilder/utils/utils.py.org
 pyNanoMatBuilder/utils/utils.py.tmp
@@ -429,4 +445,5 @@ pyNanoMatBuilder/utils/.ipynb_checkpoints/local_descriptors-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/parallel-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/polydispersity-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/prop-checkpoint.py
+pyNanoMatBuilder/utils/.ipynb_checkpoints/strain-checkpoint.py
 pyNanoMatBuilder/utils/.ipynb_checkpoints/symmetry-checkpoint.py

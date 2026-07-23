@@ -1,21 +1,22 @@
 <div style="text-align:center">
-<img src="https://raw.githubusercontent.com/rpoteau/pynanomatbuilder/main/pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_banner.png" alt="pyNMB_banner" width="800" />
+<img src="https://raw.githubusercontent.com/rpoteau/pynanomatbuilder/main/pyNanoMatBuilder/resources/svg/pyNanoMatBuilder_banner.png" alt="pyNMB_banner" width="800" /> 
 </div>
 <br>
 
 Most **nanoparticles** have a well-defined shape. The habit of a crystalline nanoparticle is dependent on its crystallographic form and growth conditions. Its properties depends on its size, shape, surface topology and composition, etc... Modeling nanoparticles at the atomic scale is a crucial preliminary step to evaluate their potential for various applications. However, the process of generating an initial conformation for modeling and simulation is not that easy. Several tools are already available, including in the python realm. But to the best of our knowledge, they do not give access to the fascinating diversity of shapes encountered at the nanoscale. `pyNanoMatBuilder` is a new python tool designed to create nanoparticle models from **any crystal structure** or atomically precise structures, *i.e.* **magic numbers polyhedra**.
 
 Once a nanoparticle is built, `pyNanoMatBuilder` provides a complete toolkit
-for **atomic-precision shape engineering**, organized in six families:
+for **atomic-precision shape engineering**, organized in six main families:
 
 | Family | Key functions |
 |--------|--------------|
-| Planar sculpting | `applySlicing`, `remove_plane` |
+| Planar sculpting | `applySlicing`, `remove_plane`, `carve_zigzag_pattern` |
 | Volume clipping | `clip_to_sphere`, `clip_to_cylinder`, `clip_to_ellipsoid`, `clip_to_cone` |
 | Tip shaping | `round_tip_in_direction`, `align_to_plane` |
 | Surface peeling | `peel_by_coordination`, `peel_by_shifted_ellipsoid` |
-| Symmetry & assembly | `apply_rotation`, `apply_reflection`, `replicate_by_rotation`, `replicate_by_reflection`, `applyTwist` |
-| Construction Solid Geometry | `cut_by`, `union_with`, `intersect_with`, `flush_inlay_with` |
+| Symmetry & assembly | `apply_rotation`, `apply_reflection`, `apply_translation`, `replicate_by_rotation`, `replicate_by_reflection`, `applyTwist`, `mirror_at_tip`, `rotate_to_align` |
+| Constructive Solid Geometry | `cut_by`, `union_with`, `intersect_with`, `flush_inlay_with`, `systematic_carve_by`, `systematic_stellate_by` |
+| Miscellaneous|`delete`, `recenter`, `set_symbols`|
 
 ---
 
@@ -45,6 +46,21 @@ summarized below:
 <img width="1200px" src="https://raw.githubusercontent.com/rpoteau/pynanomatbuilder/main/pyNanoMatBuilder/resources/figs/pnmbAvailableStructures.png"/>
 </span>
 
+---
+
+**From atomistic models to experiment**
+
+Beyond building structures, `pyNanoMatBuilder` is designed to bridge
+atomic-scale models and experimental characterization, a central goal of the
+BiMAn project. The generated structures feed directly into the tools used to
+interpret experimental data:
+
+| Theory–experiment link | pyNanoMatBuilder tools |
+|-------------------------|------------------------|
+| **Size polydispersity** | `NanoparticleDistribution`: generates NP populations following log-normal or Schulz size distributions, computes per-class proportions, and compares distributions |
+| **SAXS / WAXS / SANS** | atomistic structures feed scattering-profile calculations via **DebyeCalculator** or **pyAUSAXS** (see pyNMB-debye-coupling.ipynb and pyNMB-pyausaxs-coupling.ipynb), using the true morphology (facets, concavities, core/shell) rather than an equivalent sphere |
+| **Local-order descriptors** | the **common neighbor parameter (CNP)**, a single-number indicator of local disorder (surfaces, edges, twin boundaries, stacking faults); the **Steinhardt parameters** (q4, q6), which identify the local symmetry type (FCC, HCP, BCC, icosahedral); together they reveal both the presence and the nature of local order. Also `calculate_CN` and `calculate_GCN` (coordination and generalized coordination numbers, Calle-Vallejo/Sautet), relevant to catalytic activity |
+| **TEM / HRTEM** | generates the atomic input structures (in a chosen orientation) of amorphous carbon-supported NPs for image-simulation via **abTEM** (see pyNMB-abtem-coupling.ipynb); an alpha-shape surface mesh (`export_surface_mesh`) could also be used to reproduce the particle contour for comparison with observed projections |
 
 ---
 
@@ -90,28 +106,33 @@ pyNMBu.write("coords/SphericalAuNP_sc.cif", AuNP.sc)             # The supercell
 ```
 
 ---
+
+<div style="text-align:center">
+<img src="https://raw.githubusercontent.com/rpoteau/pynanomatbuilder/main/pyNanoMatBuilder/resources/svg/workflow_figure.png" alt="workflow" width="1200" />
+</div>
+
+---
 See more explanations in the **How to? Workflow Guides** section of the Main Tutorial notebook 
 
 **Main Tutorial**: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/rpoteau/pynanomatbuilder/blob/main/pyNMB-examples.ipynb)
 
 ---
 
-## Optional couplings (simulated data)
+**Funding**
 
-pyNanoMatBuilder nanoparticles can be fed into external simulation packages. These couplings pull in
-extra, sometimes conflicting dependencies, so each is meant to run in its **own** environment/Jupyter kernel:
+<div style="text-align:center">
+<img src="https://raw.githubusercontent.com/rpoteau/pynanomatbuilder/main/pyNanoMatBuilder/resources/svg/Materiaux-emergents.png" alt="France2030" width="250" />
+</div>
+<br>
 
-| Tutorial | Package | Setup | Notes |
-|---|---|---|---|
-| [`pyNMB-abtem-coupling.ipynb`](pyNMB-abtem-coupling.ipynb) | [abTEM](https://abtem.readthedocs.io/) (HRTEM simulation) | [`requirements-abtem.txt`](requirements-abtem.txt) | numpy version depends on your abTEM version |
-| [`pyNMB-debye-coupling.ipynb`](pyNMB-debye-coupling.ipynb) | [DebyeCalculator](https://github.com/FrederikLizakJohansen/DebyeCalculator) (scattering) | [`requirements-debye.txt`](requirements-debye.txt) | Python 3.11 only, older ASE (3.22.1) |
-| [`pyNMB-pyausaxs-coupling.ipynb`](pyNMB-pyausaxs-coupling.ipynb) | [pyausaxs](https://github.com/AUSAXS/pyAUSAXS) (scattering) | [`requirements-abtem.txt`](requirements-pyausaxs.txt) |
+`pyNanoMatBuilder` is developed within the **BiMAn** project of **PEPR DIADEM** and is supported by the French National Research Agency, as a part of the **France 2030** program, under **grant 23-PEXD-0005**.
 
-
-
-Each notebook states its required kernel in its first cell. Use a dedicated environment per
-coupling — do not reuse a general-purpose environment, and do not share one environment
-between the two tutorials.
+- **BiMan** = *Bimetallic
+magnetic nanoparticles with controlled anisotropy: from the chemical synthesis
+to the fabrication of optimized materials*
+- **DIADEM** = *Dispositifs Intégrés pour l'Accélération du DEploiement de Matériaux
+Emergents / Integrated Devices for Accelerating the Deployment of Emerging
+Materials*
 
 ---
 

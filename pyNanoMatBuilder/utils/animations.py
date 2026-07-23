@@ -101,10 +101,17 @@ def render_frames_jmol(prefix=None, n_frames=None, view_script="", output_dir=No
 
     return png_paths
 
-def frames_to_movie(png_paths, output_file, fps=5, pingpong=False,
-                    pingpong_hold_ends=False):
+def frames_to_movie(png_paths, output_file, fps=25, seconds_per_frame=1.0,
+                    pingpong=False, pingpong_hold_ends=False):
     """
     Assemble a list of PNG images into an animated movie (.mp4 or .gif).
+
+    Each source image is held on screen for `seconds_per_frame` seconds by
+    repeating it (fps * seconds_per_frame) times in the output stream. Encoding
+    at a standard frame rate (e.g. 25 fps) with repeated frames, rather than at
+    a very low frame rate such as 1 fps, produces a video that plays reliably in
+    browser-based viewers such as PowerPoint for the web, which handle very low
+    frame rates poorly and may drop frames in slideshow mode.
 
     The output format is chosen from the output_file extension.
 
@@ -112,25 +119,27 @@ def frames_to_movie(png_paths, output_file, fps=5, pingpong=False,
         png_paths (list[str]): Ordered paths of the PNG frames to assemble.
         output_file (str): Output path; '.mp4' or '.gif' extension selects the
             format.
-        fps (int, optional): Frames per second (default 5).
+        fps (int, optional): Frames per second of the output stream (default 25).
+            Kept standard for browser compatibility; the perceived pace is set
+            by seconds_per_frame, not by fps.
+        seconds_per_frame (float, optional): On-screen duration of each source
+            image, in seconds (default 1.0). Each image is repeated
+            round(fps * seconds_per_frame) times in the stream.
         pingpong (bool, optional): If True, plays the sequence forward then
-            backward (excluding the duplicated endpoints) for a seamless loop
-            (default False).
+            backward for a seamless loop (default False).
         pingpong_hold_ends (bool, optional): Only relevant when pingpong is
-            True. Controls how the endpoints are treated on the return pass:
-              - False (default): clean bounce — endpoints are not repeated.
-                For 5 frames the cycle is 0,1,2,3,4,3,2,1, so the first and
-                last frames are shown once per cycle (no pause at the extremes).
-              - True: the endpoints are duplicated on the turnaround
-                (0,1,2,3,4,4,3,2,1,0), producing a short hold at each extreme.
+            True. If True, the endpoints are duplicated on the turnaround
+            (0,1,2,3,4,4,3,2,1,0), producing a short hold at each extreme; if
+            False, a clean bounce is used (0,1,2,3,4,3,2,1).
 
     Returns:
         str or None: The output path on success, or None if nothing was written.
 
     Note:
-        - Requires the 'imageio' package. If absent, a warning is printed and
-          None is returned.
+        - Requires the 'imageio' package (and 'imageio-ffmpeg' for .mp4).
         - Missing PNG files in png_paths are skipped with a warning.
+        - The MP4 branch forces a PowerPoint-friendly encoding: H.264 (libx264),
+          yuv420p pixel format, even dimensions, and every frame as a keyframe.
     """
     try:
         import imageio.v2 as iio
@@ -151,29 +160,40 @@ def frames_to_movie(png_paths, output_file, fps=5, pingpong=False,
               f"use '.mp4' or '.gif'. '{output_file}' not written.{fg.OFF}")
         return None
 
-    # Build the playback order
+    # Build the playback order of the SOURCE images
     indices = list(range(len(png_paths)))
     if pingpong and len(png_paths) > 2:
         if pingpong_hold_ends:
-            # Hold BOTH endpoints when looping.
-            # Cycle = 0,1,2,3,4,4,3,2,1,0 ; looped -> ...,1,0,0,1,...
-            # so 4,4 holds mid-cycle and 0,0 holds across the loop seam.
             n = len(png_paths)
             indices = list(range(n)) + list(range(n - 1, -1, -1))
         else:
-            # Clean bounce, endpoints not repeated: 0,1,2,3,4,3,2,1
-            # -> uniform pacing, no pause at the extremes.
             indices += list(range(len(png_paths) - 2, 0, -1))
+
+    # Number of times each source image is repeated so it stays on screen for
+    # seconds_per_frame at the chosen (standard) fps.
+    repeat = max(1, int(round(fps * seconds_per_frame)))
 
     Path(output_file).parent.mkdir(parents=True, exist_ok=True)
 
-    # GIF needs an explicit loop=0 to repeat indefinitely; mp4 doesn't take it
     writer_kwargs = {"fps": fps}
     if extension == ".gif":
         writer_kwargs["loop"] = 0
+    else:
+        # MP4: PowerPoint-friendly encoding. yuv420p previews and plays
+        # everywhere; libx264 is the standard codec; the scale filter forces
+        # even dimensions (required by yuv420p); -g 1 makes every frame a
+        # keyframe, so no frame can be dropped for lack of a reference; and
+        # +faststart lets players begin playback immediately.
+        writer_kwargs["codec"] = "libx264"
+        writer_kwargs["pixelformat"] = "yuv420p"
+        writer_kwargs["output_params"] = [
+            "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2",
+            "-g", "1",
+            "-movflags", "+faststart",
+        ]
 
     writer = iio.get_writer(output_file, **writer_kwargs)
-    
+
     n_written = 0
     try:
         for idx in indices:
@@ -182,8 +202,10 @@ def frames_to_movie(png_paths, output_file, fps=5, pingpong=False,
                 print(f"{fg.RED}Warning: frame '{png}' not found — "
                       f"skipped.{fg.OFF}")
                 continue
-            writer.append_data(iio.imread(png))
-            n_written += 1
+            img = iio.imread(png)
+            for _ in range(repeat):          # hold this image on screen
+                writer.append_data(img)
+                n_written += 1
     finally:
         writer.close()
 
@@ -192,6 +214,7 @@ def frames_to_movie(png_paths, output_file, fps=5, pingpong=False,
               f"'{output_file}'.{fg.OFF}")
         return None
 
+    duration = n_written / float(fps)
     print(f"{fg.GREEN}{output_file} created "
-          f"({n_written} frames @ {fps} fps).{fg.OFF}")
+          f"({n_written} frames @ {fps} fps, {duration:.1f} s).{fg.OFF}")
     return output_file

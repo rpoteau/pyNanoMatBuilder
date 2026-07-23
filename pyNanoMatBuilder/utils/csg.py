@@ -1406,8 +1406,11 @@ def interface_distance_histogram(self, elemA, elemB, Rnn,
         plt.savefig(save_img, dpi=300, bbox_inches='tight')
         if not noOutput:
             print(f" - Plot saved to: {save_img}")
-    plt.show()
-
+    if not noOutput:
+        plt.show()
+    else:
+        plt.close(fig)      # free the figure without displaying it
+        
     return {'d_A_to_B': d_A_to_B, 'd_B_to_A': d_B_to_A,
             'n_overlap': n_overlap, 'n_interface': n_interface,
             'd_min': d_min}
@@ -2163,6 +2166,305 @@ def systematic_stellate_by(self, NP_B, carve_axis=None, axis_through='vertex',
         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
 
     self._flush_stale_data(shape_update="_systematic_stellate")
+    self.is_optimized = False
+
+    if postAnalyzis is None:
+        postAnalyzis = getattr(self, 'postAnalyzis', True)
+    if skipChiralityCalculation is None:
+        skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+    if skipSymmetryAnalyzis is None:
+        skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+    if skipFacetInfo is None:
+        skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+    if thresholdCoreSurface is None:
+        thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+    if postAnalyzis and self.nAtoms > 0:
+        self.propPostMake(
+            skipChiralityCalculation=skipChiralityCalculation,
+            skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+            skipFacetInfo=skipFacetInfo,
+            thresholdCoreSurface=thresholdCoreSurface,
+            noOutput=noOutput, is_optimized=False)
+
+# def carve_zigzag_pattern(self, ref1, ref2, pattern, recenter=False,
+#                          noOutput=False, postAnalyzis=None,
+#                          skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
+#                          skipFacetInfo=None, thresholdCoreSurface=None):
+#     """
+#     Carve a repeated zigzag (staircase) along an arm from two reference planes.
+
+#     Each notch is the wedge-shaped corner removed by combining two planes with
+#     AND: one parallel to ref1 (delete='above'), one parallel to ref2
+#     (delete='below'). The orientation of the exposed facets, and the angle
+#     between them, follow entirely from the reference normals provided; no
+#     crystallographic family is assumed. The FIRST notch cuts exactly at the two
+#     reference planes; each subsequent notch is displaced inward from the
+#     PREVIOUS notch, so the wedge marches along the arm, building a staircase of
+#     terraces (parallel to ref1) separated by steps (parallel to ref2).
+
+#     Reference planes use the [u, v, w, -d] convention with a unit normal
+#     [u, v, w], i.e. the plane n.x = d. This matches applySlicing's 'distance'
+#     argument directly (distance = d = -plane[3]). Reference planes are commonly
+#     obtained with planeFittingLSF_byAtom, and the symmetric opposite flank of an
+#     arm is obtained by reflecting them with reflect_plane.
+
+#     Args:
+#         self: pyNMBcore object. self.NP is carved in place via applySlicing.
+#         ref1, ref2 (array-like): reference planes [u, v, w, -d] with unit
+#             normals. Their offsets d1 = -ref1[3], d2 = -ref2[3] set where the
+#             first notch cuts.
+#         pattern (sequence of (float, float)): (delta1, delta2) per notch, in
+#             Angstrom. Because the two planes meet at a shared wedge edge, moving
+#             one plane sets the length of the OTHER exposed facet. To give the
+#             pattern an intuitive meaning, the increments are therefore CROSSED
+#             internally: delta1 controls the length of the ref1 facet (by sinking
+#             the ref2 plane), and delta2 controls the length of the ref2 facet
+#             (by sinking the ref1 plane). So pattern=[(20, 10)] gives a ref1
+#             facet about twice as long as the ref2 step. The first pair is
+#             applied at the reference planes; each following pair is an increment
+#             added to the running offsets. Use (0.0, 0.0) as the first pair to
+#             cut exactly at the references.
+#         recenter (bool): passed to applySlicing; keep False so the frame does
+#             not shift between notches. Default False.
+#         noOutput (bool): suppress output. Default False.
+#         postAnalyzis, skip*: standard post-analysis controls (None -> self.*).
+
+#     Returns:
+#         None. self.NP is carved in place, notch after notch.
+
+#     Example:
+#         # A ref1 facet twice as long as the ref2 step, then the symmetric flank
+#         ref1 = arm.planeFittingLSF_byAtom([5, 8, 26, 27, 28])
+#         ref2 = arm.planeFittingLSF_byAtom([8, 26, 421, 425])
+#         arm.carve_zigzag_pattern(ref1, ref2, pattern=[(20.0, 10.0)])
+#         ref1o = pyNMBu.reflect_plane(ref1, mirror='xOy')
+#         ref2o = pyNMBu.reflect_plane(ref2, mirror='xOy')
+#         arm.carve_zigzag_pattern(ref1o, ref2o, pattern=[(20.0, 10.0)])
+#     """
+#     import numpy as np
+#     if not noOutput:
+#         centertxt("Carve a zigzag pattern from two reference planes",
+#                   bgc='#007a7a', size='14', weight='bold')
+#         chrono = timer(); chrono.chrono_start()
+
+#     # --- source structure ------------------------------------------------
+#     if self.is_optimized and getattr(self, 'NP_opt', None) is not None:
+#         status = "optimized structure"
+#     else:
+#         status = "initial structure"
+#     n_before = len(self.NP)
+
+#     n1 = np.asarray(ref1[:3], float)
+#     n2 = np.asarray(ref2[:3], float)
+#     # Starting offsets, each paired with its OWN plane's normal.
+#     off1 = -float(ref1[3])
+#     off2 = -float(ref2[3])
+
+#     for k, (delta1, delta2) in enumerate(pattern):
+#         # Cross the increments: delta1 (the "L" the user thinks of as the ref1
+#         # facet length) sinks the ref2 plane, and delta2 sinks the ref1 plane.
+#         # Because the two planes share the wedge edge, moving one plane sets the
+#         # length of the OTHER facet, so this cross gives the intuitive mapping:
+#         # pattern (delta1, delta2) -> ref1 facet length delta1, ref2 facet delta2.
+#         off1 -= delta2      # ref1 plane sunk by delta2
+#         off2 -= delta1      # ref2 plane sunk by delta1
+#         self.applySlicing(
+#             planes=[
+#                 {'normal': n1.tolist(), 'distance': off1, 'delete': 'above'},
+#                 {'normal': n2.tolist(), 'distance': off2, 'delete': 'below'},
+#             ],
+#             mode='AND',
+#             distance_unit='Angstrom',
+#             recenter=recenter,
+#             noOutput=True,
+#         )
+
+#     self.nAtoms = len(self.NP)
+#     self.cog = self.NP.get_center_of_mass()
+#     self.trPlanes = None
+#     self.trPlanes_Wulff = None
+#     self.trPlanes_opt = None
+
+#     if not noOutput:
+#         n_removed = n_before - self.nAtoms
+#         print(f"  - Source        : {status}")
+#         print(f"  - ref1          : [{n1[0]:+.3f} {n1[1]:+.3f} {n1[2]:+.3f}]"
+#               f"  d = {-float(ref1[3]):.3f} Å")
+#         print(f"  - ref2          : [{n2[0]:+.3f} {n2[1]:+.3f} {n2[2]:+.3f}]"
+#               f"  d = {-float(ref2[3]):.3f} Å")
+#         print(f"  - Notches       : {len(pattern)}")
+#         print(f"  - Net atoms removed: {n_removed} "
+#               f"({n_before} -> {self.nAtoms})")
+#         print(f"  - self.NP updated.")
+#         chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+
+#     self._flush_stale_data(shape_update="_zigzag")
+#     self.is_optimized = False
+
+#     if postAnalyzis is None:
+#         postAnalyzis = getattr(self, 'postAnalyzis', True)
+#     if skipChiralityCalculation is None:
+#         skipChiralityCalculation = getattr(self, 'skipChiralityCalculation', True)
+#     if skipSymmetryAnalyzis is None:
+#         skipSymmetryAnalyzis = getattr(self, 'skipSymmetryAnalyzis', True)
+#     if skipFacetInfo is None:
+#         skipFacetInfo = getattr(self, 'skipFacetInfo', True)
+#     if thresholdCoreSurface is None:
+#         thresholdCoreSurface = getattr(self, 'thresholdCoreSurface', 3.0)
+#     if postAnalyzis and self.nAtoms > 0:
+#         self.propPostMake(
+#             skipChiralityCalculation=skipChiralityCalculation,
+#             skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+#             skipFacetInfo=skipFacetInfo,
+#             thresholdCoreSurface=thresholdCoreSurface,
+#             noOutput=noOutput, is_optimized=False)
+
+def carve_zigzag_pattern(self, ref1, ref2, pattern, pattern_unit='facet',
+                         recenter=False, noOutput=False, postAnalyzis=None,
+                         skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
+                         skipFacetInfo=None, thresholdCoreSurface=None):
+    """
+    Carve a repeated zigzag (staircase) along an arm from two reference planes.
+
+    Each notch is the wedge-shaped corner removed by combining two planes with
+    AND: one parallel to ref1 (delete='above'), one parallel to ref2
+    (delete='below'). The orientation of the exposed facets, and the angle
+    between them, follow entirely from the reference normals provided; no
+    crystallographic family is assumed. The FIRST notch cuts exactly at the two
+    reference planes; each subsequent notch is displaced inward from the
+    PREVIOUS notch, so the wedge marches along the arm, building a staircase of
+    terraces (parallel to ref1) separated by steps (parallel to ref2).
+
+    Geometry of the wedge. Displacing one plane orthogonally by d does not
+    expose a facet of length d: the facet is bounded by the neighbouring plane,
+    so its length is d / sin(theta), where theta is the angle between ref1 and
+    ref2. The pattern is therefore expressed in facet lengths by default
+    (pattern_unit='facet') and converted internally into plane displacements by
+    multiplying by sin(theta), so that the values mean what the user sees on the
+    arm. Atomic discretisation still adds roughly half a lattice step at each
+    end of a facet, so realised lengths scatter by about one atomic row around
+    the requested value.
+
+    Reference planes use the [u, v, w, -d] convention with a unit normal
+    [u, v, w], i.e. the plane n.x = d. This matches applySlicing's 'distance'
+    argument directly (distance = d = -plane[3]). Reference planes are commonly
+    obtained with planeFittingLSF_byAtom, and the symmetric opposite flank of an
+    arm is obtained by reflecting them with reflect_plane.
+
+    Args:
+        self: pyNMBcore object. self.NP is carved in place via applySlicing.
+        ref1, ref2 (array-like): reference planes [u, v, w, -d] with unit
+            normals. Their offsets d1 = -ref1[3], d2 = -ref2[3] set where the
+            first notch cuts.
+        pattern (sequence of (float, float)): (delta1, delta2) per notch, in
+            Angstrom, interpreted according to pattern_unit. Because the two
+            planes share the wedge edge, moving one plane sets the length of the
+            OTHER exposed facet, so the increments are CROSSED internally:
+            delta1 sinks the ref2 plane and therefore sets the ref1 facet, and
+            delta2 sinks the ref1 plane and sets the ref2 facet. Hence
+            pattern=[(20, 10)] gives a ref1 facet about twice as long as the
+            ref2 step. The first pair is applied at the reference planes; each
+            following pair is an increment added to the running offsets. Use
+            (0.0, 0.0) as the first pair to cut exactly at the references.
+        pattern_unit (str): how to read the pattern values.
+            'facet' (default): each value is the LENGTH of the facet it exposes
+                on the arm; values are converted into the plane displacements
+                that produce them (multiplied by sin(theta)).
+            'plane': each value is the raw ORTHOGONAL DISPLACEMENT of a plane
+                along its own normal (the low-level CSG quantity, no
+                conversion).
+        recenter (bool): passed to applySlicing; keep False so the frame does
+            not shift between notches. Default False.
+        noOutput (bool): suppress output. Default False.
+        postAnalyzis, skip*: standard post-analysis controls (None -> self.*).
+
+    Returns:
+        None. self.NP is carved in place, notch after notch.
+
+    Example:
+        # A ref1 facet twice as long as the ref2 step, then the symmetric flank
+        ref1 = arm.planeFittingLSF_byAtom([5, 8, 26, 27, 28])
+        ref2 = arm.planeFittingLSF_byAtom([8, 26, 421, 425])
+        arm.carve_zigzag_pattern(ref1, ref2, pattern=[(20.0, 10.0)])
+        ref1o = pyNMBu.reflect_plane(ref1, mirror='xOy')
+        ref2o = pyNMBu.reflect_plane(ref2, mirror='xOy')
+        arm.carve_zigzag_pattern(ref1o, ref2o, pattern=[(20.0, 10.0)])
+    """
+    import numpy as np
+    if not noOutput:
+        centertxt("Carve a zigzag pattern from two reference planes",
+                  bgc='#007a7a', size='14', weight='bold')
+        chrono = timer(); chrono.chrono_start()
+
+    # --- source structure ------------------------------------------------
+    if self.is_optimized and getattr(self, 'NP_opt', None) is not None:
+        status = "optimized structure"
+    else:
+        status = "initial structure"
+    n_before = len(self.NP)
+
+    n1 = np.asarray(ref1[:3], float)
+    n2 = np.asarray(ref2[:3], float)
+    u1 = n1 / np.linalg.norm(n1)
+    u2 = n2 / np.linalg.norm(n2)
+
+    # --- facet lengths -> plane displacements ----------------------------
+    # A plane displaced by d exposes, on the neighbouring plane, a facet of
+    # length d / sin(theta), theta being the angle between the two reference
+    # planes. Converting a requested facet length into the displacement that
+    # produces it is therefore a multiplication by sin(theta).
+    sin_theta = float(np.sqrt(max(0.0, 1.0 - (u1 @ u2) ** 2)))
+    if pattern_unit == 'facet':
+        if sin_theta < 1e-6:
+            raise ValueError("ref1 and ref2 are parallel; no wedge can be cut.")
+        pattern = [(a * sin_theta, b * sin_theta) for (a, b) in pattern]
+    elif pattern_unit != 'plane':
+        raise ValueError(f"pattern_unit must be 'facet' or 'plane', "
+                         f"got '{pattern_unit}'.")
+
+    # Starting offsets, each paired with its OWN plane's normal.
+    off1 = -float(ref1[3])
+    off2 = -float(ref2[3])
+
+    for k, (delta1, delta2) in enumerate(pattern):
+        # Cross the increments (see the pattern docstring): delta1 sinks the
+        # ref2 plane and sets the ref1 facet, and vice versa.
+        off1 -= delta2      # ref1 plane sunk by delta2
+        off2 -= delta1      # ref2 plane sunk by delta1
+        self.applySlicing(
+            planes=[
+                {'normal': n1.tolist(), 'distance': off1, 'delete': 'above'},
+                {'normal': n2.tolist(), 'distance': off2, 'delete': 'below'},
+            ],
+            mode='AND',
+            distance_unit='Angstrom',
+            recenter=recenter,
+            noOutput=True,
+        )
+
+    self.nAtoms = len(self.NP)
+    self.cog = self.NP.get_center_of_mass()
+    self.trPlanes = None
+    self.trPlanes_Wulff = None
+    self.trPlanes_opt = None
+
+    if not noOutput:
+        n_removed = n_before - self.nAtoms
+        theta = np.degrees(np.arcsin(min(1.0, sin_theta)))
+        print(f"  - Source        : {status}")
+        print(f"  - ref1          : [{n1[0]:+.3f} {n1[1]:+.3f} {n1[2]:+.3f}]"
+              f"  d = {-float(ref1[3]):.3f} Å")
+        print(f"  - ref2          : [{n2[0]:+.3f} {n2[1]:+.3f} {n2[2]:+.3f}]"
+              f"  d = {-float(ref2[3]):.3f} Å")
+        print(f"  - Plane angle   : {theta:.1f}°  "
+              f"(sin = {sin_theta:.3f}, pattern_unit='{pattern_unit}')")
+        print(f"  - Notches       : {len(pattern)}")
+        print(f"  - Net atoms removed: {n_removed} "
+              f"({n_before} -> {self.nAtoms})")
+        print(f"  - self.NP updated.")
+        chrono.chrono_stop(hdelay=False); chrono.chrono_show()
+
+    self._flush_stale_data(shape_update="_zigzag")
     self.is_optimized = False
 
     if postAnalyzis is None:

@@ -477,6 +477,66 @@ def rotation_around_axis_through_point(coords, angle_deg, axis, center):
 #             pr.append(ptmp)
 #     return np.array(pr)
 
+def reflect_plane(plane, mirror='yOz'):
+    """Reflect a plane equation across an arbitrary mirror plane.
+
+    Both the plane to reflect and the mirror are given as equations
+    [a, b, c, d] of a*x + b*y + c*z + d = 0. The plane is reflected as a
+    geometric object: a point p lies on the reflected plane iff its mirror
+    image M(p) lies on the original plane, where M is the reflection across the
+    mirror. This yields, for a mirror with unit normal m and signed offset md,
+
+        n' = n - 2 (n·m) m
+        d' = d - 2 (n·m) md
+
+    where (n, d) are the normal and offset of the plane being reflected.
+
+    The mirror may be passed either as a full [a, b, c, d] equation (any
+    orientation and position, need not pass through the origin), or as one of
+    the preset keywords for the coordinate planes through the origin:
+        'yOz' -> x = 0   (normal [1, 0, 0])
+        'xOz' -> y = 0   (normal [0, 1, 0])
+        'xOy' -> z = 0   (normal [0, 0, 1])
+
+    Args:
+        plane (array-like): plane to reflect, [a, b, c, d].
+        mirror (str or array-like): mirror plane. A preset keyword ('yOz',
+            'xOz', 'xOy') or a full [a, b, c, d] equation. Defaults to 'yOz'.
+
+    Returns:
+        numpy.ndarray: the reflected plane equation [a', b', c', d'].
+    """
+    presets = {
+        'yOz': [1.0, 0.0, 0.0, 0.0],
+        'xOz': [0.0, 1.0, 0.0, 0.0],
+        'xOy': [0.0, 0.0, 1.0, 0.0],
+    }
+    if isinstance(mirror, str):
+        try:
+            mirror = presets[mirror]
+        except KeyError:
+            raise ValueError(
+                f"Unknown mirror preset '{mirror}'; use one of "
+                f"{list(presets)} or pass a full [a, b, c, d] equation.")
+
+    m = np.asarray(mirror, dtype=float)
+    # Normalize the mirror so its normal is unit length; scale the offset too.
+    m_norm = np.linalg.norm(m[:3])
+    if m_norm == 0.0:
+        raise ValueError("Mirror plane has a zero normal vector.")
+    nm = m[:3] / m_norm          # unit normal of the mirror
+    md = m[3] / m_norm           # signed offset of the mirror
+
+    n = np.asarray(plane[:3], dtype=float)
+    d = float(plane[3])
+
+    # Reflection of a plane across the mirror (nm, md):
+    #   n' = n - 2 (n·nm) nm ,  d' = d - 2 (n·nm) md
+    dot = n @ nm
+    n_new = n - 2.0 * dot * nm
+    d_new = d - 2.0 * dot * md
+    return np.append(n_new, d_new)
+    
 def reflection(plane, points, doItForAtomsThatLieInTheReflectionPlane=False, eps=1e-2):
     '''
     Apply a mirror-image symmetry operation to an array of points.
@@ -498,7 +558,6 @@ def reflection(plane, points, doItForAtomsThatLieInTheReflectionPlane=False, eps
         numpy.ndarray: An (N, 3) array containing the coordinates of the 
         reflected mirror-image points.
     '''
-    import numpy as np
     pr = []
     # print(f"inside reflection. {doItForAtomsThatLieInTheReflectionPlane}")
     for p in points:
@@ -1104,21 +1163,21 @@ def planeAtVertices(coordVertices: np.ndarray,
 
     return np.array(planes)
 
-def planeAtPoint(plane: np.ndarray,
-                 P0: np.ndarray):
+def planeAtPoint(plane: np.ndarray, P0: np.ndarray):
     """
     Recalculate plane d so the plane passes through P0.
 
     Args:
-        plane (np.ndarray): Array [a, b, c, d].
-        P0 (np.ndarray): Coordinates [x0, y0, z0].
+        plane (np.ndarray): array [a, b, c, d].
+        P0 (np.ndarray): coordinates [x0, y0, z0].
 
     Returns:
-        np.ndarray: Plane parameters [a, b, c, -(ax0+by0+cz0)].
+        np.ndarray: plane parameters [a, b, c, -(a*x0 + b*y0 + c*z0)].
     """
-    d = np.dot(plane[0:3], P0)
+    plane = np.asarray(plane, dtype=float)   # ensure a float ndarray
+    P0 = np.asarray(P0, dtype=float)
     planeAtP = plane.copy()
-    planeAtP[3] = -d
+    planeAtP[3] = -np.dot(plane[0:3], P0)
     return planeAtP
 
 
@@ -1455,7 +1514,6 @@ def _estimate_Rnn(coords):
     Returns:
         float: estimated Rnn in Å.
     """
-    import numpy as np
     from scipy.spatial import cKDTree
     if len(coords) < 2:
         return 0.0
@@ -1527,7 +1585,6 @@ def coreSurface_cnp(self, cutoff_cnp=None, Rnn=None, threshold=None,
         hull criterion there, or optimize() the structure first.
 
     """
-    import numpy as np
     from .local_descriptors import common_neighbour_parameter
 
     if is_optimized is None:
@@ -1656,7 +1713,6 @@ def _cnp_largest_gap_threshold(values, decimals=1, core_quantile=0.6):
     Returns:
         float: CNP threshold in Å².
     """
-    import numpy as np
     v = np.unique(np.round(values, decimals))
     if len(v) < 2:
         return float(values.max()) + 1e-9
@@ -1696,7 +1752,6 @@ def peel_by_coordination(self, threshold_peeling=6, Rmax=2.9, noOutput=False,
     Returns:
         ase.Atoms: The updated nanoparticle (self.NP) after peeling.
     """
-    import numpy as np
     
     # 1. Determine which structure to peel
     if self.is_optimized and hasattr(self, 'NP_opt'):
@@ -1786,7 +1841,6 @@ def peel_by_shifted_ellipsoid(self, shift_dist=2.5,
         axis_def (str): 'hkl' (default) or 'cart'.
         noOutput (bool): If True, suppresses output messages.
     """
-    import numpy as np
     
     # 1. Identify source data using your updated keys
     if self.is_optimized and hasattr(self, 'NP_opt'):
@@ -1965,7 +2019,6 @@ def remove_plane(self, direction, axis_def='hkl', tol=0.5,
         # Remove the face triangulaire tournée vers +z d'un icosaèdre
         NP.remove_plane(direction=[0.3568, 0., 0.9342], axis_def='cart')
     """
-    import numpy as np
 
     if not noOutput:
         centertxt("Removing outermost atomic plane", bgc='#007a7a', size='14', weight='bold')
@@ -2127,7 +2180,6 @@ def coreSurface_combined(self, cutoff_cnp=None, Rnn=None, threshold=None,
             boolean surface mask and a breakdown of where the two methods
             agreed or disagreed.
     """
-    import numpy as np
 
     if is_optimized is None:
         is_optimized = getattr(self, 'is_optimized', False)
@@ -2226,7 +2278,6 @@ def round_tip_in_direction(self, direction, diameter_nm, axis_def='hkl',
         rod.round_tip_in_direction(direction=[0,0,1], diameter_nm=10.0,
                                    axis_def='cart')
     """
-    import numpy as np
 
     if not noOutput:
         centertxt("Rounding tip with a tangent spherical cap",
@@ -2334,7 +2385,6 @@ def clip_to_sphere(self, radius_nm, noOutput=True,
         # Clip nanostar arms to a 10 nm sphere
         nanostar.clip_to_sphere(radius_nm=10.0)
     """
-    import numpy as np
 
     if not noOutput:
         centertxt("Clipping to sphere", bgc='#007a7a', size='14', weight='bold')
@@ -2407,7 +2457,6 @@ def clip_to_ellipsoid(self, diameters_nm, noOutput=True,
         # Prolate envelope: 4 nm wide, 15 nm long along z
         rod.clip_to_ellipsoid(diameters_nm=[4.0, 4.0, 15.0])
     """
-    import numpy as np
     if not noOutput:
         centertxt("Clipping to ellipsoid", bgc='#007a7a', size='14', weight='bold')
         chrono = timer()
@@ -2650,7 +2699,6 @@ def clip_to_cylinder(self, diameter_nm, axis=(0, 0, 1), noOutput=True,
         # Round shaft, 4 nm in diameter, along z
         rod.clip_to_cylinder(diameter_nm=4.0, axis=[0, 0, 1])
     """
-    import numpy as np
     if not noOutput:
         centertxt("Clipping to cylinder", bgc='#007a7a', size='14', weight='bold')
         chrono = timer()
@@ -2821,6 +2869,7 @@ def applyTwist(self,
                 custom_profile=None,
                 pitch: float = None,
                 helix_radius: float = None,
+                Burgers: float = None,
                 chirality = 'RH',
                 noOutput: bool = False,
                 ):
@@ -2873,6 +2922,7 @@ def applyTwist(self,
             ``helical`` — angle(z) = rate * z, plus translation along axis.
             ``helix`` — bends wire to helical path, requires helix_radius and pitch.
             ``custom`` — angle(z) = rate * custom_profile(z, L).
+            ``screw`` — axial screw dislocation with Eshelby twist; uses Burgers, ignores rate)
             Default is ``'linear'``.
         custom_profile (callable, optional): A user-defined function f(z, L) -> float
                        where z is the signed distance along the axis in Å, and L is
@@ -2883,6 +2933,13 @@ def applyTwist(self,
                        Required when profile='helical' or 'helix'.
         helix_radius (float, optional): Radius of the helical path in Å.
                        Required when profile='helix'.
+        Burgers (float, optional): Burgers vector magnitude |b| in Å, used
+                       only when profile='screw'. If None (default), it is
+                       set automatically to the inter-plane spacing along
+                       the axis, so that the helical ramp closes onto the
+                       lattice after one full turn (single-plane ramp).
+                       Larger multiples of the inter-plane spacing produce
+                       multi-plane ramps (higher-order screw dislocations).
         chirality (str): Handedness of the Twist or helix.
             ``'RH'`` — Right-Handed (default): counter-clockwise when viewed
             from the positive axis direction.
@@ -2931,6 +2988,9 @@ def applyTwist(self,
         # Custom double-period sinusoidal Twist
         NP.applyTwist(axis=[0, 0, 1], rate=45.0, profile='custom',
                         custom_profile=lambda z, L: np.sin(4 * np.pi * z / L))
+
+        # Axial screw dislocation with automatic Eshelby twist
+        NP.applyTwist(axis=[1, 1, 1], profile='screw')
     """
     from .crystals import lattice_cart, normV
 
@@ -2944,9 +3004,9 @@ def applyTwist(self,
     chiral_str = "Right-Handed"
     if chirality == "LH":
         chiral_str = "Left-Handed"
-
+            
     # --- Input validation ---
-    valid_profiles = ('linear', 'sinusoidal', 'gaussian', 'helical', 'helix', 'custom')
+    valid_profiles = ('linear', 'sinusoidal', 'gaussian', 'helical', 'helix', 'custom', 'screw')
     if profile not in valid_profiles:
         raise ValueError(f"Unknown Twist profile '{profile}'. "
                          f"Choose from {valid_profiles}.")
@@ -2960,6 +3020,11 @@ def applyTwist(self,
         raise ValueError("custom_profile must be a callable function f(z, L).")
     if profile == 'helix' and rate != 1.0 and not noOutput:
         print("  Warning: rate is not used for profile='helix' and will be ignored.")
+    # Burgers = None with profile='screw' means "auto": use the inter-plane
+    # spacing along the axis (computed later as dz_mean) as the Burgers
+    # vector magnitude, which closes the helical ramp onto the lattice.
+    if profile == 'screw' and Burgers is not None and Burgers <= 0.0:
+        raise ValueError("Burgers must be a positive length in Å (or None for auto).")
 
     valid_axis_def = ('hkl', 'cart')
     if axis_def not in valid_axis_def:
@@ -3097,6 +3162,19 @@ def applyTwist(self,
     # --- Other profiles : rotation-based Twist ---
     # =========================================================
     else:
+        R_max = radial.max()
+        R_mean = radial.mean()
+        # Mean spacing between distinct atomic planes along the axis.
+        # Do NOT average diffs of the raw sorted projections: thousands of
+        # atoms share the same plane, which floods the mean with near-zero
+        # gaps and grossly underestimates the true inter-plane spacing.
+        # Instead, collapse atoms belonging to the same plane (rounding to
+        # 0.05 Å) and take the median gap between distinct planes.
+        plane_levels = np.unique(np.round(proj / 0.05) * 0.05)
+        if len(plane_levels) > 1:
+            dz_mean = np.median(np.diff(plane_levels))
+        else:
+            dz_mean = L  # degenerate case: single plane
         # Compute Twist angle for each atom (degrees)
         if profile == 'linear':
             angles = rate * proj
@@ -3109,19 +3187,76 @@ def applyTwist(self,
             angles = rate * proj
         elif profile == 'custom':
             angles = rate * np.array([custom_profile(z, L) for z in proj])
+        elif profile == 'screw':
+            # --- Axial screw dislocation (Eshelby geometry) ---
+            # Displacement field of a screw dislocation along the axis:
+            #     u_z = b * phi / (2*pi)
+            # where phi is the azimuthal angle around the axis and b the
+            # Burgers vector magnitude. The atomic planes become a single
+            # continuous helical ramp winding around the axis.
+            # A finite free-standing rod additionally relaxes by a uniform
+            # ("Eshelby") twist that cancels the torque at the free ends:
+            #     alpha = b / (pi * R^2)   [rad/Å]
+            # Refs: Eshelby, J. Appl. Phys. 24, 176 (1953);
+            #       Bierman et al., Science 320, 1060 (2008).
+            if Burgers is None:
+                Burgers = dz_mean   # auto: one inter-plane spacing
+            # Build an in-plane reference frame (e1_ref, e2_ref) normal to axis
+            arbitrary = (np.array([1.0, 0.0, 0.0])
+                         if abs(axis_cart[0]) < 0.9 else np.array([0.0, 1.0, 0.0]))
+            e1_ref = normV(arbitrary - np.dot(arbitrary, axis_cart) * axis_cart)
+            e2_ref = np.cross(axis_cart, e1_ref)
+            # Azimuthal angle of each atom around the axis, in (-pi, pi].
+            # The phi = +/-pi discontinuity is the cut plane of the
+            # dislocation: this is physical, not a bug. The mismatch is
+            # concentrated at the dislocation core instead of being spread
+            # as a dislocation network.
+            phi = np.arctan2(positions @ e2_ref, positions @ e1_ref)
+            if chirality == 'LH':
+                phi = -phi
+            u_z = Burgers * phi / (2.0 * np.pi)
+            # Eshelby twist applied as a linear twist along the axis
+            eshelby_rate = np.rad2deg(Burgers / (np.pi * R_max**2))   # °/Å
+            angles = eshelby_rate * proj
 
         # Apply chirality — LH flips the rotation direction
         if chirality == 'LH':
             angles = -angles
 
-        R_max = radial.max()
-        R_mean = radial.mean()
-        proj_sorted = np.sort(proj)
-        dz_mean = np.mean(np.diff(proj_sorted[::max(1, len(proj_sorted)//200)]))
         delta_theta_rad = np.deg2rad(rate * dz_mean)
         delta_tang_surface = R_max * delta_theta_rad
         delta_tang_core = R_mean * delta_theta_rad
 
+        # --- Lattice registry warning ---
+        # A relative tangential displacement between adjacent slices larger than
+        # ~30% of the nearest-neighbor distance destroys the stacking registry
+        # and generates dislocation networks in the core (twist grain boundaries).
+        # The nearest-neighbor distance is measured directly from the positions
+        # (no reliance on a class attribute), using a single KDTree query.
+        # Skipped for profile='screw': the Eshelby twist rate is tiny by
+        # construction and the cut-plane mismatch is intentional.
+        if profile != 'screw':
+            from scipy.spatial import cKDTree
+            tree = cKDTree(positions)
+            # k=2: first neighbor is the atom itself (d=0), second is the true NN
+            dists, _ = tree.query(positions, k=2)
+            Rnn = np.median(dists[:, 1])
+            print(f"  DEBUG: delta_tang_surface={delta_tang_surface:.3f} Å, "
+                  f"Rnn={Rnn:.3f} Å, threshold={0.3*Rnn:.3f} Å")
+            if delta_tang_surface > 0.3 * Rnn:
+                # Suggest the maximum rate that keeps the registry quasi-coherent
+                rate_max = rate * (0.3 * Rnn) / delta_tang_surface
+                if not noOutput:
+                    print(f"{bg.DARKREDB}Warning: tangential displacement between adjacent "
+                          f"slices at the surface ({delta_tang_surface:.2f} Å) exceeds "
+                          f"30% of the nearest-neighbor distance ({Rnn:.2f} Å). "
+                          f"The requested twist will break the stacking registry and "
+                          f"create dislocation networks in the core.{bg.OFF}")
+                    print(f"{bg.LIGHTGREENB}Suggestions: reduce rate below "
+                          f"~{rate_max:.3f} °/Å, restrict the twist to a surface cap "
+                          f"with depth_nm, or relax the structure afterwards with "
+                          f"optimize() (EAM).{bg.OFF}")
+                
         if not noOutput:
             centertxt("Twist analysis", bgc='#007a7a', size='14', weight='bold')
             cap_str = (f" (surface cap, depth = {depth_nm:.3f} nm)"
@@ -3138,8 +3273,15 @@ def applyTwist(self,
             else:
                 print(f"  NP length along axis    : {L:.2f} Å")
             print(f"  Max radial distance     : {R_max:.2f} Å")
-            print(f"  rate                    : {rate} °/Å")
+            if profile != 'screw': print(f"  rate                    : {rate} °/Å")
             print(f"  max angle               : {np.max(np.abs(angles)):.2f}°")
+            if profile == 'screw':
+                print(f"  Burgers vector |b|      : {Burgers:.3f} Å"
+                      f"{'  (auto: inter-plane spacing)' if Burgers == dz_mean else ''}")
+                print(f"  Eshelby twist rate      : {eshelby_rate:.4f} °/Å "
+                      f"(alpha = b / (pi R^2), R = {R_max:.1f} Å)")
+                print(f"  Total Eshelby rotation  : {eshelby_rate * L:.2f}° "
+                      f"over L = {L:.1f} Å")
             if profile == 'helical':
                 print(f"  pitch                   : {pitch:.2f} Å/turn")
             print(f"  --- Inter-slice bond stretching estimate ---")
@@ -3149,7 +3291,10 @@ def applyTwist(self,
             print(f"                           {delta_tang_core:.4f} Å (mean core, r={R_mean:.1f} Å)")
 
         # Apply vectorized Rodrigues rotation
-        if profile == 'helical':
+        if profile == 'screw':
+            new_positions = (_applyRotationRodrigues(positions, axis_cart, angles)
+                             + u_z[:, np.newaxis] * axis_cart)
+        elif profile == 'helical':
             translations = pitch * np.deg2rad(angles) / (2 * np.pi)
             new_positions = (_applyRotationRodrigues(positions, axis_cart, angles)
                              + translations[:, np.newaxis] * axis_cart)
@@ -3192,6 +3337,7 @@ def applyTwist(self,
                   f"jMolCS and jMolCS_opt will not be available.{bg.OFF}")
             print(f"{bg.LIGHTGREENB}To visualize the helical envelope, use: "
                   f"script = NP.defHelixShapeForJMol(){bg.OFF}")
+    
     self.propPostMake(skipChiralityCalculation=self.skipChiralityCalculation,
                       skipSymmetryAnalyzis=self.skipSymmetryAnalyzis,
                       skipFacetInfo = self.skipFacetInfo,
@@ -3398,7 +3544,6 @@ def farthest_in_direction(self, direction, axis_def='cart'):
             Å, the 1-based index of the outermost atom (Jmol convention), and
             the Cartesian unit direction (3,).
     """
-    import numpy as np
     pos = self.NP.get_positions()
 
     if axis_def == 'hkl':
@@ -3413,6 +3558,58 @@ def farthest_in_direction(self, direction, axis_def='cart'):
     proj = pos @ dir_cart
     i_max = int(np.argmax(proj))
     return float(proj[i_max]), i_max + 1, dir_cart
+
+def farthest_atom(self, weights=(1.0, 1.0, 1.0), signs=(1, 1, 1),
+                  metric='projection', from_cog=True):
+    """Return the outermost atom along a weighted/signed combination of x, y, z.
+
+    Finds the single atom that goes farthest 'into the corner' defined by the
+    chosen axes and directions, together with its 1-based index and Cartesian
+    coordinates.
+
+    By default the coordinates are measured relative to the center of gravity
+    (COG) of the particle, so the result does not depend on where the object
+    sits in the frame. Set from_cog=False to measure from the frame origin.
+
+    Two metrics are available:
+      - 'projection': maximize signs·weights·(x, y, z) of the (COG-referenced)
+        coordinates, i.e. the atom with the largest signed, weighted sum. With
+        signs=(1,1,1) and weights=(1,1,1) this is the atom maximizing x+y+z.
+      - 'euclidean': maximize the weighted Euclidean distance to the reference
+        point (COG or origin); signs are ignored.
+
+    Args:
+        weights (array-like of 3 floats): per-axis weights (x, y, z). Set an
+            axis weight to 0 to ignore that axis. Default (1, 1, 1).
+        signs (array-like of 3 ints): per-axis direction, +1 or -1, used by the
+            'projection' metric. Ignored by 'euclidean'. Default (1, 1, 1).
+        metric (str): 'projection' (default) or 'euclidean'.
+        from_cog (bool): if True (default), measure coordinates relative to the
+            center of gravity; if False, from the frame origin.
+
+    Returns:
+        tuple: (i_atom, coords) — the 1-based atom index (Jmol convention) and
+            its Cartesian coordinates as a (3,) numpy array. Note: `coords` are
+            the ORIGINAL (un-shifted) positions, whatever from_cog is; only the
+            selection criterion uses the COG-referenced coordinates.
+    """
+    import numpy as np
+    pos = self.NP.get_positions()
+    ref = self.NP.get_center_of_mass() if from_cog else np.zeros(3)
+    rel = pos - ref                      # coordinates used for the selection
+    w = np.asarray(weights, dtype=float)
+
+    if metric == 'euclidean':
+        score = (rel ** 2) @ w           # weighted squared distance (monotone)
+    elif metric == 'projection':
+        s = np.asarray(signs, dtype=float)
+        score = rel @ (w * s)            # signed, weighted sum of coordinates
+    else:
+        raise ValueError(
+            f"metric must be 'projection' or 'euclidean', got '{metric}'.")
+
+    i_max = int(np.argmax(score))
+    return i_max + 1, pos[i_max].copy()
 
 def mirror_at_tip(self, direction=[0, 0, 1], axis_def='cart', **kwargs):
     """
@@ -3565,7 +3762,6 @@ def center(self, noOutput=True, postAnalyzis=None,
         # Recenter after a sequence of edits done with recenter=False
         cube.center()
     """
-    import numpy as np
  
     if not noOutput:
         centertxt("Recentering on the center of mass", bgc='#007a7a',
@@ -3986,7 +4182,6 @@ def align_to_plane(self, axis=(0, 0, 1), target=0.0, tol=0.1, noOutput=True,
         # Seat the bottom of a double cone on z = 0
         cone.align_to_plane(axis=[0, 0, 1], target=0.0)
     """
-    import numpy as np
 
     if not noOutput:
         centertxt("Aligning lowest plane to target", bgc='#007a7a', size='14', weight='bold')
@@ -4048,9 +4243,18 @@ def z_height_nm(NP):
     """
     z = NP.NP.get_positions()[:, 2]
     return (z.max() - z.min()) / 10.0
+    
+def inner_end_z_height_nm(NP, slab_thickness=3.0):
+    """Return the z-extent (transverse height) of an arm's innermost end, in nm.
 
-import numpy as np
-
+    The innermost end is the slab of atoms at the smallest x (toward the star
+    center); its height is the z-span of that slab.
+    """
+    import numpy as np
+    pos = NP.NP.get_positions()
+    x_min = pos[:, 0].min()
+    slab = pos[pos[:, 0] < x_min + slab_thickness]
+    return float(np.ptp(slab[:, 2]) / 10.0)        
 
 def _parse_jmol_ranges(ranges_str, natoms):
     """Parse a Jmol-style 1-based selection string into a set of 0-based
@@ -4229,4 +4433,221 @@ def delete(self,
             noOutput                 = noOutput,
             is_optimized             = False,
         )
+
+def smooth_mesh_taubin(vertices, faces, iterations=8,
+                       lam=0.5, mu=-0.53):
+    """Smooth a triangulated mesh with Taubin's lambda/mu algorithm.
+
+    Alternates an inflating and a shrinking Laplacian pass so that, unlike
+    plain Laplacian smoothing, the mesh does not shrink over iterations.
+    This mimics the smoothing_level parameter of OVITO's
+    ConstructSurfaceModifier.
+
+    Args:
+        vertices ((N, 3) ndarray): mesh vertex coordinates.
+        faces ((M, 3) ndarray of int): triangles indexing into vertices.
+        iterations (int): number of lambda/mu passes (default 8, same
+            meaning as OVITO's smoothing_level).
+        lam (float): positive smoothing factor of the first pass.
+        mu (float): negative factor of the second pass; must satisfy
+            mu < -lam for volume preservation (default -0.53).
+
+    Returns:
+        (N, 3) ndarray: smoothed vertex coordinates. Faces are unchanged.
+    """
+    import numpy as np
+    from scipy.sparse import coo_matrix
+
+    n = len(vertices)
+    # Build the vertex adjacency from triangle edges (symmetric).
+    i = np.concatenate([faces[:, 0], faces[:, 1], faces[:, 2],
+                        faces[:, 1], faces[:, 2], faces[:, 0]])
+    j = np.concatenate([faces[:, 1], faces[:, 2], faces[:, 0],
+                        faces[:, 0], faces[:, 1], faces[:, 2]])
+    adj = coo_matrix((np.ones_like(i, dtype=float), (i, j)),
+                     shape=(n, n)).tocsr()
+    adj.data[:] = 1.0            # collapse duplicate edges
+    deg = np.asarray(adj.sum(axis=1)).ravel()
+    deg[deg == 0] = 1.0
+
+    v = np.asarray(vertices, dtype=float).copy()
+    for _ in range(iterations):
+        for factor in (lam, mu):
+            avg = adj @ v / deg[:, None]   # neighbour centroid
+            v += factor * (avg - v)
+    return v
+    
+def build_surface_mesh(atoms, method="alpha", probe_radius=4.0,
+                       return_normals=False, return_components=False):
+    """Build a triangulated surface mesh enclosing a set of atoms.
+
+    Two methods are available:
+      - 'hull': the convex hull of the atomic positions (scipy ConvexHull).
+        Suitable for convex particles (Wulff shapes, cuboctahedra, ...).
+        Concave features (e.g. the gaps between the arms of a nanostar) are
+        filled in, so this is not appropriate for concave shapes.
+      - 'alpha': an alpha-shape of the atomic positions. A 3D Delaunay
+        tessellation is computed and every tetrahedron whose circumscribed
+        sphere radius exceeds probe_radius is discarded; the surface is then
+        the set of triangular faces belonging to exactly one surviving
+        tetrahedron. This follows concave features and is the method to use
+        for nanostars and other non-convex particles.
+
+    The returned mesh is a pair (vertices, faces): vertices is an (N, 3) float
+    array of point coordinates in Angstrom, faces is an (M, 3) int array of
+    triangles indexing into vertices. Only vertices actually used by a face are
+    kept, and their indices are remapped accordingly, so the mesh is compact.
+
+    Args:
+        atoms (ase.Atoms): the particle whose enclosing surface is built. Only
+            the atomic positions are used.
+        method (str): 'alpha' (default) for an alpha-shape, or 'hull' for the
+            convex hull.
+        probe_radius (float): alpha-shape probe radius in Angstrom (the alpha
+            value). Tetrahedra whose circumsphere radius exceeds this are
+            removed. Smaller values hug the atoms and may open holes in
+            low-density regions; larger values smooth the surface and, in the
+            limit, reproduce the convex hull. Ignored when method='hull'.
+        return_normals (bool): if True, also return per-face outward unit
+            normals as an (M, 3) array.
+        return_components (bool): if True, also return per-face
+            connected-component labels as an (M,) int array
+
+    Returns:
+        tuple: (vertices, faces), extended with normals if return_normals is
+            True, and with per-face component labels if return_components is
+            True, in that order. E.g. (vertices, faces, normals, comp_labels)
+            when both flags are set.
+
+    Raises:
+        ValueError: if method is not 'alpha' or 'hull', or if fewer than four
+            atoms are supplied (a 3D tessellation needs at least four points).
+    """
+    from scipy.spatial import ConvexHull, Delaunay
+
+    pts = np.asarray(atoms.get_positions(), dtype=float)
+    if pts.shape[0] < 4:
+        raise ValueError(
+            f"build_surface_mesh needs at least 4 atoms, got {pts.shape[0]}.")
+
+    meth = str(method).lower()
+
+    if meth == "hull":
+        hull = ConvexHull(pts)
+        faces = hull.simplices
+        used = np.unique(faces)
+        remap = {old: new for new, old in enumerate(used)}
+        vertices = pts[used]
+        faces = np.array([[remap[i] for i in tri] for tri in faces], dtype=int)
+
+    elif meth == "alpha":
+        tetra = Delaunay(pts)
+        simplices = tetra.simplices  # (T, 4) indices into pts
+
+        # Circumsphere radius of each tetrahedron. For a tetrahedron with
+        # vertices a, b, c, d, solve for the center equidistant from all four,
+        # then take the distance to any vertex.
+        a = pts[simplices[:, 0]]
+        b = pts[simplices[:, 1]]
+        c = pts[simplices[:, 2]]
+        d = pts[simplices[:, 3]]
+        # Linear system (per tetrahedron) for the circumcenter.
+        A = np.stack([b - a, c - a, d - a], axis=1)  # (T, 3, 3)
+        rhs = 0.5 * np.stack([
+            np.einsum('ij,ij->i', b - a, b + a),
+            np.einsum('ij,ij->i', c - a, c + a),
+            np.einsum('ij,ij->i', d - a, d + a),
+        ], axis=1)  # (T, 3)
+
+        # Degenerate (near-flat) tetrahedra give a singular A; guard them.
+        dets = np.linalg.det(A)
+        good = np.abs(dets) > 1e-12
+        centers = np.full((simplices.shape[0], 3), np.nan)
+
+        centers[good] = np.linalg.solve(A[good], rhs[good][:, :, None])[:, :, 0]
+        radii = np.full(simplices.shape[0], np.inf)
+        radii[good] = np.linalg.norm(centers[good] - a[good], axis=1)
         
+        keep = radii <= probe_radius
+        kept = simplices[keep]
+        if kept.shape[0] == 0:
+            raise ValueError(
+                "alpha-shape removed every tetrahedron; probe_radius="
+                f"{probe_radius} is too small for this structure.")
+
+        # Each tetrahedron has four triangular faces. A face on the surface
+        # belongs to exactly one kept tetrahedron; interior faces are shared by
+        # two. Count faces (as sorted vertex triples) and keep the unique ones.
+        face_combos = np.array([[0, 1, 2], [0, 1, 3],
+                                [0, 2, 3], [1, 2, 3]])
+        all_faces = kept[:, face_combos].reshape(-1, 3)      # (4T', 3)
+        sorted_faces = np.sort(all_faces, axis=1)
+        uniq, counts = np.unique(sorted_faces, axis=0, return_counts=True)
+        boundary = uniq[counts == 1]
+
+        used = np.unique(boundary)
+        remap = {old: new for new, old in enumerate(used)}
+        vertices = pts[used]
+        faces = np.array([[remap[i] for i in tri] for tri in boundary],
+                         dtype=int)
+
+    else:
+        raise ValueError(
+            f"method must be 'alpha' or 'hull', got {method!r}.")
+
+    # Orient faces coherently by propagating across shared edges (BFS).
+    # A global centroid test is wrong for concave shapes: in the notches,
+    # outward normals can point towards the centroid and get flipped.
+    from collections import defaultdict, deque
+
+    edge_to_faces = defaultdict(list)
+    for fi, (a_, b_, c_) in enumerate(faces):
+        for e in ((a_, b_), (b_, c_), (c_, a_)):
+            edge_to_faces[frozenset(e)].append(fi)
+
+    def directed_edges(tri):
+        return ((tri[0], tri[1]), (tri[1], tri[2]), (tri[2], tri[0]))
+
+    visited = np.zeros(len(faces), dtype=bool)
+    comp_labels = np.full(len(faces), -1, dtype=int)   # NEW
+    n_comp = 0                                          # NEW
+    for seed in range(len(faces)):
+        if visited[seed]:
+            continue
+        visited[seed] = True
+        comp_labels[seed] = n_comp                      # NEW
+        queue = deque([seed])
+        while queue:
+            fi = queue.popleft()
+            own = set(directed_edges(faces[fi]))
+            for e in own:
+                for fj in edge_to_faces[frozenset(e)]:
+                    if fj == fi or visited[fj]:
+                        continue
+                    if any(d in own for d in directed_edges(faces[fj])):
+                        faces[fj] = faces[fj][::-1]
+                    visited[fj] = True
+                    comp_labels[fj] = n_comp            # NEW
+                    queue.append(fj)
+        n_comp += 1                                     # NEW
+
+    # Global flip per mesh: make the signed volume positive (outward).
+    v0 = vertices[faces[:, 0]]
+    v1 = vertices[faces[:, 1]]
+    v2 = vertices[faces[:, 2]]
+    signed_volume = np.einsum('ij,ij->i', v0, np.cross(v1, v2)).sum() / 6.0
+    if signed_volume < 0:
+        faces = np.ascontiguousarray(faces[:, ::-1])
+
+    normals = np.cross(vertices[faces[:, 1]] - vertices[faces[:, 0]],
+                       vertices[faces[:, 2]] - vertices[faces[:, 0]])
+    lengths = np.linalg.norm(normals, axis=1, keepdims=True)
+    lengths[lengths == 0] = 1.0
+    normals = normals / lengths
+
+    out = [vertices, faces]
+    if return_normals:
+        out.append(normals)
+    if return_components:
+        out.append(comp_labels)
+    return tuple(out)

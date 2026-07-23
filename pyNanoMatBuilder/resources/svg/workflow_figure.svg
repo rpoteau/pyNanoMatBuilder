@@ -1,0 +1,557 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="1321.6001"
+   height="344.74799"
+   viewBox="0 0 1321.6001 344.74799"
+   font-family="Helvetica, Arial, sans-serif"
+   version="1.1"
+   id="svg30"
+   sodipodi:docname="workflow_figure.svg"
+   inkscape:version="1.4.4 (unknown)"
+   inkscape:export-filename="workflow_figure.png"
+   inkscape:export-xdpi="300.008"
+   inkscape:export-ydpi="300.008"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs30" />
+  <sodipodi:namedview
+     id="namedview30"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="1.0398969"
+     inkscape:cx="511.58918"
+     inkscape:cy="373.11391"
+     inkscape:window-width="2544"
+     inkscape:window-height="1344"
+     inkscape:window-x="83"
+     inkscape:window-y="58"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg30" />
+  <rect
+     x="1071.2001"
+     y="76.747978"
+     width="249.60001"
+     height="148"
+     rx="10"
+     fill="#9ad9d4"
+     fill-opacity="0.2"
+     stroke="#45b8ae"
+     stroke-width="1.6"
+     id="rect24"
+     ry="10" />
+  <rect
+     x="803.59998"
+     y="96.747978"
+     width="249.60001"
+     height="148"
+     rx="10"
+     fill="#9ad9d4"
+     fill-opacity="0.2"
+     stroke="#45b8ae"
+     stroke-width="1.6"
+     id="rect20"
+     ry="10" />
+  <rect
+     x="536"
+     y="76.747978"
+     width="249.60001"
+     height="148"
+     rx="10"
+     fill="#9ad9d4"
+     fill-opacity="0.2"
+     stroke="#45b8ae"
+     stroke-width="1.6"
+     id="rect16"
+     ry="10" />
+  <rect
+     x="268.39999"
+     y="96.747978"
+     width="249.60001"
+     height="148"
+     rx="10"
+     fill="#9ad9d4"
+     fill-opacity="0.2"
+     stroke="#45b8ae"
+     stroke-width="1.6"
+     id="rect12"
+     ry="10" />
+  <rect
+     x="0.80000001"
+     y="76.747978"
+     width="249.60001"
+     height="148"
+     rx="10"
+     fill="#9ad9d4"
+     fill-opacity="0.2"
+     stroke="#45b8ae"
+     stroke-width="1.6"
+     id="rect9"
+     ry="10" />
+  <text
+     x="0.80000001"
+     y="20.747978"
+     font-size="28px"
+     font-weight="700"
+     fill="#004d4d"
+     letter-spacing="0.5"
+     id="text1">WORKFLOW</text>
+  <text
+     x="0.80000001"
+     y="46.747978"
+     font-size="16.5px"
+     fill="#5b6f6e"
+     id="text2"
+     style="font-size:18.6667px">From lattices, polyhedra, and engineered shapes to simulated observables</text>
+  <path
+     d="m 253.4,170.74798 h 9"
+     stroke="#9ad9d4"
+     stroke-width="3"
+     fill="none"
+     id="path2" />
+  <path
+     d="m 258.4,165.74798 8,5 -8,5 z"
+     fill="#45b8ae"
+     id="path3" />
+  <path
+     d="m 521,170.74798 h 9"
+     stroke="#9ad9d4"
+     stroke-width="3"
+     fill="none"
+     id="path4" />
+  <path
+     d="m 526,165.74798 8,5 -8,5 z"
+     fill="#45b8ae"
+     id="path5" />
+  <path
+     d="m 788.6,170.74798 h 9"
+     stroke="#9ad9d4"
+     stroke-width="3"
+     fill="none"
+     id="path6" />
+  <path
+     d="m 793.6,165.74798 8,5 -8,5 z"
+     fill="#45b8ae"
+     id="path7" />
+  <g
+     id="g31"
+     transform="translate(21.84949,10)">
+    <path
+       d="M 700,63.392154 V 48 h 410 v 8.080593"
+       stroke="#9ad9d4"
+       stroke-width="3"
+       fill="none"
+       id="path6-0"
+       sodipodi:nodetypes="cccc" />
+    <path
+       d="m 1114.6011,55.747978 -5,8 -5,-8 z"
+       fill="#45b8ae"
+       id="path7-7" />
+  </g>
+  <g
+     id="g31-8"
+     transform="translate(-513.35055,10)">
+    <path
+       d="M 700,63.392154 V 48 h 410 v 8.080593"
+       stroke="#9ad9d4"
+       stroke-width="3"
+       fill="none"
+       id="path6-0-9"
+       sodipodi:nodetypes="cccc" />
+    <path
+       d="m 1114.6011,55.747978 -5,8 -5,-8 z"
+       fill="#45b8ae"
+       id="path7-7-2" />
+  </g>
+  <path
+     d="m 1056.2,170.74798 h 9"
+     stroke="#9ad9d4"
+     stroke-width="3"
+     fill="none"
+     id="path8" />
+  <path
+     d="m 1061.2,165.74798 8,5 -8,5 z"
+     fill="#45b8ae"
+     id="path9" />
+  <circle
+     cx="30.799999"
+     cy="106.74798"
+     r="17"
+     fill="#007a7a"
+     id="circle9" />
+  <text
+     x="30.799999"
+     y="112.74798"
+     font-size="18px"
+     font-weight="700"
+     fill="#ffffff"
+     text-anchor="middle"
+     id="text9">1</text>
+  <text
+     x="56.799999"
+     y="113.74798"
+     font-size="20.5px"
+     font-weight="700"
+     fill="#004d4d"
+     id="text10"
+     style="font-weight:700;font-size:20.5px;fill:#004d4d"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:24px;font-family:Sans;-inkscape-font-specification:'Sans, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
+       id="tspan13">Construct</tspan></text>
+  <text
+     x="58"
+     y="162"
+     font-size="14.5"
+     fill="#12302f"
+     id="text11"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;font-family:Calibri;-inkscape-font-specification:'Calibri, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;white-space:pre;inline-size:231.6;display:inline"
+     transform="translate(-39.2,-9.252022)"
+     xml:space="preserve"><tspan
+       x="58"
+       y="162"
+       id="tspan2">Choose lattice, morphology, </tspan><tspan
+       x="58"
+       y="187"
+       id="tspan17">and size – or load an </tspan><tspan
+       x="58"
+       y="212"
+       id="tspan18">external structure file</tspan></text>
+  <text
+     x="18.799999"
+     y="173.74799"
+     font-size="14.5"
+     fill="#12302f"
+     id="text12"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.6667px;font-family:Calibri;-inkscape-font-specification:'Calibri, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal" />
+  <circle
+     cx="298.39999"
+     cy="126.74798"
+     r="17"
+     fill="#007a7a"
+     id="circle12" />
+  <text
+     x="298.39999"
+     y="132.74799"
+     font-size="18px"
+     font-weight="700"
+     fill="#ffffff"
+     text-anchor="middle"
+     id="text13">2</text>
+  <text
+     x="324.39999"
+     y="133.74799"
+     font-size="20.5px"
+     font-weight="700"
+     fill="#004d4d"
+     id="text14"
+     style="font-weight:700;font-size:20.5px;fill:#004d4d"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:24px;font-family:Sans;-inkscape-font-specification:'Sans, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
+       id="tspan12">Carve</tspan></text>
+  <text
+     x="325.60001"
+     y="162"
+     font-size="14.5"
+     fill="#12302f"
+     id="text15"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;font-family:Calibri;-inkscape-font-specification:'Calibri, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;white-space:pre;inline-size:231.6;display:inline"
+     transform="translate(-39.2,10.747978)"
+     xml:space="preserve"><tspan
+       x="325.60001"
+       y="162"
+       id="tspan19">CSG, slicing, facets, twins, </tspan><tspan
+       x="325.60001"
+       y="187"
+       id="tspan20">zigzag edges</tspan></text>
+  <text
+     x="286.39999"
+     y="173.74799"
+     font-size="14.5"
+     fill="#12302f"
+     id="text16"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.6667px;font-family:Calibri;-inkscape-font-specification:'Calibri, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal" />
+  <circle
+     cx="566"
+     cy="106.74798"
+     r="17"
+     fill="#007a7a"
+     id="circle16" />
+  <text
+     x="566"
+     y="112.74798"
+     font-size="18px"
+     font-weight="700"
+     fill="#ffffff"
+     text-anchor="middle"
+     id="text17">3</text>
+  <text
+     x="592"
+     y="113.74798"
+     font-size="20.5px"
+     font-weight="700"
+     fill="#004d4d"
+     id="text18"
+     style="font-weight:700;font-size:20.5px;fill:#004d4d"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:24px;font-family:Sans;-inkscape-font-specification:'Sans, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
+       id="tspan14">Describe</tspan></text>
+  <text
+     x="593.20001"
+     y="162"
+     font-size="14.5"
+     fill="#12302f"
+     id="text19"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;font-family:Calibri;-inkscape-font-specification:'Calibri, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;white-space:pre;inline-size:231.6;display:inline"
+     transform="translate(-39.2,-9.252022)"
+     xml:space="preserve"><tspan
+       x="593.20001"
+       y="162"
+       id="tspan21">CN, local order descriptors, </tspan><tspan
+       x="593.20001"
+       y="187"
+       id="tspan22">strain, symmetry, chirality, </tspan><tspan
+       x="593.20001"
+       y="212"
+       id="tspan23">dimensions, area, volume</tspan></text>
+  <text
+     x="554"
+     y="173.74799"
+     font-size="14.5"
+     fill="#12302f"
+     id="text20"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.6667px;font-family:Calibri;-inkscape-font-specification:'Calibri, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal" />
+  <circle
+     cx="833.59998"
+     cy="126.74798"
+     r="17"
+     fill="#007a7a"
+     id="circle20" />
+  <text
+     x="833.59998"
+     y="132.74799"
+     font-size="18px"
+     font-weight="700"
+     fill="#ffffff"
+     text-anchor="middle"
+     id="text21">4</text>
+  <text
+     x="859.59998"
+     y="133.74799"
+     font-size="20.5px"
+     font-weight="700"
+     fill="#004d4d"
+     id="text22"
+     style="font-weight:700;font-size:20.5px;fill:#004d4d"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:24px;font-family:Sans;-inkscape-font-specification:'Sans, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
+       id="tspan10">Relax</tspan></text>
+  <text
+     x="860.79999"
+     y="162"
+     font-size="14.5"
+     fill="#12302f"
+     id="text23"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;font-family:Calibri;-inkscape-font-specification:'Calibri, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;white-space:pre;inline-size:231.6;display:inline"
+     transform="translate(-39.2,10.747978)"
+     xml:space="preserve"><tspan
+       x="860.79999"
+       y="162"
+       id="tspan24">EAM / EMT energy, </tspan><tspan
+       x="860.79999"
+       y="187"
+       id="tspan25">geometry optimization</tspan></text>
+  <text
+     x="821.59998"
+     y="173.74799"
+     font-size="14.5"
+     fill="#12302f"
+     id="text24"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.6667px;font-family:Calibri;-inkscape-font-specification:'Calibri, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal" />
+  <circle
+     cx="1101.2001"
+     cy="106.74798"
+     r="17"
+     fill="#007a7a"
+     id="circle24" />
+  <text
+     x="1101.2001"
+     y="112.74798"
+     font-size="18px"
+     font-weight="700"
+     fill="#ffffff"
+     text-anchor="middle"
+     id="text25">5</text>
+  <text
+     x="1127.2001"
+     y="113.74798"
+     font-size="20.5px"
+     font-weight="700"
+     fill="#004d4d"
+     id="text26"
+     style="font-weight:700;font-size:20.5px;fill:#004d4d"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:24px;font-family:Sans;-inkscape-font-specification:'Sans, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
+       id="tspan11">Simulate</tspan></text>
+  <text
+     x="1128.4"
+     y="162"
+     font-size="14.5"
+     fill="#12302f"
+     id="text27"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;font-family:Calibri;-inkscape-font-specification:'Calibri, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;white-space:pre;inline-size:231.6;display:inline"
+     transform="translate(-39.2,-9.252022)"
+     xml:space="preserve"><tspan
+       x="1128.4"
+       y="162"
+       id="tspan26">SAXS / WAXS, microscopy</tspan></text>
+  <text
+     x="1089.2001"
+     y="173.74799"
+     font-size="14.5"
+     fill="#12302f"
+     id="text28"
+     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.6667px;font-family:Calibri;-inkscape-font-specification:'Calibri, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal" />
+  <rect
+     x="0.80000001"
+     y="252.74799"
+     width="1320"
+     height="92"
+     rx="9"
+     fill="#004d4d"
+     id="rect28"
+     ry="9" />
+  <text
+     x="113.675"
+     y="292.74799"
+     font-size="21px"
+     font-weight="700"
+     fill="#ffffff"
+     id="text29"
+     style="font-size:21.3333px">pyNanoMatBuilder</text>
+  <text
+     x="113.675"
+     y="320.74799"
+     font-size="15px"
+     fill="#9ad9d4"
+     id="text30"
+     style="font-size:18.6667px">Python · NumPy · SciPy · Numba · pandas · ASE · pymatgen</text>
+  <g
+     id="g2"
+     inkscape:export-filename="pynmb_logo_light.png"
+     inkscape:export-xdpi="300.008"
+     inkscape:export-ydpi="300.008"
+     transform="matrix(0.12521969,0,0,0.12521969,45.718718,298.74798)">
+    <path
+       d="M -199,-115 0,-230 V 230 L -199,115 Z"
+       fill="#9ad9d4"
+       fill-opacity="0.28"
+       stroke="#7fcac4"
+       stroke-width="2.5"
+       stroke-opacity="0.55"
+       id="path1" />
+    <line
+       x1="0"
+       y1="0"
+       x2="0"
+       y2="-230"
+       stroke="#7fcac4"
+       stroke-width="2.5"
+       stroke-opacity="0.6"
+       id="line1"
+       style="stroke-width:5.71429;stroke-dasharray:none" />
+    <line
+       x1="0"
+       y1="0"
+       x2="199"
+       y2="-115"
+       stroke="#7fcac4"
+       stroke-width="2.5"
+       stroke-opacity="0.6"
+       id="line2"
+       style="stroke-width:5.71429;stroke-dasharray:none" />
+    <line
+       x1="0"
+       y1="0"
+       x2="199"
+       y2="115"
+       stroke="#7fcac4"
+       stroke-width="2.5"
+       stroke-opacity="0.6"
+       id="line3"
+       style="stroke-width:5.71429;stroke-dasharray:none" />
+    <line
+       x1="0"
+       y1="0"
+       x2="0"
+       y2="230"
+       stroke="#7fcac4"
+       stroke-width="2.5"
+       stroke-opacity="0.6"
+       id="line4"
+       style="stroke-width:5.71429;stroke-dasharray:none" />
+    <line
+       x1="0"
+       y1="0"
+       x2="-199"
+       y2="115"
+       stroke="#7fcac4"
+       stroke-width="2.5"
+       stroke-opacity="0.6"
+       id="line5"
+       style="stroke-width:5.71429;stroke-dasharray:none" />
+    <line
+       x1="0"
+       y1="0"
+       x2="-199"
+       y2="-115"
+       stroke="#7fcac4"
+       stroke-width="2.5"
+       stroke-opacity="0.6"
+       id="line6"
+       style="stroke-width:5.71429;stroke-dasharray:none" />
+    <circle
+       cx="0"
+       cy="-230"
+       r="62"
+       fill="#9ad9d4"
+       id="circle6" />
+    <circle
+       cx="199"
+       cy="-115"
+       r="62"
+       fill="#9ad9d4"
+       id="circle7" />
+    <circle
+       cx="199"
+       cy="115"
+       r="62"
+       fill="#9ad9d4"
+       id="circle8" />
+    <circle
+       cx="0"
+       cy="230"
+       r="62"
+       fill="#9ad9d4"
+       id="circle9-3" />
+    <circle
+       cx="-199"
+       cy="115"
+       r="62"
+       fill="#9ad9d4"
+       id="circle10" />
+    <circle
+       cx="-199"
+       cy="-115"
+       r="62"
+       fill="#9ad9d4"
+       id="circle11" />
+    <circle
+       cx="0"
+       cy="0"
+       r="95"
+       fill="#9ad9d4"
+       id="circle12-6" />
+  </g>
+</svg>
