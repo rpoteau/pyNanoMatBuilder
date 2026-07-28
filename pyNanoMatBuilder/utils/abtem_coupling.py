@@ -49,16 +49,16 @@ def _load_substrate(substrate_size: int) -> Atoms:
     Load the relaxed amorphous-carbon substrate shipped with the package.
 
     Args:
-        substrate_size (int): Lateral size of the substrate in nm (5 or 10).
+        substrate_size (int): Lateral size of the substrate in Angstroms (50 or 100).
             The corresponding file (aC_relax_5x5.xyz.gz or aC_relax_10x10.xyz.gz)
             is resolved from the pyNanoMatBuilder package resources.
 
     Returns:
         Atoms: ASE Atoms object of the carbon substrate (no cell attached).
     """
-    if substrate_size not in (5, 10):
-        raise ValueError(f"substrate_size must be 5 or 10 (nm), got {substrate_size}.")
-    substrate_file = f"aC_relax_{substrate_size}x{substrate_size}.xyz.gz"
+    if substrate_size not in (50, 100):
+        raise ValueError(f"substrate_size must be 50 or 100 (Angstroms), got {substrate_size} Angstroms.")
+    substrate_file = f"aC_relax_{substrate_size/10:.0f}x{substrate_size/10:.0f}.xyz.gz"
     gz_path = Path(pyNMBu.get_resource_path('resources/amorphousC', substrate_file))
     with gzip.open(gz_path, 'rt', encoding='utf-8') as f:
         lines = f.readlines()
@@ -248,8 +248,8 @@ class CreateHRTEMStructure:
         result of ``platonicNPs.regIco(...)``, its ``trPlanes`` facets are
         then reused) or directly an ``ase.Atoms`` object (e.g. ``AuNP.NP``,
         the facets are then recomputed from the convex hull).
-    substrate_size : int, default 10
-        Lateral size of the amorphous-carbon substrate in nm (5 or 10).
+    substrate_size : int, default 100
+        Lateral size of the amorphous-carbon substrate in Angstroms (50 or 100).
     tolerance : float, default 3.
         Distance in Angstroms between the NP and the carbon surface. Too
         small a value creates chemical bonds at the interface.
@@ -259,7 +259,7 @@ class CreateHRTEMStructure:
     tilt : float, default 0.
         Tilt (degrees) applied around a random horizontal axis, to mimic
         substrate roughness / imperfect facet contact. The vertical clearance
-        is recomputed after the tilt. Typical experimental-like values: 5-15.
+        is recomputed after the tilt.
     output_xyz : str or None, default None
         If given, path of the XYZ file to write (NP + substrate).
     seed : int or None, default None
@@ -284,11 +284,11 @@ class CreateHRTEMStructure:
     --------
     >>> AuNP = pNP.regIco(element='Au', Rnn=2.885, nShell=5, postAnalyzis=True,
     ...                   skipSymmetryAnalyzis=True, aseView=False, noOutput=True)
-    >>> struct = CreateHRTEMStructure(AuNP, substrate_size=10, tolerance=3.)
+    >>> struct = CreateHRTEMStructure(AuNP, substrate_size=100, tolerance=3.)
     >>> struct.structure   # ASE Atoms, ready for CreateHRTEMImage
     """
 
-    def __init__(self, NP, substrate_size: int = 10, tolerance: float = 3.,
+    def __init__(self, NP, substrate_size: int = 100, tolerance: float = 3.,
                  angle_xy: float = None, tilt: float = 0.,
                  output_xyz: str = None, seed: int = None, noOutput: bool = True):
         rng = np.random.default_rng(seed)
@@ -369,15 +369,15 @@ class CreateHRTEMStructure:
             if extent > (hi - lo) - 2 * margin:
                 raise ValueError(
                     f"The NP lateral extent ({extent * 0.1:.2f} nm along {'xy'[k]}) exceeds the "
-                    f"{substrate_size}x{substrate_size} nm substrate minus the {margin} A border "
-                    f"margin: build a smaller NP or use substrate_size=10.")
+                    f"{substrate_size/10:.0f}x{substrate_size/10:.0f} nm substrate minus the {margin} A border "
+                    f"margin: build a smaller NP or use substrate_size=100 Angstroms.")
             if pos[:, k].min() < lo + margin:
                 shift[k] = lo + margin - pos[:, k].min()
             elif pos[:, k].max() > hi - margin:
                 shift[k] = hi - margin - pos[:, k].max()
         pos = pos + shift
         if not noOutput and np.any(shift != 0.):
-            print(f"NP shifted by ({shift[0]:+.1f}, {shift[1]:+.1f}) A towards the substrate "
+            print(f"NP shifted by ({shift[0]:+.0f}, {shift[1]:+.0f}) A towards the substrate "
                   f"center so that it fits within the borders.")
 
         # 8. Optional tilt around a random horizontal axis
@@ -425,9 +425,9 @@ class CreateHRTEMStructure:
         if not noOutput:
             print(f"NP: {len(np_atoms)} atoms, circumscribed diameter = "
                   f"{self.circumsphere_diameter:.2f} nm")
-            print(f"Substrate: {substrate_size}x{substrate_size} nm amorphous carbon "
+            print(f"Substrate: {substrate_size/10:.0f}x{substrate_size/10:.0f} nm amorphous carbon "
                   f"({len(substrate)} atoms)")
-            print(f"Placement: angle_xy = {angle_xy:.1f} deg, tilt = {tilt:.1f} deg, "
+            print(f"Placement: angle_xy = {angle_xy:.0f} deg, tilt = {tilt:.0f} deg, "
                   f"clearance = {tolerance} A")
             if output_xyz is not None:
                 print(f"XYZ file written: {output_xyz}")
@@ -511,7 +511,7 @@ class CreateHRTEMImage:
 
     Examples
     --------
-    >>> struct = CreateHRTEMStructure(AuNP, substrate_size=10)
+    >>> struct = CreateHRTEMStructure(AuNP, substrate_size=100)
     >>> img = CreateHRTEMImage(struct, device='cpu')
     >>> img.show()
     >>> img.save('Au_hrtem.png', metadata=True)
@@ -586,7 +586,7 @@ class CreateHRTEMImage:
         atoms.set_cell([extent[0], extent[1], extent[2]])
         atoms.center(axis=2, vacuum=self.vacuum)
         if not self.noOutput:
-            print(f"Simulation cell: {extent[0]:.1f} x {extent[1]:.1f} x "
+            print(f"Simulation cell: {extent[0]:.0f} x {extent[1]:.0f} x "
                   f"{extent[2] + 2 * self.vacuum:.1f} A, {len(atoms)} atoms")
         return atoms
 

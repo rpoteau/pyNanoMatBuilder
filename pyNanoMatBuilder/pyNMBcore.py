@@ -1394,3 +1394,128 @@ class pyNMBcore:
                                    surface_only=surface_only,
                                    atomic_radius=atomic_radius, color=color,
                                    translucency=translucency, noOutput=noOutput)
+
+    # ------------------------------------------------------------------
+    # Couplings with external simulation packages.
+    # These methods import their backend lazily, so that abTEM,
+    # debyecalculator and pyAUSAXS remain optional: the package is only
+    # required when the corresponding method is actually called. Each backend
+    # needs its own dedicated environment (their version constraints are
+    # mutually incompatible) - see the coupling notebooks and the matching
+    # requirements-*.txt files.
+    # ------------------------------------------------------------------
+
+    def hrtem_image(self, substrate_size=100, tolerance=3., angle_xy=None,
+                    tilt=0., seed=None, output_xyz=None, noOutput=None, **kwargs):
+        """Simulate an HRTEM image of the NP lying on an amorphous-carbon substrate.
+
+        Places the NP on the relaxed amorphous-carbon substrate shipped with the
+        package, then runs the abTEM multislice pipeline. Requires abTEM.
+        See utils.abtem_coupling for full documentation.
+
+        Args:
+            substrate_size (int): Lateral size of the carbon substrate in Angstroms
+                (50 or 100). The NP must be smaller than the substrate.
+            tolerance (float): Distance in Angstrom between the NP and the
+                carbon surface.
+            angle_xy (float): In-plane rotation of the NP in degrees; None
+                draws a random angle.
+            tilt (float): Tilt (z) to simulate imperfect contact (degrees).
+            seed (int): Seed of the random generator used for the placement.
+            output_xyz (str): Optional path of the NP+substrate XYZ file to write.
+            noOutput (bool): If True, suppresses output. Default is self.noOutput.
+            **kwargs: Further microscope parameters forwarded to
+                utils.abtem_coupling.CreateHRTEMImage (sampling, energy,
+                phonon_config, Cs_value, dose_poisson_noise, device...).
+
+        Returns:
+            CreateHRTEMImage: The simulation result; use ``.image`` for the
+            array, ``.show()`` to display it and ``.save()`` to write a PNG.
+        """
+        try:
+            from .utils.abtem_coupling import CreateHRTEMStructure, CreateHRTEMImage
+        except ImportError as e:
+            raise ImportError(
+                "hrtem_image requires the 'abtem' package, which is not installed in "
+                "this environment. Set up the dedicated environment described in the "
+                "pyNMB-abtem-coupling.ipynb notebook "
+                "(pip install -r requirements-abtem.txt), or install the extra with "
+                "pip install \"pyNanoMatBuilder[tem]\". Note that abTEM and "
+                "debyecalculator/pyAUSAXS cannot share the same environment."
+            ) from e
+        if noOutput is None: noOutput = self.noOutput
+        structure = CreateHRTEMStructure(self, substrate_size=substrate_size,
+                                         tolerance=tolerance, angle_xy=angle_xy,
+                                         tilt=tilt, seed=seed,
+                                         output_xyz=output_xyz, noOutput=noOutput)
+        return CreateHRTEMImage(structure, noOutput=noOutput, **kwargs)
+
+    def debye_profile(self, scattering='iq', qmin=0.001, qmax=20.0, qstep=0.001,
+                      rmin=0.0, rmax=20.0, rstep=0.01, biso=0.0,
+                      device='cpu', xyz_file=None, noOutput=None):
+        """Compute a scattering function of the NP with DebyeCalculator.
+
+        Requires the debyecalculator package.
+        See utils.scattering_coupling.debye_profile for full documentation.
+
+        Note:
+            The returned x-axis depends on ``scattering``: q (1/Angstrom) for
+            'iq'/'sq'/'fq', but r (Angstrom) for 'gr'. Only 'iq' is positive
+            and log-scale friendly; 'sq'/'fq'/'gr' oscillate and are signed,
+            so plot them on linear axes.
+
+        Args:
+            scattering (str): 'iq', 'sq', 'fq' (reciprocal space) or 'gr'
+                (real-space pair distribution function G(r)).
+            qmin (float): Lower bound of the q range in 1/Angstrom.
+            qmax (float): Upper bound of the q range in 1/Angstrom.
+            qstep (float): Step of the q grid in 1/Angstrom.
+            rmin (float): Lower bound of the r range in Angstrom (used by 'gr').
+            rmax (float): Upper bound of the r range in Angstrom (used by 'gr');
+                set it larger than the NP diameter.
+            rstep (float): Step of the r grid in Angstrom (used by 'gr').
+            biso (float): Isotropic displacement parameter B in Angstrom^2.
+            device (str): 'cpu' or 'cuda'.
+            xyz_file (str): Optional path of the XYZ file to write and keep.
+            noOutput (bool): If True, suppresses output. Default is self.noOutput.
+
+        Returns:
+            tuple[ndarray, ndarray]: (x, y); x is q for 'iq'/'sq'/'fq', r for 'gr'.
+        """
+        from .utils.scattering_coupling import debye_profile
+        if noOutput is None: noOutput = self.noOutput
+        return debye_profile(self, scattering=scattering, qmin=qmin, qmax=qmax,
+                             qstep=qstep, rmin=rmin, rmax=rmax, rstep=rstep,
+                             biso=biso, device=device, xyz_file=xyz_file,
+                             noOutput=noOutput)
+
+    def ausaxs_profile(self, qmin=0.001, qmax=20.0, npoints=20000, apply_f0=True,
+                       threads=None, bin_width=0.1, bin_count=1000,
+                       xyz_file=None, noOutput=None):
+        """Compute the scattering profile I(q) of the NP with pyAUSAXS.
+
+        Uses the raw Debye sum of pyAUSAXS and applies pyNanoMatBuilder's own
+        atomic form factors, since pyAUSAXS only knows the light elements.
+        Requires the pyausaxs package.
+        See utils.scattering_coupling.ausaxs_profile for full documentation.
+
+        Args:
+            qmin (float): Lower bound of the q range in 1/Angstrom.
+            qmax (float): Upper bound of the q range in 1/Angstrom.
+            npoints (int): Number of points of the linear q grid.
+            apply_f0 (bool): Apply the atomic form factor correction.
+            threads (int): Number of threads used by pyAUSAXS.
+            bin_width (float): Width of the distance-histogram bins in Angstrom.
+            bin_count (int): Number of histogram bins.
+            xyz_file (str): Optional path of the XYZ file to write and keep.
+            noOutput (bool): If True, suppresses output. Default is self.noOutput.
+
+        Returns:
+            tuple[ndarray, ndarray]: (q, I) in 1/Angstrom and a.u.
+        """
+        from .utils.scattering_coupling import ausaxs_profile
+        if noOutput is None: noOutput = self.noOutput
+        return ausaxs_profile(self, qmin=qmin, qmax=qmax, npoints=npoints,
+                              apply_f0=apply_f0, threads=threads,
+                              bin_width=bin_width, bin_count=bin_count,
+                              xyz_file=xyz_file, noOutput=noOutput)
