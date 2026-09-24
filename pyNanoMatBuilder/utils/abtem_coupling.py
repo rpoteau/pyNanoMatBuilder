@@ -702,3 +702,24 @@ class CreateHRTEMImage:
                 print(f"Metadata written: {csv_path}")
         if not self.noOutput:
             print(f"Image written: {filename}")
+
+    def diffractogram(self):
+        """
+        Diffractogram (power spectrum) of the recorded HRTEM image.
+
+        The diffractogram is the modulus of the Fourier transform of the
+        image -- the simulated counterpart of the FFT an experimentalist
+        computes from a micrograph to read the lattice spacings and the
+        particle orientation. It is evaluated natively by abTEM (no manual
+        FFT): the recorded image is wrapped back into an ``abtem.Images``
+        object and its :meth:`diffractograms` method is called.
+
+        For the electron diffraction pattern of the exit wavefunction (the
+        reciprocal-space counterpart), use ``self.exit_wave.diffraction_patterns()``.
+
+        Returns:
+            abtem.array.DiffractionPatterns: The diffractogram of ``self.image``.
+            Call its ``.show(power=0.2)`` method to display it.
+        """
+        images = abtem.Images(self.image, sampling=(self.sampling, self.sampling))
+        return images.diffractograms()
