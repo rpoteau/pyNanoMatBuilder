@@ -1406,7 +1406,8 @@ class pyNMBcore:
     # ------------------------------------------------------------------
 
     def hrtem_image(self, substrate_size=100, tolerance=3., angle_xy=None,
-                    tilt=0., seed=None, output_xyz=None, noOutput=None, **kwargs):
+                    tilt=0., tilt_azimuth=None, seed=None, output_xyz=None,
+                    noOutput=None, **kwargs):
         """Simulate an HRTEM image of the NP lying on an amorphous-carbon substrate.
 
         Places the NP on the relaxed amorphous-carbon substrate shipped with the
@@ -1420,7 +1421,10 @@ class pyNMBcore:
                 carbon surface.
             angle_xy (float): In-plane rotation of the NP in degrees; None
                 draws a random angle.
-            tilt (float): Tilt (z) to simulate imperfect contact (degrees).
+            tilt (float): Tilt (degrees) off the substrate plane, e.g. to reach
+                a chosen zone axis.
+            tilt_azimuth (float): Azimuth (degrees) of the tilt axis; set it for
+                a reproducible orientation, None draws a random azimuth.
             seed (int): Seed of the random generator used for the placement.
             output_xyz (str): Optional path of the NP+substrate XYZ file to write.
             noOutput (bool): If True, suppresses output. Default is self.noOutput.
@@ -1446,8 +1450,9 @@ class pyNMBcore:
         if noOutput is None: noOutput = self.noOutput
         structure = CreateHRTEMStructure(self, substrate_size=substrate_size,
                                          tolerance=tolerance, angle_xy=angle_xy,
-                                         tilt=tilt, seed=seed,
-                                         output_xyz=output_xyz, noOutput=noOutput)
+                                         tilt=tilt, tilt_azimuth=tilt_azimuth,
+                                         seed=seed, output_xyz=output_xyz,
+                                         noOutput=noOutput)
         return CreateHRTEMImage(structure, noOutput=noOutput, **kwargs)
 
     def debye_profile(self, scattering='iq', qmin=0.001, qmax=20.0, qstep=0.001,

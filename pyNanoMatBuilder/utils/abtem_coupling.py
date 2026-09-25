@@ -257,9 +257,13 @@ class CreateHRTEMStructure:
         In-plane rotation of the NP (degrees) around the substrate normal.
         None draws a random angle (reproducible through ``seed``).
     tilt : float, default 0.
-        Tilt (degrees) applied around a random horizontal axis, to mimic
-        substrate roughness / imperfect facet contact. The vertical clearance
-        is recomputed after the tilt.
+        Tilt (degrees) applied around a horizontal axis, to mimic substrate
+        roughness / imperfect facet contact, or to reach a chosen zone axis.
+        The vertical clearance is recomputed after the tilt.
+    tilt_azimuth : float or None, default None
+        Azimuth (degrees) of the horizontal tilt axis. Set it for a fully
+        reproducible orientation (e.g. to bring a specific crystallographic
+        axis up); None draws a random azimuth (reproducible through ``seed``).
     output_xyz : str or None, default None
         If given, path of the XYZ file to write (NP + substrate).
     seed : int or None, default None
@@ -277,8 +281,9 @@ class CreateHRTEMStructure:
         The carbon substrate alone.
     circumsphere_diameter : float
         Diameter of the NP circumscribed sphere in nm.
-    angle_xy, tilt, tolerance, substrate_size
-        The placement parameters actually used.
+    angle_xy, tilt, tilt_azimuth, tolerance, substrate_size
+        The placement parameters actually used (``tilt_azimuth`` is the value
+        drawn or supplied, or None when ``tilt`` is 0).
 
     Examples
     --------
@@ -289,7 +294,7 @@ class CreateHRTEMStructure:
     """
 
     def __init__(self, NP, substrate_size: int = 100, tolerance: float = 3.,
-                 angle_xy: float = None, tilt: float = 0.,
+                 angle_xy: float = None, tilt: float = 0., tilt_azimuth: float = None,
                  output_xyz: str = None, seed: int = None, noOutput: bool = True):
         rng = np.random.default_rng(seed)
 
@@ -380,14 +385,18 @@ class CreateHRTEMStructure:
             print(f"NP shifted by ({shift[0]:+.0f}, {shift[1]:+.0f}) A towards the substrate "
                   f"center so that it fits within the borders.")
 
-        # 8. Optional tilt around a random horizontal axis
+        # 8. Optional tilt around a horizontal axis. Its azimuth is set by
+        # ``tilt_azimuth`` (degrees) for a reproducible orientation, or drawn at
+        # random when None.
+        azimuth = None
         if tilt != 0.:
             ref = np.array([1., 0., 0.])
             if abs(ref @ normal_carbon) > 0.9:
                 ref = np.array([0., 1., 0.])
             axis0 = np.cross(normal_carbon, ref)
             axis0 /= np.linalg.norm(axis0)
-            azimuth = float(rng.uniform(0., 360.))
+            azimuth = (float(tilt_azimuth) if tilt_azimuth is not None
+                       else float(rng.uniform(0., 360.)))
             tilt_axis = sciR.from_rotvec(np.radians(azimuth) * normal_carbon).apply(axis0)
             pos = (sciR.from_rotvec(np.radians(tilt) * tilt_axis)
                    .apply(pos - pos.mean(axis=0)) + pos.mean(axis=0))
@@ -416,6 +425,7 @@ class CreateHRTEMStructure:
         self.tolerance = tolerance
         self.angle_xy = angle_xy
         self.tilt = tilt
+        self.tilt_azimuth = azimuth
         self.output_xyz = output_xyz
 
         if output_xyz is not None:
@@ -427,8 +437,9 @@ class CreateHRTEMStructure:
                   f"{self.circumsphere_diameter:.2f} nm")
             print(f"Substrate: {substrate_size/10:.0f}x{substrate_size/10:.0f} nm amorphous carbon "
                   f"({len(substrate)} atoms)")
-            print(f"Placement: angle_xy = {angle_xy:.0f} deg, tilt = {tilt:.0f} deg, "
-                  f"clearance = {tolerance} A")
+            azim_str = f", tilt_azimuth = {azimuth:.0f} deg" if azimuth is not None else ""
+            print(f"Placement: angle_xy = {angle_xy:.0f} deg, tilt = {tilt:.0f} deg"
+                  f"{azim_str}, clearance = {tolerance} A")
             if output_xyz is not None:
                 print(f"XYZ file written: {output_xyz}")
 
@@ -694,7 +705,7 @@ class CreateHRTEMImage:
         if size is not None:
             pil_image = pil_image.resize((size, size),
                                          resample=PILImage.Resampling.LANCZOS)
-        pil_image.save(filename)
+        pil_image.save(filename, dpi=(300, 300))
         if metadata:
             csv_path = str(Path(filename).with_suffix('')) + "_metadata.csv"
             pd.DataFrame([self.metadata]).to_csv(csv_path, index=False)
