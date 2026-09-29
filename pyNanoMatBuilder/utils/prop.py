@@ -2339,55 +2339,88 @@ def _opd_kernel(coords, neighbors_indices, neighbors_offsets):
                         
     return g0
 
-def compute_opd_index(NP:Atoms, cutoff=6.0, noOutput=False):
+def compute_opd_index(self, cutoff=6.0, achiral_tol=1e-2, noOutput=False):
     """
-    High-performance Scaled Osipov–Pickup–Dunmur chirality index computation.
-    Article: 10.1080/00268979500100831
-    Uses KDTree for neighbor searching and Numba for parallelized math.
-    
+    Osipov-Pickup-Dunmur (OPD) chirality index computed from atomic coordinates.
+    Article: 10.1080/00268979500100831 (Osipov, Pickup, Dunmur, Mol. Phys. 1995)
+
+    Two values are returned:
+      - G0     : the raw dimensionless index (Osipov eq. 17), summed over
+                 quadruplets of atoms. Its scale is stable (order unity for
+                 small molecules), so it is the quantity used for the internal
+                 achirality/handedness test and the one comparable to the
+                 values tabulated by Osipov et al.
+    - G0_norm: the same index normalized by the number of quadruplets
+                 (factor 1/N^4), i.e. made size-intensive so that particles of
+                 different sizes can be compared. Being divided by N^4, its
+                 magnitude is tiny for large particles and must NOT be tested
+                 against an absolute threshold.
+
+    The sign (identical for G0 and G0_norm) gives the handedness; a raw |G0|
+    below achiral_tol is reported as achiral.
+
     Args:
-        NP (ase.Atoms): ase object.
-        cutoff (float): Radius for neighbor search (in Angstroms).
-        
+        NP (ase.Atoms): the structure.
+        cutoff (float): neighbour-search radius (Angstroms).
+        achiral_tol (float): threshold on the RAW |G0| below which the structure
+            is reported as achiral. Default 1e-2.
+        noOutput (bool): if True, suppress the printed summary.
+
     Returns:
-        float: The scaled chirality index G0s.
+        None. The two indices are stored as attributes:
+          self.G0_OPD      : the raw dimensionless index (Osipov eq. 17).
+          self.G0_norm_OPD : the size-intensive index (G0 / N^4).
     """
     from scipy.spatial import KDTree
-    coords = NP.get_positions()
+    # Use the optimized structure when available, as elsewhere
+    if self.is_optimized and hasattr(self, 'NP_opt'):
+        target = self.NP_opt
+    else:
+        target = self.NP
+    coords = target.get_positions()
     n = len(coords)
     if n < 4:
-        return 0.0
-        
-    # 1. Build spatial index and find neighbors within cutoff
+        if not noOutput:
+            centertxt("Osipov-Pickup-Dunmur chirality index",
+                      bgc='#007a7a', size='14', weight='bold')
+            print(" fewer than 4 atoms: G0 = 0 (achiral)")
+        return 0.0, 0.0
+
+    # neighbour list within cutoff
     tree = KDTree(coords)
     adj_list = tree.query_ball_point(coords, r=cutoff)
-    
-    # 2. Flatten the adjacency list for Numba-compatible array processing
     neighbors_indices = []
     neighbors_offsets = [0]
     for neighbors in adj_list:
         neighbors_indices.extend(neighbors)
         neighbors_offsets.append(len(neighbors_indices))
-    
     neighbors_indices = np.array(neighbors_indices, dtype=np.int32)
     neighbors_offsets = np.array(neighbors_offsets, dtype=np.int32)
-    
-    # 3. Call the parallelized JIT kernel
+
+    # raw index (Osipov eq. 17)
     G0 = _opd_kernel(coords, neighbors_indices, neighbors_offsets)
-    # 4. Apply final scaling factor: (8.0 / N^4) * G0
-    G0 *= (8.0 / n**4)
-    
+    # size-intensive index (comparable across particle sizes)
+    G0_norm = G0 / n**4
+
     if not noOutput:
-        centertxt(
-            "Osipov–Pickup–Dunmur chirality index", bgc='#007a7a', size='14', weight='bold'
-        )
-        # Determine hand for visual feedback
-        hand = "Right-Handed" if G0 > 0 else "Left-Handed"
-        if abs(G0) < 1e-12: hand = "Achiral"
-        
-        # Final display line
-        print(f" G0 = {G0:.2e} ({hand})")
-    return G0
+        centertxt("Osipov-Pickup-Dunmur chirality index",
+                  bgc='#007a7a', size='14', weight='bold')
+        # handedness/achirality decided on the RAW index (stable scale)
+        if abs(G0) < achiral_tol:
+            hand = "Achiral?"
+        else:
+            hand = "Right-Handed" if G0 > 0 else "Left-Handed"
+        print(f" G0      = {G0:+.4e}   ({hand})")
+        print(f" G0_norm = {G0_norm:+.4e}   (size-intensive, 1/N^4)")
+        print(f"{bg.LIGHTGREENB}Note: G0 is highly geometry-dependent, so a low value is "
+              f"ambiguous. It may indicate a weakly chiral structure; or an achiral "
+              f"structure whose optimized geometry is not perfectly symmetric (it would "
+              f"gain a mirror plane, an inversion center, or an S_n axis if it were "
+              f"symmetrized), and that small deviation leaves a residual instead of an "
+              f"exact zero; or an achiral molecule trapped in a low-symmetry conformer. "
+              f"To decide, check the point group or average G0 over conformers.{bg.OFF}")
+    self.G0_OPD = G0
+    self.G0_norm_OPD = G0_norm
 
 class AtomicRadii:
     """

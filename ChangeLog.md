@@ -5,6 +5,8 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
+
+
 ## [0.19.2] "push_pyPi"
 
 ### Changed

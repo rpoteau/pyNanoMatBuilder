@@ -10,6 +10,8 @@ from scipy import linalg
 import math
 import sys
 
+import warnings
+
 from ase.atoms import Atoms
 from ase.geometry import cellpar_to_cell
 from ase import io as ase_io
@@ -3241,8 +3243,8 @@ def applyTwist(self,
             # k=2: first neighbor is the atom itself (d=0), second is the true NN
             dists, _ = tree.query(positions, k=2)
             Rnn = np.median(dists[:, 1])
-            print(f"  DEBUG: delta_tang_surface={delta_tang_surface:.3f} Å, "
-                  f"Rnn={Rnn:.3f} Å, threshold={0.3*Rnn:.3f} Å")
+            # print(f"  DEBUG: delta_tang_surface={delta_tang_surface:.3f} Å, "
+            #       f"Rnn={Rnn:.3f} Å, threshold={0.3*Rnn:.3f} Å")
             if delta_tang_surface > 0.3 * Rnn:
                 # Suggest the maximum rate that keeps the registry quasi-coherent
                 rate_max = rate * (0.3 * Rnn) / delta_tang_surface
@@ -3901,6 +3903,76 @@ def rotate_to_align(self, axis, target_axis=[0,0,1], axis_def='hkl',
             noOutput=noOutput,
             is_optimized=False)
 
+def align_inertia_axis(self, which='unique', target_axis=[0, 0, 1],
+                       noOutput=True, postAnalyzis=None,
+                       skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
+                       skipFacetInfo=None, thresholdCoreSurface=None):
+    """
+    Rotate self.NP to align one of its principal inertia axes with a target
+    direction. Thin selector on top of rotate_to_align: it picks the inertia
+    axis, then delegates the rotation (atoms, truncation planes, post-analysis).
+
+    Moments are computed with get_moments_of_inertia_for_size (unit masses),
+    sorted as I1 <= I2 <= I3. The axis sign is chosen so that the farthest
+    atom along the axis lies on the +target side.
+
+    Args:
+        which (str): principal axis to align.
+            'min', 'mid', 'max': axis of I1, I2 or I3.
+            'unique': symmetry (revolution) axis, i.e. the axis whose two
+            partner moments are the closest. Resolves to 'min' for a prolate
+            object (I2 ~ I3, e.g. rods) and to 'max' for an oblate one
+            (I1 ~ I2, e.g. platelets). A warning is issued when no pair of
+            moments is clearly degenerate (quasi-isotropic or asymmetric
+            shapes), since the choice is then not meaningful.
+            Default 'unique'.
+        target_axis (array-like): Target direction in Cartesian [x,y,z].
+            Default is [0,0,1].
+        noOutput (bool): If True, suppresses output. Default is True.
+        postAnalyzis, skip*, thresholdCoreSurface: forwarded to rotate_to_align.
+
+    Example:
+        # Put the 5-fold axis of an elongated decahedron along z
+        ino.align_inertia_axis(which='unique', target_axis=[0, 0, 1])
+    """
+    import numpy as np
+
+    moments, axes = get_moments_of_inertia_for_size(self.NP, vectors=True)  # axes[i] = i-th axis
+    labels = {0: 'min', 1: 'mid', 2: 'max'}
+    if which == 'unique':
+        gaps = np.array([abs(moments[(i + 1) % 3] - moments[(i + 2) % 3]) for i in range(3)])
+        k = int(np.argmin(gaps))
+        g = np.sort(gaps)
+        if g[1] < 1e-6 * moments.max() or g[0] > 0.5 * g[1]:
+            warnings.warn("which='unique': no clearly degenerate pair of moments "
+                          f"(I = {moments[0]:.2f}, {moments[1]:.2f}, {moments[2]:.2f} Å²); "
+                          f"axis '{labels[k]}' selected, orientation may not be meaningful.")
+    elif which in ('min', 'mid', 'max'):
+        k = {'min': 0, 'mid': 1, 'max': 2}[which]
+    else:
+        raise NotImplementedError(f"which='{which}' not implemented")
+
+    # sign convention: farthest atom on the +target side
+    a = axes[k] / np.linalg.norm(axes[k])
+    P = self.NP.get_positions() - self.NP.get_center_of_mass()
+    proj = P @ a
+    if abs(proj.min()) > abs(proj.max()):
+        a = -a
+
+    if not noOutput:
+        print(f"  - Moments (unit masses): I1={moments[0]:.2f}, I2={moments[1]:.2f}, "
+              f"I3={moments[2]:.2f} Å²")
+        print(f"  - Inertia axis '{labels[k]}'" + (" (from 'unique')" if which == 'unique' else "")
+              + f": [{a[0]:+.4f} {a[1]:+.4f} {a[2]:+.4f}]")
+
+    # delegate the actual rotation (atoms, planes, flush, post-analysis)
+    self.rotate_to_align(a, target_axis=target_axis, axis_def='cart',
+                         noOutput=noOutput, postAnalyzis=postAnalyzis,
+                         skipChiralityCalculation=skipChiralityCalculation,
+                         skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                         skipFacetInfo=skipFacetInfo,
+                         thresholdCoreSurface=thresholdCoreSurface)
+
 def replicate_by_rotation(self, n_copies, axis, center=None, axis_def='hkl',
                           noOutput=True, postAnalyzis=None,
                           skipChiralityCalculation=None, skipSymmetryAnalyzis=None,
@@ -4230,7 +4302,7 @@ def align_to_plane(self, axis=(0, 0, 1), target=0.0, tol=0.1, noOutput=True,
             thresholdCoreSurface=thresholdCoreSurface,
             noOutput=noOutput,
             is_optimized=False)
-
+        
 def z_height_nm(NP):
     """
     Real extent of a structure along z, in nm: z.max() - z.min().

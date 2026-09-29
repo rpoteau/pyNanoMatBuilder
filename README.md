@@ -106,7 +106,7 @@ pyNMBu.write("coords/SphericalAuNP_sc.cif", AuNP.sc)             # The supercell
 ```
 
 ---
-
+<br>
 <div style="text-align:center">
 <img src="https://raw.githubusercontent.com/rpoteau/pynanomatbuilder/main/pyNanoMatBuilder/resources/svg/workflow_figure.png" alt="workflow" width="1200" />
 </div>

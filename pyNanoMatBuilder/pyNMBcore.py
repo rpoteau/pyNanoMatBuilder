@@ -499,6 +499,20 @@ class pyNMBcore:
         from .utils.external_pgm import defHelixShapeForJMol
         return defHelixShapeForJMol(self, n_rings, n_sides, noOutput)
 
+    def compute_opd_index(self, cutoff: float = 6.0, achiral_tol = 1.e-2, noOutput: bool = None):
+        """
+        Compute the scaled Osipov-Pickup-Dunmur (OPD) chirality index G0s
+        of this NP.
+
+        See utils/prop.compute_opd_index for full documentation.
+        """
+        from .utils.prop import compute_opd_index
+
+        if noOutput is None:
+            noOutput = self.noOutput
+
+        return compute_opd_index(self, cutoff=cutoff, achiral_tol=achiral_tol, noOutput=noOutput)
+
     def reset_facets(self, colorFacets=None, useWulff=None,
                      is_optimized=None, noOutput=True):
         """
@@ -937,6 +951,20 @@ class pyNMBcore:
                                skipSymmetryAnalyzis=skipSymmetryAnalyzis,
                                skipFacetInfo=skipFacetInfo,
                                thresholdCoreSurface=thresholdCoreSurface)
+
+    def align_inertia_axis(self, which='unique', target_axis=[0,0,1], noOutput=None,
+                           postAnalyzis=None, skipChiralityCalculation=None,
+                           skipSymmetryAnalyzis=None, skipFacetInfo=None,
+                           thresholdCoreSurface=None):
+        """Rotate self.NP to align a principal inertia axis with a target direction. See utils.geometry.align_inertia_axis."""
+        from .utils.geometry import align_inertia_axis
+        if noOutput is None: noOutput = self.noOutput
+        return align_inertia_axis(self, which=which, target_axis=target_axis,
+                                  noOutput=noOutput, postAnalyzis=postAnalyzis,
+                                  skipChiralityCalculation=skipChiralityCalculation,
+                                  skipSymmetryAnalyzis=skipSymmetryAnalyzis,
+                                  skipFacetInfo=skipFacetInfo,
+                                  thresholdCoreSurface=thresholdCoreSurface)
 
     def replicate_by_rotation(self, n_copies, axis, center=None, axis_def='hkl',
                               noOutput=None, postAnalyzis=None,

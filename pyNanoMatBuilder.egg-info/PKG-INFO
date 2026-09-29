@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: pyNanoMatBuilder
-Version: 0.19.1
+Version: 0.19.2
 Summary: Build and visualize complex crystalline nanoparticle architectures, including models on substrates, for materials science, X-ray data analysis, and electron microscopy research
 Author-email: "Sara Mokhtari, LPCNO" <smokhtari@insa-toulouse.fr>, "Romuald Poteau, LPCNO" <romuald.poteau@utoulouse.fr>
 License: GPL-3.0-or-later
@@ -152,8 +152,6 @@ pyNMBu.write("coords/SphericalAuNP_sc.cif", AuNP.sc)             # The supercell
 ```
 
 ---
-
-**Typical workflow**
 
 <div style="text-align:center">
 <img src="https://raw.githubusercontent.com/rpoteau/pynanomatbuilder/main/pyNanoMatBuilder/resources/svg/workflow_figure.png" alt="workflow" width="1200" />

@@ -13,14 +13,14 @@ from .utils import hl, fg, bg
 from .pyNMBcore import pyNMBcore
 from . import platonicNPs as pNP
 
-class bch(pyNMBcore):
+class bcbh(pyNMBcore):
     """
-    Boerdijk-Coxeter Helix (BCH) builder for FCC nanoparticles.
+    Boerdijk-Coxeter-Bernal Helix (BCBH) builder for FCC nanoparticles.
 
     This class generates a chiral assembly of regular FCC tetrahedrons. 
     It leverages the base `regfccTd` class to construct the initial 
     tetrahedral seed and then applies successive face reflections to 
-    build a Boerdijk-Coxeter helix.
+    build a Boerdijk-Coxeter-Bernal helix.
 
     Attributes:
         element (str): Chemical symbol of the atoms (e.g., 'Pt', 'Au').
@@ -40,7 +40,7 @@ class bch(pyNMBcore):
                  **kwargs
                 ):
         """
-        Initialize the Boerdijk-Coxeter helix by setting up the seed parameters.
+        Initialize the Boerdijk-Coxeter-Bernal helix by setting up the seed parameters.
 
         Args:
             element: Chemical element symbol.
@@ -54,7 +54,7 @@ class bch(pyNMBcore):
         # Ensure the parent class generates exactly one tetrahedron as the seed
         super().__init__(**kwargs)
         self.element = element
-        self.shape = 'bch'
+        self.shape = 'bcbh'
         self.Rnn = Rnn
         self.nLayerTd = int(nLayerTd)
         self.n_Td = n_Td
@@ -67,7 +67,7 @@ class bch(pyNMBcore):
         self.nFaces = 2 * self.n_Td + 2
         self.area = self.tdprop.area()/4 * self.nFaces
         self.volume = self.tdprop.volume() * n_Td
-        self.imageFile = pyNMBu.imageNameWithPathway("bch-C.png")
+        self.imageFile = pyNMBu.imageNameWithPathway("bcbh-C.png")
         if chirality not in ["RH", "LH"]:
             raise ValueError(
                 f"Invalid chirality '{chirality}'. "
