@@ -1,11 +1,12 @@
 [project]
 name = "pyNanoMatBuilder"
-version = "0.20.1"
+version = "0.20.2"
 description = "Build and visualize complex crystalline nanoparticle architectures, including models on substrates, for materials science, X-ray data analysis, and electron microscopy research"
 authors = [{name = "Sara Mokhtari, LPCNO", email = "smokhtari@insa-toulouse.fr"}, {name = "Romuald Poteau, LPCNO", email = "romuald.poteau@utoulouse.fr"}]
 readme = "README.md"
 requires-python = ">=3.11"
-license = {text = "GPL-3.0-or-later"}
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
 dependencies = [
     "ase",              # Atomic Simulation Environment: manipulating and visualizing atomistic structures
     "imageio[ffmpeg]",  # MP4 animation export
@@ -32,7 +33,7 @@ Issues = "https://github.com/rpoteau/pynanomatbuilder/issues"
 "Try on Colab" = "https://colab.research.google.com/github/rpoteau/pyNanoMatBuilder/blob/main/pyNMB-examples.ipynb"
 
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=77.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]

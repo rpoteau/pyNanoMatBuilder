@@ -27,6 +27,9 @@ pandoc
 numpydoc
 sphinx-copybutton
 
+[pyausaxs]
+pyausaxs
+
 [tem]
 abtem
 

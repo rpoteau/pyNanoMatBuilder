@@ -5,6 +5,14 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
+## [0.20.2] "push/pypi bug fixes"
+### Fixed
+- `push_pyPi.sh`: `PACKAGE_NAME` and separator variables were used before being defined, breaking the PyPI version query (`jq` parse error).
+- `push_pyPi.sh`: GitHub releases now use freshly built artifacts (release step moved after `python -m build`).
+- `push_pyPi.sh`: the script now aborts if `git push` or the build fails, or if an unknown version-bump level is entered.
+- `MANIFEST.in`: `ChangeLog.md` is now included (case mismatch); backup/temporary files (`*.org`, `*.tmp`), `docs/build/` and `CLAUDE.md` are excluded from the distributions; obsolete `prune` paths removed.
+- `pyproject.toml`: license declared as an SPDX expression (`GPL-3.0-or-later`) with `license-files`, replacing the deprecated TOML table; `setuptools>=77.0` required
+
 ## [0.20.1] "chirality"
 
 ### Added

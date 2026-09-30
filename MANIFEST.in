@@ -1,32 +1,31 @@
 include README.md
-include CHANGELOG.md
+include ChangeLog.md
+include CITATION.cff
 include pyproject.toml
 include MANIFEST.in
 include LICENSE
 
-# Include everything inside docs and doc-latex
+# Include documentation sources (generated HTML is excluded below)
 recursive-include docs *
 
-# Include all source code inside pyphyschemtools
+# Include all package files (source code and resources)
 recursive-include pyNanoMatBuilder *
-
-# Include side resources
-recursive-include pyNanoMatBuilder/resources *
 
 # Include example notebooks
 include *.ipynb
 
-# Include md files
-include *.md
+# Exclude build artifacts and generated documentation
+prune build
+prune dist
+prune docs/build
 
-# Exclude python compilation files
+# Exclude developer-only files
+exclude CLAUDE.md
+
+# Exclude Python compilation files, backups and temporary files
+# (kept at the end so that no include rule re-adds them)
 global-exclude *.py[cod]
-global-exclude __pycache__/*
+global-exclude __pycache__
 global-exclude .DS_Store
 global-exclude *dev.py
-
-# Do not include additional graphic material, for developpers (but available on github)
-# Do not include the pyInstaller-related stuff
-prune pyNanoMatBuilder/build
-prune pyNanoMatBuilderpynmb/dist
-prune pyNanoMatBuilderpynmb/archives
+global-exclude *.org *.tmp

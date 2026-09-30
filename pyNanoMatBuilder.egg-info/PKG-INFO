@@ -1,9 +1,9 @@
 Metadata-Version: 2.4
 Name: pyNanoMatBuilder
-Version: 0.19.2
+Version: 0.20.1
 Summary: Build and visualize complex crystalline nanoparticle architectures, including models on substrates, for materials science, X-ray data analysis, and electron microscopy research
 Author-email: "Sara Mokhtari, LPCNO" <smokhtari@insa-toulouse.fr>, "Romuald Poteau, LPCNO" <romuald.poteau@utoulouse.fr>
-License: GPL-3.0-or-later
+License-Expression: GPL-3.0-or-later
 Project-URL: Repository, https://github.com/rpoteau/pynanomatbuilder
 Project-URL: Changelog, https://github.com/rpoteau/pynanomatbuilder/blob/main/ChangeLog.md
 Project-URL: Documentation, https://pynanomatbuilder.readthedocs.io/en/latest/
@@ -36,12 +36,14 @@ Requires-Dist: ipykernel; extra == "docs"
 Requires-Dist: pandoc; extra == "docs"
 Requires-Dist: numpydoc; extra == "docs"
 Requires-Dist: sphinx-copybutton; extra == "docs"
+Provides-Extra: visu
+Requires-Dist: tools4pyphyschem; extra == "visu"
 Provides-Extra: debye
 Requires-Dist: debyecalculator; extra == "debye"
 Provides-Extra: tem
 Requires-Dist: abtem; extra == "tem"
-Provides-Extra: visu
-Requires-Dist: tools4pyphyschem; extra == "visu"
+Provides-Extra: pyausaxs
+Requires-Dist: pyausaxs; extra == "pyausaxs"
 Dynamic: license-file
 
 <div style="text-align:center">
@@ -104,9 +106,9 @@ interpret experimental data:
 | Theory–experiment link | pyNanoMatBuilder tools |
 |-------------------------|------------------------|
 | **Size polydispersity** | `NanoparticleDistribution`: generates NP populations following log-normal or Schulz size distributions, computes per-class proportions, and compares distributions |
-| **SAXS / WAXS / SANS** | atomistic structures feed scattering-profile calculations via **DebyeCalculator** or **pyAUSAXS** (Debye equation, WAXS), using the true morphology (facets, concavities, core/shell) rather than an equivalent sphere |
+| **SAXS / WAXS / SANS** | atomistic structures feed scattering-profile calculations via **DebyeCalculator** or **pyAUSAXS** (see pyNMB-debye-coupling.ipynb and pyNMB-pyausaxs-coupling.ipynb), using the true morphology (facets, concavities, core/shell) rather than an equivalent sphere |
 | **Local-order descriptors** | the **common neighbor parameter (CNP)**, a single-number indicator of local disorder (surfaces, edges, twin boundaries, stacking faults); the **Steinhardt parameters** (q4, q6), which identify the local symmetry type (FCC, HCP, BCC, icosahedral); together they reveal both the presence and the nature of local order. Also `calculate_CN` and `calculate_GCN` (coordination and generalized coordination numbers, Calle-Vallejo/Sautet), relevant to catalytic activity |
-| **TEM / HRTEM** | generates the atomic input structures (in a chosen orientation) of amorphous carbon-supported NPs for image-simulation codes (**abTEM**, ...); an alpha-shape surface mesh (`export_surface_mesh`) could also be used to reproduce the particle contour for comparison with observed projections |
+| **TEM / HRTEM** | generates the atomic input structures (in a chosen orientation) of amorphous carbon-supported NPs for image-simulation via **abTEM** (see pyNMB-abtem-coupling.ipynb); an alpha-shape surface mesh (`export_surface_mesh`) could also be used to reproduce the particle contour for comparison with observed projections |
 
 ---
 
@@ -152,7 +154,7 @@ pyNMBu.write("coords/SphericalAuNP_sc.cif", AuNP.sc)             # The supercell
 ```
 
 ---
-
+<br>
 <div style="text-align:center">
 <img src="https://raw.githubusercontent.com/rpoteau/pynanomatbuilder/main/pyNanoMatBuilder/resources/svg/workflow_figure.png" alt="workflow" width="1200" />
 </div>

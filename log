@@ -1,0 +1,1649 @@
+.
+├── animations
+│   ├── Febcc_c_rdd_00.png
+│   ├── Febcc_c_rdd_00.xyz
+│   ├── Febcc_c_rdd_01.png
+│   ├── Febcc_c_rdd_01.xyz
+│   ├── Febcc_c_rdd_02.png
+│   ├── Febcc_c_rdd_02.xyz
+│   ├── Febcc_c_rdd_03.png
+│   ├── Febcc_c_rdd_03.xyz
+│   ├── Febcc_c_rdd_04.png
+│   ├── Febcc_c_rdd_04.xyz
+│   ├── Febcc_c_rdd_05.png
+│   ├── Febcc_c_rdd_05.xyz
+│   ├── Febcc_c_rdd_06.png
+│   ├── Febcc_c_rdd_06.xyz
+│   ├── Febcc_c_rdd_07.png
+│   ├── Febcc_c_rdd_07.xyz
+│   ├── Febcc_c_rdd_08.png
+│   ├── Febcc_c_rdd_08.xyz
+│   ├── Febcc_c_rdd_09.png
+│   ├── Febcc_c_rdd_09.xyz
+│   ├── Febcc_c_rdd_10.png
+│   ├── Febcc_c_rdd_10.xyz
+│   ├── Febcc_c_rdd_11.png
+│   ├── Febcc_c_rdd_11.xyz
+│   ├── Febcc_c_rdd_12.png
+│   ├── Febcc_c_rdd_12.xyz
+│   ├── Febcc_c_rdd_13.png
+│   ├── Febcc_c_rdd_13.xyz
+│   ├── Febcc_c_rdd_14.png
+│   ├── Febcc_c_rdd_14.xyz
+│   ├── Febcc_c_rdd_animation.gif
+│   ├── Febcc_c_rdd_animation.mp4
+│   └── Febcc_cube.xyz
+├── article_pyNMB
+│   ├── Chirality
+│   │   ├── Au_Cyl_CoreSurface.xyz
+│   │   ├── Au_Cyl.script
+│   │   ├── Au_Cyl.xyz
+│   │   ├── bcbh_LH_CoreSurface.xyz
+│   │   ├── bcbh_LH-C.png
+│   │   ├── bcbh_LH.png
+│   │   ├── bcbh_LH.script
+│   │   ├── bcbh_LH.xyz
+│   │   ├── bcbh_RH_CoreSurface.xyz
+│   │   ├── bcbh_RH-C.png
+│   │   ├── bcbh_RH.png
+│   │   ├── bcbh_RH.script
+│   │   ├── bcbh_RH.xyz
+│   │   ├── chirality.svg
+│   │   └── Td_4bcbh.xyz
+│   ├── CSG
+│   │   ├── cube_carved_by_Oh.png
+│   │   ├── cube_carved_by_Oh_Preview.png
+│   │   ├── cube_carvedCS.xyz
+│   │   ├── cube_carvedPCS.xyz
+│   │   ├── cube_carvedP.script
+│   │   ├── cube_carvedP.xyz
+│   │   └── cube_carved.xyz
+│   ├── Fig1
+│   │   ├── cubeX
+│   │   │   ├── CC.xyz
+│   │   │   ├── CoWire.script
+│   │   │   ├── CoWire_twisted.script
+│   │   │   ├── CoWire_twisted.xyz
+│   │   │   ├── CoWire.xyz
+│   │   │   ├── cubeXA_Slices.script
+│   │   │   ├── cubXA_twisted.xyz
+│   │   │   ├── cubXA.xyz
+│   │   │   ├── cubXB_twisted.xyz
+│   │   │   ├── dumbbell_CoWire_cnp.script
+│   │   │   ├── dumbbell_CoWire_woCo.xyz
+│   │   │   └── dumbbell_CoWire.xyz
+│   │   └── decorated_ico
+│   │       ├── ico_pristine.xyz
+│   │       ├── ico_with_ino_opt_cnp.script
+│   │       ├── ico_with_ino_opt_tmp.xyz
+│   │       ├── ico_with_ino_opt.xyz
+│   │       ├── ico_with_ino.script
+│   │       ├── ico_with_ino.xyz
+│   │       ├── ico_wo_ino_opt_tmp.xyz
+│   │       ├── ico_wo_ino_opt.xyz
+│   │       └── ino_cutter.xyz
+│   ├── Figs_Notebook
+│   │   ├── 5star_Pt2mM-FigS8.png
+│   │   ├── 5star_Pt_2nM_2h.png
+│   │   ├── 5star_Pt_2nM_48h.png
+│   │   └── 5star_Pt_2nM_4h.png
+│   ├── fivefold_nanostars
+│   │   ├── branches_only.xyz
+│   │   ├── cnp_scale.svg
+│   │   ├── dec_cnp-C.png
+│   │   ├── dec_cnp.png
+│   │   ├── dec_cnp.script
+│   │   ├── dec_cnp_top-C.png
+│   │   ├── dec_cnp_top.png
+│   │   ├── decCS.xyz
+│   │   ├── dec.script
+│   │   ├── dec.xyz
+│   │   ├── ino2_cnp.script
+│   │   ├── ino4starCS.xyz
+│   │   ├── ino4star.script
+│   │   ├── ino4star_vertices.xyz
+│   │   ├── ino4star.xyz
+│   │   ├── ino_cnp-C.png
+│   │   ├── ino_cnp.png
+│   │   ├── ino_cnp.script
+│   │   ├── ino_cnp_top-C.png
+│   │   ├── ino_cnp_top.png
+│   │   ├── inoCS.xyz
+│   │   ├── ino.script
+│   │   ├── ino.xyz
+│   │   ├── marks_cnp-C.png
+│   │   ├── marks_cnp.png
+│   │   ├── marks_cnp.script
+│   │   ├── marks_cnp_top-C.png
+│   │   ├── marks_cnp_top.png
+│   │   ├── marksCS.xyz
+│   │   ├── marks.script
+│   │   ├── marks.xyz
+│   │   ├── star_2h-C.png
+│   │   ├── star_2h.png
+│   │   ├── star_2h.xyz
+│   │   ├── star_48h-C.png
+│   │   ├── star_48h.png
+│   │   ├── star_48h.xyz
+│   │   ├── star_4h-C.png
+│   │   ├── star_4h.png
+│   │   ├── star_4h.xyz
+│   │   ├── star_cnp-C.png
+│   │   ├── star_cnp.png
+│   │   ├── star_cnp.script
+│   │   ├── star_cnp_top-C.png
+│   │   ├── star_cnp_top.png
+│   │   ├── star_Pt2nm_4zigzag.png
+│   │   ├── star_Pt2nm_4zigzag_scaleModel.xyz
+│   │   ├── star_Pt2nm_4zigzag.xyz
+│   │   ├── star_Pt2nm_arm_scaleModel.xyz
+│   │   ├── star_Pt2nm_arm.xyz
+│   │   ├── star_Pt2nm_armZZ_scaleModel.xyz
+│   │   ├── star_Pt2nm_armZZ.xyz
+│   │   ├── star_Pt2nm_core_scaleModel.xyz
+│   │   ├── star_Pt2nm_core.xyz
+│   │   ├── star_Pt2nm.png
+│   │   ├── star_Pt2nm_scaleModel_arms-C.png
+│   │   ├── star_Pt2nm_scaleModel_arms.png
+│   │   ├── star_Pt2nm_scaleModel_arms.script
+│   │   ├── star_Pt2nm_scaleModel.xyz
+│   │   ├── star_Pt2nm.xyz
+│   │   ├── star.script
+│   │   ├── star_slices.script
+│   │   └── star.xyz
+│   ├── LocalOrder
+│   │   ├── map
+│   │   │   ├── bcc.script
+│   │   │   ├── bcc.xyz
+│   │   │   ├── bpy.script
+│   │   │   ├── bpy_tmp.spt
+│   │   │   ├── bpy.xyz
+│   │   │   ├── fcc.script
+│   │   │   ├── fcc.xyz
+│   │   │   ├── Fe_Fe.CS3_33.alloy
+│   │   │   ├── hcp.script
+│   │   │   ├── hcp_tmp.spt
+│   │   │   ├── hcp.xyz
+│   │   │   ├── ico.script
+│   │   │   ├── ico.xyz
+│   │   │   ├── q4q6_map.svg
+│   │   │   ├── Ru.eam.fs
+│   │   │   ├── tzh.script
+│   │   │   └── tzh.xyz
+│   │   ├── pbpy_cnp-C.png
+│   │   ├── pbpy_cnp.png
+│   │   ├── pbpy_cnp.script
+│   │   ├── pbpy_CorSurface.xyz
+│   │   ├── pbpy-C.png
+│   │   ├── pbpy_facets-C.png
+│   │   ├── pbpy_facets.png
+│   │   ├── pbpy.png
+│   │   ├── pbpy.script
+│   │   ├── pbpy_selected_by_cnp_0-1.png
+│   │   ├── pbpy_selected_by_cnp_0-C.png
+│   │   ├── pbpy_selected_by_cnp_0.png
+│   │   ├── pbpy_selected_by_cnp_0.xyz
+│   │   ├── pbpy_selected_by_cnp_1-C.png
+│   │   ├── pbpy_selected_by_cnp_1.png
+│   │   ├── pbpy_selected_by_cnp_1.xyz
+│   │   ├── pbpy_selected_by_cnp.xyz
+│   │   ├── pbpy_twinningplane.png
+│   │   └── pbpy.xyz
+│   └── LocalSurfaceDescriptors
+│       ├── trOh_CNcolors-C.png
+│       ├── trOh_CNcolors.png
+│       ├── trOh_CN-C.png
+│       ├── trOh_CN.dat
+│       ├── trOh_cnp-C.png
+│       ├── trOh_CN.png
+│       ├── trOh_cnp.png
+│       ├── trOh_cnp.script
+│       ├── trOh_CN_values.dat
+│       ├── trOh-C.png
+│       ├── trOh_GCNcolors-C.png
+│       ├── trOh_GCNcolors.png
+│       ├── trOh_GCN-C.png
+│       ├── trOh_GCN.dat
+│       ├── trOh_GCN.png
+│       ├── trOh_GCN_values.dat
+│       ├── trOh_map_q4q6.png
+│       ├── trOh_original.xyz
+│       ├── trOh.png
+│       ├── trOh_q4-C.png
+│       ├── trOh_q4.png
+│       ├── trOh_q4.script
+│       ├── trOh_q6-C.png
+│       ├── trOh_q6.png
+│       ├── trOh_q6.script
+│       ├── trOh.script
+│       └── trOh.xyz
+├── ChangeLog.md
+├── CITATION.cff
+├── CLAUDE.md
+├── colab_init.py
+├── coords
+│   ├── Au_Cyl.cif
+│   ├── Au_Cyl_CoreSurface.xyz
+│   ├── Au_Cyl_helix_opt.xyz
+│   ├── Au_Cyl_helix.xyz
+│   ├── Au_Cyl.script
+│   ├── Au_Cyl_twisted_CoreSurface_opt.xyz
+│   ├── Au_Cyl_twistedEcs.xyz
+│   ├── Au_Cyl_twistedELcs_opt.xyz
+│   ├── Au_Cyl_twistedELcs.xyz
+│   ├── Au_Cyl_twistedEL_opt.xyz
+│   ├── Au_Cyl_twistedEL_traj.xyz
+│   ├── Au_Cyl_twistedEL.xyz
+│   ├── Au_Cyl_twistedE_opt.xyz
+│   ├── Au_Cyl_twistedE.xyz
+│   ├── Au_Cyl_twisted_opt.pmesh
+│   ├── Au_Cyl_twisted_opt.script
+│   ├── Au_Cyl_twisted_opt.xyz
+│   ├── Au_Cyl_twisted.script
+│   ├── Au_Cyl_twisted.xyz
+│   ├── Au_Cyl.xyz
+│   ├── Aufcc_cube.xyz
+│   ├── Aufcccylinder.cif
+│   ├── Aufcccylinder_CoreSurface.xyz
+│   ├── Aufcccylinder_new.xyz
+│   ├── Aufcccylinder.script
+│   ├── Aufcccylinder.xyz
+│   ├── AuNP_debye.xyz
+│   ├── AuNP_ellipsoid_opt_peeled.xyz
+│   ├── AuNP_ellipsoid_opt.xyz
+│   ├── AuNP_ellipsoid_peeled_CoreSurface.xyz
+│   ├── AuNP_ellipsoid_peeled.script
+│   ├── AuNP_ellipsoid_peeled.xyz
+│   ├── AuNP_ellipsoid.xyz
+│   ├── AuNP_opt_peeled_CoreSurface.xyz
+│   ├── AuNP_opt_peeled.script
+│   ├── AuNP_opt_peeled.xyz
+│   ├── AuParallelepiped.cif
+│   ├── AuParallelepiped_CoreSurface.xyz
+│   ├── AuParallelepiped_sc.cif
+│   ├── AuParallelepiped.script
+│   ├── AuParallelepiped_sc.xyz
+│   ├── AuParallelepiped.xyz
+│   ├── AuWire.cif
+│   ├── AuWire_CoreSurface.cif
+│   ├── AuWire.script
+│   ├── AuWire.xyz
+│   ├── AuWulff.cif
+│   ├── AuWulff_sc.cif
+│   ├── AuWulff.script
+│   ├── AuWulff.xyz
+│   ├── bcbh_CoreSurface.xyz
+│   ├── bcbh.script
+│   ├── bcbh.xyz
+│   ├── bcccube_CoreSurface.xyz
+│   ├── bcccube.script
+│   ├── bcccube.xyz
+│   ├── bccrdd_CoreSurface.xyz
+│   ├── bccrdd.script
+│   ├── bccrdd.xyz
+│   ├── bch_CoreSurface.xyz
+│   ├── bch.script
+│   ├── bch.xyz
+│   ├── c_cut_w90.xyz
+│   ├── c_cut_w.xyz
+│   ├── c_inlay_w.xyz
+│   ├── c_intersect_w.xyz
+│   ├── CN_color_palette.png
+│   ├── CoWire.cif
+│   ├── CoWire_CoreSurface.cif
+│   ├── CoWire.script
+│   ├── CoWire.xyz
+│   ├── csgc-C.png
+│   ├── csgc.png
+│   ├── csgc.xyz
+│   ├── csgw-C.png
+│   ├── csgw.png
+│   ├── csgw.xyz
+│   ├── c_subtract_s_diag.xyz
+│   ├── CuAualloy.xyz
+│   ├── cube_1cross.script
+│   ├── cube_1cross_Slices.script
+│   ├── cube_1cross.xyz
+│   ├── Cube-2truncate.xyz
+│   ├── cube_concaveCS.xyz
+│   ├── cube_concave.script
+│   ├── cube_concave_Slices.script
+│   ├── cube_concave.xyz
+│   ├── cube_crossesCS.xyz
+│   ├── cube_crosses.script
+│   ├── cube_crosses.xyz
+│   ├── cube_holes.script
+│   ├── cube_holes_Slices.script
+│   ├── cube_holes.xyz
+│   ├── cubeX
+│   │   ├── CC.xyz
+│   │   ├── CoWire.script
+│   │   ├── CoWire_twisted.script
+│   │   ├── CoWire_twisted.xyz
+│   │   ├── CoWire.xyz
+│   │   ├── CuAgAuNiPdPtAlPbFeMoTaWMgCoTiZr_Zhou04.eam.alloy
+│   │   ├── cubeXA_Slices.script
+│   │   ├── cubXA_twisted.xyz
+│   │   ├── cubXA.xyz
+│   │   ├── cubXB_twisted.xyz
+│   │   ├── dumbbell_CoWire_cnp.script
+│   │   ├── dumbbell_CoWire_opt_cnp.script
+│   │   ├── dumbbell_CoWire_opt_tmp.xyz
+│   │   ├── dumbbell_CoWire_opt.xyz
+│   │   ├── dumbbell_CoWire_woCo.xyz
+│   │   └── dumbbell_CoWire.xyz
+│   ├── cube.xyz
+│   ├── cubo_CoreSurface.xyz
+│   ├── cubo.script
+│   ├── cubo.xyz
+│   ├── c_union_s_diag.xyz
+│   ├── c_union_w-C.png
+│   ├── c_union_w.png
+│   ├── c_union_w.xyz
+│   ├── decorated_ico
+│   │   ├── ico_pristine.xyz
+│   │   ├── ico_with_ino_opt_cnp.script
+│   │   ├── ico_with_ino_opt_tmp.xyz
+│   │   ├── ico_with_ino_opt.xyz
+│   │   ├── ico_with_ino.script
+│   │   ├── ico_with_ino.xyz
+│   │   ├── ico_wo_ino_opt_tmp.xyz
+│   │   ├── ico_wo_ino_opt.xyz
+│   │   └── ino_cutter.xyz
+│   ├── diabolos
+│   │   ├── NR100_interstitial-C.png
+│   │   ├── NR100_interstitial.png
+│   │   ├── NR100_interstitial.script
+│   │   ├── NR100_interstitial.xyz
+│   │   ├── NR100_onatom-C.png
+│   │   ├── NR100_onatom.png
+│   │   ├── NR100_onatom.script
+│   │   ├── NR100_onatom.xyz
+│   │   ├── NR110_interstitial-C.png
+│   │   ├── NR110_interstitial.png
+│   │   ├── NR110_interstitial.script
+│   │   ├── NR110_interstitial.xyz
+│   │   ├── NR110_onatom-C.png
+│   │   ├── NR110_onatom.png
+│   │   ├── NR110_onatom.script
+│   │   ├── NR110_onatom.xyz
+│   │   ├── NR210_interstitial-C.png
+│   │   ├── NR210_interstitial.png
+│   │   ├── NR210_interstitial.script
+│   │   ├── NR210_interstitial.xyz
+│   │   ├── NR210_onatom-C.png
+│   │   ├── NR210_onatom.png
+│   │   ├── NR210_onatom.script
+│   │   ├── NR210_onatom.xyz
+│   │   ├── PY101_regular_cs.xyz
+│   │   ├── PY101_regular.png
+│   │   ├── PY101_regular.xyz
+│   │   ├── PY101_shaveA_cs.xyz
+│   │   ├── PY101_shaveA.png
+│   │   ├── PY101_shaveA.xyz
+│   │   ├── PY102_regular_cs.xyz
+│   │   ├── PY102_regular.png
+│   │   ├── PY102_regular.xyz
+│   │   ├── PY102_shaveA_cs.xyz
+│   │   ├── PY102_shaveA.png
+│   │   ├── PY102_shaveA.xyz
+│   │   ├── PY111_regular_cs.xyz
+│   │   ├── PY111_regular.png
+│   │   ├── PY111_regular.xyz
+│   │   ├── PY111_shaveA_cs.xyz
+│   │   ├── PY111_shaveA.png
+│   │   ├── PY111_shaveA.xyz
+│   │   ├── PY112_regular_cs.xyz
+│   │   ├── PY112_regular.png
+│   │   ├── PY112_regular.xyz
+│   │   ├── PY112_shaveA_cs.xyz
+│   │   ├── PY112_shaveA.png
+│   │   ├── PY112_shaveA.xyz
+│   │   ├── PY211_regular_cs.xyz
+│   │   ├── PY211_regular.png
+│   │   ├── PY211_regular.xyz
+│   │   ├── PY211_shaveA_cs.xyz
+│   │   ├── PY211_shaveA.png
+│   │   ├── PY211_shaveA.xyz
+│   │   ├── PY212_regular_cs.xyz
+│   │   ├── PY212_regular.png
+│   │   ├── PY212_regular.xyz
+│   │   ├── PY212_shaveA_cs.xyz
+│   │   ├── PY212_shaveA.png
+│   │   ├── PY212_shaveA.xyz
+│   │   ├── PY213_regular_cs.xyz
+│   │   ├── PY213_regular.png
+│   │   ├── PY213_regular.xyz
+│   │   ├── PY213_shaveA_cs.xyz
+│   │   ├── PY213_shaveA.png
+│   │   ├── PY213_shaveA.xyz
+│   │   ├── slab_001.cif
+│   │   ├── slab_001.png
+│   │   ├── slab_001.script
+│   │   ├── slab_100.cif
+│   │   ├── slab_100.png
+│   │   ├── slab_100.script
+│   │   ├── slab_101.cif
+│   │   ├── slab_101.png
+│   │   ├── slab_101.script
+│   │   ├── slab_110.cif
+│   │   ├── slab_110.png
+│   │   ├── slab_110.script
+│   │   ├── slab_111.cif
+│   │   ├── slab_111.png
+│   │   ├── slab_111.script
+│   │   ├── slab_112.cif
+│   │   ├── slab_112.png
+│   │   ├── slab_112.script
+│   │   ├── slab_210.cif
+│   │   ├── slab_210.png
+│   │   ├── slab_210.script
+│   │   ├── slab_211.cif
+│   │   ├── slab_211.png
+│   │   ├── slab_211.script
+│   │   └── test.xyz
+│   ├── dico_CoreSurface.xyz
+│   ├── dico.script
+│   ├── dico.xyz
+│   ├── disp
+│   │   ├── ico_02_opt.xyz
+│   │   ├── ico_02.xyz
+│   │   ├── ico_03_opt.xyz
+│   │   ├── ico_03.xyz
+│   │   ├── ico_04_opt.xyz
+│   │   ├── ico_04.xyz
+│   │   ├── ico_05_opt.script
+│   │   ├── ico_05_opt.xyz
+│   │   ├── ico_05.script
+│   │   ├── ico_05.xyz
+│   │   ├── ico_06_opt.xyz
+│   │   ├── ico_06.xyz
+│   │   ├── ico_07_opt.xyz
+│   │   ├── ico_07.xyz
+│   │   ├── ico_cs_opt.xyz
+│   │   ├── ico_cs.xyz
+│   │   ├── ico_opt.xyz
+│   │   ├── ico.script
+│   │   └── ico.xyz
+│   ├── disp_plane
+│   │   ├── ico_04_opt.xyz
+│   │   ├── ico_04p1_CS_opt.xyz
+│   │   ├── ico_04p1_opt.script
+│   │   ├── ico_04p1_opt.xyz
+│   │   ├── ico_04p1.script
+│   │   ├── ico_04p1.xyz
+│   │   ├── ico_04p2_CS_opt.xyz
+│   │   ├── ico_04p2_opt.script
+│   │   ├── ico_04p2_opt.xyz
+│   │   ├── ico_04p2.script
+│   │   ├── ico_04p2.xyz
+│   │   ├── ico_04p3_CS_opt.xyz
+│   │   ├── ico_04p3_opt.script
+│   │   ├── ico_04p3_opt.xyz
+│   │   ├── ico_04p3.script
+│   │   ├── ico_04p3.xyz
+│   │   ├── ico_04p5_CS_opt.xyz
+│   │   ├── ico_04p5_opt.script
+│   │   ├── ico_04p5_opt.xyz
+│   │   ├── ico_04p5.script
+│   │   ├── ico_04p5.xyz
+│   │   ├── ico_04pl1_CS_opt.xyz
+│   │   ├── ico_04pl1_opt.script
+│   │   ├── ico_04pl1_opt.xyz
+│   │   ├── ico_04pl1.script
+│   │   ├── ico_04pl1.xyz
+│   │   ├── ico_04pl2_CS_opt.xyz
+│   │   ├── ico_04pl2_opt.script
+│   │   ├── ico_04pl2_opt.xyz
+│   │   ├── ico_04pl2.script
+│   │   ├── ico_04pl2.xyz
+│   │   ├── ico_04pl3_CS_opt.xyz
+│   │   ├── ico_04pl3_opt.script
+│   │   ├── ico_04pl3_opt.xyz
+│   │   ├── ico_04pl3.script
+│   │   ├── ico_04pl3.xyz
+│   │   ├── ico_04pl5_CS_opt.xyz
+│   │   ├── ico_04pl5_opt.script
+│   │   ├── ico_04pl5_opt.xyz
+│   │   ├── ico_04pl5.script
+│   │   ├── ico_04pl5.xyz
+│   │   ├── ico_04.xyz
+│   │   ├── ico_05_opt.xyz
+│   │   ├── ico_05p_CS_opt.xyz
+│   │   ├── ico_05pl15_CS_opt.xyz
+│   │   ├── ico_05pl15_opt.script
+│   │   ├── ico_05pl15_opt.xyz
+│   │   ├── ico_05pl15.script
+│   │   ├── ico_05pl15.xyz
+│   │   ├── ico_05pl2_CS_opt.xyz
+│   │   ├── ico_05pl2_opt.script
+│   │   ├── ico_05pl2_opt.xyz
+│   │   ├── ico_05pl2.script
+│   │   ├── ico_05pl2.xyz
+│   │   ├── ico_05pl5_CS_opt.xyz
+│   │   ├── ico_05pl5_opt.script
+│   │   ├── ico_05pl5_opt.xyz
+│   │   ├── ico_05pl5.script
+│   │   ├── ico_05pl5.xyz
+│   │   ├── ico_05p_opt.script
+│   │   ├── ico_05p_opt.xyz
+│   │   ├── ico_05p.script
+│   │   ├── ico_05p.xyz
+│   │   └── ico_05.xyz
+│   ├── disp_shifted_ellipsoid
+│   │   ├── ico_04p1_CS_opt.xyz
+│   │   ├── ico_04p1_opt.script
+│   │   ├── ico_04p1_opt.xyz
+│   │   ├── ico_04p1.script
+│   │   ├── ico_04p1.xyz
+│   │   ├── ico_04p2_CS_opt.xyz
+│   │   ├── ico_04p2_opt.script
+│   │   ├── ico_04p2_opt.xyz
+│   │   ├── ico_04p2.script
+│   │   ├── ico_04p2.xyz
+│   │   ├── ico_05p_CS_opt.xyz
+│   │   ├── ico_05p_opt.script
+│   │   ├── ico_05p_opt.xyz
+│   │   ├── ico_05p.script
+│   │   └── ico_05p.xyz
+│   ├── EllipsoidalAuNP.script
+│   ├── EllipsoidalAuNP.xyz
+│   ├── EllipsoidalNaClNPcs.xyz
+│   ├── EllipsoidalNaClNP.script
+│   ├── EllipsoidalNaClNP.xyz
+│   ├── eohjM.xyz
+│   ├── eohj.script
+│   ├── eohj.xyz
+│   ├── fcccube_CoreSurface.xyz
+│   ├── fcccube.script
+│   ├── fcccube.xyz
+│   ├── fccdrdd_CoreSurface.xyz
+│   ├── fccdrdd.script
+│   ├── fccdrdd.xyz
+│   ├── fcchollowcube.xyz
+│   ├── fccOh_CoreSurface.xyz
+│   ├── fccOh_opt.xyz
+│   ├── fccOh.script
+│   ├── fccOh.xyz
+│   ├── FeCo_4_arm.xyz
+│   ├── FeCo_8_arm.xyz
+│   ├── FeCo_octo.script
+│   ├── FeCo_octo_Slices.script
+│   ├── FeCo_octo.xyz
+│   ├── FeCo_one_arm.script
+│   ├── FeCo_one_armSlices.script
+│   ├── FeCo_one_arm.xyz
+│   ├── FeCo.script
+│   ├── FeCos_Slices.script
+│   ├── FeCos.xyz
+│   ├── FeCo.xyz
+│   ├── FeWulff.cif
+│   ├── FeWulff_sc.cif
+│   ├── FeWulff.script
+│   ├── FeWulff_sc.xyz
+│   ├── FeWulff.xyz
+│   ├── fivefold_nanostars
+│   │   ├── starL_4zigzag.xyz
+│   │   ├── starL_arm.xyz
+│   │   ├── starL_armZZ.xyz
+│   │   ├── starL_core.xyz
+│   │   ├── starL_Pt.script
+│   │   ├── starL_Pt.xyz
+│   │   ├── starL.xyz
+│   │   ├── star_profile.png
+│   │   ├── star_rot.png
+│   │   ├── star_tilted-C.png
+│   │   ├── star_tilted.png
+│   │   ├── star_top.png
+│   │   └── star.xyz
+│   ├── hbpy_cs.xyz
+│   ├── hbpy.script
+│   ├── hbpy_slice.script
+│   ├── hbpy.xyz
+│   ├── hollowcube.script
+│   ├── ico_01_opt.xyz
+│   ├── ico_01.xyz
+│   ├── ico_02_opt.xyz
+│   ├── ico_02.xyz
+│   ├── ico_03_opt.xyz
+│   ├── ico_03.xyz
+│   ├── ico_04_opt.xyz
+│   ├── ico_04p1_CS_opt.xyz
+│   ├── ico_04p1_opt.script
+│   ├── ico_04p1_opt.xyz
+│   ├── ico_04p1.script
+│   ├── ico_04p1.xyz
+│   ├── ico_04p2_CS_opt.xyz
+│   ├── ico_04p2_opt.script
+│   ├── ico_04p2_opt.xyz
+│   ├── ico_04p2.script
+│   ├── ico_04p2.xyz
+│   ├── ico_04.xyz
+│   ├── ico_05_opt.xyz
+│   ├── ico_05p_CS_opt.xyz
+│   ├── ico_05p_opt.script
+│   ├── ico_05p_opt.xyz
+│   ├── ico_05p.script
+│   ├── ico_05p.xyz
+│   ├── ico_05.xyz
+│   ├── ico_06_opt.xyz
+│   ├── ico_06.xyz
+│   ├── ico_07_opt.xyz
+│   ├── ico_07.xyz
+│   ├── ico_08_opt.xyz
+│   ├── ico_08.xyz
+│   ├── ico4_minus1plane_CS_opt.xyz
+│   ├── ico4_minus1plane_opt.script
+│   ├── ico4_minus1plane_opt.xyz
+│   ├── ico4_minus1plane.xyz
+│   ├── ico4.xyz
+│   ├── ico_CoreSurface.xyz
+│   ├── ico-C.png
+│   ├── ico_cs-C.png
+│   ├── ico_cs_opt.xyz
+│   ├── ico_cs.png
+│   ├── ico_cs.xyz
+│   ├── ico_facets-C.png
+│   ├── ico_facets.png
+│   ├── ico_opt.xyz
+│   ├── ico.png
+│   ├── ico.script
+│   ├── ico.xyz
+│   ├── imprint
+│   │   ├── octa_carvedCS.xyz
+│   │   ├── octa_carved.xyz
+│   │   ├── previewC.script
+│   │   ├── previewC.xyz
+│   │   ├── previewS.script
+│   │   ├── previewS.xyz
+│   │   ├── stella_octangulaCS.xyz
+│   │   └── stella_octangula.xyz
+│   ├── InoD.xyz
+│   ├── local_order
+│   │   ├── bcc.xyz
+│   │   ├── dd_opt.xyz
+│   │   ├── fcc.xyz
+│   │   ├── hcp.xyz
+│   │   ├── ico5.xyz
+│   │   ├── ico_cnp.script
+│   │   ├── ico.script
+│   │   ├── ico_selected_cnp.xyz
+│   │   ├── ico_selected_Rmap_twin.xyz
+│   │   ├── ico_selected_Rmap.xyz
+│   │   ├── ico.xyz
+│   │   ├── NP_cnp_opt.script
+│   │   ├── NP_cnp.script
+│   │   ├── NPCS_opt.xyz
+│   │   ├── NPCS.xyz
+│   │   ├── NP_opt.script
+│   │   ├── NP_opt.xyz
+│   │   ├── NP.script
+│   │   ├── NP_selected_cnp.xyz
+│   │   ├── NP.xyz
+│   │   ├── Oh_cnp.script
+│   │   ├── Oh.script
+│   │   ├── Oh.xyz
+│   │   ├── pPrismCap_cnp.script
+│   │   ├── pPrismCap_CoreSurface.xyz
+│   │   ├── pPrismCap_q6.script
+│   │   ├── pPrismCap.script
+│   │   ├── pPrismCap_selected_cnp.xyz
+│   │   ├── pPrismCap_selected_q6.xyz
+│   │   ├── pPrismCapSmall.xyz
+│   │   └── pPrismCap.xyz
+│   ├── mesh
+│   │   ├── ico_alpha.pmesh
+│   │   ├── ico_alpha.script
+│   │   ├── icoCS.xyz
+│   │   ├── ico_hull.pmesh
+│   │   ├── ico_hull.script
+│   │   ├── ico_ovito_mesh.png
+│   │   ├── ico.script
+│   │   └── ico.xyz
+│   ├── model.opt
+│   ├── model_opt.xyz
+│   ├── OhFeBeta.cif
+│   ├── ohj.xyz
+│   ├── pbpy.xyz
+│   ├── ppy1_CoreSurface.xyz
+│   ├── ppy1.script
+│   ├── ppy1.xyz
+│   ├── ppy2_CoreSurface.xyz
+│   ├── ppy2.xyz
+│   ├── ppy3_CoreSurface.xyz
+│   ├── ppy3.script
+│   ├── ppy3.xyz
+│   ├── ppy4_CoreSurface.xyz
+│   ├── ppy4.script
+│   ├── ppy4.xyz
+│   ├── prism
+│   │   ├── pbpy_CoreSurface.xyz
+│   │   ├── pbpy_cut_CoreSurface.xyz
+│   │   ├── pbpy_cut.script
+│   │   ├── pbpy_cut.xyz
+│   │   ├── pbpy.script
+│   │   ├── pbpyVW_CoreSurface.xyz
+│   │   ├── pbpyVW.script
+│   │   ├── pbpyVW.xyz
+│   │   ├── pbpy.xyz
+│   │   ├── pPrismBE_CoreSurface.xyz
+│   │   ├── pPrismBERT_CoreSurface.xyz
+│   │   ├── pPrismBERT.script
+│   │   ├── pPrismBERT.xyz
+│   │   ├── pPrismBE.script
+│   │   ├── pPrismBE.xyz
+│   │   ├── pPrismDC_CoreSurface.xyz
+│   │   ├── pPrismDC.script
+│   │   ├── pPrismDC.xyz
+│   │   ├── pPrismE_CoreSurface.xyz
+│   │   ├── pPrismE.script
+│   │   ├── pPrismE.xyz
+│   │   ├── pPrismRT_CoreSurface.xyz
+│   │   ├── pPrismRT.script
+│   │   └── pPrismRT.xyz
+│   ├── rdd_CoreSurface.xyz
+│   ├── rdd.script
+│   ├── rdd.xyz
+│   ├── Ruhcp_CNcolors.png
+│   ├── Ruhcp_CN.dat
+│   ├── Ruhcp_GCNcolors.png
+│   ├── Ruhcp_GCN.dat
+│   ├── Ruhcp.xyz
+│   ├── RuParallelepiped.cif
+│   ├── RuParallelepiped_CoreSurface.xyz
+│   ├── RuParallelepiped_sc.cif
+│   ├── RuParallelepiped.script
+│   ├── RuParallelepiped.xyz
+│   ├── RuWire.cif
+│   ├── RuWire_CoreSurface.cif
+│   ├── RuWire.script
+│   ├── RuWire.xyz
+│   ├── RuWulff.cif
+│   ├── RuWulff_sc.cif
+│   ├── RuWulff.script
+│   ├── RuWulff.xyz
+│   ├── slab117.cif
+│   ├── slab117.script
+│   ├── sphere.xyz
+│   ├── SphericalAuNP_0.xyz
+│   ├── SphericalAuNP2.cif
+│   ├── SphericalAuNP.cif
+│   ├── SphericalAuNP_CoreSurface.xyz
+│   ├── SphericalAuNP_sc.cif
+│   ├── SphericalAuNP.script
+│   ├── SphericalAuNP_uc.cif
+│   ├── SphericalAuNP.xyz
+│   ├── SphericalFe2N_NP.cif
+│   ├── SphericalFe2N_NP_cif.cif
+│   ├── SphericalFe2N_NP_CoreSurface.xyz
+│   ├── SphericalFe2N_NP_sc.cif
+│   ├── SphericalFe2N_NP.script
+│   ├── SphericalFe2N_NP.xyz
+│   ├── SphericalHollowAuNP.cif
+│   ├── SphericalHollowAuNP_CoreSurface.xyz
+│   ├── SphericalHollowAuNP.script
+│   ├── SphericalHollowAuNP.xyz
+│   ├── SphericalRuNP_0.xyz
+│   ├── SphericalRuNP.cif
+│   ├── SphericalRuNP_cif.cif
+│   ├── SphericalRuNP_CoreSurface.xyz
+│   ├── SphericalRuNP_sc.cif
+│   ├── SphericalRuNP.script
+│   ├── SphericalRuNP.xyz
+│   ├── SphericalTiO2rNP.cif
+│   ├── SphericalTiO2rNP_cif.cif
+│   ├── SphericalTiO2rNP_CoreSurface.xyz
+│   ├── SphericalTiO2rNP.script
+│   ├── SphericalTiO2rNP.xyz
+│   ├── SphericalTiO2ruNP_sc.cif
+│   ├── strain
+│   │   ├── ico_CoreSurface.xyz
+│   │   ├── ico_opt.xyz
+│   │   ├── ico.script
+│   │   ├── ico_strainD2min_values.dat
+│   │   ├── ico_strainVM_values.dat
+│   │   ├── ico_strainVol_values.dat
+│   │   ├── ico_tmp.xyz
+│   │   ├── ico.xyz
+│   │   ├── strain_strainD2min_values.dat
+│   │   ├── strain_strainVM_values.dat
+│   │   └── strain_strainVol_values.dat
+│   ├── tbp_4tpt.xyz
+│   ├── tbp_CoreSurface.xyz
+│   ├── tbp.script
+│   ├── tbp.xyz
+│   ├── Td-2truncate.xyz
+│   ├── Td_4bcbh.xyz
+│   ├── Td_4bch.xyz
+│   ├── Td-5tpb.xyz
+│   ├── Td_CoreSurface.xyz
+│   ├── Td.script
+│   ├── Td.xyz
+│   ├── test_opd
+│   │   ├── D-tartaric_acid.com
+│   │   ├── D-tartaric_acid_freq.dat
+│   │   ├── D-tartaric_acid.log
+│   │   ├── D-tartaric_acid_OPT.xyz
+│   │   ├── D-tartaric_acid.qsub
+│   │   ├── L-tartaric_acid.com
+│   │   ├── L-tartaric_acid_freq.dat
+│   │   ├── L-tartaric_acid.log
+│   │   ├── L-tartaric_acid_OPT.xyz
+│   │   ├── L-tartaric_acid.qsub
+│   │   ├── meso-tartaric_acid.com
+│   │   ├── meso-tartaric_acid_freq.dat
+│   │   ├── meso-tartaric_acid.log
+│   │   ├── meso-tartaric_acid_OPT.xyz
+│   │   ├── meso-tartaric_acid.qsub
+│   │   └── meso-tartaric_acid.xyz
+│   ├── test_opd.zip
+│   ├── TestWulff.cif
+│   ├── TestWulff_sc.cif
+│   ├── TestWulff.script
+│   ├── TestWulff.xyz
+│   ├── tpt_CoreSurface.xyz
+│   ├── tpt.script
+│   ├── tpt.xyz
+│   ├── trCube_CoreSurface.xyz
+│   ├── trCube.script
+│   ├── trCube.xyz
+│   ├── trOh_original.xyz
+│   ├── trOh.script
+│   ├── trOh.xyz
+│   ├── trTd_CoreSurface.xyz
+│   ├── trTd.script
+│   └── trTd.xyz
+├── dist
+│   ├── pynanomatbuilder-0.20.1-py3-none-any.whl
+│   └── pynanomatbuilder-0.20.1.tar.gz
+├── docs
+│   ├── build
+│   │   ├── doctrees
+│   │   │   ├── environment.pickle
+│   │   │   ├── index.doctree
+│   │   │   ├── modules.doctree
+│   │   │   ├── nbsphinx
+│   │   │   └── theoryDocs
+│   │   │       ├── intro.doctree
+│   │   │       └── polydispersity.doctree
+│   │   └── html
+│   │       ├── CNAME
+│   │       ├── genindex.html
+│   │       ├── _images
+│   │       │   └── pyNanoMatBuilder_banner.svg
+│   │       ├── index.html
+│   │       ├── modules.html
+│   │       ├── objects.inv
+│   │       ├── py-modindex.html
+│   │       ├── search.html
+│   │       ├── searchindex.js
+│   │       ├── _sources
+│   │       │   ├── index.rst.txt
+│   │       │   ├── modules.rst.txt
+│   │       │   └── theoryDocs
+│   │       │       ├── intro.md.txt
+│   │       │       └── polydispersity.md.txt
+│   │       ├── _static
+│   │       │   ├── base-stemmer.js
+│   │       │   ├── basic.css
+│   │       │   ├── check-solid.svg
+│   │       │   ├── clipboard.min.js
+│   │       │   ├── copybutton.css
+│   │       │   ├── copybutton_funcs.js
+│   │       │   ├── copybutton.js
+│   │       │   ├── copy-button.svg
+│   │       │   ├── css
+│   │       │   │   ├── badge_only.css
+│   │       │   │   ├── fonts
+│   │       │   │   │   ├── fontawesome-webfont.eot
+│   │       │   │   │   ├── fontawesome-webfont.svg
+│   │       │   │   │   ├── fontawesome-webfont.ttf
+│   │       │   │   │   ├── fontawesome-webfont.woff
+│   │       │   │   │   ├── fontawesome-webfont.woff2
+│   │       │   │   │   ├── lato-bold-italic.woff
+│   │       │   │   │   ├── lato-bold-italic.woff2
+│   │       │   │   │   ├── lato-bold.woff
+│   │       │   │   │   ├── lato-bold.woff2
+│   │       │   │   │   ├── lato-normal-italic.woff
+│   │       │   │   │   ├── lato-normal-italic.woff2
+│   │       │   │   │   ├── lato-normal.woff
+│   │       │   │   │   ├── lato-normal.woff2
+│   │       │   │   │   ├── Roboto-Slab-Bold.woff
+│   │       │   │   │   ├── Roboto-Slab-Bold.woff2
+│   │       │   │   │   ├── Roboto-Slab-Regular.woff
+│   │       │   │   │   └── Roboto-Slab-Regular.woff2
+│   │       │   │   └── theme.css
+│   │       │   ├── doctools.js
+│   │       │   ├── documentation_options.js
+│   │       │   ├── english-stemmer.js
+│   │       │   ├── file.png
+│   │       │   ├── fonts
+│   │       │   │   ├── Lato
+│   │       │   │   │   ├── lato-bold.eot
+│   │       │   │   │   ├── lato-bolditalic.eot
+│   │       │   │   │   ├── lato-bolditalic.ttf
+│   │       │   │   │   ├── lato-bolditalic.woff
+│   │       │   │   │   ├── lato-bolditalic.woff2
+│   │       │   │   │   ├── lato-bold.ttf
+│   │       │   │   │   ├── lato-bold.woff
+│   │       │   │   │   ├── lato-bold.woff2
+│   │       │   │   │   ├── lato-italic.eot
+│   │       │   │   │   ├── lato-italic.ttf
+│   │       │   │   │   ├── lato-italic.woff
+│   │       │   │   │   ├── lato-italic.woff2
+│   │       │   │   │   ├── lato-regular.eot
+│   │       │   │   │   ├── lato-regular.ttf
+│   │       │   │   │   ├── lato-regular.woff
+│   │       │   │   │   └── lato-regular.woff2
+│   │       │   │   └── RobotoSlab
+│   │       │   │       ├── roboto-slab-v7-bold.eot
+│   │       │   │       ├── roboto-slab-v7-bold.ttf
+│   │       │   │       ├── roboto-slab-v7-bold.woff
+│   │       │   │       ├── roboto-slab-v7-bold.woff2
+│   │       │   │       ├── roboto-slab-v7-regular.eot
+│   │       │   │       ├── roboto-slab-v7-regular.ttf
+│   │       │   │       ├── roboto-slab-v7-regular.woff
+│   │       │   │       └── roboto-slab-v7-regular.woff2
+│   │       │   ├── jquery.js
+│   │       │   ├── js
+│   │       │   │   ├── badge_only.js
+│   │       │   │   ├── theme.js
+│   │       │   │   └── versions.js
+│   │       │   ├── language_data.js
+│   │       │   ├── minus.png
+│   │       │   ├── nbsphinx-broken-thumbnail.svg
+│   │       │   ├── nbsphinx-code-cells.css
+│   │       │   ├── nbsphinx-gallery.css
+│   │       │   ├── nbsphinx-no-thumbnail.svg
+│   │       │   ├── plus.png
+│   │       │   ├── pygments.css
+│   │       │   ├── pyNanoMatBuilder_banner.svg
+│   │       │   ├── searchtools.js
+│   │       │   ├── sphinx_highlight.js
+│   │       │   ├── _sphinx_javascript_frameworks_compat.js
+│   │       │   └── visualID.css
+│   │       └── theoryDocs
+│   │           ├── intro.html
+│   │           └── polydispersity.html
+│   ├── make.bat
+│   ├── Makefile
+│   └── source
+│       ├── conf.py
+│       ├── index.rst
+│       ├── modules.rst
+│       ├── _static
+│       │   ├── pyNanoMatBuilder_banner.svg
+│       │   └── visualID.css
+│       ├── _templates
+│       └── theoryDocs
+│           ├── intro.md
+│           └── polydispersity.md
+├── figs
+│   ├── at.xyz
+│   ├── bccrdd.png
+│   ├── bccrDDWS.png
+│   ├── bccrDDWS.script
+│   ├── bccrDDWS.xyz
+│   ├── bccrdd.xyz
+│   ├── chirality
+│   │   ├── Au_Cyl_twisted_CS.xyz
+│   │   ├── Au_Cyl_twisted.pmesh
+│   │   ├── Au_Cyl_twisted.script
+│   │   ├── Au_Cyl_twisted.xyz
+│   │   ├── bcbh.png
+│   │   ├── bcbh_tmp.spt
+│   │   ├── bcbh.xyz
+│   │   ├── bch.png
+│   │   ├── bch_tmp.spt
+│   │   ├── bch.xyz
+│   │   ├── helix.png
+│   │   ├── helix_tmp.spt
+│   │   └── helix.xyz
+│   ├── c_inlay_s_diag.xyz
+│   ├── c_intersect_s_diag.xyz
+│   ├── CSG
+│   │   ├── octa.script
+│   │   ├── previewSCB_oh_td-C.png
+│   │   ├── previewSCB_oh_td.png
+│   │   ├── previewSCB_oh_td.script
+│   │   ├── previewSCB_oh_td_tmp.spt
+│   │   ├── previewSCB_oh_td.xyz
+│   │   ├── previewSSB_oh_td-C.png
+│   │   ├── previewSSB_oh_td.png
+│   │   ├── previewSSB_oh_td.script
+│   │   ├── previewSSB_oh_td_tmp.spt
+│   │   ├── previewSSB_oh_td.xyz
+│   │   ├── SCB_oh_td-C.png
+│   │   ├── SCB_oh_tdCS.xyz
+│   │   ├── SCB_oh_td.png
+│   │   ├── SCB_oh_td.script
+│   │   ├── SCB_oh_td.xyz
+│   │   ├── SSB_oh_td-C.png
+│   │   ├── SSB_oh_tdCS.xyz
+│   │   ├── SSB_oh_td.png
+│   │   ├── SSB_oh_td.script
+│   │   └── SSB_oh_td.xyz
+│   ├── c_subtract_s_diag.xyz
+│   ├── cube.png
+│   ├── cubeWS.png
+│   ├── cubeWS.script
+│   ├── cubeWS.xyz
+│   ├── cube.xyz
+│   ├── cubo.png
+│   ├── cuboWS.png
+│   ├── cuboWS.script
+│   ├── cuboWS.xyz
+│   ├── cubo.xyz
+│   ├── c_union_s_diag.xyz
+│   ├── cylinder-C.png
+│   ├── cylinder.png
+│   ├── cylinder.xyz
+│   ├── dicoTdWS-C.png
+│   ├── dicoTdWS.png
+│   ├── dicoTdWS.script
+│   ├── dicoTdWS.xyz
+│   ├── ellipsoid.png
+│   ├── eohj-C.png
+│   ├── eohjM-C.png
+│   ├── eohjM.png
+│   ├── eohjM.xyz
+│   ├── eohj.png
+│   ├── eohj.xyz
+│   ├── fccdrdd.png
+│   ├── fccdrdd.xyz
+│   ├── fccOh.png
+│   ├── fccOh.xyz
+│   ├── fccTd.png
+│   ├── fccTd.xyz
+│   ├── FeCo_4_arm.xyz
+│   ├── FeCo_8_arm.xyz
+│   ├── FeCo_one_armCS.xyz
+│   ├── FeCo_one_arm.script
+│   ├── FeCo_one_armSlices.script
+│   ├── FeCo_one_arm.xyz
+│   ├── FeCo.xyz
+│   ├── fivefold_nanostars
+│   │   ├── star.png
+│   │   ├── star_shaped_b.png
+│   │   └── star_shaped.png
+│   ├── hbpy
+│   │   ├── hbpy.png
+│   │   ├── hbpy.script
+│   │   ├── hbpy_tmp.spt
+│   │   └── hbpy.xyz
+│   ├── hcpsph1WS.png
+│   ├── hcpsph1WS.script
+│   ├── hcpsph1WS.xyz
+│   ├── hcpsph2WS.png
+│   ├── hcpsph2WS.script
+│   ├── hcpsph2WS.xyz
+│   ├── hcpwireWS.png
+│   ├── hcpwireWS.script
+│   ├── hcpwireWS.xyz
+│   ├── ico_10pCN.script
+│   ├── ico_10pCN.xyz
+│   ├── ico_10pE.xyz
+│   ├── ico_10.xyz
+│   ├── ico.png
+│   ├── ico.xyz
+│   ├── InoD.png
+│   ├── InoD.xyz
+│   ├── MarksD.png
+│   ├── MarksD.xyz
+│   ├── octopod-C.png
+│   ├── octopod.png
+│   ├── octopod.xyz
+│   ├── ohj-C.png
+│   ├── ohj.png
+│   ├── ohj.xyz
+│   ├── OhWS.png
+│   ├── OhWS.script
+│   ├── OhWS.xyz
+│   ├── pbpy.png
+│   ├── pbpy.xyz
+│   ├── pentaTwinned
+│   │   ├── capsule.png
+│   │   ├── capsule.script
+│   │   ├── capsule_tmp.spt
+│   │   ├── capsule.xyz
+│   │   ├── dcone.png
+│   │   ├── dcone.script
+│   │   ├── dcone.xyz
+│   │   ├── ellipsoidPT-C.png
+│   │   ├── ellipsoidPT.png
+│   │   ├── ellipsoidPT.script
+│   │   ├── ellipsoidPT_tmp.spt
+│   │   ├── ellipsoidPT.xyz
+│   │   ├── pbipy.png
+│   │   ├── pbipy.script
+│   │   ├── pbipyW.png
+│   │   ├── pbipyW.script
+│   │   ├── pbipyW.xyz
+│   │   ├── pbipy.xyz
+│   │   ├── uptnr.png
+│   │   ├── uptnr.script
+│   │   └── uptnr.xyz
+│   ├── pppd.png
+│   ├── pppd.xyz
+│   ├── rDD.png
+│   ├── rDD.xyz
+│   ├── rhcuboWS.png
+│   ├── rhcuboWS.script
+│   ├── rhcuboWS.xyz
+│   ├── slices
+│   │   ├── cube_X-C.png
+│   │   ├── cube_X.png
+│   │   ├── cube_X.script
+│   │   ├── cube_X_Slices.script
+│   │   └── cube_X.xyz
+│   ├── sphere.png
+│   ├── sphere.xyz
+│   ├── tbp.png
+│   ├── tbp.xyz
+│   ├── thh210WS-C.png
+│   ├── thh210WS.png
+│   ├── thh210WS.script
+│   ├── thh210WS.xyz
+│   ├── thhWS.png
+│   ├── thhWS.script
+│   ├── thhWS.xyz
+│   ├── tpt.png
+│   ├── tpt.xyz
+│   ├── trbccrDDWS.png
+│   ├── trbccrDDWS.script
+│   ├── trbccrDDWS.xyz
+│   ├── trcubeWS.png
+│   ├── trcubeWS.script
+│   ├── trcubeWS.xyz
+│   ├── trOh.png
+│   ├── trOhWS.png
+│   ├── trOhWS.script
+│   ├── trOhWS.xyz
+│   ├── trOh.xyz
+│   ├── trTd.png
+│   ├── trTd.xyz
+│   ├── ttrbccrDDWS.png
+│   ├── ttrbccrDDWS.script
+│   ├── ttrbccrDDWS.xyz
+│   ├── tzh211WS-C.png
+│   ├── tzh211WS.png
+│   ├── tzh211WS.script
+│   ├── tzh211WS.xyz
+│   ├── wire-C.png
+│   ├── wire.png
+│   ├── wire.xyz
+│   ├── WS-C.png
+│   ├── WS.png
+│   ├── WS.script
+│   └── WS.xyz
+├── figs-backup-20260516-dev
+│   ├── at.xyz
+│   ├── bccrdd.png
+│   ├── bccrDDWS.png
+│   ├── bccrDDWS.script
+│   ├── bccrDDWS.xyz
+│   ├── bccrdd.xyz
+│   ├── bch.png
+│   ├── bch.xyz
+│   ├── cube.png
+│   ├── cubeWS.png
+│   ├── cubeWS.script
+│   ├── cubeWS.xyz
+│   ├── cube.xyz
+│   ├── cubo.png
+│   ├── cuboWS.png
+│   ├── cuboWS.script
+│   ├── cuboWS.xyz
+│   ├── cubo.xyz
+│   ├── cylinder-C.png
+│   ├── cylinder.png
+│   ├── cylinder.xyz
+│   ├── dicoTdWS-C.png
+│   ├── dicoTdWS.png
+│   ├── dicoTdWS.script
+│   ├── dicoTdWS.xyz
+│   ├── ellipsoid.png
+│   ├── fccdrdd.png
+│   ├── fccdrdd.xyz
+│   ├── fccOh.png
+│   ├── fccOh.xyz
+│   ├── fccTd.png
+│   ├── fccTd.xyz
+│   ├── hcpsph1WS.png
+│   ├── hcpsph1WS.script
+│   ├── hcpsph1WS.xyz
+│   ├── hcpsph2WS.png
+│   ├── hcpsph2WS.script
+│   ├── hcpsph2WS.xyz
+│   ├── hcpwireWS.png
+│   ├── hcpwireWS.script
+│   ├── hcpwireWS.xyz
+│   ├── helix-C.png
+│   ├── helix.png
+│   ├── helix.xyz
+│   ├── ico.png
+│   ├── ico.xyz
+│   ├── InoD.png
+│   ├── InoD.xyz
+│   ├── MarksD.png
+│   ├── MarksD.xyz
+│   ├── OhWS.png
+│   ├── OhWS.script
+│   ├── OhWS.xyz
+│   ├── pbpy.png
+│   ├── pbpy.xyz
+│   ├── pppd.png
+│   ├── pppd.xyz
+│   ├── rDD.png
+│   ├── rDD.xyz
+│   ├── rhcuboWS.png
+│   ├── rhcuboWS.script
+│   ├── rhcuboWS.xyz
+│   ├── sphere.png
+│   ├── tbp.png
+│   ├── tbp.xyz
+│   ├── tpt.png
+│   ├── tpt.xyz
+│   ├── trbccrDDWS.png
+│   ├── trbccrDDWS.script
+│   ├── trbccrDDWS.xyz
+│   ├── trcubeWS.png
+│   ├── trcubeWS.script
+│   ├── trcubeWS.xyz
+│   ├── trOh.png
+│   ├── trOhWS.png
+│   ├── trOhWS.script
+│   ├── trOhWS.xyz
+│   ├── trOh.xyz
+│   ├── trTd.png
+│   ├── trTd.xyz
+│   ├── ttrbccrDDWS.png
+│   ├── ttrbccrDDWS.script
+│   ├── ttrbccrDDWS.xyz
+│   ├── wire-C.png
+│   ├── wire.png
+│   ├── wire.xyz
+│   ├── WS.png
+│   ├── WS.script
+│   └── WS.xyz
+├── git_push
+├── LICENSE
+├── log
+├── MANIFEST.in
+├── push_pyPi.sh
+├── pyNanoMatBuilder
+│   ├── archimedeanNPs.py
+│   ├── catalanNPs.py
+│   ├── chiralNPs.py
+│   ├── crystalNPs.py
+│   ├── data.py
+│   ├── __init__.py
+│   ├── johnsonNPs.py
+│   ├── otherNPs.py
+│   ├── platonicNPs.py
+│   ├── __pycache__
+│   │   ├── archimedeanNPs.cpython-311.pyc
+│   │   ├── catalanNPs.cpython-311.pyc
+│   │   ├── chiralNPs.cpython-311.pyc
+│   │   ├── core.cpython-311.pyc
+│   │   ├── crystalNPs.cpython-311.pyc
+│   │   ├── data.cpython-311.pyc
+│   │   ├── __init__.cpython-311.pyc
+│   │   ├── johnsonNPs.cpython-311.pyc
+│   │   ├── make_files_remastered.cpython-311.pyc
+│   │   ├── otherNPs.cpython-311.pyc
+│   │   ├── platonicNPs.cpython-311.pyc
+│   │   ├── pyNMBcore.cpython-311.pyc
+│   │   ├── TEM_creator.cpython-311.pyc
+│   │   ├── utils.cpython-311.pyc
+│   │   └── visualID.cpython-311.pyc
+│   ├── pyNMBcore.py
+│   ├── README
+│   ├── resources
+│   │   ├── amorphousC
+│   │   │   ├── aC_relax_10x10.xyz.gz
+│   │   │   ├── aC_relax_5x5.xyz.gz
+│   │   │   └── __init__.py
+│   │   ├── cif_database
+│   │   │   ├── cod1000041-NaCl.cif
+│   │   │   ├── cod1539039-Fe_beta.cif
+│   │   │   ├── cod1539039-Mn_beta.cif
+│   │   │   ├── cod5000217-Fe_bcc.cif
+│   │   │   ├── cod9004229-FeCo_bcc.cif
+│   │   │   ├── cod9008459-Ag_fcc.cif
+│   │   │   ├── cod9008463-Au_fcc.cif
+│   │   │   ├── cod9008466-Co_fcc.cif
+│   │   │   ├── cod9008492-Co_hcp.cif
+│   │   │   ├── cod9008513-Ru_hcp.cif
+│   │   │   ├── cod9011068-Mn_alpha.cif
+│   │   │   ├── cod9012884-Co_epsilon.cif
+│   │   │   ├── cod9012957-Pt_fcc.cif
+│   │   │   ├── cod9013024_Ni_fcc.cif
+│   │   │   ├── cod9015662-TiO2-rutile.cif
+│   │   │   ├── cod9015929-TiO2-anatase.cif
+│   │   │   ├── CsPbBr3_cubic_231023.cif
+│   │   │   ├── CsPbBr3_ortho_14608.cif
+│   │   │   └── __init__.py
+│   │   ├── css
+│   │   │   ├── BrainHalfHalf-120x139.base64
+│   │   │   ├── BrainHalfHalf-120x139.png
+│   │   │   ├── BrainHalfHalf.base64
+│   │   │   ├── BrainHalfHalf.png
+│   │   │   ├── BrainHalfHalf.svg
+│   │   │   └── visualID.css
+│   │   ├── elements_f0_coeff
+│   │   │   ├── coefficients.yaml
+│   │   │   └── __init__.py
+│   │   ├── figs
+│   │   │   ├── at.xyz
+│   │   │   ├── bcbh-C.png
+│   │   │   ├── bcbh.png
+│   │   │   ├── bcbh.xyz
+│   │   │   ├── bccrdd.base64
+│   │   │   ├── bccrdd-C.png
+│   │   │   ├── bccrdd.png
+│   │   │   ├── bccrDDWS-C.png
+│   │   │   ├── bccrddWS.png
+│   │   │   ├── bccrDDWS.png
+│   │   │   ├── bccrddWS.script
+│   │   │   ├── bccrDDWS.script
+│   │   │   ├── bccrddWS.xyz
+│   │   │   ├── bccrDDWS.xyz
+│   │   │   ├── bccrdd.xyz
+│   │   │   ├── capsule-C.png
+│   │   │   ├── CSG
+│   │   │   │   ├── c_inlay_s_diag-C.png
+│   │   │   │   ├── c_inlay_s_diag.png
+│   │   │   │   ├── c_inlay_s_diag.xyz
+│   │   │   │   ├── c_intersect_s_diag-C.png
+│   │   │   │   ├── c_intersect_s_diag.png
+│   │   │   │   ├── c_intersect_s_diag.xyz
+│   │   │   │   ├── c_subtract_s_diag-C.png
+│   │   │   │   ├── c_subtract_s_diag.png
+│   │   │   │   ├── c_subtract_s_diag.xyz
+│   │   │   │   ├── cube-C.png
+│   │   │   │   ├── cube.png
+│   │   │   │   ├── cube.xyz
+│   │   │   │   ├── c_union_s_diag-C.png
+│   │   │   │   ├── c_union_s_diag.png
+│   │   │   │   ├── c_union_s_diag.xyz
+│   │   │   │   ├── moveto.dat
+│   │   │   │   ├── previewSCB_oh_td-C.png
+│   │   │   │   ├── previewSSB_oh_td-C.png
+│   │   │   │   ├── SCB_oh_td-C.png
+│   │   │   │   ├── sphere-C.png
+│   │   │   │   ├── sphere.png
+│   │   │   │   ├── sphere.xyz
+│   │   │   │   └── SSB_oh_td-C.png
+│   │   │   ├── cube.base64
+│   │   │   ├── cube-C.png
+│   │   │   ├── cube.png
+│   │   │   ├── cubeWS-C.png
+│   │   │   ├── cubeWS.png
+│   │   │   ├── cubeWS.script
+│   │   │   ├── cubeWS.xyz
+│   │   │   ├── cube.xyz
+│   │   │   ├── cubo.base64
+│   │   │   ├── cubo-C.png
+│   │   │   ├── cubo.png
+│   │   │   ├── cuboWS-C.png
+│   │   │   ├── cuboWS.png
+│   │   │   ├── cuboWS.script
+│   │   │   ├── cuboWS.xyz
+│   │   │   ├── cubo.xyz
+│   │   │   ├── cylinder-C.png
+│   │   │   ├── cylinder.xyz
+│   │   │   ├── dcone-C.png
+│   │   │   ├── dicoTdWS-C.png
+│   │   │   ├── dicoTdWS.png
+│   │   │   ├── dicoTdWS.script
+│   │   │   ├── dicoTdWS.xyz
+│   │   │   ├── ellipsoid.base64
+│   │   │   ├── ellipsoid-C.png
+│   │   │   ├── ellipsoid.png
+│   │   │   ├── ellipsoidPT-C.png
+│   │   │   ├── eohj-C.png
+│   │   │   ├── eohjM-C.png
+│   │   │   ├── fccdrdd.png
+│   │   │   ├── fccdrdd.xyz
+│   │   │   ├── fccOh.base64
+│   │   │   ├── fccOh-C.png
+│   │   │   ├── fccOh.png
+│   │   │   ├── fccOh.xyz
+│   │   │   ├── fccrdd.base64
+│   │   │   ├── fccrdd-C.png
+│   │   │   ├── fccrdd.png
+│   │   │   ├── fccrdd.xyz
+│   │   │   ├── fccTd.base64
+│   │   │   ├── fccTd-C.png
+│   │   │   ├── fccTd.png
+│   │   │   ├── fccTd.xyz
+│   │   │   ├── hbpy-C.png
+│   │   │   ├── hcpsph1WS-C.png
+│   │   │   ├── hcpsph1WS.png
+│   │   │   ├── hcpsph1WS.script
+│   │   │   ├── hcpsph1WS.xyz
+│   │   │   ├── hcpsph2WS-C.png
+│   │   │   ├── hcpsph2WS.png
+│   │   │   ├── hcpsph2WS.script
+│   │   │   ├── hcpsph2WS.xyz
+│   │   │   ├── helix-C.png
+│   │   │   ├── helix.xyz
+│   │   │   ├── hrtem
+│   │   │   │   ├── hrtem_angle_xy.png
+│   │   │   │   ├── hrtem_tilt.png
+│   │   │   │   └── hrtem_tolerance.png
+│   │   │   ├── ico.base64
+│   │   │   ├── ico-C.png
+│   │   │   ├── ico.png
+│   │   │   ├── ico.xyz
+│   │   │   ├── __init__.py
+│   │   │   ├── InoD.base64
+│   │   │   ├── InoD-C.png
+│   │   │   ├── InoD.png
+│   │   │   ├── InoD.xyz
+│   │   │   ├── MarksD.base64
+│   │   │   ├── MarksD-C.png
+│   │   │   ├── MarksD.png
+│   │   │   ├── MarksD.xyz
+│   │   │   ├── octopod
+│   │   │   │   ├── arm-C.png
+│   │   │   │   ├── arm.png
+│   │   │   │   ├── FeCo_4_arm.xyz
+│   │   │   │   ├── FeCo_8_arm.xyz
+│   │   │   │   ├── FeCo_one_armCS.xyz
+│   │   │   │   ├── FeCo_one_arm.script
+│   │   │   │   ├── FeCo_one_armSlices.script
+│   │   │   │   ├── FeCo_one_arm.xyz
+│   │   │   │   ├── octopod-C.png
+│   │   │   │   └── octopod.png
+│   │   │   ├── ohj-C.png
+│   │   │   ├── OhWS-C.png
+│   │   │   ├── OhWS.png
+│   │   │   ├── OhWS.script
+│   │   │   ├── OhWS.xyz
+│   │   │   ├── pbipy-C.png
+│   │   │   ├── pbipyW-C.png
+│   │   │   ├── pbpy.base64
+│   │   │   ├── pbpy-C.png
+│   │   │   ├── pbpy.png
+│   │   │   ├── pbpy.xyz
+│   │   │   ├── peeling
+│   │   │   ├── pnmbAvailableStructures.png
+│   │   │   ├── pnmbAvailableStructures.svg
+│   │   │   ├── pppd-C.png
+│   │   │   ├── pppd.png
+│   │   │   ├── pppd.xyz
+│   │   │   ├── rDD.base64
+│   │   │   ├── rDD-C.png
+│   │   │   ├── rDD.png
+│   │   │   ├── rDD.xyz
+│   │   │   ├── rhcuboWS-C.png
+│   │   │   ├── rhcuboWS.png
+│   │   │   ├── rhcuboWS.script
+│   │   │   ├── rhcuboWS.xyz
+│   │   │   ├── script-facettes-345PtLight.spt
+│   │   │   ├── slices
+│   │   │   │   ├── cube_X-C.png
+│   │   │   │   └── cube_X.xyz
+│   │   │   ├── sphere.base64
+│   │   │   ├── sphere-C.png
+│   │   │   ├── sphere.png
+│   │   │   ├── star-C.png
+│   │   │   ├── star_shaped_b-C.png
+│   │   │   ├── star_shaped-C.png
+│   │   │   ├── tbp.base64
+│   │   │   ├── tbp-C.png
+│   │   │   ├── tbp.png
+│   │   │   ├── tbp.xyz
+│   │   │   ├── thh210WS-C.png
+│   │   │   ├── thh210WS.xyz
+│   │   │   ├── tpt.base64
+│   │   │   ├── tpt-C.png
+│   │   │   ├── tpt.png
+│   │   │   ├── tpt.xyz
+│   │   │   ├── trbccrDDWS-C.png
+│   │   │   ├── trbccrddWS.png
+│   │   │   ├── trbccrDDWS.png
+│   │   │   ├── trbccrddWS.script
+│   │   │   ├── trbccrDDWS.script
+│   │   │   ├── trbccrddWS.xyz
+│   │   │   ├── trbccrDDWS.xyz
+│   │   │   ├── trcubeWS-C.png
+│   │   │   ├── trcubeWS.png
+│   │   │   ├── trcubeWS.script
+│   │   │   ├── trcubeWS.xyz
+│   │   │   ├── trOh.base64
+│   │   │   ├── trOh-C.png
+│   │   │   ├── trOh.png
+│   │   │   ├── trOhWS-C.png
+│   │   │   ├── trOhWS.png
+│   │   │   ├── trOhWS.script
+│   │   │   ├── trOhWS.xyz
+│   │   │   ├── trOh.xyz
+│   │   │   ├── trTd.base64
+│   │   │   ├── trTd-C.png
+│   │   │   ├── trTd.png
+│   │   │   ├── trTd.xyz
+│   │   │   ├── ttrbccrDDWS-C.png
+│   │   │   ├── ttrbccrddWS.png
+│   │   │   ├── ttrbccrDDWS.png
+│   │   │   ├── ttrbccrddWS.script
+│   │   │   ├── ttrbccrDDWS.script
+│   │   │   ├── ttrbccrddWS.xyz
+│   │   │   ├── ttrbccrDDWS.xyz
+│   │   │   ├── tzh211WS-C.png
+│   │   │   ├── tzh211WS.script
+│   │   │   ├── tzh211WS.xyz
+│   │   │   ├── underConstruction-C.png
+│   │   │   ├── underConstruction.png
+│   │   │   ├── underConstruction.svg
+│   │   │   ├── uptnr-C.png
+│   │   │   ├── wire-C.png
+│   │   │   ├── wire.xyz
+│   │   │   ├── WS-C.png
+│   │   │   ├── WS.png
+│   │   │   ├── WS.script
+│   │   │   └── WS.xyz
+│   │   ├── figs.zip
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-311.pyc
+│   │   │   ├── tools4pyPC.cpython-311.pyc
+│   │   │   ├── visualID.cpython-311.pyc
+│   │   │   ├── visualID.cpython-312.pyc
+│   │   │   └── visualID_Eng.cpython-311.pyc
+│   │   └── svg
+│   │       ├── bccrdd.spt
+│   │       ├── bccrdd.xyz
+│   │       ├── csg_operations.png
+│   │       ├── csg_operations.svg
+│   │       ├── __init__.py
+│   │       ├── logo2-C.png
+│   │       ├── logo2.png
+│   │       ├── logo3-C.png
+│   │       ├── logo3.png
+│   │       ├── logo-C.png
+│   │       ├── logoEnd.svg
+│   │       ├── Logo-institutionnel-couleur-Uonly.svg
+│   │       ├── logo_lpcno_300_dpi_notexttransparent.png
+│   │       ├── logo.png
+│   │       ├── Logo-Universite-Toulouse-n-2023.png
+│   │       ├── Materiaux-emergents.png
+│   │       ├── pyNanoMatBuilder_banner_draft.svg
+│   │       ├── pyNanoMatBuilder_banner_old.png
+│   │       ├── pyNanoMatBuilder_banner.png
+│   │       ├── pyNanoMatBuilder_banner.svg
+│   │       ├── pyNanoMatBuilder_logo.png
+│   │       ├── pyNanoMatBuilder_logo.svg
+│   │       ├── pynanomatbuilder_pypi_ready_badge.png
+│   │       ├── pynanomatbuilder_pypi_ready_badge.svg
+│   │       ├── pynmb_logo_dark.png
+│   │       ├── pynmb_logo_light.png
+│   │       ├── pynmb_logo.svg
+│   │       ├── Python_logo_and_wordmark.svg.png
+│   │       ├── workflow_figure.png
+│   │       └── workflow_figure.svg
+│   ├── utils
+│   │   ├── abtem_coupling.py
+│   │   ├── animations.py
+│   │   ├── compute_f0.py
+│   │   ├── core.py
+│   │   ├── crystals.py
+│   │   ├── csg.py
+│   │   ├── energy.py
+│   │   ├── external_pgm.py
+│   │   ├── geometry.py
+│   │   ├── __init__.py
+│   │   ├── io.py
+│   │   ├── local_descriptors.py
+│   │   ├── parallel.py
+│   │   ├── polydispersity.py
+│   │   ├── prop.py
+│   │   ├── __pycache__
+│   │   │   ├── animations.cpython-311.pyc
+│   │   │   ├── compute_f0.cpython-311.pyc
+│   │   │   ├── core.cpython-311.pyc
+│   │   │   ├── crystals.cpython-311.pyc
+│   │   │   ├── csg.cpython-311.pyc
+│   │   │   ├── energy.cpython-311.pyc
+│   │   │   ├── external_pgm.cpython-311.pyc
+│   │   │   ├── geometry.cpython-311.pyc
+│   │   │   ├── __init__.cpython-311.pyc
+│   │   │   ├── io.cpython-311.pyc
+│   │   │   ├── local_descriptors.cpython-311.pyc
+│   │   │   ├── parallel.cpython-311.pyc
+│   │   │   ├── polydispersity.cpython-311.pyc
+│   │   │   ├── prop.cpython-311.pyc
+│   │   │   ├── strain.cpython-311.pyc
+│   │   │   ├── strain._falk_langer_core-19.py311.1.nbc
+│   │   │   ├── strain._falk_langer_core-19.py311.nbi
+│   │   │   └── symmetry.cpython-311.pyc
+│   │   ├── scattering_coupling.py
+│   │   ├── strain.py
+│   │   ├── symmetry.py
+│   │   ├── utils.py.org
+│   │   └── utils.py.tmp
+│   └── visualID.py
+├── pyNanoMatBuilder.egg-info
+│   ├── dependency_links.txt
+│   ├── PKG-INFO
+│   ├── requires.txt
+│   ├── SOURCES.txt
+│   └── top_level.txt
+├── pyNMB-abtem-coupling.ipynb
+├── pyNMB-Article.ipynb
+├── pyNMB-debyecalculator-coupling.ipynb
+├── pyNMB-examples.ipynb
+├── pyNMB-GraphAbs.ipynb
+├── pyNMB-pyausaxs-coupling.ipynb
+├── pyNMB-tutorials.ipynb
+├── pyproject.toml
+├── README.md
+├── requirements-abtem.txt
+├── requirements-debye.txt
+├── requirements-pyausaxs.txt
+└── userDefCifs
+    └── Fe2N-zeta-1668016.cif
+
+76 directories, 1571 files
