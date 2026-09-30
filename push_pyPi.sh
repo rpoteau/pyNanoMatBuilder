@@ -26,6 +26,29 @@ DIST_DIR="dist"
 project_name="pyNanoMatBuilder"
 
 TARGET_INDEX="testpypi"   # "testpypi" or "pypi"
+#
+# Clear separator line
+SEPARATOR_RAW="---------------------------------------------------------------------------------------------"
+SEPARATOR_WIDTH=${#SEPARATOR_RAW}
+SEPARATOR="${WHITE_BG_BLACK_TEXT}${SEPARATOR_RAW}${RESET}"
+
+# Package name as declared in pyproject.toml (needed to build JSON_URL)
+PACKAGE_NAME=$(grep "^name" $PYPROJECT | head -n1 | cut -d '"' -f2)
+
+# nice utility
+print_padded_line_wbg() {
+    # Usage: print_padded_line "your message" width
+    local msg="$1"
+    local width="$2"
+    local msg_len=${#msg}
+    local pad_len=0
+    if (( msg_len < width )); then
+        pad_len=$((width - msg_len))
+        pad=$(printf '%*s' "$pad_len" "")
+        msg="$msg$pad"
+    fi
+    echo -e "${WHITE_BG_BLACK_TEXT}${msg}${RESET}"
+}
 
 if [ "$TARGET_INDEX" = "testpypi" ]; then
     JSON_URL="https://test.pypi.org/pypi/$PACKAGE_NAME/json"
@@ -45,25 +68,7 @@ echo
 
 USER_COMMENT="$1"
 
-# nice utility
-print_padded_line_wbg() {
-    # Usage: print_padded_line "your message" width
-    local msg="$1"
-    local width="$2"
-    local msg_len=${#msg}
-    local pad_len=0
-    if (( msg_len < width )); then
-        pad_len=$((width - msg_len))
-        pad=$(printf '%*s' "$pad_len" "")
-        msg="$msg$pad"
-    fi
-    echo -e "${WHITE_BG_BLACK_TEXT}${msg}${RESET}"
-}
 #
-# Clear separator line
-SEPARATOR_RAW="---------------------------------------------------------------------------------------------"
-SEPARATOR_WIDTH=${#SEPARATOR_RAW}
-SEPARATOR="${WHITE_BG_BLACK_TEXT}${SEPARATOR_RAW}${RESET}"
 
 # Validate pyproject.toml syntax before proceeding
 if ! python3 -c "import tomllib; tomllib.load(open('$PYPROJECT', 'rb'))" 2>/dev/null; then
@@ -96,13 +101,13 @@ fi
 echo
 
 # Get the latest published version on PyPI (optional)
-PACKAGE_NAME=$(grep "^name" $PYPROJECT | head -n1 | cut -d '"' -f2)
 echo -e "$SEPARATOR"
 print_padded_line_wbg "Querying PyPI for $PACKAGE_NAME..." "$SEPARATOR_WIDTH"
 echo -e "$SEPARATOR"
-LATEST_PYPI=$(curl -s "$JSON_URL" | jq -r '.info.version')
+# -f: fail on HTTP errors instead of returning an HTML page
+LATEST_PYPI=$(curl -sf "$JSON_URL" | jq -r '.info.version' 2>/dev/null)
 
-if [ "$LATEST_PYPI" != "null" ]; then
+if [ -n "$LATEST_PYPI" ] && [ "$LATEST_PYPI" != "null" ]; then
     echo -e "${CYAN}Latest published version on PyPI:${RESET} ${YELLOW}$LATEST_PYPI${RESET}"
 else
     echo -e "${RED}Package does not exist on PyPI (or PyPI error).${RESET}"
@@ -135,6 +140,7 @@ if [[ "$REPLY" =~ ^[Yy]$ ]]; then
             ;;
         *)
             echo -e "${RED}Unknown type, version not modified.${RESET}"
+	    exit 1
             ;;
     esac
 
@@ -187,8 +193,8 @@ if [[ "$REPLY" =~ ^[Yy]$ ]]; then
     # --- DOC VALIDATION ---
     echo -e "${CYAN}Checking documentation health before commit...${RESET}"
     
-    # On lance le build. On ne redirige plus les erreurs vers /dev/null 
-    # pour que tu puisses voir ce qui cloche si ça rate vraiment.
+    # Run the Sphinx build with visible errors (no redirection to /dev/null)
+    # so that failures can be diagnosed.
     (cd docs && make clean && make html)
     
     if [ $? -ne 0 ]; then
@@ -242,15 +248,13 @@ if [[ "$REPLY" =~ ^[Yy]$ ]]; then
         git commit -m "$COMMIT_MSG"
         git tag "v$NEW_VERSION"
         git push
-        git push --tags
-	# Create GitHub Release if gh cli is installed
-        if command -v gh >/dev/null 2>&1; then
-            echo -e "${CYAN}Creating GitHub Release...${RESET}"
-            gh release create "v$NEW_VERSION" dist/* --title "Release v$NEW_VERSION" --notes "$COMMIT_MSG"
-            echo "     - GitHub Release created ... Done"
-        else
-            echo -e "${RED}     - Warning: gh CLI not found. Please create the release manually on GitHub.${RESET}"
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}❌ git push failed (remote has new commits?). Run 'git pull --no-rebase', then push manually.${RESET}"
+            echo -e "${YELLOW}Local tag v$NEW_VERSION removed; no release/upload was made.${RESET}"
+            git tag -d "v$NEW_VERSION"
+            exit 1
         fi
+        git push --tags
     else
         echo -e "${RED}Commit cancelled. Reverting version numbers only...${RESET}"
 	sed -i "s/^version = \"$NEW_VERSION\"/version = \"$CURRENT_VERSION\"/" "$PYPROJECT"
@@ -287,6 +291,20 @@ if [[ "$REPLY" =~ ^[Yy]$ ]]; then
     print_padded_line_wbg "Building the package: python -m build" "$SEPARATOR_WIDTH"
     echo -e "$SEPARATOR"
     python -m build
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}❌ Build failed! Tag v$NEW_VERSION is pushed but no release/upload was made.${RESET}"
+        exit 1
+    fi
+    echo
+
+    # Create GitHub Release with the freshly built artifacts (requires gh CLI)
+    if command -v gh >/dev/null 2>&1; then
+        echo -e "${CYAN}Creating GitHub Release...${RESET}"
+        gh release create "v$NEW_VERSION" dist/* --title "Release v$NEW_VERSION" --notes "$COMMIT_MSG"
+        echo "     - GitHub Release created ... Done"
+    else
+        echo -e "${RED}     - Warning: gh CLI not found. Please create the release manually on GitHub.${RESET}"
+    fi
     echo
 
     # Upload to PyPI

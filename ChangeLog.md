@@ -5,7 +5,58 @@
 <a id="semvers"></a>
 # Semantic Versioning ([SemVer](https://semver.org/))
 
+## [0.20.1] "chirality"
 
+### Added
+- `compute_opd_index` of `utils/prop.py` now exposed
+  as a `pyNMBcore` method wrapping.
+- tests of the opd index on tartaric acid added in pyNMB-examples.py
+
+### Changed
+- **`compute_opd_index()`**  in `utils/prop.py` (Osipov-Pickup-Dunmur chirality indexes G0) now computes both the raw OPD index (Osipov eq. 17,
+  comparable to the original tabulated values) and its size-intensive form
+  `G0 / N^4`, and stores them as the attributes `self.G0_OPD` and
+  `self.G0_norm_OPD` instead of returning a value. The achirality/handedness
+  test is now performed on the raw `G0` rather than on the normalized value,
+  and the previous unexplained factor of 8 was removed.
+- `get_moments_of_inertia_for_size` moved from `utils.prop.py` to `utils.core.py`,
+    to avoid a circular dependency between `prop.py` and `geometry.py`
+
+## [0.20.0] "couplings"
+
+### Added
+- **External-package couplings**, each available both as a standalone `utils/`
+  module and as a thin method on `pyNMBcore` that imports its backend lazily
+  (so the backend stays optional and is only required when the method is
+  actually called):
+  - **HRTEM simulation with abTEM** (`utils/abtem_coupling.py`,
+    `pyNMBcore.hrtem_image()`): places a nanoparticle on the shipped relaxed
+    amorphous-carbon substrate (`CreateHRTEMStructure`) and runs the abTEM
+    multislice pipeline — frozen phonons, CTF at Scherzer defocus, partial
+    coherence, Poisson shot noise and detector MTF (`CreateHRTEMImage`).
+  - **Powder X-ray scattering with DebyeCalculator**
+    (`utils/scattering_coupling.debye_profile`, `pyNMBcore.debye_profile()`):
+    I(q), S(q), F(q) and the real-space reduced pair distribution function G(r).
+  - **Powder X-ray scattering with pyAUSAXS**
+    (`utils/scattering_coupling.ausaxs_profile`, `pyNMBcore.ausaxs_profile()`):
+    the raw Debye sum corrected with pyNanoMatBuilder's own atomic form factors
+    (`utils/compute_f0.py` + `resources/elements_f0_coeff`), since pyAUSAXS only
+    tabulates the light elements (H, C, N, O, S).
+- **Optional-dependency extras** `debye`, `tem` and `pyausaxs` in
+  `pyproject.toml`, plus three dedicated pinned environment files
+  (`requirements-abtem.txt`, `requirements-debye.txt`,
+  `requirements-pyausaxs.txt`). The three backends have mutually incompatible
+  version constraints and must each live in their own environment.
+- **Three coupling tutorial notebooks**: `pyNMB-abtem-coupling.ipynb`,
+  `pyNMB-debyecalculator-coupling.ipynb`, `pyNMB-pyausaxs-coupling.ipynb`.
+
+### Fixed
+- **`utils/strain.py` imported numba directly** (`from numba import njit`),
+  which made `import pyNanoMatBuilder` fail in any environment without numba,
+  although numba is meant to be optional. It now imports from
+  `utils/parallel.py` (the graceful `njit`/`HAS_NUMBA` fallback), like the
+  other modules.
+- **Wrong crystal family returned for hexagonal structures.**
 
 ## [0.19.2] "push_pyPi"
 

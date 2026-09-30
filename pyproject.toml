@@ -1,6 +1,6 @@
 [project]
 name = "pyNanoMatBuilder"
-version = "0.19.2"
+version = "0.20.1"
 description = "Build and visualize complex crystalline nanoparticle architectures, including models on substrates, for materials science, X-ray data analysis, and electron microscopy research"
 authors = [{name = "Sara Mokhtari, LPCNO", email = "smokhtari@insa-toulouse.fr"}, {name = "Romuald Poteau, LPCNO", email = "romuald.poteau@utoulouse.fr"}]
 readme = "README.md"
@@ -61,12 +61,17 @@ docs = [
   "numpydoc",
   "sphinx-copybutton"
 ]
+
+visu = [
+    "tools4pyphyschem"
+]
+
 debye = [
     "debyecalculator"
 ]
 tem = [
     "abtem"
 ]
-visu = [
-    "tools4pyphyschem"
+pyausaxs = [
+    "pyausaxs"
 ]

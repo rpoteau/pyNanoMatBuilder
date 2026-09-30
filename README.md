@@ -58,9 +58,9 @@ interpret experimental data:
 | Theory–experiment link | pyNanoMatBuilder tools |
 |-------------------------|------------------------|
 | **Size polydispersity** | `NanoparticleDistribution`: generates NP populations following log-normal or Schulz size distributions, computes per-class proportions, and compares distributions |
-| **SAXS / WAXS / SANS** | atomistic structures feed scattering-profile calculations via **DebyeCalculator** or **pyAUSAXS** (Debye equation, WAXS), using the true morphology (facets, concavities, core/shell) rather than an equivalent sphere |
+| **SAXS / WAXS / SANS** | atomistic structures feed scattering-profile calculations via **DebyeCalculator** or **pyAUSAXS** (see pyNMB-debye-coupling.ipynb and pyNMB-pyausaxs-coupling.ipynb), using the true morphology (facets, concavities, core/shell) rather than an equivalent sphere |
 | **Local-order descriptors** | the **common neighbor parameter (CNP)**, a single-number indicator of local disorder (surfaces, edges, twin boundaries, stacking faults); the **Steinhardt parameters** (q4, q6), which identify the local symmetry type (FCC, HCP, BCC, icosahedral); together they reveal both the presence and the nature of local order. Also `calculate_CN` and `calculate_GCN` (coordination and generalized coordination numbers, Calle-Vallejo/Sautet), relevant to catalytic activity |
-| **TEM / HRTEM** | generates the atomic input structures (in a chosen orientation) of amorphous carbon-supported NPs for image-simulation codes (**abTEM**, ...); an alpha-shape surface mesh (`export_surface_mesh`) could also be used to reproduce the particle contour for comparison with observed projections |
+| **TEM / HRTEM** | generates the atomic input structures (in a chosen orientation) of amorphous carbon-supported NPs for image-simulation via **abTEM** (see pyNMB-abtem-coupling.ipynb); an alpha-shape surface mesh (`export_surface_mesh`) could also be used to reproduce the particle contour for comparison with observed projections |
 
 ---
 

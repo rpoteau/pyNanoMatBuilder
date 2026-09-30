@@ -1153,3 +1153,44 @@ def set_symbols(self, to_symbol, from_symbol=None, indices=None,
         print(f" - New composition: {comp}")
 
     return n_changed
+
+#NEW Sara
+def get_moments_of_inertia_for_size(self, vectors=False):  # from ASE with mass modification
+    """
+    Get the moments of inertia along the principal axes with mass normalization.
+
+    Args:
+        vectors (bool, optional): If True, returns both eigenvalues and eigenvectors.
+            If False, returns only eigenvalues. Defaults to False.
+
+    Returns:
+        np.ndarray: Principal moments of inertia (3 values).
+        np.ndarray: Principal axes (3x3 matrix) if vectors is True.
+
+    Notes:
+        Periodic boundary conditions are ignored.
+        Units of the moments of inertia are angstrom**2.
+    """
+    com = self.get_center_of_mass()
+    positions = self.get_positions()
+    #number_atoms=len(positions)
+    positions -= com  # translate center of mass to origin
+    # masses = self.get_masses() # mass normalization is done by setting all masses to 1 in the inertia tensor calculation
+
+    # Initialize elements of the inertial tensor
+    I11 = np.sum(positions[:, 1]**2 + positions[:, 2]**2)
+    I22 = np.sum(positions[:, 0]**2 + positions[:, 2]**2)
+    I33 = np.sum(positions[:, 0]**2 + positions[:, 1]**2)
+    I12 = -np.sum(positions[:, 0] * positions[:, 1])
+    I13 = -np.sum(positions[:, 0] * positions[:, 2])
+    I23 = -np.sum(positions[:, 1] * positions[:, 2])
+    Itensor = np.array([[I11, I12, I13],
+                        [I12, I22, I23],
+                        [I13, I23, I33]])
+
+    evals, evecs = np.linalg.eigh(Itensor)  # valeurs propes de la matrice
+    if vectors:
+        return evals, evecs.transpose()
+    else:
+        return evals
+

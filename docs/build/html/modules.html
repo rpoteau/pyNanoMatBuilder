@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.19.2 documentation</title>
+  <title>Core Crystalline Builder &mdash; pyNanoMatBuilder 0.20.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -16,7 +16,7 @@
     <link rel="canonical" href="https://pynanomatbuilder.readthedocs.io/modules.html" />
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=587b3f23"></script>
+      <script src="_static/documentation_options.js?v=1154e574"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -709,6 +709,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.core.kDTreeCN"><code class="docutils literal notranslate"><span class="pre">kDTreeCN()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.core.listOf_Attributes_Methods"><code class="docutils literal notranslate"><span class="pre">listOf_Attributes_Methods()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.core.set_symbols"><code class="docutils literal notranslate"><span class="pre">set_symbols()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.core.get_moments_of_inertia_for_size"><code class="docutils literal notranslate"><span class="pre">get_moments_of_inertia_for_size()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-pyNanoMatBuilder.utils.geometry">Geometry Tools (geometry.py)</a><ul>
@@ -766,6 +767,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.apply_translation"><code class="docutils literal notranslate"><span class="pre">apply_translation()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.center"><code class="docutils literal notranslate"><span class="pre">center()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.rotate_to_align"><code class="docutils literal notranslate"><span class="pre">rotate_to_align()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.align_inertia_axis"><code class="docutils literal notranslate"><span class="pre">align_inertia_axis()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.replicate_by_rotation"><code class="docutils literal notranslate"><span class="pre">replicate_by_rotation()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.replicate_by_reflection"><code class="docutils literal notranslate"><span class="pre">replicate_by_reflection()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.geometry.remove_duplicates"><code class="docutils literal notranslate"><span class="pre">remove_duplicates()</span></code></a></li>
@@ -827,7 +829,6 @@
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.magicNumbers"><code class="docutils literal notranslate"><span class="pre">magicNumbers()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.rdf"><code class="docutils literal notranslate"><span class="pre">rdf()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.compute_moi"><code class="docutils literal notranslate"><span class="pre">compute_moi()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.get_moments_of_inertia_for_size"><code class="docutils literal notranslate"><span class="pre">get_moments_of_inertia_for_size()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.moi_size"><code class="docutils literal notranslate"><span class="pre">moi_size()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.calculate_rg"><code class="docutils literal notranslate"><span class="pre">calculate_rg()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pyNanoMatBuilder.utils.prop.calculate_npr"><code class="docutils literal notranslate"><span class="pre">calculate_npr()</span></code></a></li>
@@ -7874,6 +7875,28 @@ pyNMB). Default None.</p></li>
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.core.get_moments_of_inertia_for_size">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.core.</span></span><span class="sig-name descname"><span class="pre">get_moments_of_inertia_for_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.core.get_moments_of_inertia_for_size" title="Link to this definition"></a></dt>
+<dd><p>Get the moments of inertia along the principal axes with mass normalization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>vectors</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, returns both eigenvalues and eigenvectors.
+If False, returns only eigenvalues. Defaults to False.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Principal moments of inertia (3 values).
+np.ndarray: Principal axes (3x3 matrix) if vectors is True.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Periodic boundary conditions are ignored.
+Units of the moments of inertia are angstrom**2.</p>
+</dd></dl>
+
 </section>
 <section id="module-pyNanoMatBuilder.utils.geometry">
 <span id="geometry-tools-geometry-py"></span><h2>Geometry Tools (geometry.py)<a class="headerlink" href="#module-pyNanoMatBuilder.utils.geometry" title="Link to this heading"></a></h2>
@@ -9486,6 +9509,41 @@ Default is [0,0,1].</p></li>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.align_inertia_axis">
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">align_inertia_axis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">which</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'unique'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">1]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.align_inertia_axis" title="Link to this definition"></a></dt>
+<dd><p>Rotate self.NP to align one of its principal inertia axes with a target
+direction. Thin selector on top of rotate_to_align: it picks the inertia
+axis, then delegates the rotation (atoms, truncation planes, post-analysis).</p>
+<p>Moments are computed with get_moments_of_inertia_for_size (unit masses),
+sorted as I1 &lt;= I2 &lt;= I3. The axis sign is chosen so that the farthest
+atom along the axis lies on the +target side.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>which</strong> (<em>str</em>) – principal axis to align.
+‘min’, ‘mid’, ‘max’: axis of I1, I2 or I3.
+‘unique’: symmetry (revolution) axis, i.e. the axis whose two
+partner moments are the closest. Resolves to ‘min’ for a prolate
+object (I2 ~ I3, e.g. rods) and to ‘max’ for an oblate one
+(I1 ~ I2, e.g. platelets). A warning is issued when no pair of
+moments is clearly degenerate (quasi-isotropic or asymmetric
+shapes), since the choice is then not meaningful.
+Default ‘unique’.</p></li>
+<li><p><strong>target_axis</strong> (<em>array-like</em>) – Target direction in Cartesian [x,y,z].
+Default is [0,0,1].</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – If True, suppresses output. Default is True.</p></li>
+<li><p><strong>postAnalyzis</strong> – forwarded to rotate_to_align.</p></li>
+<li><p><strong>skip*</strong> – forwarded to rotate_to_align.</p></li>
+<li><p><strong>thresholdCoreSurface</strong> – forwarded to rotate_to_align.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p># Put the 5-fold axis of an elongated decahedron along z
+ino.align_inertia_axis(which=’unique’, target_axis=[0, 0, 1])</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.geometry.replicate_by_rotation">
 <span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.geometry.</span></span><span class="sig-name descname"><span class="pre">replicate_by_rotation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_copies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis_def</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hkl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">postAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipChiralityCalculation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipSymmetryAnalyzis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipFacetInfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresholdCoreSurface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.geometry.replicate_by_rotation" title="Link to this definition"></a></dt>
 <dd><p>Duplicate self.NP n_copies times by rotation around an axis,
@@ -9796,13 +9854,18 @@ equals <cite>scaleDmin2</cite>.</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.crystals.FindInterAtomicDist">
 <span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.crystals.</span></span><span class="sig-name descname"><span class="pre">FindInterAtomicDist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.crystals.FindInterAtomicDist" title="Link to this definition"></a></dt>
-<dd><p>Computes the interatomic distance based on the Bravais lattice (fcc, bcc or hcp only).</p>
+<dd><p>Computes the interatomic distance based on the packing type
+(fcc, bcc or hcp only).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Interatomic distance</p>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If crystal_type is not one of the simple packings the
+    formulas below are valid for (e.g. ‘cubic’, ‘hexagonal’…).</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Interatomic distance</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
@@ -10257,10 +10320,30 @@ and assigns them to attributes within the <cite>system</cite> instance.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.io.get_crystal_type">
 <span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.io.</span></span><span class="sig-name descname"><span class="pre">get_crystal_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.io.get_crystal_type" title="Link to this definition"></a></dt>
-<dd><p>Find the Bravais lattice based on the space group number.</p>
+<dd><p>Classify the structure into a packing type or, failing that, a crystal
+family, based on the space group number and the number of atoms in the
+primitive cell.</p>
+<p>The labels ‘fcc’, ‘bcc’ and ‘hcp’ are reserved for the genuine simple
+metallic packings, since downstream code (e.g. FindInterAtomicDist and
+the shape classes) relies on them to apply packing-specific formulas:</p>
+<ul class="simple">
+<li><p>‘fcc’: space group 225 with 1 atom in the primitive cell (Au, Ag…).
+Rock-salt compounds (e.g. NaCl, space group 225 but 2 atoms) are NOT
+fcc packings and return ‘cubic’.</p></li>
+<li><p>‘bcc’: space group 229 with 1 atom in the primitive cell (Fe alpha…).</p></li>
+<li><p>‘hcp’: space group 194 with 2 atoms in the primitive cell (Co, Ru…).
+Other hexagonal structures (e.g. epsilon-Co, space group 186 with a
+20-atom cell) are hexagonal but not close-packed and return
+‘hexagonal’.</p></li>
+</ul>
+<p>Any other structure returns its crystal family: ‘cubic’, ‘hexagonal’,
+‘tetragonal’, ‘orthorhombic’, ‘monoclinic’ or ‘triclinic’.</p>
+<p>Requires self.ucSG_number and self.ucNprimitive (both set by
+extract_cif_info). If ucNprimitive is unavailable, the conservative
+family name is returned instead of a packing label.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Bravais lattice</p>
+<dd class="field-odd"><p>Packing type or crystal family.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>str</p>
@@ -10776,28 +10859,6 @@ Periodic boundary conditions are ignored.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.get_moments_of_inertia_for_size">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">get_moments_of_inertia_for_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.get_moments_of_inertia_for_size" title="Link to this definition"></a></dt>
-<dd><p>Get the moments of inertia along the principal axes with mass normalization.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>vectors</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, returns both eigenvalues and eigenvectors.
-If False, returns only eigenvalues. Defaults to False.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Principal moments of inertia (3 values).
-np.ndarray: Principal axes (3x3 matrix) if vectors is True.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>np.ndarray</p>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>Periodic boundary conditions are ignored.
-Units of the moments of inertia are angstrom**2.</p>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.moi_size">
 <span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">moi_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.moi_size" title="Link to this definition"></a></dt>
 <dd><p>Get the moments of inertia along the principal axes with mass normalization.</p>
@@ -11168,22 +11229,50 @@ $NPR_{1}=I_{1}/I_{3}$ and $NPR_{2}=I_{2}/I_{3}$</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyNanoMatBuilder.utils.prop.compute_opd_index">
-<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">compute_opd_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">NP</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Atoms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.compute_opd_index" title="Link to this definition"></a></dt>
-<dd><p>High-performance Scaled Osipov–Pickup–Dunmur chirality index computation.
-Article: 10.1080/00268979500100831
-Uses KDTree for neighbor searching and Numba for parallelized math.</p>
+<span class="sig-prename descclassname"><span class="pre">pyNanoMatBuilder.utils.prop.</span></span><span class="sig-name descname"><span class="pre">compute_opd_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">achiral_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noOutput</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyNanoMatBuilder.utils.prop.compute_opd_index" title="Link to this definition"></a></dt>
+<dd><p>Osipov-Pickup-Dunmur (OPD) chirality index computed from atomic coordinates.
+Article: 10.1080/00268979500100831 (Osipov, Pickup, Dunmur, Mol. Phys. 1995)</p>
+<dl class="simple">
+<dt>Two values are returned:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>G0<span class="classifier">the raw dimensionless index (Osipov eq. 17), summed over</span></dt><dd><p>quadruplets of atoms. Its scale is stable (order unity for
+small molecules), so it is the quantity used for the internal
+achirality/handedness test and the one comparable to the
+values tabulated by Osipov et al.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<ul class="simple">
+<li><dl class="simple">
+<dt>G0_norm: the same index normalized by the number of quadruplets</dt><dd><p>(factor 1/N^4), i.e. made size-intensive so that particles of
+different sizes can be compared. Being divided by N^4, its
+magnitude is tiny for large particles and must NOT be tested
+against an absolute threshold.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>The sign (identical for G0 and G0_norm) gives the handedness; a raw <a href="#id8"><span class="problematic" id="id9">|G0|</span></a>
+below achiral_tol is reported as achiral.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>NP</strong> (<em>ase.Atoms</em>) – ase object.</p></li>
-<li><p><strong>cutoff</strong> (<em>float</em>) – Radius for neighbor search (in Angstroms).</p></li>
+<li><p><strong>NP</strong> (<em>ase.Atoms</em>) – the structure.</p></li>
+<li><p><strong>cutoff</strong> (<em>float</em>) – neighbour-search radius (Angstroms).</p></li>
+<li><p><strong>achiral_tol</strong> (<em>float</em>) – threshold on the RAW <a href="#id10"><span class="problematic" id="id11">|G0|</span></a> below which the structure
+is reported as achiral. Default 1e-2.</p></li>
+<li><p><strong>noOutput</strong> (<em>bool</em>) – if True, suppress the printed summary.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The scaled chirality index G0s.</p>
+<dd class="field-even"><p>self.G0_OPD      : the raw dimensionless index (Osipov eq. 17).
+self.G0_norm_OPD : the size-intensive index (G0 / N^4).</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float</p>
+<dd class="field-odd"><p>None. The two indices are stored as attributes</p>
 </dd>
 </dl>
 </dd></dl>
@@ -11434,7 +11523,7 @@ absolute volume, i.e. the outer skin.</p>
 indexing into vertices.</p></li>
 <li><p><strong>per_component</strong> (<em>bool</em>) – if True, also return the per-component
 breakdown as a list of (area, volume, n_faces) tuples sorted by
-decreasing <a href="#id8"><span class="problematic" id="id9">|volume|</span></a>.</p></li>
+decreasing <a href="#id12"><span class="problematic" id="id13">|volume|</span></a>.</p></li>
 <li><p><strong>labels</strong> (<em>(</em><em>M</em><em>,</em><em>) </em><em>ndarray</em><em> of </em><em>int</em><em>, </em><em>optional</em>) – precomputed per-face
 connected-component labels (e.g. from build_surface_mesh with
 return_components=True). If None, components are recomputed
@@ -11676,7 +11765,7 @@ limits in the field’s units. None uses each field’s own min/max.
 Pass the same value_range to several structures to colour them on a
 common scale. Default is None.</p></li>
 <li><p><strong>symmetric</strong> (<em>bool</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – If True, centre the colour range on
-zero (vmax = -vmin = max(<a href="#id10"><span class="problematic" id="id11">|values|</span></a>)), appropriate for the signed
+zero (vmax = -vmin = max(<a href="#id14"><span class="problematic" id="id15">|values|</span></a>)), appropriate for the signed
 volumetric strain so that zero strain maps to the colourmap centre.
 If None, defaults to True for the volumetric field and False for the
 (non-negative) von Mises and D2min fields. Ignored when value_range

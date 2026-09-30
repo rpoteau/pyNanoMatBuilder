@@ -113,7 +113,12 @@ def scaleUnitCell(crystal: Atoms,
 
 def FindInterAtomicDist(self):
     """
-    Computes the interatomic distance based on the Bravais lattice (fcc, bcc or hcp only).
+    Computes the interatomic distance based on the packing type
+    (fcc, bcc or hcp only).
+
+    Raises:
+        ValueError: If crystal_type is not one of the simple packings the
+            formulas below are valid for (e.g. 'cubic', 'hexagonal'...).
 
     Returns:
         float: Interatomic distance
@@ -121,16 +126,23 @@ def FindInterAtomicDist(self):
     if self.crystal_type == 'fcc':
         d = self.parameters[0] * math.sqrt(2) / 2
 
-    if self.crystal_type == 'bcc':
+    elif self.crystal_type == 'bcc':
         d = self.parameters[0] * math.sqrt(3) / 2
 
-    if self.crystal_type == 'hcp':
+    elif self.crystal_type == 'hcp':
         d_a = self.parameters[0]
         d_c = self.parameters[2] / 2
         if d_a > d_c:  # if compact
             d = d_c
-        if d_c > d_a:  # if not compact
+        else:  # if not compact
             d = d_a
+
+    else:
+        raise ValueError(
+            f"FindInterAtomicDist only supports the simple packings "
+            f"'fcc', 'bcc' and 'hcp', got crystal_type='{self.crystal_type}'. "
+            f"Its nearest-neighbour formulas are meaningless for structures "
+            f"with a multi-atom basis (e.g. rock-salt or epsilon-Co).")
 
     return d
 

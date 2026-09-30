@@ -28,7 +28,8 @@ from .core import (pyNMB_location, get_resource_path, timer, RAB, Rbetween2Point
                    vector, vectorBetween2Points, coord2xyz, vertex, vertexScaled, RadiusSphereAfterV,
                    centerOfGravity, center2cog, normOfV, normV, centerToVertices, Rx, Ry, Rz,
                    EulerRotationMatrix, plotPalette, rgb2hex, clone, deleteElementsOfAList,
-                   planeFittingLSF, faces_to_planes, AngleBetweenVV, signedAngleBetweenVV
+                   planeFittingLSF, faces_to_planes, AngleBetweenVV, signedAngleBetweenVV,
+                   get_moments_of_inertia_for_size
                    )
 from .core import centertxt, centerTitle, fg, bg, hl, color
 from .crystals import lattice_cart, convertuvwh2hkld

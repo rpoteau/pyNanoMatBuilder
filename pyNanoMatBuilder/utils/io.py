@@ -118,23 +118,49 @@ def listCifsOfTheDatabase():
 ######################################## cif files informations
 def get_crystal_type(self):
     """
-    Find the Bravais lattice based on the space group number.
+    Classify the structure into a packing type or, failing that, a crystal
+    family, based on the space group number and the number of atoms in the
+    primitive cell.
+
+    The labels 'fcc', 'bcc' and 'hcp' are reserved for the genuine simple
+    metallic packings, since downstream code (e.g. FindInterAtomicDist and
+    the shape classes) relies on them to apply packing-specific formulas:
+
+    - 'fcc': space group 225 with 1 atom in the primitive cell (Au, Ag...).
+      Rock-salt compounds (e.g. NaCl, space group 225 but 2 atoms) are NOT
+      fcc packings and return 'cubic'.
+    - 'bcc': space group 229 with 1 atom in the primitive cell (Fe alpha...).
+    - 'hcp': space group 194 with 2 atoms in the primitive cell (Co, Ru...).
+      Other hexagonal structures (e.g. epsilon-Co, space group 186 with a
+      20-atom cell) are hexagonal but not close-packed and return
+      'hexagonal'.
+
+    Any other structure returns its crystal family: 'cubic', 'hexagonal',
+    'tetragonal', 'orthorhombic', 'monoclinic' or 'triclinic'.
+
+    Requires self.ucSG_number and self.ucNprimitive (both set by
+    extract_cif_info). If ucNprimitive is unavailable, the conservative
+    family name is returned instead of a packing label.
 
     Returns:
-        str: Bravais lattice
+        str: Packing type or crystal family.
     """
     spacegroup_number = self.ucSG_number  # space group number
+    n_primitive = getattr(self, 'ucNprimitive', None)
 
-    # Bravais lattice based on space group number https://fr.wikipedia.org/wiki/Groupe_d%27espace
+    # Space group ranges: https://en.wikipedia.org/wiki/Space_group
     if 195 <= spacegroup_number <= 230:  # Cubic
-        if spacegroup_number == 225:
+        if spacegroup_number == 225 and n_primitive == 1:
             return 'fcc'
-        elif spacegroup_number == 229:
+        elif spacegroup_number == 229 and n_primitive == 1:
             return 'bcc'
         else:
             return 'cubic'
     elif 168 <= spacegroup_number <= 194:  # Hexagonal
-        return 'hcp'
+        if spacegroup_number == 194 and n_primitive == 2:
+            return 'hcp'
+        else:
+            return 'hexagonal'
     elif 75 <= spacegroup_number <= 142:  # Tetragonal
         return 'tetragonal'
     elif 16 <= spacegroup_number <= 74:  # Orthorhombic
@@ -182,6 +208,10 @@ def extract_cif_info(self, cif_file):
     # Get trustworthy symmetry data
     self.ucSG_number = sga.get_space_group_number()
     self.ucSG_symbol = sga.get_space_group_symbol()
+    # Number of atoms in the primitive cell: discriminates true packings
+    # (fcc/bcc/hcp) from compounds that merely share the space group
+    # (e.g. rock-salt NaCl vs fcc metals). See get_crystal_type.
+    self.ucNprimitive = len(sga.get_primitive_standard_structure())
 
     self.crystal_type = get_crystal_type(self)
     return {
